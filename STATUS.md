@@ -65,7 +65,7 @@ Each lecture folder holds a deck (index.html + figs.js, generated from experimen
 | L5 The Signature | 37 | **Service account:** NE1 24/24 vs passthrough 0/24. **Read-back:** catches Draft 30/30 vs bare 13/30. **Guard v2:** 0/24 adversarial. **App journey** test 12/12; 5 real app screenshots |
 | L6 The Inspector | 39 | **60-case suite:** graph 56/60 (84–97%), loop 40/60, naive 3/60. flash-words + lite-routing 57/60 at ₹5.58. **Broken bots:** all 9 caught. **Regression gate** CLI built. Spend ₹745 |
 | L7 The Night Shift | 32 | **50 faults:** naive redo 25/50 duplicated (₹92.96 lakh extra) vs keyed workflow 50/50 correct. **Approval:** reminder at 24 h, escalation at 48 h. Crash drills pass. Deploy image passes 11/11 (not deployed) |
-| L8 Your Module | in progress | Demo-day kit, 8 demo changes, final demo + WALKTHROUGH.md |
+| L8 Your Module | 34 | **Final stack:** 57/60 (86–98%), 0 never-events, ₹0.43 per resolved order, p95 32 s (over the 20 s bar). **Demo-day changes:** 8 tested as fair. **demo/WALKTHROUGH.md** written |
 | Module kits | n/a | 8 kits + TEMPLATE; modules/test_kits.py PASS |
 
 ## Known issues (left for v1.1; fixing them changes recorded prompts, so every dependent cassette must be re-recorded)
@@ -90,7 +90,17 @@ Each lecture folder holds a deck (index.html + figs.js, generated from experimen
 - Wave 2: L5, L6, L8.
 - **Lead:** replays every notebook with no key (tools/modal_run.py --mode replay) and runs headless deck QA; the hub index.html is at the root.
 
+## Live (2026-10-27)
+- **Course hub (private artifact):** https://claude.ai/artifact/BxkGjPwuBwLEhoaVyuroii (source `hub.html`; republish the same path to update).
+- **Staging app:** https://rajatworkspace--bahi-agent-staging.us-east.modal.run
+  - Modal app `bahi-agent-staging`. The admin token is in Modal secret `bahi-staging`.
+  - Operate it with `BAHI_ENV=staging modal run deploy/admin.py --cmd status|kill|revive|model-off|model-on|smoke`.
+  - Daily cap ₹250. Rate limits are 20/min overall and 6/min per user.
+- **Langfuse:** 60 L6 suite traces under tag `L6-suite`, exported over OTel. The old ingestion API retires on 16 Nov 2026.
+- **Keys:** `.env` (gitignored) holds OpenRouter and Langfuse. The Gemini key comes from `wm-lecture6-ijepa/.env`.
+- **Repo:** committed locally. The public push needs Rajat to run `gh repo create VizuaraAI/agents-for-enterprises --public --source . --push` (the classifier blocked Claude).
+- **Theme:** Sky (Google Sans Flex, full-bleed). All 9 decks pass deck QA after the re-theme.
+
 ## Open
 - **Course repo for Colab installs:** `nb_setup.txt` points at `github.com/VizuaraAI/agents-for-enterprises` (not created yet). Needs Rajat's OK to publish; it is fictional data only.
-- **Not run:** GPT and Claude comparisons need an OpenRouter key; Langfuse needs keys (traces are stored locally until then).
 - **Explainer films:** not started.
