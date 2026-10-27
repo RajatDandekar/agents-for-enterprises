@@ -1,0 +1,27 @@
+code: SAL-CUS-01
+title: CUSTOMER AND PRICE ENQUIRY
+menu: Sales > Masters > Customer Enquiry
+roles: [SAL-EXEC, SAL-MGR, PLANT-HEAD]
+fields:
+  - {name: q, label: NAME LIKE, type: str, req: true, help: "Annapurna finds three"}
+  - {name: cust_cd, label: CUST CD, type: str, req: true}
+  - {name: cr_avail, label: CREDIT AVAIL, type: float, readonly: true}
+  - {name: itm_cd, label: ITEM CD, type: str, req: true}
+  - {name: list_cd, label: LIST CD, type: str, req: false, help: "DLR/DST/RTL/MRP"}
+  - {name: prices, label: PRICE GRID, type: grid, readonly: true, help: expired rows shown too}
+tasks:
+  - button: Find
+    service: so_cust_search
+    sends: [q]
+    fills: [cust_cd]
+  - button: Show
+    service: so_cust_get
+    sends: [cust_cd]
+    fills: [cr_avail, list_cd]
+    needs: [Find]
+  - button: Prices
+    service: so_price_get
+    sends: [itm_cd, list_cd]
+    fills: [prices]
+state:
+  - {rule: "The price grid lists expired prices with live ones; read VALID TO", error: none}

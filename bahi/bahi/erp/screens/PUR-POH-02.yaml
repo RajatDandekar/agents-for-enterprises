@@ -1,0 +1,17 @@
+code: PUR-POH-02
+title: ORDER HISTORY BY ITEM
+menu: Purchase > Order history
+roles: [ALL]
+help: >-
+  The last ten released orders for an item. Rates here are history, for reference only: the price to use
+  is the current rate contract, which Fetch on Order Entry brings in.
+fields:
+  - {name: itm_cd, label: ITEM CD, type: str, req: true, lookup: itm_search}
+  - {name: sup_cd, label: SUP CD, type: str, req: false, lookup: sup_search}
+  - {name: rows, label: RELEASED ORDERS, type: grid, readonly: true, columns: [po_no, sup_cd, sup_name, qty, rate, created_on, status], pick: sup_cd}
+tasks:
+  - {button: Query, service: po_hist, sends: [itm_cd, sup_cd], fills: [rows]}
+  - {button: Select, service: null}
+  - {button: Close, service: null}
+state:
+  - {rule: "History shows the old rate (11.40); the contract rate since 1 Oct is 11.90", error: null}

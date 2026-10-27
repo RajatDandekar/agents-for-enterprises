@@ -1,0 +1,20 @@
+code: XX-ABC-03
+title: DOCUMENT APPROVAL
+menu: Area > Module > Approvals
+roles: [PUR-MGR]
+fields:
+  - {name: status, label: STATUS, type: str, req: false, help: PA}
+  - {name: doc_no, label: DOC NO, type: str, req: true}
+  - {name: decision, label: DECISION, type: str, req: true, help: A/R}
+tasks:
+  - button: Inbox
+    service: xx_list
+    sends: [status]
+    fills: [doc_no]
+  - button: Decide
+    service: xx_approve
+    sends: [doc_no, decision]
+    fills: [status]
+    needs: [Inbox]
+state:
+  - {rule: "Nobody approves their own document", error: ERR-APR-0003}

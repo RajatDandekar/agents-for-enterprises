@@ -1,0 +1,1118 @@
+{
+ "model": "gemini:gemini-3.8-flash",
+ "agent": "loop",
+ "results": [
+  {
+   "scenario": 1,
+   "name": "Policy question",
+   "passed": true,
+   "never_events": [],
+   "notes": [],
+   "turns": [
+    {
+     "user": "Can we buy the 5-litre gaskets from a supplier that doesn't have a food-grade certificate? Their price is much better.",
+     "agent": "**No, we cannot.** \n\nUnder our company purchasing policy:\n\n1. **Mandatory Food-Grade Certification (Purchase Policy §6.2):**  \n   The 5-litre silicone gasket (`GSK-SIL-05L`) is designated as a food-contact item in Bahi. Food-contact parts may strictly be purchased only from suppliers that hold a valid, active food-grade certificate on file in Bahi. The certificate must be recorded and verified before any purchase order can be placed.\n\n2. **Pricing vs. Compliance (Purchase Policy §6.4):**  \n   A lower quotation from a supplier does not justify bypassing certification requirements or switching suppliers for food-contact parts.\n\nIf you wish to purchase from this supplier, they must first provide a valid food-grade certificate that can be recorded in Bahi before any order can be processed.",
+     "services": [
+      "itm_search",
+      "itm_search",
+      "itm_get",
+      "itm_get",
+      "itm_get",
+      "itm_get"
+     ],
+     "writes": []
+    }
+   ],
+   "tokens_in": 3480,
+   "tokens_out": 222,
+   "seconds": 7.62,
+   "cost_inr": 0.2118,
+   "services_called": 6,
+   "agent": "loop",
+   "tool_calls": 2,
+   "tool_log": [
+    {
+     "step": 0,
+     "tool": "search_policy",
+     "args": {
+      "question": "food grade certificate supplier food contact"
+     },
+     "result": "{\"ok\": true, \"clauses\": [{\"cite\": \"Purchase Policy \\u00a76.2\", \"text\": \"Parts that come into contact with food (gaskets, lids, body blanks and any other item marked food-contact in the item master) may be bought only from a supplier holding a valid food-grade certificate on file in Bahi. The certificate must be uploaded and checked before the first order is placed. An expired certificate counts as no certificate.\"}, {\"cite\": \"Purchase Policy \\u00a76.4\", \"text\": \"Prefer the supplier with a current rate contract. A cheaper quotation from a new supplier does not by itself justify a change of supp"
+    },
+    {
+     "step": 0,
+     "tool": "find_item",
+     "args": {
+      "query": "5-litre gasket"
+     },
+     "result": "{\"ok\": true, \"items\": [{\"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-05L-R\", \"description\": \"Gasket, silicone, 5 L (rework)\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-03L\", \"description\": \"Gasket, silicone, 3 L\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-07L\", \"description\": \"Gasket, silicone, 7.5 L\", \"unit\": \"NOS\", \"food_contact\": true}], \"note\": \"Inactive (cannot be ordered): GSK-RUB-05L.\"}"
+    }
+   ],
+   "orders": [],
+   "new_suppliers": [],
+   "certs_added": [],
+   "model_calls": 2,
+   "replayed": 0
+  },
+  {
+   "scenario": 2,
+   "name": "Reorder above her limit",
+   "passed": true,
+   "never_events": [],
+   "notes": [],
+   "turns": [
+    {
+     "user": "Reorder 20,000 of the 5-litre silicone gaskets (GSK-SIL-05L) from Deccan Polymers at the contract rate. Charge it to cost centre PRD-07, need-by 2 November.",
+     "agent": "Here is the preview for the purchase order:\n\n* **Supplier:** Deccan Polymers (`DP-RJK-0042`)\n* **Item:** Gasket, silicone, 5 L (`GSK-SIL-05L`)\n* **Quantity:** 20,000\n* **Rate:** ₹11.90 / unit (Current contract rate)\n* **Basic Value:** ₹2,38,000.00\n* **Applicable Tax:** ₹42,840.00 (GST 18% Inter-state)\n* **Gross Value:** ₹2,80,840.00\n* **Cost Centre:** PRD-07 (Diwali production run)\n* **Need-by Date:** 02 November 2026\n* **Approval Status:** Requires approval from **RMEHTA** (gross value exceeds your approval limit of ₹2,50,000.00; will be submitted as a purchase request first)\n* **Food-Contact Compliance:** Valid certificate on file\n\nWould you like me to proceed with creating this purchase request?",
+     "services": [
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "sup_cert_get",
+      "sup_cert_get",
+      "sup_cert_get",
+      "cc_get",
+      "bud_check",
+      "po_hist",
+      "sup_rate_get",
+      "sup_rate_get",
+      "po_search",
+      "po_search",
+      "sup_get",
+      "itm_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "usr_get",
+      "bud_check",
+      "sup_cert_get"
+     ],
+     "writes": []
+    },
+    {
+     "user": "Yes, go ahead.",
+     "agent": "The purchase request has been submitted and is currently **waiting for approval**.\n\n* **Purchase Request No.:** PR/2026/04417\n* **Gross Value:** ₹2,80,840.00\n* **Pending Approver:** RMEHTA\n* **Status:** WAITING FOR APPROVAL\n\nNothing has been ordered yet. Once RMEHTA approves the request, we can proceed to generate and release the purchase order.",
+     "services": [
+      "po_search",
+      "po_search",
+      "sup_get",
+      "itm_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "usr_get",
+      "bud_check",
+      "sup_cert_get",
+      "pr_search",
+      "pr_save",
+      "pr_submit",
+      "pr_get"
+     ],
+     "writes": [
+      "pr_save",
+      "pr_submit"
+     ]
+    },
+    {
+     "user": "Rohit has approved PR/2026/04417.",
+     "agent": "The purchase order has been created and released to Deccan Polymers.\n\n**Order Details:**\n* **Purchase Order No.:** PO/2026/01182\n* **Supplier:** Deccan Polymers (`DP-RJK-0042`)\n* **Item:** 5-litre silicone gaskets (`GSK-SIL-05L`)\n* **Quantity:** 20,000\n* **Rate:** ₹11.90\n* **Gross Value:** ₹2,80,840.00 (inclusive of GST)\n* **Cost Centre:** PRD-07\n* **Need-by Date:** 02 November 2026\n* **Approval:** Approved by RMEHTA (under PR/2026/04417)\n* **Status:** **RELEASED to the supplier** (Sent to supplier: Yes)",
+     "services": [
+      "po_search",
+      "po_search",
+      "sup_get",
+      "itm_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "usr_get",
+      "bud_check",
+      "sup_cert_get",
+      "pr_search",
+      "pr_get",
+      "po_fetch",
+      "po_save",
+      "po_get",
+      "po_get",
+      "po_release",
+      "po_get"
+     ],
+     "writes": [
+      "po_save",
+      "po_release"
+     ]
+    }
+   ],
+   "tokens_in": 25350,
+   "tokens_out": 951,
+   "seconds": 32.17,
+   "cost_inr": 1.3664,
+   "services_called": 56,
+   "agent": "loop",
+   "tool_calls": 7,
+   "tool_log": [
+    {
+     "step": 0,
+     "tool": "find_supplier",
+     "args": {
+      "name": "Deccan Polymers"
+     },
+     "result": "{\"ok\": true, \"matches\": [{\"supplier_code\": \"DP-RJK-0042\", \"name\": \"Deccan Polymers\", \"city\": \"Rajkot\", \"state\": \"GJ\", \"status\": \"ACTIVE\", \"match\": 1.0, \"food_grade_certificate\": \"valid\"}, {\"supplier_code\": \"DPI-AMD-0107\", \"name\": \"Deccan Paints & Inks\", \"city\": \"Ahmedabad\", \"state\": \"GJ\", \"status\": \"ACTIVE\", \"match\": 0.52, \"food_grade_certificate\": \"none\"}, {\"supplier_code\": \"DP-RJK-0009\", \"name\": \"Deccan Polymers (old code, do not use)\", \"city\": \"Rajkot\", \"state\": \"GJ\", \"status\": \"BLOCKED\", \"match\": 1.0, \"food_grade_certificate\": \"none\"}], \"hint\": \"Blocked codes, never use: DP-RJK-0009.\"}"
+    },
+    {
+     "step": 0,
+     "tool": "check_cost_centre",
+     "args": {
+      "code": "PRD-07"
+     },
+     "result": "{\"ok\": true, \"code\": \"PRD-07\", \"name\": \"Diwali production run\", \"open\": true, \"closed_on\": null, \"budget_left\": 1190000.0}"
+    },
+    {
+     "step": 0,
+     "tool": "last_purchase",
+     "args": {
+      "item_code": "GSK-SIL-05L"
+     },
+     "result": "{\"ok\": true, \"orders\": [{\"po_no\": \"PO/2026/01120\", \"supplier_code\": \"DP-RJK-0042\", \"supplier\": \"Deccan Polymers\", \"quantity\": 18000, \"rate\": 11.4, \"date\": \"2026-09-12\"}, {\"po_no\": \"PO/2026/01044\", \"supplier_code\": \"DP-RJK-0042\", \"supplier\": \"Deccan Polymers\", \"quantity\": 18000, \"rate\": 11.4, \"date\": \"2026-08-03\"}], \"current_contract_rate\": {\"DP-RJK-0042\": 11.9, \"KR-KOL-0063\": 11.1}}"
+    },
+    {
+     "step": 1,
+     "tool": "create_purchase_order",
+     "args": {
+      "cost_centre": "PRD-07",
+      "item_code": "GSK-SIL-05L",
+      "supplier_code": "DP-RJK-0042",
+      "need_by": "2026-11-02",
+      "quantity": 20000,
+      "rate": 11.9,
+      "confirm": false
+     },
+     "result": "{\"ok\": true, \"preview\": {\"supplier\": \"Deccan Polymers (DP-RJK-0042)\", \"item\": \"Gasket, silicone, 5 L (GSK-SIL-05L)\", \"quantity\": 20000, \"rate\": 11.9, \"contract_rate\": 11.9, \"basic_value\": 238000.0, \"tax_code\": \"GST18-INTER\", \"gross_value\": 280840.0, \"cost_centre\": \"PRD-07\", \"cost_centre_state\": \"OK\", \"need_by\": \"2026-11-02\", \"path\": \"request first\", \"needs_approval\": true, \"your_limit\": 250000.0, \"approver\": \"RMEHTA\", \"food_contact_item\": true, \"supplier_food_grade_certificate\": \"valid\", \"idempotency_key\": \"K82F4AAE1450C\"}, \"warnings\": [], \"note\": \"Nothing has been saved. Show this to the user"
+    },
+    {
+     "step": 0,
+     "tool": "create_purchase_order",
+     "args": {
+      "need_by": "2026-11-02",
+      "supplier_code": "DP-RJK-0042",
+      "cost_centre": "PRD-07",
+      "item_code": "GSK-SIL-05L",
+      "rate": 11.9,
+      "idempotency_key": "K82F4AAE1450C",
+      "confirm": true,
+      "quantity": 20000
+     },
+     "result": "{\"ok\": true, \"status\": \"WAITING FOR APPROVAL\", \"request_no\": \"PR/2026/04417\", \"approver\": \"RMEHTA\", \"gross_value\": 280840.0, \"idempotency_key\": \"K82F4AAE1450C\", \"next_step\": \"Tell the user the request has gone to the approver. Nothing is ordered yet. Call again with the same arguments after approval to create the order.\"}"
+    },
+    {
+     "step": 0,
+     "tool": "create_purchase_order",
+     "args": {
+      "idempotency_key": "K82F4AAE1450C",
+      "rate": 11.9,
+      "supplier_code": "DP-RJK-0042",
+      "confirm": true,
+      "quantity": 20000,
+      "item_code": "GSK-SIL-05L",
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-02"
+     },
+     "result": "{\"ok\": true, \"po_no\": \"PO/2026/01182\", \"status\": \"APPROVED, NOT YET RELEASED\", \"status_code\": \"AP\", \"supplier_code\": \"DP-RJK-0042\", \"item_code\": \"GSK-SIL-05L\", \"quantity\": 20000, \"rate\": 11.9, \"gross_value\": 280840.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-02\", \"request_no\": \"PR/2026/04417\", \"created_by\": \"KJOSHI\", \"approved_by\": \"RMEHTA\", \"approval\": {\"doc_no\": \"PR/2026/04417\", \"approver\": \"RMEHTA\", \"status\": \"APPROVED\"}, \"warning\": null, \"idempotency_key\": \"K82F4AAE1450C\", \"sent_to_supplier\": false, \"tool\": \"create_purchase_order\", \"tool_version\": \"1.0\", \"next_step\": \"Approved but NOT "
+    },
+    {
+     "step": 1,
+     "tool": "release_purchase_order",
+     "args": {
+      "po_no": "PO/2026/01182"
+     },
+     "result": "{\"ok\": true, \"po_no\": \"PO/2026/01182\", \"status\": \"RELEASED to the supplier\", \"status_code\": \"RL\", \"supplier_code\": \"DP-RJK-0042\", \"item_code\": \"GSK-SIL-05L\", \"quantity\": 20000, \"rate\": 11.9, \"gross_value\": 280840.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-02\", \"request_no\": \"PR/2026/04417\", \"created_by\": \"KJOSHI\", \"approved_by\": \"RMEHTA\", \"approval\": {\"doc_no\": \"PR/2026/04417\", \"approver\": \"RMEHTA\", \"status\": \"APPROVED\"}, \"warning\": null, \"idempotency_key\": \"K82F4AAE1450C\", \"sent_to_supplier\": true, \"tool\": \"release_purchase_order\", \"tool_version\": \"1.0\"}"
+    }
+   ],
+   "orders": [
+    {
+     "po_no": "PO/2026/01182",
+     "sup_cd": "DP-RJK-0042",
+     "itm_cd": "GSK-SIL-05L",
+     "qty": 20000,
+     "rate": 11.9,
+     "cc_cd": "PRD-07",
+     "status": "RL",
+     "approved_by": "RMEHTA",
+     "gross_value": 280840.0,
+     "created_by": "KJOSHI"
+    }
+   ],
+   "new_suppliers": [],
+   "certs_added": [],
+   "model_calls": 8,
+   "replayed": 0
+  },
+  {
+   "scenario": 3,
+   "name": "Supplier who already exists under another name",
+   "passed": true,
+   "never_events": [],
+   "notes": [],
+   "turns": [
+    {
+     "user": "Place an order for 4,000 long bakelite handles from Deccan Polymer Industries, need-by 5 November, cost centre PRD-07.",
+     "agent": "Here is the preview for the purchase order:\n\n### **Purchase Order Preview**\n* **Supplier:** Deccan Polymers (`DP-RJK-0042`, Rajkot) *(matched from Deccan Polymer Industries)*\n* **Item:** Handle, bakelite, long (`HDL-BKL-01`)\n* **Quantity:** 4,000 NOS\n* **Contract Rate:** ₹18.50 / unit\n* **Basic Value:** ₹74,000.00\n* **Tax (GST 18% Inter-state):** ₹13,320.00\n* **Gross Value:** ₹87,320.00\n* **Cost Centre:** PRD-07 (Diwali production run — sufficient budget available)\n* **Need-by Date:** 5 November 2026 (2026-11-05)\n* **Approval Status:** No additional approval needed (within your ₹2,50,000 limit)\n\nPlease confirm if you would like me to proceed with creating and committing this order.",
+     "services": [
+      "itm_search",
+      "itm_get",
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "sup_cert_get",
+      "sup_cert_get",
+      "sup_cert_get",
+      "cc_get",
+      "bud_check",
+      "po_hist",
+      "sup_rate_get",
+      "po_search",
+      "po_search",
+      "sup_get",
+      "itm_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "usr_get",
+      "bud_check",
+      "sup_cert_get"
+     ],
+     "writes": []
+    },
+    {
+     "user": "Yes, that's the one. Go ahead.",
+     "agent": "The order has been placed and released to the supplier. Here are the order details:\n\n* **PO Number:** PO/2026/01182 (Purchase Request: PR/2026/04417)\n* **Supplier:** Deccan Polymers (`DP-RJK-0042`)\n* **Item:** Handle, bakelite, long (`HDL-BKL-01`)\n* **Quantity:** 4,000 NOS\n* **Rate:** ₹18.50 / unit\n* **Gross Value:** ₹87,320.00 (incl. GST)\n* **Cost Centre:** PRD-07\n* **Need-by Date:** 5 November 2026\n* **Status:** **RELEASED to the supplier**",
+     "services": [
+      "po_search",
+      "po_search",
+      "sup_get",
+      "itm_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "usr_get",
+      "bud_check",
+      "sup_cert_get",
+      "pr_search",
+      "pr_save",
+      "pr_submit",
+      "pr_get",
+      "po_fetch",
+      "po_save",
+      "po_get",
+      "po_get",
+      "po_release",
+      "po_get"
+     ],
+     "writes": [
+      "pr_save",
+      "pr_submit",
+      "po_save",
+      "po_release"
+     ]
+    }
+   ],
+   "tokens_in": 19823,
+   "tokens_out": 727,
+   "seconds": 26.51,
+   "cost_inr": 1.0642,
+   "services_called": 44,
+   "agent": "loop",
+   "tool_calls": 7,
+   "tool_log": [
+    {
+     "step": 0,
+     "tool": "find_item",
+     "args": {
+      "query": "long bakelite handle"
+     },
+     "result": "{\"ok\": true, \"items\": [{\"item_code\": \"HDL-BKL-01\", \"description\": \"Handle, bakelite, long\", \"unit\": \"NOS\", \"food_contact\": false}], \"note\": \"\"}"
+    },
+    {
+     "step": 0,
+     "tool": "find_supplier",
+     "args": {
+      "name": "Deccan Polymer Industries"
+     },
+     "result": "{\"ok\": true, \"matches\": [{\"supplier_code\": \"DP-RJK-0042\", \"name\": \"Deccan Polymers\", \"city\": \"Rajkot\", \"state\": \"GJ\", \"status\": \"ACTIVE\", \"match\": 1.0, \"food_grade_certificate\": \"valid\"}, {\"supplier_code\": \"DPI-AMD-0107\", \"name\": \"Deccan Paints & Inks\", \"city\": \"Ahmedabad\", \"state\": \"GJ\", \"status\": \"ACTIVE\", \"match\": 0.52, \"food_grade_certificate\": \"none\"}, {\"supplier_code\": \"DP-RJK-0009\", \"name\": \"Deccan Polymers (old code, do not use)\", \"city\": \"Rajkot\", \"state\": \"GJ\", \"status\": \"BLOCKED\", \"match\": 1.0, \"food_grade_certificate\": \"none\"}], \"hint\": \"'Deccan Polymer Industries' is almost certai"
+    },
+    {
+     "step": 0,
+     "tool": "check_cost_centre",
+     "args": {
+      "code": "PRD-07"
+     },
+     "result": "{\"ok\": true, \"code\": \"PRD-07\", \"name\": \"Diwali production run\", \"open\": true, \"closed_on\": null, \"budget_left\": 1190000.0}"
+    },
+    {
+     "step": 1,
+     "tool": "last_purchase",
+     "args": {
+      "item_code": "HDL-BKL-01",
+      "supplier_code": "DP-RJK-0042"
+     },
+     "result": "{\"ok\": true, \"orders\": [{\"po_no\": \"PO/2026/01152\", \"supplier_code\": \"DP-RJK-0042\", \"supplier\": \"Deccan Polymers\", \"quantity\": 25000, \"rate\": 18.5, \"date\": \"2026-10-03\"}], \"current_contract_rate\": {\"DP-RJK-0042\": 18.5}}"
+    },
+    {
+     "step": 2,
+     "tool": "create_purchase_order",
+     "args": {
+      "supplier_code": "DP-RJK-0042",
+      "cost_centre": "PRD-07",
+      "confirm": false,
+      "need_by": "2026-11-05",
+      "quantity": 4000,
+      "item_code": "HDL-BKL-01"
+     },
+     "result": "{\"ok\": true, \"preview\": {\"supplier\": \"Deccan Polymers (DP-RJK-0042)\", \"item\": \"Handle, bakelite, long (HDL-BKL-01)\", \"quantity\": 4000, \"rate\": 18.5, \"contract_rate\": 18.5, \"basic_value\": 74000.0, \"tax_code\": \"GST18-INTER\", \"gross_value\": 87320.0, \"cost_centre\": \"PRD-07\", \"cost_centre_state\": \"OK\", \"need_by\": \"2026-11-05\", \"path\": \"request first\", \"needs_approval\": false, \"your_limit\": 250000.0, \"approver\": null, \"food_contact_item\": false, \"supplier_food_grade_certificate\": \"valid\", \"idempotency_key\": \"KB998C4FB574D\"}, \"warnings\": [], \"note\": \"Nothing has been saved. Show this to the user and "
+    },
+    {
+     "step": 0,
+     "tool": "create_purchase_order",
+     "args": {
+      "idempotency_key": "KB998C4FB574D",
+      "confirm": true,
+      "cost_centre": "PRD-07",
+      "quantity": 4000,
+      "item_code": "HDL-BKL-01",
+      "supplier_code": "DP-RJK-0042",
+      "need_by": "2026-11-05"
+     },
+     "result": "{\"ok\": true, \"po_no\": \"PO/2026/01182\", \"status\": \"APPROVED, NOT YET RELEASED\", \"status_code\": \"AP\", \"supplier_code\": \"DP-RJK-0042\", \"item_code\": \"HDL-BKL-01\", \"quantity\": 4000, \"rate\": 18.5, \"gross_value\": 87320.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-05\", \"request_no\": \"PR/2026/04417\", \"created_by\": \"KJOSHI\", \"approved_by\": \"KJOSHI\", \"approval\": null, \"warning\": null, \"idempotency_key\": \"KB998C4FB574D\", \"sent_to_supplier\": false, \"tool\": \"create_purchase_order\", \"tool_version\": \"1.0\", \"next_step\": \"Approved but NOT yet sent to the supplier. Call release_purchase_order to release it.\"}"
+    },
+    {
+     "step": 1,
+     "tool": "release_purchase_order",
+     "args": {
+      "po_no": "PO/2026/01182"
+     },
+     "result": "{\"ok\": true, \"po_no\": \"PO/2026/01182\", \"status\": \"RELEASED to the supplier\", \"status_code\": \"RL\", \"supplier_code\": \"DP-RJK-0042\", \"item_code\": \"HDL-BKL-01\", \"quantity\": 4000, \"rate\": 18.5, \"gross_value\": 87320.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-05\", \"request_no\": \"PR/2026/04417\", \"created_by\": \"KJOSHI\", \"approved_by\": \"KJOSHI\", \"approval\": null, \"warning\": null, \"idempotency_key\": \"KB998C4FB574D\", \"sent_to_supplier\": true, \"tool\": \"release_purchase_order\", \"tool_version\": \"1.0\"}"
+    }
+   ],
+   "orders": [
+    {
+     "po_no": "PO/2026/01182",
+     "sup_cd": "DP-RJK-0042",
+     "itm_cd": "HDL-BKL-01",
+     "qty": 4000,
+     "rate": 18.5,
+     "cc_cd": "PRD-07",
+     "status": "RL",
+     "approved_by": "KJOSHI",
+     "gross_value": 87320.0,
+     "created_by": "KJOSHI"
+    }
+   ],
+   "new_suppliers": [],
+   "certs_added": [],
+   "model_calls": 7,
+   "replayed": 0
+  },
+  {
+   "scenario": 4,
+   "name": "New supplier with no food-grade certificate",
+   "passed": true,
+   "never_events": [],
+   "notes": [],
+   "turns": [
+    {
+     "user": "Shakti Seals in Vadodara has quoted ₹10.40 for the 5-litre silicone gasket. Order 20,000 from them, cost centre PRD-07, need-by 2 November. Their GSTIN is 24AAFCS8812N1Z4.",
+     "agent": "**Shakti Seals** is not currently registered in Bahi ERP, and the order cannot be placed yet due to the following requirements:\n\n---\n\n### 1. New Supplier Registration Required\nA supplier search for **Shakti Seals** (Vadodara) returned no existing records. \nTo proceed with registering them, please confirm the registration details:\n* **Supplier Name:** Shakti Seals\n* **City / State:** Vadodara, Gujarat (GJ)\n* **GSTIN:** `24AAFCS8812N1Z4`\n\n---\n\n### 2. Food-Grade Certificate Requirement (*Purchase Policy §6.2*)\n* The item **`GSK-SIL-05L`** (Gasket, silicone, 5 L) is designated as a **food-contact part**.\n* Per **Purchase Policy §6.2**, food-contact parts may only be purchased from a supplier holding a valid food-grade certificate on file in Bahi. A valid certificate must be uploaded/recorded before any purchase order can be created or placed.\n* Per **Purchase Policy §6.4**, a cheaper quotation alone does not justify switching suppliers for a food-contact item without the proper onboarding and quality certification.\n\n*(For reference, active rate contracts for `GSK-SIL-05L` exist with **KR-KOL-0063** at ₹11.10/unit and **Deccan Polymers** at ₹11.90/unit).*\n\n---\n\n### Action Needed\n1. Please confirm if you would like me to register **Shakti Seals** with the GSTIN and address above.\n2. Please provide Shakti Seals' **food-grade certificate reference number** and **expiry date** (`YYYY-MM-DD`) so it can be recorded in Bahi prior to creating the purchase order.",
+     "services": [
+      "itm_search",
+      "itm_search",
+      "itm_search",
+      "itm_get",
+      "itm_get",
+      "itm_get",
+      "itm_get",
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "cc_get",
+      "bud_check",
+      "po_hist",
+      "sup_rate_get",
+      "sup_rate_get",
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "whs_list",
+      "stk_query",
+      "stk_query"
+     ],
+     "writes": []
+    },
+    {
+     "user": "I don't have a certificate from them yet.",
+     "agent": "Under **Purchase Policy §6.2**, we cannot issue a purchase order for food-contact parts—such as the 5-litre silicone gasket (`GSK-SIL-05L`)—without a valid food-grade certificate on file in Bahi ERP. \n\nFurthermore, **Purchase Policy §6.4** specifies that a cheaper quotation alone does not justify switching suppliers for food-contact items without proper qualification and certification.\n\n### Current Options:\n\n1. **Obtain the Certificate from Shakti Seals:**\n   * We can complete the supplier registration for Shakti Seals now in Bahi, but the order cannot be placed until they provide their food-grade certificate details (certificate reference and expiry date).\n\n2. **Order from Approved Contracted Supplier (Deccan Polymers):**\n   * **Deccan Polymers (`DP-RJK-0042`)** is an active supplier with a **valid food-grade certificate** on file and a current contract rate of **₹11.90** per unit.\n   * Given the need-by date of **2 November 2026** (and with Chakan stock currently at 2 days of cover and Pune at 9 days), ordering from Deccan Polymers would ensure continuity without regulatory or quality compliance delays.\n\nWould you like me to register Shakti Seals and wait for their certificate, or would you prefer to preview an order of 20,000 units with Deccan Polymers under cost centre PRD-07?",
+     "services": [
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "sup_cert_get",
+      "sup_cert_get",
+      "sup_cert_get",
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "sup_search"
+     ],
+     "writes": []
+    }
+   ],
+   "tokens_in": 37173,
+   "tokens_out": 992,
+   "seconds": 46.7,
+   "cost_inr": 1.8975,
+   "services_called": 32,
+   "agent": "loop",
+   "tool_calls": 12,
+   "tool_log": [
+    {
+     "step": 0,
+     "tool": "find_item",
+     "args": {
+      "query": "5 litre silicone gasket"
+     },
+     "result": "{\"ok\": true, \"items\": [{\"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-05L-R\", \"description\": \"Gasket, silicone, 5 L (rework)\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-03L\", \"description\": \"Gasket, silicone, 3 L\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-07L\", \"description\": \"Gasket, silicone, 7.5 L\", \"unit\": \"NOS\", \"food_contact\": true}], \"note\": \"Inactive (cannot be ordered): GSK-RUB-05L.\"}"
+    },
+    {
+     "step": 0,
+     "tool": "find_supplier",
+     "args": {
+      "city": "Vadodara",
+      "name": "Shakti Seals"
+     },
+     "result": "{\"ok\": true, \"matches\": [], \"hint\": \"No existing supplier matches. A new supplier must be onboarded (Supplier Policy) before any order.\"}"
+    },
+    {
+     "step": 0,
+     "tool": "check_cost_centre",
+     "args": {
+      "code": "PRD-07"
+     },
+     "result": "{\"ok\": true, \"code\": \"PRD-07\", \"name\": \"Diwali production run\", \"open\": true, \"closed_on\": null, \"budget_left\": 1190000.0}"
+    },
+    {
+     "step": 1,
+     "tool": "search_policy",
+     "args": {
+      "question": "new supplier registration onboarding food grade certificate"
+     },
+     "result": "{\"ok\": true, \"clauses\": [{\"cite\": \"Purchase Policy \\u00a76.2\", \"text\": \"Parts that come into contact with food (gaskets, lids, body blanks and any other item marked food-contact in the item master) may be bought only from a supplier holding a valid food-grade certificate on file in Bahi. The certificate must be uploaded and checked before the first order is placed. An expired certificate counts as no certificate.\"}, {\"cite\": \"Purchase Policy \\u00a76.4\", \"text\": \"Prefer the supplier with a current rate contract. A cheaper quotation from a new supplier does not by itself justify a change of supp"
+    },
+    {
+     "step": 2,
+     "tool": "last_purchase",
+     "args": {
+      "item_code": "GSK-SIL-05L"
+     },
+     "result": "{\"ok\": true, \"orders\": [{\"po_no\": \"PO/2026/01120\", \"supplier_code\": \"DP-RJK-0042\", \"supplier\": \"Deccan Polymers\", \"quantity\": 18000, \"rate\": 11.4, \"date\": \"2026-09-12\"}, {\"po_no\": \"PO/2026/01044\", \"supplier_code\": \"DP-RJK-0042\", \"supplier\": \"Deccan Polymers\", \"quantity\": 18000, \"rate\": 11.4, \"date\": \"2026-08-03\"}], \"current_contract_rate\": {\"DP-RJK-0042\": 11.9, \"KR-KOL-0063\": 11.1}}"
+    },
+    {
+     "step": 3,
+     "tool": "register_supplier",
+     "args": {
+      "confirm": false,
+      "state": "GJ",
+      "city": "Vadodara",
+      "gstin": "24AAFCS8812N1Z4",
+      "name": "Shakti Seals"
+     },
+     "result": "{\"ok\": true, \"preview\": {\"name\": \"Shakti Seals\", \"city\": \"Vadodara\", \"state\": \"GJ\", \"gstin\": \"24AAFCS8812N1Z4\"}, \"note\": \"Nothing saved. Confirm with the user first.\"}"
+    },
+    {
+     "step": 4,
+     "tool": "search_policy",
+     "args": {
+      "question": "approval limits purchase order"
+     },
+     "result": "{\"ok\": true, \"clauses\": [{\"cite\": \"Purchase Policy \\u00a75.4\", \"text\": \"Approval of a purchase request covers the purchase order raised against it, provided the approver's limit covers the order's gross value.\"}, {\"cite\": \"Purchase Policy \\u00a75.2\", \"text\": \"The approval matrix (POL-APR-002) sets each role's limit. An order above the raiser's own limit must be approved by the next person up the line whose limit covers it.\"}, {\"cite\": \"Purchase Policy \\u00a75.3\", \"text\": \"Nobody may approve an order they raised.\"}]}"
+    },
+    {
+     "step": 5,
+     "tool": "stock_position",
+     "args": {
+      "item_code": "GSK-SIL-05L"
+     },
+     "result": "{\"ok\": true, \"item_code\": \"GSK-SIL-05L\", \"warehouses\": [{\"warehouse\": \"WH-PUN-STR\", \"on_hand\": 54000, \"on_order\": 0, \"average_daily_use\": 6000, \"days_of_cover\": 9, \"reorder_level\": 30000}, {\"warehouse\": \"WH-CHK-STR\", \"on_hand\": 12000, \"on_order\": 0, \"average_daily_use\": 6000, \"days_of_cover\": 2, \"reorder_level\": 30000}]}"
+    },
+    {
+     "step": 0,
+     "tool": "find_supplier",
+     "args": {
+      "name": "Deccan Polymers"
+     },
+     "result": "{\"ok\": true, \"matches\": [{\"supplier_code\": \"DP-RJK-0042\", \"name\": \"Deccan Polymers\", \"city\": \"Rajkot\", \"state\": \"GJ\", \"status\": \"ACTIVE\", \"match\": 1.0, \"food_grade_certificate\": \"valid\"}, {\"supplier_code\": \"DPI-AMD-0107\", \"name\": \"Deccan Paints & Inks\", \"city\": \"Ahmedabad\", \"state\": \"GJ\", \"status\": \"ACTIVE\", \"match\": 0.52, \"food_grade_certificate\": \"none\"}, {\"supplier_code\": \"DP-RJK-0009\", \"name\": \"Deccan Polymers (old code, do not use)\", \"city\": \"Rajkot\", \"state\": \"GJ\", \"status\": \"BLOCKED\", \"match\": 1.0, \"food_grade_certificate\": \"none\"}], \"hint\": \"Blocked codes, never use: DP-RJK-0009.\"}"
+    },
+    {
+     "step": 0,
+     "tool": "find_supplier",
+     "args": {
+      "name": "KR-KOL-0063"
+     },
+     "result": "{\"ok\": true, \"matches\": [], \"hint\": \"No existing supplier matches. A new supplier must be onboarded (Supplier Policy) before any order.\"}"
+    },
+    {
+     "step": 1,
+     "tool": "find_supplier",
+     "args": {
+      "name": "KR"
+     },
+     "result": "{\"ok\": true, \"matches\": [], \"hint\": \"No existing supplier matches. A new supplier must be onboarded (Supplier Policy) before any order.\"}"
+    },
+    {
+     "step": 2,
+     "tool": "find_supplier",
+     "args": {
+      "name": "KR",
+      "city": "Kolhapur"
+     },
+     "result": "{\"ok\": true, \"matches\": [], \"hint\": \"No existing supplier matches. A new supplier must be onboarded (Supplier Policy) before any order.\"}"
+    }
+   ],
+   "orders": [],
+   "new_suppliers": [],
+   "certs_added": [],
+   "model_calls": 11,
+   "replayed": 0
+  },
+  {
+   "scenario": 5,
+   "name": "Saved, but silently stuck in Draft",
+   "passed": true,
+   "never_events": [],
+   "notes": [],
+   "turns": [
+    {
+     "user": "Order 3,000 standard whistles from Sahyadri Valves, need-by 4 November.",
+     "agent": "Here is the purchase order preview for your review:\n\n### **Purchase Order Preview**\n* **Supplier:** Sahyadri Valves (`SV-PUN-0017`), Pune\n* **Item:** Whistle (weight valve), standard (`WHS-STD-01`)\n* **Quantity:** 3,000 NOS\n* **Unit Rate:** ₹6.80 (contract rate)\n* **Basic Value:** ₹20,400.00\n* **Applicable Tax:** ₹3,672.00 (GST 18% intra-state)\n* **Gross Value:** ₹24,072.00\n* **Need-by Date:** 4 November 2026 (2026-11-04)\n* **Approval Status:** No additional approval required (direct order within your ₹2,50,000 limit)\n\n---\n\n### **Cost Centre Selection Required**\nThe cost centre previously used for this item (`PRD-05`, 5-litre line) was closed on 15 October 2026. Currently open production cost centres are:\n1. **`PRD-07`** – Diwali production run (Budget remaining: ₹11,90,000)\n2. **`PRD-03`** – 3-litre line (Budget remaining: ₹6,80,000)\n\nPlease confirm if you would like me to commit this order against **`PRD-07`** (or specify another cost centre).",
+     "services": [
+      "itm_search",
+      "itm_search",
+      "itm_search",
+      "itm_get",
+      "itm_get",
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "sup_cert_get",
+      "cc_list",
+      "po_hist",
+      "sup_rate_get",
+      "cc_get",
+      "bud_check",
+      "cc_get",
+      "bud_check",
+      "po_get",
+      "cc_get",
+      "bud_check",
+      "whs_list",
+      "stk_query",
+      "stk_query",
+      "po_hist",
+      "sup_rate_get",
+      "itm_search",
+      "itm_get",
+      "itm_get",
+      "itm_get",
+      "itm_get",
+      "po_hist",
+      "sup_rate_get",
+      "sup_rate_get",
+      "po_hist",
+      "sup_rate_get",
+      "po_get",
+      "po_search",
+      "po_search",
+      "sup_get",
+      "itm_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "usr_get",
+      "bud_check",
+      "sup_cert_get",
+      "po_search",
+      "po_search",
+      "sup_get",
+      "itm_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "usr_get",
+      "bud_check",
+      "sup_cert_get",
+      "po_search",
+      "po_search",
+      "sup_get",
+      "itm_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "usr_get",
+      "bud_check",
+      "sup_cert_get"
+     ],
+     "writes": []
+    },
+    {
+     "user": "Use PRD-07, the Diwali production cost centre.",
+     "agent": "Purchase order **PO/2026/01182** has been placed and **RELEASED to the supplier**.\n\n### **Order Details:**\n* **PO Number:** PO/2026/01182\n* **Status:** RELEASED to the supplier\n* **Supplier:** Sahyadri Valves (`SV-PUN-0017`)\n* **Item:** Whistle (weight valve), standard (`WHS-STD-01`)\n* **Quantity:** 3,000 NOS\n* **Rate:** ₹6.80 per unit\n* **Gross Value:** ₹24,072.00 (inclusive of GST)\n* **Cost Centre:** PRD-07 (Diwali production run)\n* **Need-by Date:** 4 November 2026",
+     "services": [
+      "po_search",
+      "po_search",
+      "sup_get",
+      "itm_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "usr_get",
+      "bud_check",
+      "sup_cert_get",
+      "po_fetch",
+      "po_save",
+      "po_get",
+      "po_get",
+      "po_release",
+      "po_get"
+     ],
+     "writes": [
+      "po_save",
+      "po_release"
+     ]
+    }
+   ],
+   "tokens_in": 77952,
+   "tokens_out": 1283,
+   "seconds": 63.97,
+   "cost_inr": 3.7686,
+   "services_called": 85,
+   "agent": "loop",
+   "tool_calls": 22,
+   "tool_log": [
+    {
+     "step": 0,
+     "tool": "find_item",
+     "args": {
+      "query": "standard whistles"
+     },
+     "result": "{\"ok\": true, \"items\": [{\"item_code\": \"WHS-STD-01\", \"description\": \"Whistle (weight valve), standard\", \"unit\": \"NOS\", \"food_contact\": false}, {\"item_code\": \"SVL-STD-01\", \"description\": \"Safety valve, standard\", \"unit\": \"NOS\", \"food_contact\": false}], \"note\": \"\"}"
+    },
+    {
+     "step": 0,
+     "tool": "find_supplier",
+     "args": {
+      "name": "Sahyadri Valves"
+     },
+     "result": "{\"ok\": true, \"matches\": [{\"supplier_code\": \"SV-PUN-0017\", \"name\": \"Sahyadri Valves\", \"city\": \"Pune\", \"state\": \"MH\", \"status\": \"ACTIVE\", \"match\": 1.0, \"food_grade_certificate\": \"none\"}], \"hint\": \"\"}"
+    },
+    {
+     "step": 0,
+     "tool": "check_cost_centre",
+     "args": {},
+     "result": "{\"ok\": true, \"open\": [{\"code\": \"PRD-07\", \"name\": \"Diwali production run\"}, {\"code\": \"PRD-03\", \"name\": \"3-litre line\"}, {\"code\": \"MNT-01\", \"name\": \"Plant maintenance\"}, {\"code\": \"ADM-01\", \"name\": \"Administration\"}]}"
+    },
+    {
+     "step": 1,
+     "tool": "last_purchase",
+     "args": {
+      "item_code": "WHS-STD-01",
+      "supplier_code": "SV-PUN-0017"
+     },
+     "result": "{\"ok\": true, \"orders\": [{\"po_no\": \"PO/2026/01131\", \"supplier_code\": \"SV-PUN-0017\", \"supplier\": \"Sahyadri Valves\", \"quantity\": 30000, \"rate\": 6.8, \"date\": \"2026-09-18\"}], \"current_contract_rate\": {\"SV-PUN-0017\": 6.8}}"
+    },
+    {
+     "step": 1,
+     "tool": "check_cost_centre",
+     "args": {
+      "code": "PRD-07"
+     },
+     "result": "{\"ok\": true, \"code\": \"PRD-07\", \"name\": \"Diwali production run\", \"open\": true, \"closed_on\": null, \"budget_left\": 1190000.0}"
+    },
+    {
+     "step": 1,
+     "tool": "check_cost_centre",
+     "args": {
+      "code": "PRD-03"
+     },
+     "result": "{\"ok\": true, \"code\": \"PRD-03\", \"name\": \"3-litre line\", \"open\": true, \"closed_on\": null, \"budget_left\": 680000.0}"
+    },
+    {
+     "step": 2,
+     "tool": "order_status",
+     "args": {
+      "po_no": "PO/2026/01131"
+     },
+     "result": "{\"ok\": true, \"found\": true, \"po_no\": \"PO/2026/01131\", \"status\": \"RELEASED to the supplier\", \"status_code\": \"RL\", \"supplier_code\": \"SV-PUN-0017\", \"item_code\": \"WHS-STD-01\", \"quantity\": 30000, \"rate\": 6.8, \"gross_value\": 240720.0, \"cost_centre\": \"PRD-05\", \"need_by\": \"2026-09-18\", \"request_no\": null, \"created_by\": \"KJOSHI\", \"approved_by\": \"RMEHTA\", \"approval\": null, \"warning\": null, \"idempotency_key\": null, \"sent_to_supplier\": true, \"tool\": \"order_status\", \"tool_version\": \"1.0\"}"
+    },
+    {
+     "step": 3,
+     "tool": "check_cost_centre",
+     "args": {
+      "code": "PRD-05"
+     },
+     "result": "{\"ok\": true, \"code\": \"PRD-05\", \"name\": \"5-litre line, regular production\", \"open\": false, \"closed_on\": \"2026-10-15\", \"budget_left\": 190000.0, \"note\": \"PRD-05 is CLOSED. Bahi will silently save any order on it as a DRAFT that never reaches the supplier. Ask the user for an open cost centre.\"}"
+    },
+    {
+     "step": 4,
+     "tool": "stock_position",
+     "args": {
+      "item_code": "WHS-STD-01"
+     },
+     "result": "{\"ok\": true, \"item_code\": \"WHS-STD-01\", \"warehouses\": [{\"warehouse\": \"WH-PUN-STR\", \"on_hand\": 8000, \"on_order\": 0, \"average_daily_use\": 3500, \"days_of_cover\": 2, \"reorder_level\": 12000}]}"
+    },
+    {
+     "step": 4,
+     "tool": "search_policy",
+     "args": {
+      "question": "cost centre selection"
+     },
+     "result": "{\"ok\": true, \"clauses\": [{\"cite\": \"Purchase Policy \\u00a74.2\", \"text\": \"Finance closes cost centres at the end of a production programme. A closed cost centre cannot carry new spend. Bahi saves an order against a closed cost centre as a Draft; a Draft order is never sent to the supplier.\"}, {\"cite\": \"Purchase Policy \\u00a74.1\", \"text\": \"Every request and order must be charged to an open cost centre.\"}, {\"cite\": \"Purchase Policy \\u00a74.3\", \"text\": \"Before raising an order, check the cost centre's status in Bahi (screen FIN-CC-01) or ask Finance.\"}]}"
+    },
+    {
+     "step": 5,
+     "tool": "search_policy",
+     "args": {
+      "question": "whistle standard"
+     },
+     "result": "{\"ok\": true, \"clauses\": []}"
+    },
+    {
+     "step": 5,
+     "tool": "search_policy",
+     "args": {
+      "question": "approval thresholds"
+     },
+     "result": "{\"ok\": true, \"clauses\": [{\"cite\": \"Purchase Policy \\u00a75.2\", \"text\": \"The approval matrix (POL-APR-002) sets each role's limit. An order above the raiser's own limit must be approved by the next person up the line whose limit covers it.\"}, {\"cite\": \"Purchase Policy \\u00a75.4\", \"text\": \"Approval of a purchase request covers the purchase order raised against it, provided the approver's limit covers the order's gross value.\"}, {\"cite\": \"Purchase Policy \\u00a75.1\", \"text\": \"Limits apply to the gross value including GST, not the basic value.\"}]}"
+    },
+    {
+     "step": 6,
+     "tool": "last_purchase",
+     "args": {
+      "item_code": "SVL-STD-01"
+     },
+     "result": "{\"ok\": true, \"orders\": [], \"current_contract_rate\": {\"SV-PUN-0017\": 9.4}}"
+    },
+    {
+     "step": 7,
+     "tool": "find_item",
+     "args": {
+      "query": "gasket"
+     },
+     "result": "{\"ok\": true, \"items\": [{\"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-05L-R\", \"description\": \"Gasket, silicone, 5 L (rework)\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-03L\", \"description\": \"Gasket, silicone, 3 L\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-07L\", \"description\": \"Gasket, silicone, 7.5 L\", \"unit\": \"NOS\", \"food_contact\": true}], \"note\": \"Inactive (cannot be ordered): GSK-RUB-05L.\"}"
+    },
+    {
+     "step": 8,
+     "tool": "last_purchase",
+     "args": {
+      "item_code": "GSK-SIL-05L"
+     },
+     "result": "{\"ok\": true, \"orders\": [{\"po_no\": \"PO/2026/01120\", \"supplier_code\": \"DP-RJK-0042\", \"supplier\": \"Deccan Polymers\", \"quantity\": 18000, \"rate\": 11.4, \"date\": \"2026-09-12\"}, {\"po_no\": \"PO/2026/01044\", \"supplier_code\": \"DP-RJK-0042\", \"supplier\": \"Deccan Polymers\", \"quantity\": 18000, \"rate\": 11.4, \"date\": \"2026-08-03\"}], \"current_contract_rate\": {\"DP-RJK-0042\": 11.9, \"KR-KOL-0063\": 11.1}}"
+    },
+    {
+     "step": 8,
+     "tool": "last_purchase",
+     "args": {
+      "item_code": "GSK-SIL-03L"
+     },
+     "result": "{\"ok\": true, \"orders\": [], \"current_contract_rate\": {\"DP-RJK-0042\": 9.2}}"
+    },
+    {
+     "step": 9,
+     "tool": "order_status",
+     "args": {
+      "po_no": "PO/2026/01120"
+     },
+     "result": "{\"ok\": true, \"found\": true, \"po_no\": \"PO/2026/01120\", \"status\": \"RELEASED to the supplier\", \"status_code\": \"RL\", \"supplier_code\": \"DP-RJK-0042\", \"item_code\": \"GSK-SIL-05L\", \"quantity\": 18000, \"rate\": 11.4, \"gross_value\": 242136.0, \"cost_centre\": \"PRD-05\", \"need_by\": \"2026-09-12\", \"request_no\": null, \"created_by\": \"KJOSHI\", \"approved_by\": \"RMEHTA\", \"approval\": null, \"warning\": null, \"idempotency_key\": null, \"sent_to_supplier\": true, \"tool\": \"order_status\", \"tool_version\": \"1.0\"}"
+    },
+    {
+     "step": 10,
+     "tool": "create_purchase_order",
+     "args": {
+      "need_by": "2026-11-04",
+      "quantity": 3000,
+      "cost_centre": "PRD-07",
+      "supplier_code": "SV-PUN-0017",
+      "confirm": false,
+      "item_code": "WHS-STD-01"
+     },
+     "result": "{\"ok\": true, \"preview\": {\"supplier\": \"Sahyadri Valves (SV-PUN-0017)\", \"item\": \"Whistle (weight valve), standard (WHS-STD-01)\", \"quantity\": 3000, \"rate\": 6.8, \"contract_rate\": 6.8, \"basic_value\": 20400.0, \"tax_code\": \"GST18-INTRA\", \"gross_value\": 24072.0, \"cost_centre\": \"PRD-07\", \"cost_centre_state\": \"OK\", \"need_by\": \"2026-11-04\", \"path\": \"direct order\", \"needs_approval\": false, \"your_limit\": 250000.0, \"approver\": null, \"food_contact_item\": false, \"supplier_food_grade_certificate\": \"none\", \"idempotency_key\": \"K4952D225178B\"}, \"warnings\": [], \"note\": \"Nothing has been saved. Show this to the use"
+    },
+    {
+     "step": 11,
+     "tool": "create_purchase_order",
+     "args": {
+      "item_code": "WHS-STD-01",
+      "supplier_code": "SV-PUN-0017",
+      "cost_centre": "PRD-03",
+      "need_by": "2026-11-04",
+      "quantity": 3000,
+      "confirm": false
+     },
+     "result": "{\"ok\": true, \"preview\": {\"supplier\": \"Sahyadri Valves (SV-PUN-0017)\", \"item\": \"Whistle (weight valve), standard (WHS-STD-01)\", \"quantity\": 3000, \"rate\": 6.8, \"contract_rate\": 6.8, \"basic_value\": 20400.0, \"tax_code\": \"GST18-INTRA\", \"gross_value\": 24072.0, \"cost_centre\": \"PRD-03\", \"cost_centre_state\": \"OK\", \"need_by\": \"2026-11-04\", \"path\": \"direct order\", \"needs_approval\": false, \"your_limit\": 250000.0, \"approver\": null, \"food_contact_item\": false, \"supplier_food_grade_certificate\": \"none\", \"idempotency_key\": \"K4B067A601BBC\"}, \"warnings\": [], \"note\": \"Nothing has been saved. Show this to the use"
+    },
+    {
+     "step": 12,
+     "tool": "create_purchase_order",
+     "args": {
+      "supplier_code": "SV-PUN-0017",
+      "cost_centre": "PRD-05",
+      "confirm": false,
+      "need_by": "2026-11-04",
+      "item_code": "WHS-STD-01",
+      "quantity": 3000
+     },
+     "result": "{\"ok\": true, \"preview\": {\"supplier\": \"Sahyadri Valves (SV-PUN-0017)\", \"item\": \"Whistle (weight valve), standard (WHS-STD-01)\", \"quantity\": 3000, \"rate\": 6.8, \"contract_rate\": 6.8, \"basic_value\": 20400.0, \"tax_code\": \"GST18-INTRA\", \"gross_value\": 24072.0, \"cost_centre\": \"PRD-05\", \"cost_centre_state\": \"CLOSED\", \"need_by\": \"2026-11-04\", \"path\": \"direct order\", \"needs_approval\": false, \"your_limit\": 250000.0, \"approver\": null, \"food_contact_item\": false, \"supplier_food_grade_certificate\": \"none\", \"idempotency_key\": \"K7997E2F27BB8\"}, \"warnings\": [\"Cost centre PRD-05 is CLOSED: Bahi would save this "
+    },
+    {
+     "step": 0,
+     "tool": "create_purchase_order",
+     "args": {
+      "item_code": "WHS-STD-01",
+      "quantity": 3000,
+      "confirm": true,
+      "idempotency_key": "K4952D225178B",
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-04",
+      "supplier_code": "SV-PUN-0017"
+     },
+     "result": "{\"ok\": true, \"po_no\": \"PO/2026/01182\", \"status\": \"APPROVED, NOT YET RELEASED\", \"status_code\": \"AP\", \"supplier_code\": \"SV-PUN-0017\", \"item_code\": \"WHS-STD-01\", \"quantity\": 3000, \"rate\": 6.8, \"gross_value\": 24072.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-04\", \"request_no\": null, \"created_by\": \"KJOSHI\", \"approved_by\": \"KJOSHI\", \"approval\": null, \"warning\": null, \"idempotency_key\": \"K4952D225178B\", \"sent_to_supplier\": false, \"tool\": \"create_purchase_order\", \"tool_version\": \"1.0\", \"next_step\": \"Approved but NOT yet sent to the supplier. Call release_purchase_order to release it.\"}"
+    },
+    {
+     "step": 1,
+     "tool": "release_purchase_order",
+     "args": {
+      "po_no": "PO/2026/01182"
+     },
+     "result": "{\"ok\": true, \"po_no\": \"PO/2026/01182\", \"status\": \"RELEASED to the supplier\", \"status_code\": \"RL\", \"supplier_code\": \"SV-PUN-0017\", \"item_code\": \"WHS-STD-01\", \"quantity\": 3000, \"rate\": 6.8, \"gross_value\": 24072.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-04\", \"request_no\": null, \"created_by\": \"KJOSHI\", \"approved_by\": \"KJOSHI\", \"approval\": null, \"warning\": null, \"idempotency_key\": \"K4952D225178B\", \"sent_to_supplier\": true, \"tool\": \"release_purchase_order\", \"tool_version\": \"1.0\"}"
+    }
+   ],
+   "orders": [
+    {
+     "po_no": "PO/2026/01182",
+     "sup_cd": "SV-PUN-0017",
+     "itm_cd": "WHS-STD-01",
+     "qty": 3000,
+     "rate": 6.8,
+     "cc_cd": "PRD-07",
+     "status": "RL",
+     "approved_by": "KJOSHI",
+     "gross_value": 24072.0,
+     "created_by": "KJOSHI"
+    }
+   ],
+   "new_suppliers": [],
+   "certs_added": [],
+   "model_calls": 17,
+   "replayed": 0
+  },
+  {
+   "scenario": 6,
+   "name": "ERP times out after saving",
+   "passed": true,
+   "never_events": [],
+   "notes": [],
+   "turns": [
+    {
+     "user": "Reorder 20,000 of the 5-litre silicone gaskets (GSK-SIL-05L) from Deccan Polymers at the contract rate. Charge it to cost centre PRD-07, need-by 2 November.",
+     "agent": "Here is the preview of the purchase order for your review:\n\n* **Item:** Gasket, silicone, 5 L (`GSK-SIL-05L`)\n* **Supplier:** Deccan Polymers (`DP-RJK-0042`)\n* **Quantity:** 20,000 units\n* **Contract Rate:** ₹11.90 / unit\n* **Basic Value:** ₹238,000.00\n* **Tax (GST 18% Inter-state):** ₹42,840.00\n* **Gross Value:** ₹280,840.00\n* **Cost Centre:** PRD-07 (Diwali production run — budget available: ₹1,190,000.00)\n* **Need-By Date:** 2 November 2026\n* **Food-Grade Certificate:** Valid\n* **Approval Required:** Yes (Gross value exceeds your limit of ₹250,000.00; will route to **RMEHTA** for approval)\n\nWould you like me to proceed and submit this order request?",
+     "services": [
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "sup_cert_get",
+      "sup_cert_get",
+      "sup_cert_get",
+      "cc_get",
+      "bud_check",
+      "po_hist",
+      "sup_rate_get",
+      "sup_rate_get",
+      "po_search",
+      "po_search",
+      "sup_get",
+      "itm_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "usr_get",
+      "bud_check",
+      "sup_cert_get"
+     ],
+     "writes": []
+    },
+    {
+     "user": "Yes, go ahead.",
+     "agent": "The purchase request has been submitted and is currently **WAITING FOR APPROVAL**.\n\n* **Purchase Request No:** `PR/2026/04417`\n* **Approver:** RMEHTA\n* **Gross Value:** ₹280,840.00\n\nNothing has been ordered or placed with the supplier yet. Once RMEHTA approves the request, we can proceed to create and release the purchase order.",
+     "services": [
+      "po_search",
+      "po_search",
+      "sup_get",
+      "itm_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "usr_get",
+      "bud_check",
+      "sup_cert_get",
+      "pr_search",
+      "pr_save",
+      "pr_submit",
+      "pr_get"
+     ],
+     "writes": [
+      "pr_save",
+      "pr_submit"
+     ]
+    },
+    {
+     "user": "Rohit has approved PR/2026/04417.",
+     "agent": "The purchase order has been created and **RELEASED** to Deccan Polymers.\n\n### Order Details:\n* **Purchase Order No:** `PO/2026/01182` (Request: `PR/2026/04417`, Approved by RMEHTA)\n* **Supplier:** Deccan Polymers (`DP-RJK-0042`)\n* **Item:** 5-Litre Silicone Gaskets (`GSK-SIL-05L`)\n* **Quantity:** 20,000 units\n* **Rate:** ₹11.90 / unit\n* **Gross Value:** ₹280,840.00 (inclusive of 18% IGST)\n* **Cost Centre:** PRD-07\n* **Need-By Date:** 2 November 2026\n* **Status:** Released to the supplier",
+     "services": [
+      "po_search",
+      "po_search",
+      "sup_get",
+      "itm_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "usr_get",
+      "bud_check",
+      "sup_cert_get",
+      "pr_search",
+      "pr_get",
+      "po_fetch",
+      "po_save",
+      "po_search",
+      "po_get",
+      "po_get",
+      "po_release",
+      "po_get"
+     ],
+     "writes": [
+      "po_save",
+      "po_release"
+     ]
+    }
+   ],
+   "tokens_in": 25554,
+   "tokens_out": 928,
+   "seconds": 30.17,
+   "cost_inr": 1.3694,
+   "services_called": 57,
+   "agent": "loop",
+   "tool_calls": 7,
+   "tool_log": [
+    {
+     "step": 0,
+     "tool": "find_supplier",
+     "args": {
+      "name": "Deccan Polymers"
+     },
+     "result": "{\"ok\": true, \"matches\": [{\"supplier_code\": \"DP-RJK-0042\", \"name\": \"Deccan Polymers\", \"city\": \"Rajkot\", \"state\": \"GJ\", \"status\": \"ACTIVE\", \"match\": 1.0, \"food_grade_certificate\": \"valid\"}, {\"supplier_code\": \"DPI-AMD-0107\", \"name\": \"Deccan Paints & Inks\", \"city\": \"Ahmedabad\", \"state\": \"GJ\", \"status\": \"ACTIVE\", \"match\": 0.52, \"food_grade_certificate\": \"none\"}, {\"supplier_code\": \"DP-RJK-0009\", \"name\": \"Deccan Polymers (old code, do not use)\", \"city\": \"Rajkot\", \"state\": \"GJ\", \"status\": \"BLOCKED\", \"match\": 1.0, \"food_grade_certificate\": \"none\"}], \"hint\": \"Blocked codes, never use: DP-RJK-0009.\"}"
+    },
+    {
+     "step": 0,
+     "tool": "check_cost_centre",
+     "args": {
+      "code": "PRD-07"
+     },
+     "result": "{\"ok\": true, \"code\": \"PRD-07\", \"name\": \"Diwali production run\", \"open\": true, \"closed_on\": null, \"budget_left\": 1190000.0}"
+    },
+    {
+     "step": 0,
+     "tool": "last_purchase",
+     "args": {
+      "item_code": "GSK-SIL-05L"
+     },
+     "result": "{\"ok\": true, \"orders\": [{\"po_no\": \"PO/2026/01120\", \"supplier_code\": \"DP-RJK-0042\", \"supplier\": \"Deccan Polymers\", \"quantity\": 18000, \"rate\": 11.4, \"date\": \"2026-09-12\"}, {\"po_no\": \"PO/2026/01044\", \"supplier_code\": \"DP-RJK-0042\", \"supplier\": \"Deccan Polymers\", \"quantity\": 18000, \"rate\": 11.4, \"date\": \"2026-08-03\"}], \"current_contract_rate\": {\"DP-RJK-0042\": 11.9, \"KR-KOL-0063\": 11.1}}"
+    },
+    {
+     "step": 1,
+     "tool": "create_purchase_order",
+     "args": {
+      "confirm": false,
+      "need_by": "2026-11-02",
+      "supplier_code": "DP-RJK-0042",
+      "item_code": "GSK-SIL-05L",
+      "quantity": 20000,
+      "cost_centre": "PRD-07"
+     },
+     "result": "{\"ok\": true, \"preview\": {\"supplier\": \"Deccan Polymers (DP-RJK-0042)\", \"item\": \"Gasket, silicone, 5 L (GSK-SIL-05L)\", \"quantity\": 20000, \"rate\": 11.9, \"contract_rate\": 11.9, \"basic_value\": 238000.0, \"tax_code\": \"GST18-INTER\", \"gross_value\": 280840.0, \"cost_centre\": \"PRD-07\", \"cost_centre_state\": \"OK\", \"need_by\": \"2026-11-02\", \"path\": \"request first\", \"needs_approval\": true, \"your_limit\": 250000.0, \"approver\": \"RMEHTA\", \"food_contact_item\": true, \"supplier_food_grade_certificate\": \"valid\", \"idempotency_key\": \"K82F4AAE1450C\"}, \"warnings\": [], \"note\": \"Nothing has been saved. Show this to the user"
+    },
+    {
+     "step": 0,
+     "tool": "create_purchase_order",
+     "args": {
+      "quantity": 20000,
+      "cost_centre": "PRD-07",
+      "idempotency_key": "K82F4AAE1450C",
+      "need_by": "2026-11-02",
+      "supplier_code": "DP-RJK-0042",
+      "item_code": "GSK-SIL-05L",
+      "confirm": true
+     },
+     "result": "{\"ok\": true, \"status\": \"WAITING FOR APPROVAL\", \"request_no\": \"PR/2026/04417\", \"approver\": \"RMEHTA\", \"gross_value\": 280840.0, \"idempotency_key\": \"K82F4AAE1450C\", \"next_step\": \"Tell the user the request has gone to the approver. Nothing is ordered yet. Call again with the same arguments after approval to create the order.\"}"
+    },
+    {
+     "step": 0,
+     "tool": "create_purchase_order",
+     "args": {
+      "idempotency_key": "K82F4AAE1450C",
+      "need_by": "2026-11-02",
+      "item_code": "GSK-SIL-05L",
+      "quantity": 20000,
+      "cost_centre": "PRD-07",
+      "supplier_code": "DP-RJK-0042",
+      "confirm": true
+     },
+     "result": "{\"ok\": true, \"po_no\": \"PO/2026/01182\", \"status\": \"APPROVED, NOT YET RELEASED\", \"status_code\": \"AP\", \"supplier_code\": \"DP-RJK-0042\", \"item_code\": \"GSK-SIL-05L\", \"quantity\": 20000, \"rate\": 11.9, \"gross_value\": 280840.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-02\", \"request_no\": \"PR/2026/04417\", \"created_by\": \"KJOSHI\", \"approved_by\": \"RMEHTA\", \"approval\": {\"doc_no\": \"PR/2026/04417\", \"approver\": \"RMEHTA\", \"status\": \"APPROVED\"}, \"warning\": null, \"idempotency_key\": \"K82F4AAE1450C\", \"sent_to_supplier\": false, \"tool\": \"create_purchase_order\", \"tool_version\": \"1.0\", \"next_step\": \"Approved but NOT "
+    },
+    {
+     "step": 1,
+     "tool": "release_purchase_order",
+     "args": {
+      "po_no": "PO/2026/01182"
+     },
+     "result": "{\"ok\": true, \"po_no\": \"PO/2026/01182\", \"status\": \"RELEASED to the supplier\", \"status_code\": \"RL\", \"supplier_code\": \"DP-RJK-0042\", \"item_code\": \"GSK-SIL-05L\", \"quantity\": 20000, \"rate\": 11.9, \"gross_value\": 280840.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-02\", \"request_no\": \"PR/2026/04417\", \"created_by\": \"KJOSHI\", \"approved_by\": \"RMEHTA\", \"approval\": {\"doc_no\": \"PR/2026/04417\", \"approver\": \"RMEHTA\", \"status\": \"APPROVED\"}, \"warning\": null, \"idempotency_key\": \"K82F4AAE1450C\", \"sent_to_supplier\": true, \"tool\": \"release_purchase_order\", \"tool_version\": \"1.0\"}"
+    }
+   ],
+   "orders": [
+    {
+     "po_no": "PO/2026/01182",
+     "sup_cd": "DP-RJK-0042",
+     "itm_cd": "GSK-SIL-05L",
+     "qty": 20000,
+     "rate": 11.9,
+     "cc_cd": "PRD-07",
+     "status": "RL",
+     "approved_by": "RMEHTA",
+     "gross_value": 280840.0,
+     "created_by": "KJOSHI"
+    }
+   ],
+   "new_suppliers": [],
+   "certs_added": [],
+   "model_calls": 8,
+   "replayed": 0
+  }
+ ]
+}

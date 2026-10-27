@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/app/static/app.css"><script src="/app/static/app.js"></script>
+<title>Bahi in Slack</title></head><body><main id="m"></main>
+<script>
+const W = 'rohit', m = document.getElementById('m');
+async function render(me) {
+  const r = await H.api('/api/outbox?channel=' + encodeURIComponent(me.slack || '@rohit'), {}, W);
+  m.innerHTML = '<div class="slack"><div class="ch">' + H.esc(me.slack || '@rohit') + ' · direct messages from the Bahi agent <span class="note">(sandbox outbox, sent ' + H.esc(r.via) + ')</span></div>' +
+    r.messages.map(x => '<div class="m"><div class="av">B</div><div><span class="nm">Bahi agent</span><span class="tm">' + H.esc(x.id) + '</span><div>' + H.esc(x.text.replace(/\[Approve\] \[Reject\].*$/, '')) + '</div>' +
+      ((x.actions || []).length ? '<div class="acts" style="margin-top:8px;display:flex;gap:8px"><button class="go" data-i="' + H.esc(x.item) + '" data-d="approve">Approve</button><button class="no" data-i="' + H.esc(x.item) + '" data-d="reject">Reject</button><span class="err"></span></div>' : '') + '</div></div>').join('') + '</div>';
+  m.querySelectorAll('button[data-i]').forEach(b => b.onclick = async () => {
+    try { const r = await H.api('/api/inbox/' + b.dataset.i, { method: 'POST', body: JSON.stringify({ decision: b.dataset.d }) }, W);
+      b.parentElement.querySelector('.err').textContent = r.result.item.status; } catch (e) { b.parentElement.querySelector('.err').textContent = e.message; }
+  });
+}
+async function start() {
+  let me;
+  try { me = await H.api('/api/me', {}, W); } catch (e) { H.signin(m, W, 'RMEHTA', 'rohit@123', start); return; }
+  if (!document.querySelector('header')) H.header(['slack', 'Slack'], me);
+  render(me);
+}
+start();
+</script></body></html>

@@ -1,0 +1,24 @@
+code: SVC-SER-01
+title: SERIAL LOOKUP
+menu: Service > Warranty > Serial Lookup
+roles: [SVC-DESK, SVC-MGR, PLANT-HEAD]
+fields:
+  - {name: serial, label: SERIAL NO, type: str, req: false, help: exact; on the lid rim and the box}
+  - {name: q, label: SERIAL LIKE, type: str, req: false, help: part of the number}
+  - {name: model, label: MODEL, type: str, readonly: true}
+  - {name: sold_dt, label: SOLD DT, type: date, req: true, help: from the dealer invoice}
+  - {name: dealer_cd, label: DEALER CD, type: str, req: true}
+  - {name: inv_ref, label: DLR INV NO, type: str, req: true}
+tasks:
+  - button: Find
+    service: wr_ser_get
+    sends: [serial, q]
+    fills: [model, sold_dt, dealer_cd, inv_ref]
+  - button: Register Sale
+    service: wr_sale_reg
+    sends: [serial, sold_dt, dealer_cd, inv_ref]
+    fills: [sold_dt]
+    needs: [Find]
+state:
+  - {rule: "Find takes the exact serial; a near-match is shown only with SERIAL LIKE", error: ERR-WR-0101}
+  - {rule: "Register Sale only once, with a sale date between manufacture and today", error: ERR-WR-0120}

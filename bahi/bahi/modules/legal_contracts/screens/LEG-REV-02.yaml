@@ -1,0 +1,31 @@
+code: LEG-REV-02
+title: CLAUSE REVIEW AND SIGNATURE
+menu: Legal > Contracts > Review / Sign
+roles: [LEGAL, PUR-MGR, PLANT-HEAD]
+fields:
+  - {name: status, label: STATUS, type: str, req: false, help: "LR for Legal, PS for signatories"}
+  - {name: ct_no, label: CT NO, type: str, req: true}
+  - {name: devs, label: DEVIATIONS, type: grid, readonly: true}
+  - {name: decision, label: DECISION, type: str, req: true, help: "A/R"}
+  - {name: comment, label: COMMENT, type: str, req: false}
+tasks:
+  - button: Inbox
+    service: ct_list
+    sends: [status]
+    fills: [ct_no]
+  - button: Open
+    service: ct_list
+    sends: [ct_no]
+    fills: [devs]
+  - button: Clear (Legal)
+    service: ct_review
+    sends: [ct_no, decision, comment]
+    fills: [status]
+    needs: [Open]
+  - button: Sign
+    service: ct_sign
+    sends: [ct_no, decision, comment]
+    fills: [status]
+    needs: [Open]
+state:
+  - {rule: "Only the named reviewer or signatory may decide; nobody decides their own request", error: ERR-CT-0506}

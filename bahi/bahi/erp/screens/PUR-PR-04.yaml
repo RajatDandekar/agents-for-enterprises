@@ -1,0 +1,25 @@
+code: PUR-PR-04
+title: PURCHASE REQUEST APPROVAL
+menu: Purchase > Request approval
+roles: [PUR-SR, PUR-MGR, PLANT-HEAD, SYS-ADMIN]
+help: >-
+  Inbox lists documents waiting for you. Fetch a request, then choose A (approve) or R (reject)
+  and Confirm. You cannot approve your own request, or one above your limit.
+fields:
+  - {name: rows, label: INBOX, type: grid, readonly: true, columns: [doc_type, doc_no, requested_by, requested_on], pick: {doc_no: pr_no}}
+  - {name: pr_no, label: PR NO, type: str, req: true, lookup: po_pending_appr}
+  - {name: raised_by, label: RAISED BY, type: str, readonly: true}
+  - {name: cc_cd, label: CC CD, type: str, readonly: true}
+  - {name: need_dt, label: NEED DT, type: date, readonly: true}
+  - {name: est_value, label: EST VALUE (GROSS), type: float, readonly: true}
+  - {name: status, label: STATUS, type: str, readonly: true}
+  - {name: decision, label: DECISION, type: str, req: true, help: A/R}
+  - {name: comment, label: COMMENT, type: str, req: false}
+tasks:
+  - {button: Inbox, service: po_pending_appr, sends: [], fills: [rows]}
+  - {button: Fetch, service: pr_get, sends: [pr_no], fills: [raised_by, cc_cd, need_dt, est_value, status]}
+  - {button: Confirm, service: pr_approve, sends: [pr_no, decision, comment], fills: [status], needs: [Fetch]}
+  - {button: Close, service: null}
+state:
+  - {rule: "Nobody approves their own request", error: ERR-APR-0003}
+  - {rule: "Value above the approver's limit", error: ERR-APR-0004}

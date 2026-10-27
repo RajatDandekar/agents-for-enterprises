@@ -1,0 +1,26 @@
+code: FIN-AP-05
+title: PAYMENT PROPOSAL AND RUN
+menu: Finance > Payables > Payment Run
+roles: [AP-EXEC, FIN-CTRL]
+fields:
+  - {name: ap_no, label: AP NO, type: str, req: true}
+  - {name: pay_dt, label: PAY DT, type: date, req: true, help: a run Friday}
+  - {name: early_rsn, label: EARLY PAY REASON, type: str, req: false}
+  - {name: doc_no, label: DOC NO, type: str, req: false}
+  - {name: decision, label: DECISION, type: str, req: false, help: "A/R"}
+  - {name: run_dt, label: RUN DT, type: date, req: false}
+tasks:
+  - button: Propose
+    service: ap_pay_sched
+    sends: [ap_no, pay_dt, early_rsn]
+    fills: [pay_no, status]
+  - button: Approve
+    service: ap_approve
+    sends: [doc_no, decision]
+    fills: [status]
+  - button: Run
+    service: ap_pay_run
+    sends: [run_dt]
+    fills: []
+state:
+  - {rule: "Proposing before the due date with no reason parks the payment (PK); the reply only says SCHEDULED", error: W-AP-311}

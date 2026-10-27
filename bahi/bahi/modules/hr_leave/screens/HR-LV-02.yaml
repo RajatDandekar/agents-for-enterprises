@@ -1,0 +1,31 @@
+code: HR-LV-02
+title: LEAVE APPLICATION
+menu: HR > Leave > Apply
+roles: [PUR-EXEC, PUR-SR, PUR-MGR, PLANT-HEAD, STORES, HR-EXEC]
+fields:
+  - {name: emp_cd, label: EMP CD, type: str, req: true}
+  - {name: lv_cd, label: LV TYPE, type: str, req: true, help: "CL/EL/SL/CO/LWP"}
+  - {name: from_dt, label: FROM DT, type: date, req: true}
+  - {name: to_dt, label: TO DT, type: date, req: true}
+  - {name: half, label: HALF DAY, type: str, req: false, help: "1H/2H, single date only"}
+  - {name: reason, label: REASON, type: str, req: true}
+  - {name: ref_dt, label: WORKED DT, type: date, req: false, help: CO only}
+  - {name: fwd_to, label: FWD TO, type: str, req: false}
+  - {name: fetch_tok, label: (hidden), type: str, req: false}
+tasks:
+  - button: Fetch
+    service: lv_fetch
+    sends: [emp_cd, lv_cd]
+    fills: [fetch_tok]
+  - button: Save
+    service: lv_save
+    sends: [emp_cd, lv_cd, from_dt, to_dt, half, reason, ref_dt, fwd_to, fetch_tok]
+    fills: [lv_no, status]
+    needs: [Fetch]
+  - button: Cancel Leave
+    service: lv_cancel
+    sends: [lv_no, reason]
+    fills: [status]
+state:
+  - {rule: "Save needs Fetch for the same EMP CD and LV TYPE", error: ERR-SCR-0221}
+  - {rule: "A balance shortfall is saved as unpaid and held for HR (status HD); the reply only says SAVED", error: W-LV-118}

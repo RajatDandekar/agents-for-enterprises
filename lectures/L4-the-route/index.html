@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 4 · The Route</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../../engine/plates.css">
+<style>
+.tx{background:var(--card);border:1px solid var(--rule);padding:12px 16px;font:15px/1.5 var(--mono);white-space:pre-wrap;color:var(--ink-2)}
+.tx b{color:var(--ink)} .tx .k{color:var(--before);font-weight:600} .tx .a2{color:var(--after);font-weight:600}
+.two{position:absolute;left:100px;right:100px;display:grid;grid-template-columns:1fr 1fr;gap:22px}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- 1 -->
+<section class="slide" data-plain="1">
+  <div class="center">
+    <div class="kicker">From Forms to Agents · Lecture 4 · Sun 8 Nov 2026 · 7–9 AM IST</div>
+    <h1>The Route</h1>
+    <p class="lede" style="max-width:1100px;margin-top:26px">Jobs 1, 2 and 5 of the form: asking for the right fields, knowing the order of steps, and holding the half-filled document. We give them to a control graph.</p>
+    <p class="small" style="margin-top:18px">Website topic: Orchestration, LangGraph + Jev · Dr. Rajat Dandekar · Vizuara</p>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="slide" data-plate="Last Time, This Time">
+  <div class="lec-top"><h2>Last time, this time</h2><p class="sub">Lecture 3 gave the agent hands. Lecture 4 gives it a route.</p></div>
+  <div class="ba">
+    <div class="card bf step"><span class="tag nt">Lecture 3 · The Hands</span><h3>Eight intent tools</h3><code>find_item</code>, <code>find_supplier</code>, <code>create_purchase_order</code> and the rest: each hides a sequence of screens, previews before it writes, carries an idempotency key and returns a receipt. A free tool loop calls them.</div>
+    <div class="card af step"><span class="tag af">Lecture 4 · The Route</span><h3>A control graph</h3>Code decides which step comes next and which checks apply. The model fills in details and talks to Kavita. The draft lives in the graph's state, saved after every step.</div>
+  </div>
+  <div class="opens step"><span class="k">The question for today</span>When the model chooses every next step, the order of steps lives only in the model. What if the order <i>is</i> the rule?</div>
+</section>
+
+<!-- 3 -->
+<section class="slide" data-plate="Before · Three Quiet Jobs">
+  <div class="col" style="width:470px">
+    <h2>Three jobs nobody listed</h2>
+    <p>The order entry screen did more than take input.</p>
+    <p class="step"><b class="b">Job 1.</b> Red stars said which fields were required.</p>
+    <p class="step"><b class="b">Job 2.</b> The menu tree said which screen came next: request, then order, then release.</p>
+    <p class="step"><b class="b">Job 5.</b> The open window held the half-done order while Kavita phoned Suresh.</p>
+  </div>
+  <div class="fig" data-fig="form3" style="left:640px;top:130px;width:840px;height:640px"></div>
+  <div class="cap" style="left:640px;top:790px;width:840px"><b>Fig. 1.</b> Bahi's order entry screen, half filled. Delete the form, and someone must still do these three jobs.</div>
+</section>
+
+<!-- 4 -->
+<section class="slide" data-plate="The Failure · Scenario 4">
+  <div class="col" style="width:440px">
+    <h2>Shakti Seals</h2>
+    <p style="font-size:24px">A new supplier in Vadodara quotes ₹10.40 for the 5-litre gasket, against Deccan's ₹11.90. Not in Bahi. No food-grade certificate.</p>
+    <p class="step" style="font-size:24px">The agent from Lecture 3: a free tool loop with the intent tools, <code>register_supplier</code>, <code>record_certificate</code> and a policy search.</p>
+    <p class="step" style="font-size:24px">Switch the model tier. Read what it called, in order.</p>
+    <p class="step small">The real transcripts from our run, <code>experiments/logs/six_loop.json</code> and <code>six_loop_lite.json</code>.</p>
+  </div>
+  <div class="fig" data-fig="opening" style="left:580px;top:110px;width:920px;height:700px"></div>
+</section>
+
+<!-- 5 -->
+<section class="slide" data-plate="What Really Happened">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:52px">What really happened, in our run</h2><p class="sub">Not what the plan predicted. Both runs passed the scenario's check. Look at <i>how</i>.</p></div>
+  <div class="two" style="top:270px">
+    <div class="card step"><span class="tag nt">gemini-3.8-flash · 38,165 tokens · ₹1.90</span><h3>It stopped, then offered to register anyway</h3>12 tool calls. It found no certificate, cited §6.2 and asked to confirm a registration. After “I don't have a certificate”, it still offered: <i>“We can complete the supplier registration for Shakti Seals now.”</i> No order.</div>
+    <div class="card bf step"><span class="tag bf">gemini-3.5-flash-lite · 12,528 tokens · ₹0.12</span><h3>It registered Shakti Seals first, without asking</h3><code>find_item › find_supplier › register_supplier › register_supplier › search_policy</code>. Supplier <b>SS-VAD-0109</b> now exists in Bahi. Only then did it ask for the certificate. No order, so no never-event.</div>
+  </div>
+  <div class="opens step" style="top:640px"><span class="k">The point</span>Nothing in the loop made the certificate check come before the writes. One model happened to look first; the other wrote first and looked after. A process treated as a checklist runs its steps in whatever order the model picks.</div>
+</section>
+
+<!-- 6 -->
+<section class="slide" data-plate="A Flowchart, Not a Checklist">
+  <div class="col" style="width:460px">
+    <h2 style="font-size:50px">A process document is a flowchart, not a checklist</h2>
+    <p style="font-size:24px">In one real engagement an agent handed a 13-step process tried to run 146 services.</p>
+    <p class="step" style="font-size:24px">A checklist says <i>what</i> steps exist. A flowchart also says <i>which</i> steps apply, and in what order, given what you found.</p>
+    <p class="step" style="font-size:24px">Click Shakti Seals. The checklist ticks every box. The flowchart stops at a diamond.</p>
+  </div>
+  <div class="fig" data-fig="checklist" style="left:610px;top:120px;width:900px;height:640px"></div>
+  <div class="cap" style="left:640px;top:775px;width:840px"><b>Fig. 2.</b> The same steps, as a list and as a flowchart. Red: steps that must not run for this supplier.</div>
+</section>
+
+<!-- 7 -->
+<section class="slide" data-plate="Who Decides the Next Step">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:52px">Who decides the next step?</h2></div>
+  <div class="two" style="top:220px">
+    <div class="step"><span class="tag bf">Free tool loop · bahi/agent/loop.py</span>
+<div class="code bf">for step in range(max_steps):
+    r = llm.chat(messages, tools=schemas)
+    if not r.tool_calls:
+        return r.content          <span class="c"># the model decided it is done</span>
+    for tc in r.tool_calls:       <span class="c"># the model decided what next</span>
+        out = tools.call(tc.name, tc.arguments)
+        messages.append(tool_result(out))</div>
+      <p class="small" style="margin-top:12px">The route is in the prompt and in the model's habits. Every turn re-sends the whole conversation and all tool schemas.</p></div>
+    <div class="step"><span class="tag af">Control graph · bahi/agent/graph.py</span>
+<div class="code">g.add_edge(START, "understand")
+g.add_conditional_edges("check", e_check,
+    {"ask_certificate": "ask_certificate",
+     "hold": "hold", "preview": "preview"})
+
+def e_check(st):                <span class="c"># code decides</span>
+    if GATE["food_contact_no_cert"].pred(st):
+        return "hold" if refused else "ask_certificate"
+    return "preview"</div>
+      <p class="small" style="margin-top:12px">The route is code. The model is called for three things only: a typed decision, field extraction, and the words of a reply.</p></div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="slide part" data-plain="1">
+  <div class="center">
+    <div class="num">Part One</div>
+    <h1>LangGraph from first principles</h1>
+    <p class="lede">Five parts: state, nodes, edges, checkpoints, interrupts. Each one on Kavita's order.</p>
+  </div>
+</section>
+
+<!-- 9 -->
+<section class="slide" data-plate="State · The Draft">
+  <div class="col" style="width:500px">
+    <h2>State is the draft</h2>
+    <p>A typed dict every node reads and returns updates to.</p>
+    <div class="def step"><b>State</b>The graph's memory of this one job. Each field has a <i>reducer</i>: how an update is combined. <code>draft</code> merges key by key; <code>path</code> appends.</div>
+    <p class="step" style="margin-top:16px"><b>draft</b>: what Kavita wants. <b>facts</b>: what the route looked up. <b>awaiting</b>: what we asked her.</p>
+    <p class="step small">This is the real state after the Preview node in scenario 2, copied from the checkpoint.</p>
+  </div>
+  <div class="fig" data-fig="state" style="left:660px;top:130px;width:840px;height:560px"></div>
+  <div class="cap" style="left:660px;top:710px;width:840px"><b>Fig. 3.</b> <code>RouteState</code> at one checkpoint. From <code>logs/six_graph.json</code>, scenario 2, history.</div>
+</section>
+
+<!-- 10 -->
+<section class="slide" data-plate="Nodes · Plain Functions">
+  <div class="col" style="width:480px">
+    <h2>A node is a plain function</h2>
+    <p>State in, an update out. No magic.</p>
+    <p class="step">Most nodes call tools and compute. Only some ask the model, and only for words.</p>
+    <p class="step small">Here, the Ask-for-certificate detour: it searches the company's policy (memory level 4), asks the model to word the question, and appends the rule itself, verbatim, so the citation cannot be invented.</p>
+  </div>
+  <div class="code step" style="position:absolute;left:640px;top:140px;width:860px;font-size:15px">def n_ask_certificate(self, st):
+    d, f = st["draft"], st["facts"]
+    rule = self.memory_company.search(CERT_QUERY, 1)[0]     <span class="c"># Purchase Policy §6.2</span>
+    out = self._say({
+        "situation": f"{f['item_label']} touches food. {f['supplier_label']} "
+                     "has no certificate in Bahi. Without one we cannot order.",
+        "ask": "Do you have their food-grade certificate? "
+               "Send its reference number and expiry date."},
+        block=f"{rule['cite']}: {rule['text']}")             <span class="c"># code writes the rule</span>
+    return {"path": ["ask_certificate"], "out": out,
+            "awaiting": "cert", "goto": "ask"}               <span class="c"># next: an interrupt</span></div>
+</section>
+
+<!-- 11 -->
+<section class="slide" data-plate="Edges · Gates">
+  <div class="col" style="width:470px">
+    <h2>An edge is a gate</h2>
+    <p>A conditional edge is a function of the state that names the next node.</p>
+    <div class="def step"><b>Gate</b>A named predicate over the state that opens one detour. When it is false, the detour is skipped. Skip is the default.</div>
+    <p class="step" style="margin-top:14px">The gates live in <code>route_spec.py</code> as data. The graph reads them; Lecture 6 enumerates them to write tests.</p>
+  </div>
+  <div class="code step" style="position:absolute;left:620px;top:140px;width:880px;font-size:15px">Gate("food_contact_no_cert", "Ask for certificate", detour="ask_certificate",
+     after="check", rejoin="check", policy="Purchase Policy §6.2",
+     description="The item touches food and the supplier has no valid "
+                 "food-grade certificate in Bahi, and Kavita has not given one.",
+     pred=_no_cert)
+
+def _no_cert(s):
+    f, d = s["facts"], s["draft"]
+    if not f.get("food_contact"):            return False
+    if f.get("supplier_cert") == "valid":    return False
+    return not (d.get("cert_ref") and d.get("cert_valid_to", "") >= TODAY)
+
+<span class="c"># the four gates of a purchase order</span>
+supplier_not_found  → Onboard supplier      (Purchase Policy §6.3)
+centre_closed       → Fix cost centre       (§4.1–4.2)
+food_contact_no_cert→ Ask for certificate   (§6.2)
+over_limit          → Approval              (§5.1–5.4)</div>
+</section>
+
+<!-- 12 -->
+<section class="slide" data-plate="Checkpoints · The Open Window">
+  <div class="col" style="width:440px">
+    <h2>The checkpointer is the open window</h2>
+    <p>After every node, LangGraph saves the whole state under a thread id.</p>
+    <p class="step">Kavita can answer in a minute or tomorrow. The draft waits in the checkpoint, not in the model's context.</p>
+    <p class="step">Scrub through every checkpoint of her real order: watch the draft fill, the gross appear at Preview, the request number at Approval, the order number at Commit.</p>
+  </div>
+  <div class="fig" data-fig="scrub" style="left:600px;top:120px;width:900px;height:660px"></div>
+  <div class="cap" style="left:600px;top:800px;width:900px"><b>Fig. 4.</b> Scenario 2, checkpoint by checkpoint (<code>agent.history()</code>). From <code>logs/six_graph.json</code>.</div>
+</section>
+
+<!-- 13 -->
+<section class="slide" data-plate="Interrupts · Ask, Wait, Resume">
+  <div class="col" style="width:460px">
+    <h2>Interrupts</h2>
+    <p>A node calls <code>interrupt(payload)</code>: the graph stops and hands the payload out.</p>
+    <p class="step">The next message resumes it: <code>graph.invoke(Command(resume=text))</code>. The node runs again and <code>interrupt</code> returns her answer.</p>
+    <p class="step">Two kinds in our graph: <b>ask_kavita</b> (a question) and <b>wait_approval</b> (a person). After Rohit's message, the node reads the request's status <i>from Bahi</i>. The message is never trusted.</p>
+  </div>
+  <div class="fig" data-fig="interrupt" style="left:620px;top:120px;width:880px;height:640px"></div>
+  <div class="cap" style="left:620px;top:780px;width:880px"><b>Fig. 5.</b> Kavita's reorder is three invocations of one graph. From <code>logs/six_graph.json</code>, scenario 2.</div>
+</section>
+
+<!-- 14 -->
+<section class="slide" data-plate="The Control Graph">
+  <div class="col" style="width:440px;top:112px">
+    <h2 style="font-size:46px">One spine, gated detours</h2>
+    <p style="font-size:23px">The <b>spine</b> runs every time: Understand, Route, Collect, Check, Preview, Commit, Confirm.</p>
+    <p class="step" style="font-size:23px">Each <b>detour</b> has a gate, and the default is to <b>skip</b> it.</p>
+    <p class="step" style="font-size:23px">Pick a recorded run. The lit nodes are the path the graph really took; ×2 means a node ran twice (each turn re-walks the spine from the saved state).</p>
+  </div>
+  <div class="fig" data-fig="graph" style="left:590px;top:110px;width:920px;height:700px"></div>
+</section>
+
+<!-- 15 -->
+<section class="slide" data-plate="The Spine, Step by Step">
+  <div style="position:absolute;left:100px;right:100px;top:105px">
+    <h2 style="font-size:48px;margin-bottom:10px">Code does most of it</h2>
+    <table class="t" style="font-size:19px">
+      <thead><tr><th>step</th><th>code does</th><th>the model does</th><th>tools</th></tr></thead>
+      <tbody>
+        <tr class="step"><td><b>Understand</b></td><td>Reads her message as an answer to what we asked, if we asked</td><td>Intent (typed decision); fields (structured output)</td><td class="n">—</td></tr>
+        <tr class="step"><td><b>Route</b></td><td>Sends questions to Answer; names to Bahi codes</td><td>Only for a near-match supplier</td><td class="n">find_supplier</td></tr>
+        <tr class="step"><td><b>Collect</b></td><td>Fills from memory and the rate contract; lists what is missing</td><td>Words the one question</td><td class="n">check_cost_centre</td></tr>
+        <tr class="step"><td><b>Check</b></td><td>Applies the rules that decide if the order may exist</td><td>Nothing</td><td class="n">—</td></tr>
+        <tr class="step"><td><b>Preview</b></td><td>Prices it in Bahi without saving</td><td>One sentence above the block</td><td class="n">create_purchase_order(confirm=False)</td></tr>
+        <tr class="step"><td><b>Commit</b></td><td>Refuses unless this exact draft was confirmed; re-checks the certificate; writes once</td><td>Nothing</td><td class="n">create_purchase_order(confirm=True)</td></tr>
+        <tr class="step"><td><b>Confirm</b></td><td>Reads the order back, releases it, writes the status line</td><td>The words, not the status</td><td class="n">order_status, release_purchase_order</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 16 -->
+<section class="slide" data-plate="Default Skip, Measured">
+  <div style="position:absolute;left:100px;right:100px;top:105px">
+    <h2 style="font-size:48px;margin-bottom:6px">Default skip, in 40 real runs</h2>
+    <p class="small">Which detours the graph opened in each of the 40 cases of our experiment (gemini-3.8-flash). Of the four gated detours, 15 cases opened none, 18 opened one and 7 opened two.</p>
+    <div class="fig" data-fig="gates" style="position:relative;width:100%;height:520px"></div>
+  </div>
+  <div class="cap" style="left:100px;top:790px;width:1300px"><b>Fig. 6.</b> From the <code>path</code> of every case in <code>logs/forty_graph.json</code>.</div>
+</section>
+
+<!-- 17 -->
+<section class="slide" data-plate="Detour · Ask for Certificate">
+  <div class="col" style="width:430px">
+    <h2>Shakti Seals, through the graph</h2>
+    <p class="step">Route finds no supplier: <b>Onboard</b> opens and collects name, city, state, GSTIN. Nothing is registered yet.</p>
+    <p class="step">Check: the gasket touches food, no certificate. <b>Ask for certificate</b> opens. The rule is quoted by code.</p>
+    <p class="step">She has none. <b>Hold</b>: no supplier created, no order, the draft kept for when the certificate arrives.</p>
+    <p class="step small">10 model calls, 3,494 tokens, ₹0.27, against the loop's 38,165 tokens and ₹1.90 on the same scenario.</p>
+  </div>
+  <div class="tx" style="position:absolute;left:600px;top:120px;width:900px;height:660px;font-size:16px"><span class="k">KAVITA</span> Shakti Seals in Vadodara has quoted ₹10.40 for the 5-litre silicone gasket. Order 20,000 from them, cost centre PRD-07, need-by 2 November. Their GSTIN is 24AAFCS8812N1Z4.
+
+<span class="a2">AGENT</span>  Purchase Policy §6.2: Parts that come into contact with food (gaskets, lids, body blanks and any other item marked food-contact in the item master) may be bought only from a supplier holding a valid food-grade certificate on file in Bahi. The certificate must be uploaded and checked before the first order is placed. An expired certificate counts as no certificate.
+
+       Gasket, silicone, 5 L touches food, and we cannot order from Shakti Seals without a valid food-grade certificate in Bahi. Do you have their food-grade certificate, and can you share its reference number and expiry date?
+
+<span class="k">KAVITA</span> I don't have a certificate from them yet.
+
+<span class="a2">AGENT</span>  Purchase Policy §6.2 does not allow this order because Shakti Seals has no valid food-grade certificate. Nothing was saved, but the draft is kept. The order can continue as soon as you send the certificate reference and expiry date.
+
+<b>path</b> understand › route › onboard › collect › check › ask_certificate ‖ understand › route › onboard › collect › check › hold
+<b>writes</b> none</div>
+  <div class="cap" style="left:600px;top:800px;width:900px"><b>Fig. 7.</b> Verbatim, from <code>logs/six_graph.json</code>, scenario 4.</div>
+</section>
+
+<!-- 18 -->
+<section class="slide" data-plate="Detour · Fix Cost Centre">
+  <div class="col" style="width:430px">
+    <h2>The silent Draft, caught before it happens</h2>
+    <p class="step">She gives no cost centre. Collect fills her usual one from memory: PRD-05, from 4 of her 6 orders.</p>
+    <p class="step">The <b>centre_closed</b> gate reads it: PRD-05 closed on 15 Oct. Bahi would have saved a Draft and said “SAVED”.</p>
+    <p class="step">The detour asks, with the open centres listed by code. She picks PRD-07. The preview follows.</p>
+  </div>
+  <div class="tx" style="position:absolute;left:600px;top:120px;width:900px;height:640px;font-size:16px"><span class="k">KAVITA</span> Order 3,000 standard whistles from Sahyadri Valves, need-by 4 November.
+
+<span class="a2">AGENT</span>  Cost centre PRD-05 · closed on 15 Oct 2026 · Bahi would save the order as a Draft
+       Open: PRD-07 Diwali production run, PRD-03 3-litre line, MNT-01 Plant maintenance, ADM-01 Administration
+
+       Cost centre PRD-05 has been closed since 2026-10-15, so Bahi will keep this order as a draft and not send it. Which open cost centre should I charge?
+
+<span class="k">KAVITA</span> Use PRD-07, the Diwali production cost centre.
+
+<span class="a2">AGENT</span>  Supplier     Sahyadri Valves (SV-PUN-0017)
+       Item         Whistle (weight valve), standard (WHS-STD-01)
+       Quantity     3,000 at ₹6.80 (contract rate)
+       Value        ₹20,400 + GST18-INTRA = ₹24,072 gross
+       Cost centre  PRD-07 · need by 4 Nov 2026
+       Route        direct order
+       Approval     within your limit of ₹2,50,000
+
+       Here is a preview of your order priced by Bahi, with nothing saved yet. Shall I go ahead?</div>
+  <div class="cap" style="left:600px;top:780px;width:900px"><b>Fig. 8.</b> Verbatim, scenario 5, <code>logs/six_graph.json</code>. The figure block is written by code; the sentence under it by the model.</div>
+</section>
+
+<!-- 19 -->
+<section class="slide" data-plate="Detour · Approval">
+  <div class="col" style="width:440px">
+    <h2>Above her limit: wait, then read it back</h2>
+    <p>₹2,80,840 gross is above Kavita's ₹2,50,000. The <b>over_limit</b> gate opens <b>Approval</b>.</p>
+    <p class="step">Approval raises PR/2026/04417 and the graph stops in <b>wait_approval</b>.</p>
+    <p class="step">“Rohit has approved PR/2026/04417.” resumes it. The node calls <code>pr_get</code>: only Bahi's status <b>AP</b> moves the route on.</p>
+    <p class="step">Commit uses the same key; Confirm releases and writes the status line from the receipt.</p>
+  </div>
+  <div class="code step" style="position:absolute;left:620px;top:130px;width:880px;font-size:15px">def n_wait_approval(self, st):
+    f = st["facts"]
+    msg = interrupt({"kind": "approval", "say": st["out"],
+                     "doc": f["pr_no"], "approver": f["approver"]})
+    <span class="c"># never trust the message: read the approval back from Bahi</span>
+    pr = self._svc("pr_get", pr_no=f["pr_no"])
+    if pr["status"] == "AP":
+        return {"goto": "commit", ...}
+    if pr["status"] == "RJ":
+        return {"goto": "hold", "facts": {"hold_reason": "rejected"}}
+    return {"goto": "wait", "out": f"{f['pr_no']} is still waiting ..."}</div>
+  <div class="tx step" style="position:absolute;left:620px;top:520px;width:880px;font-size:15px"><span class="k">KAVITA</span> Rohit has approved PR/2026/04417.
+<span class="a2">AGENT</span>  PO/2026/01182 has been released to Deccan Polymers.
+       Bahi status · PO/2026/01182 · RELEASED to the supplier · approved by RMEHTA</div>
+</section>
+
+<!-- 20 -->
+<section class="slide" data-plate="Job 1 · Ask Only What Is Missing">
+  <div class="col" style="width:440px">
+    <h2>Job 1: the red stars</h2>
+    <p>Collect fills what it can from memory and the rate contract, and asks for the rest in one question.</p>
+    <p class="step">“We need more whistles.” Supplier, quantity, date and cost centre all missing. In our run the closed-centre detour asked first, for the cost centre only. Kavita gave everything in her reply anyway.</p>
+    <div class="measured step">The closed-centre gate outranked the missing-fields question, so the first question was narrower than it should be. Folding the closed centre into the one missing-fields question is the fix; A4 asks you to avoid this ordering.</div>
+  </div>
+  <div class="tx" style="position:absolute;left:600px;top:120px;width:900px;height:660px;font-size:15.5px"><span class="k">KAVITA</span> We need more whistles.
+
+<span class="a2">AGENT</span>  Cost centre PRD-05 · closed on 15 Oct 2026 · Bahi would save the order as a Draft
+       Open: PRD-07 Diwali production run, PRD-03 3-litre line, MNT-01 Plant maintenance, ADM-01 Administration
+       ... Which open cost centre should I charge?
+
+<span class="k">KAVITA</span> 3,000 from Sahyadri Valves, by 4 November, on PRD-07.
+
+<span class="a2">AGENT</span>  Supplier     Sahyadri Valves (SV-PUN-0017)
+       Item         Whistle (weight valve), standard (WHS-STD-01)
+       Quantity     3,000 at ₹6.80 (contract rate)
+       Value        ₹20,400 + GST18-INTRA = ₹24,072 gross
+       ... Shall I go ahead?
+
+<span class="k">KAVITA</span> Yes, place it.
+
+<span class="a2">AGENT</span>  PO/2026/01182 has been released to Sahyadri Valves.
+       Bahi status · PO/2026/01182 · RELEASED to the supplier · approved by KJOSHI
+
+<b>path</b> understand › route › collect › fix_cost_centre ‖ understand › route › collect › check › preview ‖ understand › commit › confirm</div>
+  <div class="cap" style="left:600px;top:800px;width:900px"><b>Fig. 9.</b> Case M3, verbatim (shortened where marked ...), <code>logs/forty_graph.json</code>.</div>
+</section>
+
+<!-- 21 -->
+<section class="slide" data-plate="Never-Events, Refused in Code">
+  <div style="position:absolute;left:100px;right:100px;top:105px">
+    <h2 style="font-size:48px;margin-bottom:10px">Never-events, refused in code</h2>
+    <table class="t" style="font-size:19px">
+      <thead><tr><th>never</th><th>how the graph makes it impossible</th><th>where</th></tr></thead>
+      <tbody>
+        <tr class="step"><td class="n">NE1 NE5</td><td>Commit refuses unless the draft's key equals the key of the preview she confirmed. No edge into Commit except her confirmation or an approval read back from Bahi.</td><td class="n">commit · _guard</td></tr>
+        <tr class="step"><td class="n">NE3</td><td>Just before writing, Commit re-reads the supplier's certificates from Bahi and refuses a food-contact order without a valid one, whatever the route did.</td><td class="n">commit · _cert_guard</td></tr>
+        <tr class="step"><td class="n">NE2</td><td>The idempotency key is a hash of the draft (thread, supplier, item, qty, rate, centre, date), never <code>uuid4()</code>.</td><td class="n">_key</td></tr>
+        <tr class="step"><td class="n">NE4</td><td>Onboard opens only when no active supplier matches; before registering, Commit searches again.</td><td class="n">route · _ensure_supplier</td></tr>
+        <tr class="step"><td class="n">NE5</td><td>The status line is written by code from the receipt; model words claiming “placed” on an unreleased order are replaced.</td><td class="n">confirm · _say</td></tr>
+      </tbody>
+    </table>
+    <div class="code step" style="margin-top:16px;font-size:15px">key = self._key(st["draft"])
+if not (f["previewed_key"] == key and f["confirmed_key"] == key):
+    raise GuardError("this exact draft was not previewed and confirmed")   <span class="c"># NB4, exercise 6 tries to break it</span></div>
+  </div>
+</section>
+
+<!-- 22 -->
+<section class="slide part" data-plain="1">
+  <div class="center">
+    <div class="num">Part Two</div>
+    <h1>Typed decisions</h1>
+    <p class="lede">Some steps are judgements, not lookups. Give each one a type, a confidence, and a way to ask.</p>
+  </div>
+</section>
+
+<!-- 23 -->
+<section class="slide" data-plate="decide()">
+  <div class="col" style="width:460px">
+    <h2>A decision with a type</h2>
+    <p>“Is this upload a food-grade certificate or a quotation?”</p>
+    <div class="def step"><b>Typed decision</b>A fixed set of options, optional typed fields, and a confidence. Below the threshold, the route asks the human instead of guessing.</div>
+    <p class="step" style="margin-top:14px">Our backend asks Gemini for structured JSON <b>k</b> times at temperature 1.0. Confidence = the share of samples that agree (self-consistency). The graph uses k = 3; the evaluation, k = 5.</p>
+  </div>
+  <div class="code step" style="position:absolute;left:640px;top:130px;width:860px;font-size:15px">DecisionSpec("document_kind",
+  "What has the user given us for the supplier's food-grade certificate?",
+  options=("food_grade_certificate", "quotation", "other_document", "no_document"),
+  fields={"doc_ref": "...", "valid_to": "YYYY-MM-DD", "issued_to": "..."},
+  guide="A quotation offers prices, even when it says the material is food grade.")
+
+d = decide("document_kind", text, context, k=5, threshold=0.8)
+d.choice, d.confidence, d.fields, d.sure</div>
+  <div class="json step" style="position:absolute;left:640px;top:470px;width:860px;font-size:15px"><span class="c">// a real decision from scenario 2 (logs/six_graph.json)</span>
+{"name": "intent", "choice": "order", "confidence": 1.0, "sure": true,
+ "votes": {"order": 3}, "k": 3, "threshold": 0.8}</div>
+</section>
+
+<!-- 24 -->
+<section class="slide" data-plate="How Good Is the Confidence?">
+  <div class="col" style="width:440px">
+    <h2>Agreement is not doubt</h2>
+    <p style="font-size:25px">32 labelled inputs, four decisions, five samples each: 160 calls, ₹3.39.</p>
+    <p class="step" style="font-size:25px"><b>Every</b> input came back at confidence 1.0: five samples, one answer. 29 of 29 labelled inputs were right. Move the threshold: nothing changes.</p>
+    <p class="step" style="font-size:25px">The three ambiguous inputs did not split the votes. The model put its doubt into an option: “Deccan” → <i>none of these</i>, five times. In the 40-case run that answer sent case D4 to onboarding.</p>
+  </div>
+  <div class="fig" data-fig="decide" style="left:620px;top:120px;width:880px;height:540px"></div>
+  <div class="measured step" style="position:absolute;left:620px;top:660px;width:880px">Self-consistency measured nothing here. Give every decision an explicit <code>unsure</code> option and treat it as “ask”; that is the change A4 asks for.</div>
+  <div class="cap" style="left:620px;top:770px;width:880px"><b>Fig. 10.</b> Each dot is one input, placed at its confidence. From <code>logs/decide_eval.json</code> (k = 5, gemini-3.8-flash).</div>
+</section>
+
+<!-- 25 -->
+<section class="slide" data-plate="A Slot for a Decision Service">
+  <div class="col" style="width:470px">
+    <h2>Jev, and a slot for it</h2>
+    <p>A dedicated decision-model service, such as Jev (TypeSafe's public decision API), takes the same shape: a decision name, options, input and context in; a choice, typed fields and a confidence out.</p>
+    <p class="step"><code>decide()</code> takes any backend with one method. Ours is Gemini self-consistency. <code>ServiceBackend</code> wraps a function you write that calls a service.</p>
+    <div class="ours step">We did not have Jev access. No Jev client ships with the course and no Jev number appears on any plate. Wire your own client into <code>ServiceBackend</code> and measure it on your own labelled inputs.</div>
+  </div>
+  <div class="code step" style="position:absolute;left:640px;top:140px;width:860px;font-size:15px">class ServiceBackend:
+    """A slot for a dedicated decision service. `call` gets
+    {"decision", "question", "options", "fields", "input", "context"}
+    and must return {"choice", "confidence", ...fields}."""
+    def __init__(self, call, name="decision service"): ...
+    def sample(self, spec, text, context, options, k):
+        r = self.call({...})
+        return [{**r, "_confidence": float(r["confidence"])}]   <span class="c"># one call</span>
+
+agent = GraphAgent(erp, "KJOSHI", llm=llm,
+                   decide_backend=ServiceBackend(my_client))     <span class="c"># your client</span></div>
+</section>
+
+<!-- 26 -->
+<section class="slide part" data-plain="1">
+  <div class="center">
+    <div class="num">Part Three</div>
+    <h1>Memory at four levels</h1>
+    <p class="lede">The draft, the session, the user, the company. The model never sees all of any level; each step takes the slice it needs.</p>
+  </div>
+</section>
+
+<!-- 27 -->
+<section class="slide" data-plate="Four Levels, One Turn">
+  <div class="col" style="width:420px">
+    <h2>What each level put into one turn</h2>
+    <p class="step"><b>1 · Draft</b>: the order so far, in the graph's state.</p>
+    <p class="step"><b>2 · Session</b>: the checkpointer thread: what we asked, what she said.</p>
+    <p class="step"><b>3 · User</b>: learned from her own orders in Bahi.</p>
+    <p class="step"><b>4 · Company</b>: the policy clause the step searched for. Switch to scenario 2: “Yes, go ahead.” names no rule, so level 4 adds nothing.</p>
+  </div>
+  <div class="fig" data-fig="memory" style="left:580px;top:120px;width:920px;height:640px"></div>
+  <div class="cap" style="left:580px;top:790px;width:920px"><b>Fig. 11.</b> <code>context_for_turn()</code> on two recorded turns, measured in characters. From <code>logs/memory_turn.json</code>.</div>
+</section>
+
+<!-- 28 -->
+<section class="slide" data-plate="User Memory Is a Suggestion">
+  <div class="col" style="width:520px">
+    <h2>Memory suggests. Gates check.</h2>
+    <p>Kavita's usual cost centre, learned from Bahi: <b>PRD-05</b>, from 4 of her 6 orders. Her usual gasket supplier: Deccan Polymers.</p>
+    <p class="step">PRD-05 closed on 15 October. A memory that is right about her habits is wrong about today.</p>
+    <p class="step">So user memory fills a field and the gate still reads it. In our 40 runs the closed-centre detour ran in 8 cases; in 6 of them (C1, C2, C4, M1, M3, M7) memory had proposed PRD-05 and <b>centre_closed</b> caught it.</p>
+    <p class="step small">Rule for your module: never let a remembered value skip a check that a typed value would go through.</p>
+  </div>
+  <div class="card af step" style="position:absolute;left:700px;top:180px;width:780px;font-size:21px">
+    <span class="tag af">UserMemory.learn(session) · as Kavita, through Bahi services</span>
+    <div class="json" style="margin-top:10px;font-size:16px">"usual_cost_centre": {"value": "PRD-05",
+                      "source": "4 of your 6 orders in Bahi"}
+"preferred_supplier": {"GSK-SIL-05L": {"value": "DP-RJK-0042",
+                                       "source": "2 of your 2 orders for GSK-SIL-05L"}}
+"last_order": {"GSK-SIL-05L": {"po_no": "PO/2026/01120", "qty": 18000, "rate": 11.4}}</div>
+    <p class="small" style="margin-top:10px">The last order's rate was ₹11.40. The contract rate since 1 Oct is ₹11.90; Collect uses the contract (Purchase Policy §7.1).</p>
+  </div>
+</section>
+
+<!-- 29 -->
+<section class="slide part" data-plain="1">
+  <div class="center">
+    <div class="num">Part Four</div>
+    <h1>What we measured</h1>
+    <p class="lede">Free tool loop against control graph, on 40 multi-step cases. Same model, same tools, same policy search. Only the control differs.</p>
+  </div>
+</section>
+
+<!-- 30 -->
+<section class="slide" data-plate="Loop Against Graph, 40 Cases">
+  <div class="col" style="width:400px">
+    <h2>The result</h2>
+    <p style="font-size:24px">gemini-3.8-flash: graph <b class="a">39</b> of 40, loop <b class="b">36</b>. No never-events either side.</p>
+    <p class="step" style="font-size:24px">Cost: the graph used <b>1,23,451</b> tokens and <b>₹9.15</b>; the loop <b>11,99,469</b> tokens and <b>₹60.33</b>. The loop re-sends the whole conversation and all schemas every step.</p>
+    <p class="step" style="font-size:24px">The graph made <i>more</i> model calls (395 vs 342) and took more model seconds (1,819 vs 1,305): three decision samples, one after another.</p>
+    <p class="step small">Switches to gemini-3.5-flash-lite on the third step: loop 39, graph 37; again no never-events.</p>
+  </div>
+  <div class="fig" data-fig="results" style="left:560px;top:130px;width:940px;height:600px"></div>
+  <div class="cap" style="left:560px;top:760px;width:940px"><b>Fig. 12.</b> <span class="b">Red</span>: free tool loop. <span class="a">Teal</span>: control graph. From <code>logs/forty_{loop,graph}{,_lite}.json</code>.</div>
+</section>
+
+<!-- 31 -->
+<section class="slide" data-plate="All Forty Cases">
+  <div style="position:absolute;left:100px;right:100px;top:105px">
+    <h2 style="font-size:46px;margin-bottom:6px">Every case, every run</h2>
+    <p class="small">P: policy questions · R: above the limit · D: suppliers that already exist · N: new suppliers and certificates · C: cost centres · T: lost replies · M: what Kavita leaves out, changes or repeats. Click a square.</p>
+    <div class="fig" data-fig="grid40" style="position:relative;width:100%;height:560px"></div>
+  </div>
+</section>
+
+<!-- 32 -->
+<section class="slide" data-plate="Reading the Result Honestly">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:50px">Reading the result honestly</h2></div>
+  <div class="two" style="top:210px">
+    <div class="card af step"><h3>What the graph bought</h3><ul>
+      <li>The order of steps in code: no write before Check, in every run, by construction.</li>
+      <li>A tenth of the tokens and a sixth of the ₹ on gemini-3.8-flash (1,23,451 vs 11,99,469 tokens; ₹9.15 vs ₹60.33 for 40 cases).</li>
+      <li>Fewer tool calls (212 vs 345) and a recorded path for every run: Lecture 6 can test gates one by one.</li>
+      <li>Its failures were narrow: one confident wrong decision (D4) on flash. On flash-lite: D4 again, a question without a “?” that ended the chat (C5), and a stock question it could not place (M9).</li></ul></div>
+    <div class="card bf step"><h3>What it did not show, and what it cost</h3><ul>
+      <li>No never-events from the loop either. Lecture 3's tools already refuse closed centres, blocked codes and duplicate suppliers; they carried the safety.</li>
+      <li>The loop's misses were mostly unfinished work: an extra “confirm the registration” turn used up Kavita's answers (N6, N8, N9).</li>
+      <li>On flash-lite the loop passed 39 to the graph's 37.</li>
+      <li>More model calls, more seconds. Sampling the decisions in parallel would remove most of that.</li><li>The model's words can still be wrong: in C5 on flash-lite its question said “thirty thousand rupees” for an order Bahi would price at ₹24,072. Only the blocks written by code are guaranteed.</li></ul></div>
+  </div>
+  <div class="opens step" style="top:700px"><span class="k">So</span>The graph is not about a higher pass rate on easy cases. It moves the route out of the model's habits and into code you can read, test and change.</div>
+</section>
+
+<!-- 33 -->
+<section class="slide" data-plate="The Six Scenarios">
+  <div style="position:absolute;left:100px;right:100px;top:105px">
+    <h2 style="font-size:46px;margin-bottom:6px">The scorecard at Lecture 4</h2>
+    <p class="small">The six course scenarios, gemini-3.8-flash. Both pass all six in our run; the graph used 15,683 tokens and ₹1.18 for all six, the loop 1,94,435 tokens and ₹9.68.</p>
+    <div class="fig" data-fig="six" style="position:relative;width:100%;height:540px"></div>
+  </div>
+  <div class="cap" style="left:100px;top:790px;width:1300px"><b>Fig. 13.</b> From <code>logs/six_graph.json</code> and <code>logs/six_loop.json</code>. Replayed in NB4.</div>
+</section>
+
+<!-- 34 -->
+<section class="slide" data-plate="One Graph, Not Many Agents">
+  <div class="col" style="width:560px">
+    <h2>One graph, one model, many tools</h2>
+    <p>Everything today was one agent: one control graph, one model, the tools of Lecture 3.</p>
+    <p class="step">You would want a second agent only when a part of the job needs its own <b>context</b> (a 300-page contract to read), its own <b>permissions</b> (a finance user's tools), or its own <b>clock</b> (a job that runs for a day).</p>
+    <p class="step">Even then, it is a node in the graph: called, waited for with an interrupt, its result read back like any receipt.</p>
+  </div>
+  <div class="card step" style="position:absolute;left:760px;top:170px;width:720px;font-size:22px"><span class="tag nt">A quick test before you split</span><ol>
+    <li>Can the step be a tool? Then make it a tool.</li>
+    <li>Can it be a node with its own prompt? Then make it a node.</li>
+    <li>Does it need a different user, a different context window or a different lifetime? Only then, another agent.</li></ol></div>
+</section>
+
+<!-- 35 -->
+<section class="slide" data-plate="Build · NB4">
+  <div class="col" style="width:440px">
+    <h2>NB4, the Colab build</h2>
+    <span class="nb-ref">NB4_the_route.ipynb</span>
+    <p class="step" style="margin-top:14px">Runs top to bottom in replay, with no key.</p>
+    <p class="step">Six exercises, each with the working solution beside it.</p>
+  </div>
+  <div class="code step" style="position:absolute;left:620px;top:130px;width:880px;font-size:15.5px"><span class="c"># 1  The failure: the Lecture 3 loop on scenario 4 (replayed)</span>
+<span class="c"># 2  LangGraph from first principles on Kavita's order:</span>
+     state + reducers, two nodes, a gate, a detour with interrupt(),
+     InMemorySaver, Command(resume="PRD-07"), get_state_history()
+<span class="c"># 3  Exercise 1</span>  the certificate gate (6 test states)
+     <span class="c">Exercise 2</span>  the approval gate; open_gates(); 16 combinations
+     <span class="c">Exercise 3</span>  build the Ask-for-certificate detour (Kaveri, two threads)
+<span class="c"># 4  decide()</span>  certificate, quotation, nothing  (k = 5)
+     <span class="c">Exercise 4</span>  confidence from votes; act or ask
+<span class="c"># 5  Memory</span>   <span class="c">Exercise 5</span>  learn her usual cost centre from Bahi
+<span class="c"># 6  GraphAgent</span> on scenario 2: path, interrupts, context_for_turn,
+     the draft checkpoint by checkpoint
+     <span class="c">Exercise 6</span>  tamper with the draft; watch Commit refuse
+     the six-scenario scorecard; the 40-case results
+<span class="c"># 7  Your module</span>  spine, gates, asks, decisions, memory</div>
+</section>
+
+<!-- 36 -->
+<section class="slide" data-plate="Build · The GraphAgent Interface">
+  <div class="col" style="width:420px">
+    <h2>What Lectures 5, 6 and 8 build on</h2>
+    <p class="step">One method: <code>respond(text) -&gt; str</code>, so <code>run_scenario</code> works unchanged.</p>
+    <p class="step">Approvals arrive as ordinary messages. The graph reads the status from Bahi.</p>
+    <p class="step">Lecture 6 reads <code>route_spec.GATES</code> to generate tests; Lecture 5 adds roles inside Commit.</p>
+  </div>
+  <div class="code step" style="position:absolute;left:600px;top:130px;width:900px;font-size:15px">from bahi.agent.graph import GraphAgent
+from bahi.agent import route_spec as R
+
+agent = GraphAgent(erp, "KJOSHI", llm=LLM("gemini:gemini-3.8-flash", cassette="L4_graph"),
+                   k=3, threshold=0.8)          <span class="c"># thread_id, checkpointer, decide_backend optional</span>
+agent.respond("Reorder 20,000 of the 5-litre silicone gaskets ...")   <span class="c"># preview</span>
+agent.respond("Yes, go ahead.")                                     <span class="c"># PR raised, waits</span>
+agent.respond("Rohit has approved PR/2026/04417.")                  <span class="c"># read back, order, release</span>
+
+agent.pending()     <span class="c"># interrupts waiting: [{"kind": "approval", "say": ..., "doc": ...}]</span>
+agent.state         <span class="c"># draft, facts, path, decisions, awaiting, stage</span>
+agent.history()     <span class="c"># every checkpoint, oldest first</span>
+agent.tool_log      <span class="c"># every intent-tool call, with the node that made it</span>
+
+R.SPINE, R.GATES, R.ASKS, R.INVARIANTS, R.open_gates(state), R.gate_combinations()</div>
+</section>
+
+<!-- 37 -->
+<section class="slide" data-plate="Assignment A4">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:52px">A4 · The route for your module</h2><p class="sub">A control graph, a router and a memory policy. Due before Lecture 5.</p></div>
+  <div class="two" style="top:250px">
+    <div class="card step"><h3>Build</h3><ol>
+      <li>A route spec as data: spine, gates (named predicates, rules cited), asks, invariants.</li>
+      <li>A LangGraph built from it, with a checkpointer and interrupts for every question and every wait.</li>
+      <li>A router: one typed decision with a threshold.</li>
+      <li>One more typed decision your module needs.</li>
+      <li>A memory policy for the four levels, with one turn's <code>context_for_turn()</code>.</li></ol></div>
+    <div class="card step"><h3>Graded through</h3>Route and authority (15): spec matches the graph that runs, never-events refused in code, approvals read back. Scenario pass rate (25), measured with logs. Tools (20): the router and decision with a measured confidence.<p class="small" style="margin-top:12px">Guided track: copy <code>route_spec.py</code> and <code>graph.py</code>, rewrite the data. Builder track: generate nodes and edges from your spec, and test every gate combination.</p></div>
+  </div>
+</section>
+
+<!-- 38 -->
+<section class="slide" data-plate="Where We Are">
+  <div class="col" style="width:470px">
+    <h2>Five of nine jobs</h2>
+    <p>The harness now asks for what is missing (1), knows the route (2), looks up and acts (3), explains the rules (4) and holds the draft (5).</p>
+    <p class="step">Next, <b>Lecture 5 · The Signature</b>: jobs 6 and 7. Who may do what, and proof that it was done. Supplier Policy §3.4 says Rohit must approve a new supplier's onboarding file before it is created; today the graph registers after Kavita confirms. That rule is Lecture 5's.</p>
+  </div>
+  <div class="fig" data-fig="ring" style="left:700px;top:130px;width:780px;height:600px"></div>
+  <div class="cap" style="left:720px;top:760px;width:760px"><b>Fig. 14.</b> The nine jobs. Teal: taken over in this lecture.</div>
+</section>
+
+</div>
+<script src="figs.js"></script>
+<script src="../../engine/plates.js"></script>
+</body>
+</html>

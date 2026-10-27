@@ -1,0 +1,32 @@
+code: FIN-AP-03
+title: INVOICE HOLD QUEUE
+menu: Finance > Payables > Hold Queue
+roles: [AP-EXEC, FIN-CTRL, PUR-EXEC, PUR-SR, PUR-MGR, PLANT-HEAD, STORES]
+fields:
+  - {name: sup_cd, label: SUP CD, type: str, req: false}
+  - {name: sup_inv_no, label: SUP INV NO, type: str, req: false, help: two suppliers may share a number}
+  - {name: status, label: STATUS, type: str, req: false, help: HD = on hold}
+  - {name: hold_cd, label: HOLD CD, type: str, req: false}
+  - {name: ap_no, label: AP NO, type: str, req: true}
+  - {name: refer_to, label: REFER TO, type: str, req: false}
+  - {name: reason, label: REASON, type: str, req: false}
+tasks:
+  - button: Search
+    service: ap_inv_list
+    sends: [sup_cd, sup_inv_no, status, hold_cd]
+    fills: [ap_no]
+  - button: Details
+    service: ap_inv_get
+    sends: [ap_no]
+    fills: [hold_cd]
+    needs: [Search]
+  - button: Refer
+    service: ap_hold_refer
+    sends: [ap_no, hold_cd, refer_to]
+    fills: []
+  - button: Release
+    service: ap_hold_release
+    sends: [ap_no, hold_cd, reason]
+    fills: [status]
+state:
+  - {rule: "Only the roles listed for a hold code may release it", error: ERR-AP-0305}

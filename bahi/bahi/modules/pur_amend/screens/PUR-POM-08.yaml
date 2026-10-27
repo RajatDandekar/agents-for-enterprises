@@ -1,0 +1,35 @@
+code: PUR-POM-08
+title: PURCHASE ORDER AMENDMENT
+menu: Purchase > Orders > Amend Released Order
+roles: [PUR-EXEC, PUR-SR]
+fields:
+  - {name: po_no, label: PO NO, type: str, req: true}
+  - {name: amd_type, label: AMD TYPE, type: str, req: false, help: "REV / SCL (short-close)"}
+  - {name: qty, label: NEW QTY, type: int, req: false, help: new total, not the change}
+  - {name: need_dt, label: NEW NEED DT, type: date, req: false}
+  - {name: reason_cd, label: REASON, type: str, req: true}
+  - {name: remarks, label: REMARKS, type: str, req: false}
+  - {name: s1_dt, label: "SCH 1 DT / QTY", type: date, req: false, help: blank = old lines kept}
+  - {name: s2_dt, label: "SCH 2 DT / QTY", type: date, req: false}
+  - {name: fetch_tok, label: (hidden), type: str, req: false}
+tasks:
+  - button: Fetch
+    service: pa_amd_fetch
+    sends: [po_no]
+    fills: [fetch_tok]
+  - button: Save
+    service: pa_amd_save
+    sends: [po_no, amd_type, qty, need_dt, reason_cd, remarks, s1_dt, s1_qty, s2_dt, s2_qty, fetch_tok]
+    fills: [amd_no, status]
+    needs: [Fetch]
+  - button: Fix Schedule
+    service: pa_sched_save
+    sends: [amd_no, s1_dt, s1_qty, s2_dt, s2_qty]
+    fills: [status]
+  - button: Release Rev
+    service: pa_amd_release
+    sends: [amd_no]
+    fills: [status]
+state:
+  - {rule: "Save needs Fetch for the same PO NO", error: ERR-SCR-0221}
+  - {rule: "If the schedule does not add up to NEW QTY and NEW NEED DT, Save still says SAVED but holds it (HD)", error: W-SCH-209}

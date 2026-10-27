@@ -1,0 +1,31 @@
+code: INV-TRN-04
+title: TRANSFER NOTE
+menu: Inventory > Transfers > Transfer Note
+roles: [STORES, PUR-MGR, PLANT-HEAD]
+fields:
+  - {name: itm_cd, label: ITEM CD, type: str, req: true}
+  - {name: from_whs, label: FROM WHS, type: str, req: true}
+  - {name: to_whs, label: TO WHS, type: str, req: true, help: "the 5 L line is WH-PUN-LN5"}
+  - {name: qty, label: QTY, type: int, req: true}
+  - {name: slot, label: SLOT, type: str, req: false, help: DAY/NIGHT}
+  - {name: vehicle, label: VEH NO, type: str, req: false}
+  - {name: ewb_no, label: EWB NO, type: str, req: false}
+  - {name: fwd_to, label: FWD TO, type: str, req: false}
+  - {name: remarks, label: REMARKS, type: str, req: false}
+  - {name: fetch_tok, label: (hidden), type: str, req: false}
+tasks:
+  - button: Fetch
+    service: tr_fetch
+    sends: [itm_cd, from_whs, to_whs]
+    fills: [fetch_tok]
+  - button: Save
+    service: tr_save
+    sends: [itm_cd, qty, from_whs, to_whs, slot, vehicle, ewb_no, fwd_to, remarks, fetch_tok]
+    fills: [tn_no, status]
+    needs: [Fetch]
+  - button: Approve
+    service: tr_approve
+    sends: [tn_no, decision, comment]
+    fills: [status]
+state:
+  - {rule: "Save needs Fetch for the same item, FROM and TO", error: ERR-SCR-0221}

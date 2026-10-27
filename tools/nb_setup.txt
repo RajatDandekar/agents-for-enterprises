@@ -1,0 +1,14 @@
+# Setup: install the Bahi sandbox and its recorded model replies. Runs in about a minute on Colab.
+# REPLAY mode (the default when you have no key) plays back our recorded model calls, so every cell runs
+# without an API key and shows the numbers from our own run. To call a model live, set a key below.
+import os, sys, subprocess
+COURSE_REPO = "https://github.com/VizuaraAI/agents-for-enterprises"   # course code (Bahi sandbox + reference agent)
+try:
+    import bahi  # already available (local checkout or Modal)
+except ImportError:
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", f"bahi-erp[all] @ git+{COURSE_REPO}.git#subdirectory=bahi"], check=True)
+    import bahi
+# os.environ["GEMINI_API_KEY"] = "..."        # optional: your own key, to run live
+# os.environ["OPENROUTER_API_KEY"] = "..."    # optional: GPT, Claude, Llama ... via OpenRouter
+os.environ.setdefault("BAHI_LLM_MODE", "auto")  # auto = replay what was recorded, call live only for new requests
+print("Bahi", bahi.__version__, "· model mode:", os.environ["BAHI_LLM_MODE"])

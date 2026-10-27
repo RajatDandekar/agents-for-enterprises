@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 7 · The Night Shift</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../../engine/plates.css">
+<style>
+  .lst2 li{margin-bottom:8px}
+  .code{font-size:17px}
+  table.t td,table.t th{font-size:19px}
+  table.t th{font-size:14px}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- 1 -->
+<section class="slide" data-plain="1">
+  <div class="center">
+    <div class="kicker">From Forms to Agents · Lecture 7 · Sat 21 Nov 2026</div>
+    <h1>The Night Shift</h1>
+    <p class="lede" style="max-width:1150px;margin-top:26px">Job 8: recovering when something hangs, waiting days for an approval, and running in production.</p>
+    <p class="small" style="margin-top:18px">Website topic: Deploy + recover with Temporal</p>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="slide" data-plate="Last Time, This Time">
+  <div class="ba" style="top:170px">
+    <div class="card"><span class="tag nt">Last time · Lecture 6</span><h3>The inspector</h3>A scenario suite, code-based metrics, broken bots that each metric must catch, and a regression gate. We can now say how good the agent is, in numbers.</div>
+    <div class="card af step"><span class="tag af">This time · Lecture 7</span><h3>The night shift</h3>What happens when Bahi does not answer, when Rohit takes two days, when the server restarts at 2 a.m., and when we must stop every write at once.</div>
+  </div>
+  <div class="opens step" style="top:560px;border-color:var(--after);background:var(--after-soft)"><span class="k" style="color:var(--after)">By the end</span>Kavita's order runs as a durable workflow: keyed writes, a two-day wait with reminders, a crash it survives, a kill switch, and a deployable container with a runbook.</div>
+</section>
+
+<!-- 3 -->
+<section class="slide" data-plate="Lecture 7 · The Job">
+  <div class="lec-top"><div class="kicker">Lecture 7 · Job 8 of the form</div><h2>The Night Shift</h2><p class="sub">Recovering when something hangs, waiting days for an approval, and running in production.</p></div>
+  <div class="ba">
+    <div class="card bf step"><span class="tag bf">Before</span><h3>Kavita checks, then retries</h3>When Save hung, she opened the PO list to see whether it had gone through. When Rohit was travelling, she phoned him on Wednesday.</div>
+    <div class="card af step"><span class="tag af">After</span><h3>A durable workflow</h3>Every write carries a key, so a retry finds the first order instead of making a second. The workflow waits days for Rohit, reminds him, escalates, and survives a crash.</div>
+  </div>
+  <div class="opens step"><span class="k">Opens with · scenario 6</span>Bahi times out after saving. The fear: the agent retries, and there are two orders for 20,000 gaskets each, 40,000 gaskets and ₹5,61,680 committed. We ran it. What happened was not quite that.</div>
+</section>
+
+<!-- 4 -->
+<section class="slide" data-plate="Scenario 6 · What Really Happened">
+  <div class="col" style="width:470px">
+    <h2 style="font-size:46px">The save worked. The reply did not.</h2>
+    <p style="font-size:23px">The naive agent (38 raw services, the service account) on gemini-3.1-pro. The timeout reached it as a bare <code>HTTP 504 Gateway Timeout</code>, the way a load balancer sends it.</p>
+    <p class="step" style="font-size:23px">It pressed Save again. Twice.</p>
+    <p class="step" style="font-size:23px">Bahi refused both. A request closes on its first order, so a second save against it fails.</p>
+    <p class="step" style="font-size:23px">The second order was stopped by <b>Bahi's own rule</b>, not by the agent.</p>
+  </div>
+  <div class="fig" data-fig="s6trace" style="left:610px;top:112px;width:900px;height:680px"></div>
+  <div class="cap" style="left:610px;top:800px;width:900px"><b>Fig. 1.</b> Calls 8 to 18 of our run, replayed in NB7. <code>logs/agent_s6_naive504_gemini_gemini-3.1-pro-preview.json</code></div>
+</section>
+
+<!-- 5 -->
+<section class="slide" data-plate="Nine Runs of Scenario 6">
+  <div style="position:absolute;left:100px;right:100px;top:104px">
+    <h2 style="font-size:44px;margin-bottom:14px">Nine runs, no second order, and still no pass</h2>
+    <table class="t">
+      <thead><tr><th>Agent</th><th>Timeout looked like</th><th>Model</th><th>First call after the timeout</th><th>Orders</th><th>Never-events</th><th>Result</th></tr></thead>
+      <tbody id="runsT"></tbody>
+    </table>
+    <div class="measured step" style="margin-top:14px;font-size:20px">The models behaved like Kavita: after the timeout they looked at the PO list. But they searched by supplier and item, not by a key, and the naive agent still approved ₹2,80,840 itself (NE1). The ToolLoopAgent never saw the timeout: its tool looked the key up. Logs: <code>logs/agent_s6_*.json</code>.</div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="slide" data-plate="A Lost Reply, Taken Apart">
+  <div class="col" style="width:440px">
+    <h2 style="font-size:44px">What each side knows</h2>
+    <p style="font-size:23px">Scrub through Kavita's Save. Bahi runs eight stored procedures and commits. The reply is lost on the wire.</p>
+    <p class="step" style="font-size:23px">Now the client and Bahi disagree. The client knows only that it stopped waiting.</p>
+    <p class="step" style="font-size:23px">Two ways on: save blind, or <b>look the key up first</b>.</p>
+  </div>
+  <div class="fig" data-fig="lostreply" style="left:580px;top:108px;width:940px;height:700px"></div>
+  <div class="cap" style="left:580px;top:812px;width:940px"><b>Fig. 2.</b> One run of <code>drills.lost_reply()</code>, timestamps and procedures as Bahi logged them. <code>logs/lost_reply.json</code></div>
+</section>
+
+<!-- 7 -->
+<section class="slide" data-plate="A Timeout Hides Three Cases">
+  <div class="lec-top" style="top:104px"><h2 style="font-size:50px">“No reply” can mean three different things</h2></div>
+  <div style="position:absolute;left:100px;right:100px;top:220px;display:grid;grid-template-columns:repeat(3,1fr);gap:22px">
+    <div class="card step"><h3>1. Never arrived</h3>The request died on the way. Nothing saved. Retrying is right.</div>
+    <div class="card step"><h3>2. Arrived and failed</h3>Bahi said “server busy” before doing anything (<code>ERR-SYS-0503</code>). Nothing saved. Retrying is right.</div>
+    <div class="card bf step"><h3>3. Saved, reply lost</h3>PO/2026/01182 exists, ₹2,80,840 is committed to PRD-07. Retrying blind makes a second order.</div>
+  </div>
+  <p class="step" style="position:absolute;left:100px;right:100px;top:560px;font-size:27px">The client cannot tell these apart from where it stands. So it must not guess: it must <b>ask Bahi</b>, and it needs something to ask with.</p>
+</section>
+
+<!-- 8 -->
+<section class="slide" data-plate="At Most Once, At Least Once">
+  <div class="col w" style="width:680px">
+    <h2 style="font-size:46px">Two promises, neither enough</h2>
+    <div class="def"><b>At most once</b>Never retry. No duplicates, but a lost reply leaves the order missing, or saved and forgotten.</div>
+    <div class="def step" style="margin-top:14px"><b>At least once</b>Retry until you hear back. Nothing lost, but a lost reply becomes a second order.</div>
+    <div class="def step" style="margin-top:14px"><b>Idempotent</b>Doing it twice has the same effect as doing it once. At least once, into an idempotent write, gives exactly one order.</div>
+  </div>
+  <div class="card step" style="position:absolute;left:840px;top:150px;width:660px;font-size:23px">
+    <h3>The idempotency key</h3>
+    A value that travels with the write and is stored with the result. Before writing, look the key up; after a lost reply, look it up again.
+    <div class="code" style="margin-top:14px;white-space:pre">po_save   ... client_ref = <span class="s">"K4505F45939F0"</span>
+<span class="c"># reply lost. Next attempt starts with:</span>
+po_search client_ref = <span class="s">"K4505F45939F0"</span>
+  → PO/2026/01182  AP  <span class="c"># found: do not save again</span></div>
+    <p class="small" style="margin-top:10px">Bahi already has the column: <code>po_hdr.client_ref</code>. Every module kit has one too.</p>
+  </div>
+</section>
+
+<!-- 9 -->
+<section class="slide" data-plate="Keys From Content, Never uuid4">
+  <div class="col" style="width:560px">
+    <h2 style="font-size:44px">Where the key comes from</h2>
+    <p style="font-size:23px">A random <code>uuid4()</code> is new on every attempt, so a retry can never find the first one.</p>
+    <p class="step" style="font-size:23px">In this course it would also change every prompt, and recorded model replies would stop replaying.</p>
+    <p class="step" style="font-size:23px">So the key is a <b>hash of what the order is</b>, plus a <code>ref</code> for two orders identical on purpose (the chat message id).</p>
+  </div>
+  <div class="code step" style="position:absolute;left:720px;top:150px;width:780px;white-space:pre"><span class="k">def</span> order_key(o):
+    parts = [o.user, o.supplier_code, o.item_code, o.quantity,
+             o.cost_centre, o.need_by, o.rate, o.ref]
+    blob = json.dumps(parts, sort_keys=<span class="k">True</span>, separators=(<span class="s">","</span>, <span class="s">":"</span>))
+    <span class="k">return</span> <span class="s">"K"</span> + sha256(blob).hexdigest()[:12].upper()
+
+<span class="c"># bahi/bahi/durable/keys.py</span>
+order_key(KJOSHI, DP-RJK-0042, GSK-SIL-05L, 20000, PRD-07,
+          2026-11-02, None, "msg-17")   →  K40B77AFC1F0C   <span class="c"># run 1</span>
+                                         →  K40B77AFC1F0C   <span class="c"># run 2</span>
+uuid4()                                  →  a new random value on every run,
+                                            so a retry can never find run 1
+
+workflow id = <span class="s">"po-"</span> + key     <span class="c"># a second start of the same order is refused</span></div>
+  <div class="cap" style="left:720px;top:600px;width:780px"><b>Fig. 3.</b> Keys as printed by NB7 §3. The intent tool (Lecture 3) derives the same kind of key when the model gives none.</div>
+</section>
+
+<!-- 10 -->
+<section class="slide" data-plate="Check Before You Write">
+  <div class="col" style="width:500px">
+    <h2 style="font-size:44px">Three lines of logic</h2>
+    <ol class="lst2" style="font-size:23px;padding-left:28px">
+      <li>Look the key up.</li>
+      <li class="step">Found: return it. Do not write.</li>
+      <li class="step">Not found: write, carrying the key. On a timeout, go round again; the look-up decides.</li>
+    </ol>
+    <p class="step measured" style="font-size:20px">NB7 §4: two timeouts after commit in a row. The keyed write returned PO/2026/01182 on attempt 2; one order carries the key.</p>
+  </div>
+  <div class="code" style="position:absolute;left:660px;top:140px;width:850px;white-space:pre"><span class="k">def</span> create_order(self, o, request_no, t_h):         <span class="c"># bahi/durable/activities.py</span>
+    s = self.erp.session(o.user)
+    rows = self._call(s, <span class="s">"po_search"</span>, client_ref=o.key)[<span class="s">"rows"</span>]
+    <span class="k">if</span> rows:                         <span class="c"># an earlier attempt saved it</span>
+        <span class="k">return</span> {**self.receipt(s, rows[0][<span class="s">"po_no"</span>]), <span class="s">"found_by_key"</span>: <span class="k">True</span>}
+    self._guard(o.user)                <span class="c"># kill switch, before any write</span>
+    rate, tax_cd, _ = self._price(s, o)
+    f = self._call(s, <span class="s">"po_fetch"</span>, sup_cd=o.supplier_code, itm_cd=o.item_code,
+                   pr_no=request_no)
+    saved = self._call(s, <span class="s">"po_save"</span>, ..., fetch_tok=f[<span class="s">"fetch_tok"</span>],
+                       client_ref=o.key)   <span class="c"># ServiceTimeout -> retryable error</span>
+    <span class="k">return</span> {**self.receipt(s, saved[<span class="s">"doc_no"</span>]), <span class="s">"found_by_key"</span>: <span class="k">False</span>}</div>
+  <div class="cap" style="left:660px;top:520px;width:850px"><b>Fig. 4.</b> The create-order activity. Its receipt is read back from Bahi, never taken from Bahi's message.</div>
+</section>
+
+<!-- 11 -->
+<section class="slide" data-plate="The Retry Drill">
+  <div class="col" style="width:440px">
+    <h2 style="font-size:44px">Fifty faults, three clients</h2>
+    <p style="font-size:22px">Half the faults hit before the commit, half after. Each trial is a fresh Bahi and a different quantity.</p>
+    <p class="step" style="font-size:22px"><b class="b">Redo the job</b>: a retry decorator around “place the order”.</p>
+    <p class="step" style="font-size:22px"><b class="b">Press Save again</b>: re-fetch, re-save, no key.</p>
+    <p class="step" style="font-size:22px"><b class="a">Keyed workflow</b>: the Temporal activities.</p>
+    <p class="small">The sandbox Rohit approves whatever reaches his inbox.</p>
+  </div>
+  <div class="fig" data-fig="sweep" style="left:580px;top:112px;width:940px;height:640px"></div>
+  <div class="cap" style="left:580px;top:790px;width:940px"><b>Fig. 5.</b> Each cell is one trial; tap the buttons. <code>logs/retry_sweep.json</code> (seed 7).</div>
+</section>
+
+<!-- 12 -->
+<section class="slide" data-plate="What We Measured">
+  <div class="col" style="width:470px">
+    <h2 style="font-size:44px">Duplicates, and the quieter failures</h2>
+    <p style="font-size:22px">Redoing the job made a second order in <b>25 of 50</b> trials: 33 extra orders, ₹92,95,804 extra committed, 6,62,000 extra gaskets.</p>
+    <p class="step" style="font-size:22px">Pressing Save again never duplicated (Bahi's request rule), but reported <b>8 released orders as failed</b> and left <b>9 saved orders</b> unreleased.</p>
+    <p class="step" style="font-size:22px">The keyed workflow: <b>50 of 50</b> with exactly one released order.</p>
+    <div class="measured step" style="font-size:19px">Surprise: redoing the job duplicated even when the fault came <i>before</i> the commit, in 8 of 25 trials. The request and order from the first try had already been saved.</div>
+  </div>
+  <div class="fig" data-fig="sweepbars" style="left:620px;top:150px;width:880px;height:560px"></div>
+  <div class="cap" style="left:620px;top:740px;width:880px"><b>Fig. 6.</b> Totals over 50 faults. <code>logs/retry_sweep.json</code>, <code>summary</code>.</div>
+</section>
+
+<!-- 13 -->
+<section class="slide" data-plate="Waiting Is the Other Half">
+  <div class="lec-top" style="top:104px"><h2 style="font-size:50px">A chat turn cannot wait two days</h2><p class="sub">Retrying one call is half of job 8. The other half is waiting for Rohit.</p></div>
+  <div class="ba" style="top:270px">
+    <div class="card bf step"><span class="tag bf">Where the wait lives today</span><h3>In Kavita's head</h3>She remembers the request, checks on Tuesday, phones on Wednesday. If she is on leave, the order waits with her.</div>
+    <div class="card af step"><span class="tag af">Where it must live</span><h3>Somewhere that survives</h3>Not in a Python process: servers restart, deploys happen, laptops close. The wait, its timers and every step done so far must be stored outside the process.</div>
+  </div>
+  <p class="step" style="position:absolute;left:100px;right:100px;top:640px;font-size:26px"><b>Temporal</b> does exactly this: it stores each workflow's history on a server, and any worker can pick the workflow up from there.</p>
+</section>
+
+<!-- 14 -->
+<section class="slide" data-plate="Temporal in Six Words">
+  <div style="position:absolute;left:100px;right:100px;top:110px;display:grid;grid-template-columns:1fr 1fr;gap:16px 26px">
+    <div class="def"><b>Workflow</b>Ordinary Python for the whole path: request, wait, order, release. Every step it takes is recorded.</div>
+    <div class="def step"><b>Activity</b>A step that touches the world (Bahi). Temporal retries it on failure, on whichever worker is alive.</div>
+    <div class="def step"><b>Signal</b>A message into a running workflow: “Rohit has decided”, or “look again”.</div>
+    <div class="def step"><b>Timer</b>A durable sleep: “wake me in 24 hours”. It lives on the server, not in the process.</div>
+    <div class="def step"><b>Worker</b>A process that runs workflow and activity code. Kill it and start another: same workflows.</div>
+    <div class="def step"><b>History</b>The list of events the server stored. After a crash the workflow code is re-run against it to rebuild its state.</div>
+  </div>
+  <p class="step" style="position:absolute;left:100px;right:100px;top:700px;font-size:24px">So workflow code must be <b>deterministic</b>: it never calls Bahi, reads the clock or draws a random number itself. Those go in activities, <code>workflow.now()</code> and timers.</p>
+</section>
+
+<!-- 15 -->
+<section class="slide" data-plate="Kavita's Order as a Workflow">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:46px">PurchaseOrderWorkflow</h2></div>
+  <div class="fig" data-fig="wfshape" style="left:100px;top:200px;width:1400px;height:560px"></div>
+  <div class="step" style="display:none"></div><div class="step" style="display:none"></div><div class="step" style="display:none"></div>
+  <div class="cap" style="left:100px;top:790px;width:1400px"><b>Fig. 7.</b> <code>bahi/bahi/durable/workflow.py</code>. The workflow id is <code>"po-" + key</code>.</div>
+</section>
+
+<!-- 16 -->
+<section class="slide" data-plate="The Run Method">
+  <div class="code" style="position:absolute;left:90px;top:110px;width:870px;white-space:pre;font-size:16px"><span class="k">@workflow.run</span>
+<span class="k">async def</span> run(self, o: OrderRequest, p: WaitPolicy) -> dict:
+    req = <span class="k">await</span> self._write(<span class="s">"raise_request"</span>, o, p=p)
+    self.request_no, self.gross = req[<span class="s">"request_no"</span>], req[<span class="s">"gross_value"</span>]
+    <span class="k">if</span> req[<span class="s">"status"</span>] == <span class="s">"PA"</span>:                 <span class="c"># above Kavita's ₹2,50,000</span>
+        self.stage = <span class="s">"waiting for approval"</span>
+        decided = <span class="k">await</span> self._wait_for_approval(o, p)
+        <span class="k">if</span> decided <span class="k">is None</span>:                    <span class="c"># 120 h, no decision</span>
+            <span class="k">await</span> self._act(<span class="s">"notify"</span>, o.user, o.user, ...)
+            <span class="k">return</span> self._done(<span class="s">"expired"</span>)
+        req = {**req, **decided}
+    <span class="k">if</span> req[<span class="s">"status"</span>] == <span class="s">"RJ"</span>:
+        <span class="k">return</span> self._done(<span class="s">"rejected"</span>)
+    po = <span class="k">await</span> self._write(<span class="s">"create_order"</span>, o, self.request_no, p=p)
+    <span class="k">if</span> po[<span class="s">"status_code"</span>] != <span class="s">"AP"</span>:              <span class="c"># e.g. Draft on a closed cost centre</span>
+        <span class="k">return</span> self._done(<span class="s">"needs a person"</span>, receipt=po)
+    rel = <span class="k">await</span> self._write(<span class="s">"release_order"</span>, o.user, po[<span class="s">"po_no"</span>], p=p)
+    <span class="k">return</span> self._done(<span class="s">"released"</span>, receipt=rel)</div>
+  <div class="col" style="left:1010px;width:500px;top:120px">
+    <h3 style="font-size:30px">Sorting errors</h3>
+    <table class="t step"><thead><tr><th>Error</th><th>Retry?</th></tr></thead><tbody>
+      <tr><td>ServiceTimeout (reply lost)</td><td class="n" style="color:var(--after)">yes, look up first</td></tr>
+      <tr><td>ERR-SYS-0503 server busy</td><td class="n" style="color:var(--after)">yes</td></tr>
+      <tr><td>any other Bahi refusal</td><td class="n" style="color:var(--before)">no: same answer</td></tr>
+      <tr><td>kill switch on</td><td class="n" style="color:var(--gold)">pause, re-check</td></tr>
+    </tbody></table>
+    <p class="step small" style="margin-top:12px">Retry policy: first after 2 s, doubling, at most 1 min apart, 6 attempts; each call may take 30 s.</p>
+  </div>
+</section>
+
+<!-- 17 -->
+<section class="slide" data-plate="Waiting for Rohit, Time-Skipped">
+  <div class="col" style="width:420px">
+    <h2 style="font-size:42px">Two days in one second</h2>
+    <p style="font-size:22px">Temporal's test server jumps over timers. The request goes to Rohit on Monday 09:00.</p>
+    <p class="step" style="font-size:22px">Every 4 hours the workflow reads the request back: Rohit may approve on Bahi's own screen, and nobody signals.</p>
+    <p class="step" style="font-size:22px">24 h: remind Rohit.</p>
+    <p class="step" style="font-size:22px">48 h: escalate to Anand Patil, plant head.</p>
+    <p class="step" style="font-size:22px">50 h: Rohit approves. Order saved, released.</p>
+  </div>
+  <div class="fig" data-fig="wait" style="left:560px;top:108px;width:960px;height:680px"></div>
+  <div class="cap" style="left:560px;top:796px;width:960px"><b>Fig. 8.</b> Bahi's own timestamps. <code>logs/approval_wait_50h.json</code>, <code>…_no_answer.json</code></div>
+</section>
+
+<!-- 18 -->
+<section class="slide" data-plate="The History of a Real Run">
+  <div class="col" style="width:440px">
+    <h2 style="font-size:42px">What Temporal stored</h2>
+    <p style="font-size:22px">191 events for the 50-hour run in our logged run (the count of workflow-task events moves by a few between runs; the Bahi calls and timers do not). Nothing here lives in the worker.</p>
+    <p class="step" style="font-size:22px">Timers: one started, one fired, every 4 hours.</p>
+    <p class="step" style="font-size:22px">Activities: 19 Bahi calls, each scheduled, started, completed.</p>
+    <p class="step" style="font-size:22px">One signal at hour 50, and the last timer cancelled.</p>
+  </div>
+  <div class="fig" data-fig="history" style="left:560px;top:108px;width:960px;height:640px"></div>
+  <div class="cap" style="left:560px;top:790px;width:960px"><b>Fig. 9.</b> The event history, fetched with <code>handle.fetch_history()</code>. <code>logs/approval_wait_50h.json</code>.</div>
+</section>
+
+<!-- 19 -->
+<section class="slide" data-plate="Signal, Poll, Read Back">
+  <div class="lec-top" style="top:104px"><h2 style="font-size:48px">The signal wakes it. Bahi decides.</h2></div>
+  <div style="position:absolute;left:100px;right:100px;top:220px;display:grid;grid-template-columns:repeat(3,1fr);gap:22px">
+    <div class="card"><h3><code>approval_decided</code></h3>Sent by the app after Rohit approves <b>with his own login</b>. Bahi checks his limit and that he is not the requester. The agent never sends it for him.</div>
+    <div class="card step"><h3><code>recheck</code></h3>“Look in Bahi now.” Carries no decision, so anyone may send it: the chat app, when Kavita says “Rohit approved it”.</div>
+    <div class="card step"><h3>a poll every 4 h</h3>Rohit may approve on Bahi's old approval screen. Nobody signals. The workflow finds out anyway.</div>
+  </div>
+  <p class="step" style="position:absolute;left:100px;right:100px;top:560px;font-size:25px">Whatever woke it, the workflow runs the <code>request_status</code> activity and believes only that. In the deploy smoke test, Kavita trying to approve her own request was refused by Bahi (<code>ERR-SEC-0001</code>), and the workflow did not move.</p>
+</section>
+
+<!-- 20 -->
+<section class="slide" data-plate="Kill the Worker">
+  <div class="col" style="width:420px">
+    <h2 style="font-size:42px">The crash drills</h2>
+    <p style="font-size:22px">Bahi survives (it stands in for the real server). The worker process dies.</p>
+    <p class="step" style="font-size:22px">Worker A is killed.</p>
+    <p class="step" style="font-size:22px">Worker B, a new process with no memory, reads the history and carries on.</p>
+    <p class="step" style="font-size:22px">Count what Bahi holds afterwards.</p>
+  </div>
+  <div class="fig" data-fig="crash" style="left:560px;top:108px;width:960px;height:640px"></div>
+  <div class="cap" style="left:560px;top:790px;width:960px"><b>Fig. 10.</b> Worker identities from the history. <code>logs/crash_while_waiting.json</code>, <code>logs/crash_after_commit.json</code>.</div>
+</section>
+
+<!-- 21 -->
+<section class="slide" data-plate="What the Crash Drills Showed">
+  <div style="position:absolute;left:100px;right:100px;top:110px">
+    <h2 style="font-size:46px">One request, one order, both times</h2>
+    <table class="t" style="margin-top:12px"><thead><tr><th>Drill</th><th>What died, and when</th><th>What carried on</th><th>Bahi afterwards</th></tr></thead><tbody>
+      <tr><td>While waiting</td><td>worker A, after the request was raised; 30 hours with no worker</td><td>worker B ran the hour-4 poll, the 24 h reminder (Tue 09:00), the approval at hour 30</td><td class="n">1 request · 1 order · RL</td></tr>
+      <tr class="step"><td>After the commit</td><td>worker A, frozen right after Bahi saved PO/2026/01182</td><td>create_order ran again on worker B as attempt 2; found by key; then release</td><td class="n">1 order · RL</td></tr>
+      <tr class="step"><td>HR leave (A7 example)</td><td>a process that saved LV/2026/00388 and forgot it</td><td>a fresh session retried with the same key; found it</td><td class="n">1 leave</td></tr>
+    </tbody></table>
+    <div class="measured step" style="margin-top:16px;font-size:20px">The test server holds its clock while a fired timer waits for a worker, so worker B ran the hour-4 poll at hour 4. A real server's clock keeps going: the overdue work would run late, once, when a worker comes back.</div>
+  </div>
+</section>
+
+<!-- 22 -->
+<section class="slide" data-plate="The Agent Hands Off to the Workflow">
+  <div class="col" style="width:520px">
+    <h2 style="font-size:42px">Same tools, durable commit</h2>
+    <p style="font-size:22px">The model sees the same eight tools as in Lecture 3.</p>
+    <p class="step" style="font-size:22px"><code>create_purchase_order(confirm=true)</code> now starts the workflow, with exactly the key the tool would use, and reports “waiting for approval”.</p>
+    <p class="step" style="font-size:22px">The chat can end. The workflow creates and releases the order after Rohit approves.</p>
+    <p class="step" style="font-size:22px">When Kavita says “Rohit approved it”, <code>order_status</code> sends <code>recheck</code> and reports what Bahi holds.</p>
+  </div>
+  <div class="code" style="position:absolute;left:680px;top:150px;width:830px;white-space:pre"><span class="c"># bahi/durable/agent_tools.py</span>
+tools = DurableIntentTools(IntentTools(erp.session(<span class="s">"KJOSHI"</span>)),
+                           durable=DurableBahi(erp), flags=Flags())
+agent = ToolLoopAgent(erp, <span class="s">"KJOSHI"</span>, tools=tools)
+
+<span class="c"># what the model gets back after it confirms</span>
+{<span class="s">"ok"</span>: true, <span class="s">"workflow_id"</span>: <span class="s">"po-K…"</span>,
+ <span class="s">"stage"</span>: <span class="s">"WAITING FOR APPROVAL"</span>,
+ <span class="s">"request_no"</span>: <span class="s">"PR/2026/04417"</span>, <span class="s">"po_no"</span>: null,
+ <span class="s">"next_step"</span>: <span class="s">"Tell the user the request is with the approver..."</span>}</div>
+</section>
+
+<!-- 23 -->
+<section class="slide" data-plate="Six Scenarios at This Layer">
+  <div style="position:absolute;left:100px;right:100px;top:104px">
+    <h2 style="font-size:44px;margin-bottom:12px">Five of six, and scenario 6 cost the same as scenario 2</h2>
+    <table class="t"><thead><tr><th>#</th><th>Scenario</th><th>Result</th><th>Workflow</th><th>Tokens</th><th>₹</th></tr></thead><tbody id="scoreT"></tbody></table>
+    <div class="measured step" style="margin-top:14px;font-size:20px">Scenario 6 used 20,629 tokens and ₹1.12, exactly what scenario 2 used: the timeout and its retry happened inside the workflow, and the model never saw them. Scenario 1 fails on the §6.2 citation, which is retrieval's job (Lecture 2), not this layer's. ToolLoopAgent + DurableIntentTools on gemini-3.8-flash. <code>logs/durable_scorecard_gemini_gemini-3.8-flash.json</code></div>
+  </div>
+</section>
+
+<!-- 24 -->
+<section class="slide part" data-plain="1">
+  <div class="center">
+    <div class="num">Production</div>
+    <h1>Running it for real</h1>
+    <p class="lede">A container, three environments, pinned versions, a rollout ladder, a kill switch and a runbook. All in <code>deploy/</code>, built and smoke-tested, not deployed.</p>
+  </div>
+</section>
+
+<!-- 25 -->
+<section class="slide" data-plate="One Image, Three Environments">
+  <div class="col" style="width:560px">
+    <h2 style="font-size:42px">The same bytes everywhere</h2>
+    <p style="font-size:22px">One Dockerfile: Bahi, the agent API and the Temporal worker in one process (the sandbox ERP is in memory, so one copy).</p>
+    <p class="step" style="font-size:22px">dev, staging and prod differ only in an env file and a secret. Secrets never enter the image.</p>
+    <p class="step" style="font-size:22px">Built on Modal from the Dockerfile and smoke-tested inside: <b>11 of 11</b> checks passed.</p>
+  </div>
+  <div class="card" style="position:absolute;left:720px;top:130px;width:780px;font-size:19px">
+    <table class="t"><thead><tr><th></th><th>dev</th><th>staging</th><th>prod</th></tr></thead><tbody>
+      <tr><td>Temporal</td><td>time-skipping test server</td><td>cluster, ns bahi-staging</td><td>cluster, ns bahi-prod</td></tr>
+      <tr><td>Rollout stage</td><td>full</td><td>assist</td><td>shadow</td></tr>
+      <tr><td>Model</td><td colspan="3">gemini:gemini-3.8-flash, pinned in versions.yaml</td></tr>
+      <tr><td>Secrets</td><td>bahi-dev</td><td>bahi-staging</td><td>bahi-prod</td></tr>
+      <tr><td>Flags</td><td>in memory</td><td colspan="2">/var/bahi/flags.json on a volume</td></tr>
+    </tbody></table>
+    <div class="step" id="smokeL" style="margin-top:12px;font:15px/1.5 var(--mono)"></div>
+  </div>
+  <div class="cap" style="left:720px;top:800px;width:780px"><b>Fig. 11.</b> <code>deploy/env/*.env</code>, <code>deploy/build_check.py</code> → <code>logs/deploy_smoke.json</code>.</div>
+</section>
+
+<!-- 26 -->
+<section class="slide" data-plate="Versions, Pinned">
+  <div class="col" style="width:560px">
+    <h2 style="font-size:42px">A changed word is a release</h2>
+    <p style="font-size:22px">Every prompt, tool schema, the workflow and the model are pinned with a hash in <code>versions.yaml</code>. The image build fails if the code no longer matches.</p>
+    <p class="step" style="font-size:22px">The workflow is special: Temporal replays <b>running</b> workflows through the code deployed now. One that has waited two days for Rohit must still replay.</p>
+    <p class="step" style="font-size:22px">So workflow changes go behind <code>workflow.patched("id")</code>, or under a new name, with the old code kept until its workflows drain.</p>
+  </div>
+  <div class="code" style="position:absolute;left:720px;top:140px;width:790px;white-space:pre"><span class="c"># deploy/versions.yaml (excerpt)</span>
+prompts:
+  toolloop_system:        {version: 3, sha: 1788c5267119}
+tools:
+  create_purchase_order:  {version: 2, sha: 9b0950b31d02}
+  release_purchase_order: {version: 1, sha: 6b3f601b1be1}
+workflow:
+  PurchaseOrder: {version: 2, sha: 9bd7d5546cb4,
+                  task_queue: bahi-purchasing}
+
+$ python -m deploy.versions --check
+versions OK: every prompt, tool schema and the
+workflow match versions.yaml</div>
+</section>
+
+<!-- 27 -->
+<section class="slide" data-plate="The Rollout Ladder and the Kill Switch">
+  <div class="col" style="width:420px">
+    <h2 style="font-size:42px">One rung at a time</h2>
+    <p style="font-size:22px">Shadow: real requests, no writes.</p>
+    <p class="step" style="font-size:22px">Assist: only a person's Confirm writes.</p>
+    <p class="step" style="font-size:22px">Partial: a cohort first.</p>
+    <p class="step" style="font-size:22px">Full.</p>
+    <p class="step" style="font-size:22px">Above every rung, the kill switch. The workflow pauses; it does not lose the order.</p>
+  </div>
+  <div class="fig" data-fig="ladder" style="left:540px;top:120px;width:980px;height:620px"></div>
+  <div class="cap" style="left:540px;top:780px;width:980px"><b>Fig. 12.</b> Tap a rung or the switch. Verdicts and the paused minutes from <code>logs/kill_switch.json</code>; gates in <code>deploy/rollout.yaml</code>.</div>
+</section>
+
+<!-- 28 -->
+<section class="slide" data-plate="The Runbook">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:46px">Four situations, written down before they happen</h2><p class="sub">First rule for anything that writes money: switch writes off first, investigate second.</p></div>
+  <div class="quad" style="top:250px;grid-template-columns:1fr 1fr">
+    <div class="card step"><h3>Bahi is down</h3>Leave the workflows: writes retry and look their key up. If it lasts, pull the switch so they pause instead of using up retries. Revive when <code>/readyz</code> is green.</div>
+    <div class="card step"><h3>An approval is stuck</h3>Read the diary. Reminders are automatic (24 h, 48 h). Send <code>recheck</code>, never an approval on someone's behalf. At 120 h the workflow stops and tells Kavita.</div>
+    <div class="card step"><h3>Duplicates appear</h3>Pull the switch. Run the duplicates query. Same key twice means a path that skipped the look-up. Cancel the extra in Bahi as its owner, not as the agent.</div>
+    <div class="card step"><h3>Rolling back</h3>Prompt, tool, model: redeploy the previous image. Workflow code: <code>patched</code> or a new name, both kept until old workflows drain. Bad data: not a rollback.</div>
+  </div>
+  <div class="cap" style="left:100px;top:800px"><code>deploy/runbook.md</code></div>
+</section>
+
+<!-- 29 -->
+<section class="slide" data-plate="What Production Grade Means Here">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:44px">The production checklist, with Lecture 7's items filled in</h2></div>
+  <div class="fig" data-fig="checklist" style="left:100px;top:190px;width:1400px;height:600px"></div>
+  <div class="step" style="display:none"></div>
+  <div class="cap" style="left:100px;top:800px;width:1400px"><b>Fig. 13.</b> From the course plan. Teal items are built and measured in this lecture.</div>
+</section>
+
+<!-- 30 -->
+<section class="slide" data-plate="Build · NB7">
+  <div class="col w" style="width:640px">
+    <span class="nb-ref">NB7_the_night_shift</span>
+    <h2 style="font-size:42px;margin-top:14px">What you build</h2>
+    <ol class="lst2" style="font-size:22px;padding-left:28px">
+      <li>Scenario 6 replayed, two agents</li>
+      <li>A lost reply, both sides</li>
+      <li>Keys from content (exercise 1)</li>
+      <li>Check before you write (exercise 2)</li>
+      <li>The 50-fault retry drill</li>
+      <li>The workflow: signal, timers (exercise 3)</li>
+      <li>Kill the worker (exercise 4)</li>
+      <li>Kill switch and ladder (exercise 5)</li>
+      <li>Six scenarios at this layer; your module</li>
+    </ol>
+  </div>
+  <div class="code" style="position:absolute;left:820px;top:150px;width:690px;white-space:pre"><span class="c"># start it, approve it, read its history</span>
+<span class="k">from</span> bahi.durable.runtime <span class="k">import</span> DurableBahi
+<span class="k">from</span> bahi.durable.model <span class="k">import</span> OrderRequest
+
+d = DurableBahi(erp)          <span class="c"># test server + worker</span>
+wid = d.start(OrderRequest(<span class="s">"KJOSHI"</span>, <span class="s">"DP-RJK-0042"</span>,
+      <span class="s">"GSK-SIL-05L"</span>, 20000, <span class="s">"PRD-07"</span>,
+      <span class="s">"2026-11-02"</span>, ref=<span class="s">"msg-17"</span>))
+d.status(wid)[<span class="s">"stage"</span>]   <span class="c"># 'waiting for approval'</span>
+d.skip(hours=24)              <span class="c"># reminder goes out</span>
+d.approve(wid, by=<span class="s">"RMEHTA"</span>)  <span class="c"># Rohit, in Bahi</span>
+d.result(wid)[<span class="s">"outcome"</span>]  <span class="c"># 'released'</span>
+d.history(wid)                <span class="c"># every event</span></div>
+  <div class="cap" style="left:820px;top:560px;width:690px">Runs on free Colab in replay mode, no key. Temporal's test server downloads on first use.</div>
+</section>
+
+<!-- 31 -->
+<section class="slide" data-plate="Assignment A7">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:48px">A7 · The night shift for your module</h2></div>
+  <div class="ba" style="top:220px">
+    <div class="card"><h3>Four drills, passed</h3><ol style="font-size:22px">
+      <li>D1 timeout after the commit</li><li>D2 error before the commit</li><li>D3 crash after the commit</li><li>D4 kill switch</li></ol>
+      <p class="small">Describe your module's main write as a <code>WriteSpec</code> and run <code>run_module_drills</code>. HR leave passes 4 of 4.</p></div>
+    <div class="card step"><h3>A runbook</h3>One page in the shape of <code>deploy/runbook.md</code>: your ERP down, an approval stuck, duplicates, rolling back. Plus your module's waits: who approves, when to remind, when to escalate.</div>
+  </div>
+  <div class="opens step" style="top:640px;border-color:var(--gold);background:#F1E9D2"><span class="k" style="color:var(--gold)">Graded under operations (15)</span>Guided track: fill in the WriteSpec and the runbook template. Builder track: also wrap your module's commit path in a workflow with a signal and two timers, and show its history.</div>
+</section>
+
+<!-- 32 -->
+<section class="slide" data-plate="Where We Are">
+  <div class="col" style="width:440px">
+    <h2 style="font-size:44px">Eight of nine jobs</h2>
+    <p style="font-size:23px">Job 8 was the one nobody wrote down: noticing a save that hung, and chasing a manager who was travelling.</p>
+    <p class="step" style="font-size:23px">Next week, demo day: your module, its before and after, and a change announced today that it must absorb.</p>
+  </div>
+  <div class="fig" data-fig="jobs" style="left:600px;top:150px;width:900px;height:560px"></div>
+  <div class="cap" style="left:600px;top:740px;width:900px"><b>Fig. 14.</b> The nine jobs of the form and the lecture that took each over.</div>
+</section>
+
+</div>
+<script src="figs.js"></script>
+<script src="../../engine/plates.js"></script>
+</body>
+</html>

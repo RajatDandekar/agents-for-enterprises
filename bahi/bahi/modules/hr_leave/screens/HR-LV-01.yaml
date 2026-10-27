@@ -1,0 +1,27 @@
+code: HR-LV-01
+title: LEAVE BALANCE ENQUIRY
+menu: HR > Leave > Balance Enquiry
+roles: [PUR-EXEC, PUR-SR, PUR-MGR, PLANT-HEAD, STORES, HR-EXEC]
+fields:
+  - {name: user_id, label: USER ID, type: str, req: false, help: blank = you}
+  - {name: q, label: NAME LIKE, type: str, req: false, help: two Kavitas on the roll}
+  - {name: emp_cd, label: EMP CD, type: str, req: true, help: from Find Emp}
+  - {name: yr, label: YEAR, type: int, req: false}
+  - {name: bal, label: BALANCE GRID, type: grid, readonly: true}
+  - {name: co_open, label: OPEN CO CREDITS, type: grid, readonly: true}
+tasks:
+  - button: Find Emp
+    service: lv_emp_get
+    sends: [user_id, q]
+    fills: [emp_cd]
+  - button: Show
+    service: lv_bal_get
+    sends: [emp_cd, yr]
+    fills: [bal, co_open]
+    needs: [Find Emp]
+  - button: Holidays
+    service: lv_hol_list
+    sends: []
+    fills: []
+state:
+  - {rule: "Show needs an EMP CD; the screen does not take a name", error: ERR-SYS-0421}

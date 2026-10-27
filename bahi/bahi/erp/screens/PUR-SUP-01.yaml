@@ -1,0 +1,20 @@
+code: PUR-SUP-01
+title: SUPPLIER MASTER CREATE
+menu: Masters > Supplier create
+roles: [PUR-EXEC, PUR-SR, SYS-ADMIN]
+help: >-
+  Search the supplier list first: a supplier may already exist under another name or an old code.
+  The food-grade certificate is uploaded separately and must be on file before the first order for food-contact parts.
+fields:
+  - {name: name, label: SUP NAME, type: str, req: true}
+  - {name: city, label: CITY, type: str, req: true}
+  - {name: state, label: STATE CD (2), type: str, req: true, help: "MH, GJ ..."}
+  - {name: gstin, label: GSTIN, type: str, req: false}
+  - {name: pt_cd, label: PAY TERM CD, type: str, req: false, lookup: pt_list, default: N30}
+  - {name: sup_cd, label: SUP CD, type: str, readonly: true}
+tasks:
+  - {button: Save, service: sup_create, sends: [name, city, state, gstin, pt_cd], fills: [sup_cd]}
+  - {button: Close, service: null}
+state:
+  - {rule: "Same GSTIN already registered", error: ERR-SUP-0118}
+  - {rule: "A near-duplicate name (Deccan Polymer Industries) is NOT caught; only an exact GSTIN is", error: null}

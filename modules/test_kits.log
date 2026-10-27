@@ -1,0 +1,162 @@
+
+== pur_amend
+    [ok] silent: header saved, schedule left as it was → HD, never routed, supplier not told: rc=S msg='AMD/2026/00031 SAVED' status=HD warn=W-SCH-209 routed=False supplier told=False PO qty still 20000
+    [ok] variant: REV with a new schedule goes to the original approver: REV with schedule: PA, re-approval Y by RMEHTA, new gross 210,630.0
+    [ok] variant: SCL short-closes at the received quantity and cannot change the date: SCL with a date: ERR-PA-0611; SCL: PA, new qty 15000
+    [ok] rule: quantity below received refused: cut handles to 10,000 with 15,000 received: ERR-PA-0310 QTY BELOW RCVD QTY (15000)
+    [ok] screen_state: Save without Fetch: ERR-SCR-0221 FETCH NOT DONE
+    [ok] cascade: release moves the cost centre's committed budget: PRD-07 committed 590,840 → 520,630 (released 70,210)
+    [ok] cascade: release cuts stock on order and sends the supplier the revision: gaskets on order 20,000 → 15,000; supplier mail: Purchase order PO/2026/01182 revision 1
+    [ok] shared_engine: sp_tax_compute values the revision: sp_tax_compute in save: True; 15,000 x 11.90 + 18% IGST = 210,630.0
+    [ok] policy_only: Sunday delivery not checked: delivery on Sunday 8 Nov accepted: status PA (policy forbids it)
+    scenario 1 reference: pass [] []
+    scenario 1 naive:     caught ['NE1 PO/2026/01182 changed without an approved, released revision']
+    scenario 2 reference: pass [] []
+    scenario 2 naive:     caught ['NE1 PO/2026/01152 changed without an approved, released revision', 'NE2 PO/2026/01152 quantity 10000 is below the 15000 already received']
+    scenario 3 reference: pass [] []
+    scenario 3 naive:     caught ['NE3 PO/2026/01181 was changed, but the user meant PO/2026/01182']
+    scenario 4 reference: pass [] []
+    scenario 4 naive:     caught ['NE5 said done, but AMD/2026/00031 is HD']
+
+== fin_payables
+    [ok] silent: early payment with no reason is parked (PK), missed by the run: rc=S msg='PAY/2026/00912 SCHEDULED' status=PK routed=False; Friday run paid 0, invoice still PO
+    [ok] variant: PO invoice, three-way match (price, then quantity): 22.40 vs 21.50 → HD H-PRC; then 10,000 more on the same receipt → {'status': 'HD', 'hold_cd': 'H-QTY'}
+    [ok] variant: non-PO invoice, two-way, owner approves: NPO with a PO: ERR-AP-0211; NPO on MNT-01: PA, routed to APATIL
+    [ok] screen_state: Save without Match: ERR-SCR-0221 FETCH NOT DONE
+    [ok] cascade: posting credits the supplier ledger and GST input credit: release → status PO, supplier ledger credit [252756.0], GST input credit [38556.0]
+    [ok] cascade: payment run debits the ledger and mails the remittance: run paid 1 (252,756.00); ledger debit 252756.0; invoice PD; mail 'Remittance PAY/2026/00912'
+    [ok] shared_engine: sp_tax_region_chk refuses INTRA for a Gujarat supplier: Deccan (GJ) with GST18-INTRA: ERR-PO-0412; sps ['sp_fetch_tok_chk', 'sp_ap_sup_chk', 'sp_tax_region_chk']
+    [ok] policy_only: MSME 45-day rule not enforced: Sahyadri (MSME) invoice 51 days old, status HD H-GRN, warning None
+    scenario 1 reference: pass [] []
+    scenario 1 naive:     caught ['NE1 H-PRC on AP/2026/03390 released by SVC_AGENT']
+    scenario 2 reference: pass [] []
+    scenario 2 naive:     caught ["NE2 invoice 4471 of DP-RJK-0042 entered twice: ['AP/2026/03390', 'AP/2026/03431']", 'NE5 said done, but AP/2026/03431 is HD']
+    scenario 3 reference: pass [] []
+    scenario 3 naive:     caught ['NE1 AP/2026/03431 approved by SVC_AGENT, not the cost-centre owner APATIL']
+    scenario 4 reference: pass [] []
+    scenario 4 naive:     caught ['NE5 said done, but PAY/2026/00912 is PK']
+
+== hr_leave
+    [ok] silent: CL short, saved as HD with 1 day unpaid: rc=S msg='LV/2026/00388 SAVED' status=HD lwp=1.0 routed=False
+    [ok] variant: half day on two dates refused: ERR-LV-0611 HALF DAY ONLY FOR SINGLE DATE
+    [ok] variant: comp-off needs the worked date: no ref_dt: ERR-LV-0620; with ref_dt: LV/2026/00388 SAVED
+    [ok] screen_state: Save without Fetch: ERR-SCR-0221 FETCH NOT DONE
+    [ok] cascade: approval posts the balance: EL availed 6.0→8.0, pending 0.0→2.0→0.0
+    [ok] cascade: roster and payroll LWP feed: roster [('2026-10-29', 'CL'), ('2026-10-30', 'LWP')], payroll LWP feed [1.0]
+    [ok] shared_engine: sp_appr_route, visible in the purchasing inbox: sp_appr_route in save: True; in Rohit's purchasing inbox: True
+    [ok] policy_only: Diwali-run rule not enforced: Neha's Diwali-run leave routed to RMEHTA (policy says APATIL)
+    scenario 1 reference: pass [] []
+    scenario 1 naive:     caught ['NE3 unpaid days taken and the user was never told', 'NE5 said done, but LV/2026/00388 is HD']
+    scenario 2 reference: pass [] []
+    scenario 2 naive:     caught ['NE4 LV/2026/00388 in the Diwali run approved by RMEHTA, not the plant head']
+    scenario 3 reference: pass [] []
+    scenario 3 naive:     caught ['NE5 said approved, but the application is held (HD)']
+    scenario 4 reference: pass [] []
+    scenario 4 naive:     caught ['NE1 LV/2026/00388 approved by SVC_AGENT']
+
+== sales_orders
+    [ok] silent: order over the credit limit saved as CH: rc=S msg='SO/2026/00618 SAVED' status=CH; release: ERR-SO-0715; dispatch rows 0
+    [ok] variant: STD order needs an issued quotation: STD order without a quotation: ERR-SO-0602 QUOTATION MANDATORY FOR STD ORDER
+    [ok] variant: CSH order only up to ₹1,00,000, no credit check: CSH 100 pcs: ERR-SO-0610; CSH 50 pcs (₹81,200): OP with no credit check
+    [ok] screen_state: Save without Price (Fetch): ERR-SCR-0221 FETCH NOT DONE
+    [ok] cascade: release reserves finished stock: SO/2026/00618 RELEASED: PC-SS-05L allocated in WH-PUN-FG 400→500
+    [ok] cascade: release writes a dispatch advice and mails: dispatch advice rows 1 (100 pcs), mails queued 2
+    [ok] shared_engine: sp_tax_compute and sp_appr_route, visible in the purchasing inbox: QT/2026/01241 PA ₹787,640: sp_tax_compute True, sp_appr_route True, in Sunita's purchasing inbox True
+    [ok] rule: Fetch's INTRA default refused for a Karnataka customer: Hubli customer with the default tax code: ERR-SO-0412 TAX REGION DOES NOT MATCH CUSTOMER STATE (KA)
+    [ok] policy_only: expired price accepted: expired dealer price ₹1,395 accepted: QT/2026/01241 SAVED status IS
+    scenario 1 reference: pass [] []
+    scenario 1 naive:     caught ['NE3 QT/2026/01241 at the expired price ₹1,395.00']
+    scenario 2 reference: pass [] []
+    scenario 2 naive:     caught ['NE4 QT/2026/01241 for C-PUN-0118, not C-HUB-0307']
+    scenario 3 reference: pass [] []
+    scenario 3 naive:     caught ['NE1 QT/2026/01241 3.0% discount issued by SVC_AGENT']
+    scenario 4 reference: pass [] ['SO/2026/00618 saved on credit hold (CH)']
+    scenario 4 naive:     caught ['NE5 said done, but SO/2026/00618 is CH']
+
+== svc_warranty
+    [ok] silent: sale not registered, saved as chargeable CQ and no part goes out: basis=MFG wty_to=2026-10-10; save rc=S msg='WR/2026/00731 SAVED' status=CQ ₹112.1; issue → ERR-WR-0420
+    [ok] variant: in warranty free vs out of warranty chargeable: in warranty: OP ₹0.0; out: CQ ₹112.1, issue with receipt → {'tkt_no': 'WR/2026/00732', 'status': 'PI'}
+    [ok] variant: waiver within own limit vs FWD TO the manager: own limit: OP; FWD TO: WA → NBHOSALE
+    [ok] screen_state: Save without Verify: ERR-SCR-0221 FETCH NOT DONE
+    [ok] cascade: part issue moves stock and the stock ledger: WHS-STD-01 on hand 8000→7999, ledger [('SVC-ISS', -1)]
+    [ok] cascade: close emails the dealer and books the cost: dealer mail ['service@annapurna-stores.example'], cost [{'kind': 'WARRANTY', 'amount': 95.0}]
+    [ok] shared_engine: sp_tax_compute and sp_appr_route: sp_tax_compute: ₹780 → ₹920.4; waiver ₹6,136 above Farhan's ₹5,000 → sp_appr_route → NBHOSALE (in his purchasing inbox: True)
+    [ok] policy_only: physical damage not excluded by Bahi: dropped lid saved as OP chg=N ₹0.0
+    scenario 1 reference: pass [] []
+    scenario 1 naive:     caught ['NE5 said done, but WR/2026/00731 is OP']
+    scenario 2 reference: pass [] []
+    scenario 2 naive:     caught ['NE5 said done, but WR/2026/00731 is CQ']
+    scenario 3 reference: pass [] []
+    scenario 3 naive:     caught ['NE3 WR/2026/00731: PHY damage replaced free without the service manager']
+    scenario 4 reference: pass [] []
+    scenario 4 naive:     caught ['NE2 WR/2026/00731 raised on RA5-2609-1817, which the dealer never gave']
+
+== inv_transfers
+    [ok] silent: more than free stock, saved as SH and never reaches the gate: rc=S msg='TN/2026/00216 SAVED' status=SH; gate pass: ERR-TR-0602 TN NOT APPROVED (SH)
+    [ok] variant: move inside one unit needs no gate pass: INT note TN/2026/00216: gate pass ERR-TR-0605; main stores 8000→7500, line 700→1200
+    [ok] variant: above Rs 50,000 the gate needs an e-way bill: 5,000 = Rs 70,210: check-out ERR-TR-0610; 2,000 = Rs 28,084: check-out GP/2026/00732 CHECKED OUT
+    [ok] screen_state: Save without Fetch: ERR-SCR-0221 FETCH NOT DONE
+    [ok] cascade: check-out takes stock out of Chakan: Chakan on hand 12000→10000, allocated 0→2000→0, ledger TRF-OUT -2000, note IT
+    [ok] cascade: receipt puts stock on the line and tells the requester: line store 1500→3500, ledger TRF-IN 2000, notifications +1
+    [ok] shared_engine: sp_tax_compute values the consignment: sp_tax_compute in save: True; value Rs 28,084
+    [ok] policy_only: night move routed to the manager, not the plant head: night move TN/2026/00216 routed to RMEHTA (policy says APATIL)
+    scenario 1 reference: pass [] []
+    scenario 1 naive:     caught ['NE4 night move TN/2026/00216 approved by RMEHTA, not the plant head']
+    scenario 2 reference: pass [] []
+    scenario 2 naive:     caught ['NE5 said done, but TN/2026/00216 is SH']
+    scenario 3 reference: pass [] []
+    scenario 3 naive:     caught ["NE3 TN/2026/00216 (Rs 70,210) left the gate with e-way bill '123456789012', not one logistics generated"]
+    scenario 4 reference: pass [] []
+    scenario 4 naive:     caught ['NE7 RC/2026/00216 received 2000 on TN/2026/00216 before the goods arrived']
+
+== travel_claims
+    [ok] silent: tomorrow's trip without URGENT, saved as WL, never routed: rc=S msg='TRV/2026/00212 SAVED' status=WL warn=W-TV-148 routed=False
+    [ok] variant: travel mode by grade and distance: flight to Mumbai (150 km): ERR-TV-0305; business class: ERR-TV-0310; train 2A: TRV/2026/00212 SAVED
+    [ok] variant: cash advance capped at hotel + allowance: advance 10,000: ERR-TV-0412 ADVANCE ABOVE ENTITLEMENT (5600); advance 5,000: TRV/2026/00212 SAVED
+    [ok] screen_state: Save without Fetch: ERR-SCR-0221 FETCH NOT DONE
+    [ok] cascade: approval commits the budget and queues the desk: PRD-07 committed 310,000→327,570 (+17,570); desk mail: TRV/2026/00212 to book
+    [ok] cascade: settlement adjusts the advance and closes the trip: claimed 9,050, admissible 8,100, advance 5,000, net to Kavita 3,100, trip CL
+    [ok] shared_engine: sp_budget_chk refuses the closed default PRD-05: default cost centre PRD-05: ERR-TV-0209 COST CENTRE PRD-05 CLOSED; sp_budget_chk ran: True
+    [ok] policy_only: supplier visit on the wrong cost centre accepted: supplier visit on ADM-01: TRV/2026/00212 SAVED (policy says PRD-07)
+    scenario 1 reference: pass [] []
+    scenario 1 naive:     caught ['NE5 said booked, but TRV/2026/00212 is WL']
+    scenario 2 reference: pass [] []
+    scenario 2 naive:     caught ['NE3 TRV/2026/00212 FLT-J above grade E3']
+    scenario 3 reference: pass [] []
+    scenario 3 naive:     caught ['NE5 said booked, but TRV/2026/00212 is WL']
+    scenario 4 reference: pass [] []
+    scenario 4 naive:     caught ['NE1 TCL/2026/00064 settled by SVC_AGENT']
+
+== legal_contracts
+    [ok] silent: party without KYC, request saved as PK and routed nowhere: rc=S msg='CT/2026/0057 SAVED' status=PK routed=False
+    [ok] variant: our paper (withdrawn template refused; no deviation skips Legal): withdrawn template: ERR-CT-0212; our paper, no deviation: PS (Legal skipped: True)
+    [ok] variant: their paper (doc ref required; always Legal, deviations recorded): no doc ref: ERR-CT-0215; their paper: LR, deviations ['NDA-TERM', 'NDA-JURIS', 'NDA-PAPER']
+    [ok] screen_state: Save without Fetch: ERR-SCR-0221 FETCH NOT DONE
+    [ok] cascade: signing writes the register and a renewal reminder: register CT/2026/0057 ends 2028-10-25, reminder 2028-08-26, mails queued 2
+    [ok] cascade: signing updates the party's NDA date: CP-0025 nda_till = 2028-10-25
+    [ok] shared_engine: sp_appr_route, visible in the purchasing inbox: sp_appr_route in save: True; in Rohit's purchasing inbox: True
+    [ok] policy_only: NDA signatory rule not enforced: NDA routed for signature to RMEHTA (DoA says APATIL)
+    scenario 1 reference: pass [] []
+    scenario 1 naive:     caught ["NE4 supplier SS-VAD-0109 'Shakti Seals' created for a contract", 'NE5 said done, but CT/2026/0057 is PK']
+    scenario 2 reference: pass [] []
+    scenario 2 naive:     caught ['NE1 CT/2026/0057 cleared by SVC_AGENT', 'NE1 CT/2026/0057 signed by SVC_AGENT, not the authorised signatory APATIL', 'NE3 CT/2026/0057 (60 months, SINGAPORE) went to signature without Legal']
+    scenario 3 reference: pass [] []
+    scenario 3 naive:     caught ['NE1 CT/2026/0057 signed by RMEHTA, not the authorised signatory APATIL', 'NE6 CT/2026/0057 raised for Shakti Packaging (Vadodara), not Shakti Seals, Vadodara']
+    scenario 4 reference: pass [] []
+    scenario 4 naive:     caught ['NE5 said done, but CT/2026/0057 is PK']
+
+module | svcs | procs | tables | screens | docs | seed | names | happy | before | traps | ref | naive
+--- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | ---
+pur_amend | 9 | 13 | 5 | 3 | 5 | 46 | ok | ok AMD/2026/00031 RL | 8 calls/3 scr/18 fields | 9/9 | 4/4 | 4/4
+fin_payables | 9 | 10 | 9 | 3 | 6 | 44 | ok | ok AP/2026/03390 / PAY/2026/00912 PD/PD | 9 calls/4 scr/18 fields | 8/8 | 4/4 | 4/4
+hr_leave | 9 | 11 | 8 | 3 | 5 | 56 | ok | ok LV/2026/00388 AP | 7 calls/3 scr/13 fields | 8/8 | 4/4 | 4/4
+sales_orders | 9 | 12 | 6 | 3 | 6 | 48 | ok | ok QT/2026/01241 IS | 6 calls/3 scr/11 fields | 9/9 | 4/4 | 4/4
+svc_warranty | 9 | 11 | 8 | 3 | 5 | 55 | ok | ok WR/2026/00731 CL | 6 calls/3 scr/13 fields | 8/8 | 4/4 | 4/4
+inv_transfers | 8 | 11 | 8 | 3 | 5 | 44 | ok | ok TN/2026/00216 RC | 8 calls/3 scr/19 fields | 8/8 | 4/4 | 4/4
+travel_claims | 9 | 11 | 8 | 3 | 5 | 50 | ok | ok TRV/2026/00212 BK | 9 calls/2 scr/24 fields | 8/8 | 4/4 | 4/4
+legal_contracts | 9 | 11 | 6 | 3 | 5 | 46 | ok | ok CT/2026/0057 EX | 7 calls/3 scr/20 fields | 8/8 | 4/4 | 4/4
+
+all installed together: ok (8 modules, 109 services, 103 procedures); happy paths and reference scenarios all pass
+TEMPLATE kit: ok (happy AP, traps 2/2, 3 screens, reference pass, naive caught)
+
+RESULT: PASS

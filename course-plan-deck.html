@@ -1,0 +1,1172 @@
+<title>From Forms to Agents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a 1600 x 900 plate deck (same grammar as The Anatomy of AI), on cool ledger paper.
+   Two inks carry the story: ledger red = the legacy form-based ERP (before), deep teal = the AI-native ERP (after). */
+:root{
+  --paper:#F3F5F2; --paper-2:#E7ECE8; --card:#FAFBF9;
+  --ink:#1B2030; --ink-2:#4A5265; --ink-3:#848B9B; --rule:#C6CEC9;
+  --before:#A3372B; --before-soft:#F3E2DE; --after:#136C76; --after-soft:#DCEDEE; --gold:#8E6E12;
+  --display:"Newsreader", Georgia, serif; --serif:"Source Serif 4", Georgia, serif; --mono:"IBM Plex Mono", Menlo, monospace;
+  --win:#D4D0C8; --win-dark:#808080; --win-title:#0A246A; --win-title2:#A6CAF0;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--paper);color:var(--ink)}
+body{font:400 26px/1.45 var(--serif);-webkit-font-smoothing:antialiased}
+.deck{position:fixed;left:50%;top:50%;width:1600px;height:900px;background:var(--paper)}
+.slide{position:absolute;inset:0;display:none;font-size:27px}
+.slide.active{display:block}
+.frame{position:absolute;inset:26px;border:2px solid var(--ink);pointer-events:none}
+.frame::after{content:"";position:absolute;inset:7px;border:1px solid var(--rule)}
+.plate-head{position:absolute;left:0;right:0;top:52px;text-align:center;font:600 17px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--ink-2)}
+.folio{position:absolute;left:0;right:0;bottom:44px;text-align:center;font:italic 400 20px/1 var(--display);color:var(--ink-3)}
+h1,h2,h3{font-family:var(--display);font-weight:600;margin:0;text-wrap:balance}
+.slide h1{font-size:104px;line-height:.98;letter-spacing:-.01em}
+.slide h2{font-size:58px;line-height:1.05;margin-bottom:24px}
+.slide h3{font-size:30px;line-height:1.15;margin-bottom:10px}
+.slide p{margin:0 0 18px}
+.kicker{font:600 17px/1.2 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);margin-bottom:16px}
+.lede{font-size:33px;line-height:1.38}
+.small{font-size:22px;color:var(--ink-2)}
+.tiny{font-size:18px;color:var(--ink-3)}
+.mono,code{font-family:var(--mono);font-size:.84em}
+.b{color:var(--before);font-weight:600}.a{color:var(--after);font-weight:600}.g{color:var(--gold);font-weight:600}
+.col{position:absolute;left:100px;top:118px;width:520px;z-index:2}
+.col.w{width:640px}
+.fig{position:absolute}
+.cap{position:absolute;font:italic 400 21px/1.3 var(--display);color:var(--ink-2)}
+.cap b{font-style:normal;color:var(--ink)}
+.step{opacity:0;transform:translateY(8px);transition:opacity .35s ease,transform .35s ease}
+.step.shown{opacity:1;transform:none}
+.legend{list-style:none;margin:0;padding:0}
+.legend li{display:grid;grid-template-columns:42px 1fr;gap:6px;margin-bottom:10px;font-size:24px;line-height:1.35}
+.legend .n{font:600 24px/1.35 var(--display);color:var(--ink-3)}
+.center{position:absolute;left:150px;right:150px;top:150px;bottom:110px;display:flex;flex-direction:column;justify-content:center}
+.ours{border-left:3px solid var(--gold);padding:4px 0 4px 12px;font-size:19px;color:var(--ink-2);font-style:italic}
+.ours::before{content:"Not yet measured";display:block;font:600 13px/1.4 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-style:normal}
+
+/* part divider */
+.part .center{align-items:flex-start}
+.part .num{font:italic 400 34px/1 var(--display);color:var(--ink-3);margin-bottom:22px}
+.part h1{font-size:120px}
+.part .lede{max-width:900px;margin-top:28px;color:var(--ink-2)}
+
+/* cards */
+.card{background:var(--card);border:1px solid var(--rule);padding:18px 22px;font-size:22px;line-height:1.4}
+.card h3{font-size:25px}
+.card.bf{border-top:5px solid var(--before)} .card.af{border-top:5px solid var(--after)}
+.card ul,.card ol{margin:6px 0 0;padding-left:24px}
+.card li{margin-bottom:5px}
+.tag{display:inline-block;font:600 13px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;padding:5px 8px;margin-bottom:10px}
+.tag.bf{background:var(--before-soft);color:var(--before)} .tag.af{background:var(--after-soft);color:var(--after)} .tag.nt{background:var(--paper-2);color:var(--ink-2)}
+
+/* tables */
+table.t{border-collapse:collapse;width:100%;font-size:21px;line-height:1.3}
+table.t th{font:600 13px/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);text-align:left;padding:8px 10px;border-bottom:2px solid var(--ink)}
+table.t td{padding:9px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+table.t td.n{font-family:var(--mono);font-size:18px;white-space:nowrap}
+
+/* the legacy window (Windows-2000-era ERP client) */
+.win{background:var(--win);border:2px solid;border-color:#fff #404040 #404040 #fff;box-shadow:1px 1px 0 #000;font:15px/1.3 Tahoma,Verdana,"Segoe UI",sans-serif;color:#000;display:flex;flex-direction:column}
+.win .tb{background:linear-gradient(90deg,var(--win-title),var(--win-title2));color:#fff;font-weight:700;padding:4px 6px;display:flex;gap:10px;align-items:center;font-size:15px}
+.win .tb .sp{flex:1}
+.win .tb .bx{display:inline-block;width:18px;height:16px;background:var(--win);border:1px solid;border-color:#fff #404040 #404040 #fff;color:#000;font-size:11px;line-height:13px;text-align:center}
+.win .mn{padding:3px 8px;border-bottom:1px solid var(--win-dark);font-size:14px;word-spacing:10px}
+.win .bd{display:flex;flex:1;min-height:0}
+.win .tree{width:170px;background:#fff;border:2px inset #fff;margin:6px;font-size:13px;padding:4px 6px;line-height:1.55;white-space:nowrap;overflow:hidden}
+.win .tree .gr{color:#999}
+.win .tree .on{background:var(--win-title);color:#fff}
+.win .fm{flex:1;padding:10px 12px 6px 4px;display:grid;grid-template-columns:150px 1fr;gap:6px 10px;align-content:start}
+.win .fm label{text-align:right;padding-top:3px;font-size:14px}
+.win .fm label.req::after{content:" *";color:#c00}
+.win .in{background:#fff;border:2px inset #fff;padding:2px 6px;min-height:24px;font-size:14px;display:flex;justify-content:space-between;align-items:center}
+.win .in.code{font-family:"Courier New",monospace;font-weight:700}
+.win .in.ro{background:var(--win)}
+.win .in.err{outline:2px solid #c00}
+.win .in.draft{color:#777;font-style:italic}
+.win .f2{font:11px Tahoma,sans-serif;border:1px solid;border-color:#fff #404040 #404040 #fff;background:var(--win);padding:0 4px;margin-left:6px}
+.win .lst{grid-column:1/-1;background:#fff;border:2px inset #fff;font-size:13px}
+.win .lst div{display:grid;grid-template-columns:150px 1fr 50px;padding:2px 6px;font-family:"Courier New",monospace}
+.win .lst .hd{background:var(--win);font-family:Tahoma,sans-serif;font-weight:700}
+.win .lst .sel{background:var(--win-title);color:#fff}
+.win .bt{display:flex;gap:8px;padding:6px 10px;justify-content:flex-end}
+.win .bt span{border:2px solid;border-color:#fff #404040 #404040 #fff;padding:3px 14px;font-size:14px;min-width:70px;text-align:center}
+.win .bt span.hot{outline:1px dotted #000;outline-offset:-5px;font-weight:700}
+.win .sb{border-top:1px solid var(--win-dark);display:flex;font-size:13px}
+.win .sb span{border:1px inset #fff;padding:2px 6px}
+.win .sb span:first-child{flex:1}
+.win .sb .er{color:#c00;font-weight:700}
+.meters{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 14px;margin-top:14px}
+.meter{border-top:2px solid var(--before);padding-top:4px}
+.meter .v{font:600 34px/1.1 var(--display);color:var(--before);font-variant-numeric:tabular-nums}
+.meter .k{font:500 13px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+
+/* chat (after) */
+.chat{display:grid;grid-template-columns:1fr 360px;gap:18px;height:100%}
+.thread{background:var(--card);border:1px solid var(--rule);padding:16px;display:flex;flex-direction:column;gap:12px;overflow:hidden;font-size:19px;line-height:1.38}
+.thread .who{font:600 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+.msg{max-width:88%;padding:10px 14px;border-radius:14px}
+.msg.u{align-self:flex-end;background:var(--paper-2);border-bottom-right-radius:3px}
+.msg.ag{align-self:flex-start;background:var(--after-soft);border-bottom-left-radius:3px}
+.pv{background:#fff;border:1px solid var(--after);padding:10px 12px;margin-top:8px;font-size:17px;font-family:var(--mono);line-height:1.5}
+.trace{border-left:2px solid var(--after);padding-left:12px;font:13.5px/1.45 var(--mono);color:var(--ink-2);display:flex;flex-direction:column;gap:7px;overflow:hidden}
+.trace .h{font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--after);font-size:12px}
+.trace .l b{color:var(--ink);font-weight:600}
+.trace .ok{color:var(--after)} .trace .x{color:var(--before)}
+.hide{display:none!important}
+.fade{opacity:.18}
+
+/* bars */
+.cmp{display:flex;flex-direction:column;gap:20px}
+.cmp .row{display:grid;grid-template-columns:230px 1fr;gap:16px;align-items:center}
+.cmp .lab{font-size:21px;text-align:right;color:var(--ink-2)}
+.cmp .br{display:flex;flex-direction:column;gap:5px}
+.cmp .bar{height:24px;display:flex;align-items:center;font:600 15px/1 var(--mono);color:#fff;padding-left:8px;white-space:nowrap;transition:width .8s cubic-bezier(.3,.7,.2,1)}
+.cmp .bar.b{background:var(--before)} .cmp .bar.a{background:var(--after)}
+.cmp .bar.zero{background:transparent;color:var(--after);padding-left:0}
+
+/* stacks */
+.stk{display:flex;flex-direction:column;gap:8px}
+.lyr{border:1.5px solid var(--ink);background:var(--card);padding:10px 14px;font-size:21px;display:flex;justify-content:space-between;align-items:center;transition:all .5s ease}
+.lyr .tg{font:600 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.lyr.gone{text-decoration:line-through;color:var(--ink-3);border-style:dashed;background:transparent}
+.lyr.new{border-color:var(--after);background:var(--after-soft)}
+.lyr.keep{border-color:var(--ink);box-shadow:inset 6px 0 0 var(--ink)}
+.lyr.leg{border-color:var(--before);background:var(--before-soft)}
+
+/* zoom */
+.zoom{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:stretch}
+.zc{background:var(--card);border:1px solid var(--rule);padding:12px 14px;font-size:20px;line-height:1.4;display:flex;flex-direction:column;gap:6px;transition:opacity .4s}
+.zc .k{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--before)}
+.zc pre{margin:0;font:13.5px/1.45 var(--mono);white-space:pre-wrap;background:var(--paper-2);padding:8px}
+.zarrow{position:relative}
+.toolsig{margin-top:16px;border:2px dashed var(--after);background:var(--after-soft);padding:14px 18px;font-size:20px;transition:opacity .4s}
+.toolsig pre{margin:6px 0 0;font:16px/1.45 var(--mono);white-space:pre-wrap}
+
+/* controls */
+.ctl{display:flex;gap:10px;align-items:center;font:500 15px/1 var(--mono);color:var(--ink-2);margin-top:12px;flex-wrap:wrap}
+.ctl button{font:600 14px/1 var(--mono);padding:8px 12px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer}
+.ctl button.on{background:var(--ink);color:var(--paper)}
+.ctl input[type=range]{width:300px;accent-color:var(--after)}
+.ctl output{font-weight:600;color:var(--after);min-width:110px}
+
+/* score grid */
+.sg td.s{text-align:center;width:72px}
+.chip{display:inline-block;min-width:54px;font:600 12px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:6px 6px;transition:opacity .4s}
+.chip.f{background:var(--before-soft);color:var(--before)} .chip.p{background:var(--after-soft);color:var(--after)} .chip.h{background:#F1E9D2;color:var(--gold)}
+.sg .off{opacity:.12}
+.sg th.cur{color:var(--after)}
+
+/* lecture plates */
+.lec-top{position:absolute;left:100px;right:100px;top:104px}
+.lec-top h2{font-size:64px;margin-bottom:6px}
+.lec-top .sub{font-size:25px;color:var(--ink-2)}
+.ba .card{font-size:25px;line-height:1.42}.ba .card h3{font-size:31px}
+.ba{position:absolute;left:100px;right:100px;top:290px;display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.opens{position:absolute;left:100px;right:100px;top:655px;border-left:5px solid var(--before);padding:12px 20px;background:var(--before-soft);font-size:24px;line-height:1.4}
+.opens .k{font:600 13px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--before);display:block;margin-bottom:6px}
+.quad{position:absolute;left:100px;right:100px;top:200px;display:grid;grid-template-columns:1.25fr 1fr;grid-template-rows:auto auto;gap:16px 22px}
+.quad .card{font-size:24px;line-height:1.42}
+.quad .card h3{font-size:18px;font-family:var(--mono);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.quad .tall{grid-row:1 / span 2}
+
+/* chrome */
+.chrome{position:fixed;left:0;right:0;bottom:0;height:40px;display:flex;align-items:center;gap:12px;padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));font:500 13px/1 var(--mono);color:var(--ink-3);z-index:10}
+.chrome .sp{flex:1}
+.chrome button{font:600 16px/1 var(--mono);color:var(--ink);background:var(--paper);border:1.5px solid var(--ink);width:38px;height:28px;cursor:pointer}
+.chrome button:hover,.chrome button:focus-visible{background:var(--ink);color:var(--paper);outline:none}
+.pbar{position:fixed;left:0;top:0;height:3px;background:var(--after);z-index:10;transition:width .3s ease}
+@media (max-width:600px){.chrome .title{display:none}}
+@media (prefers-reduced-motion:reduce){.step,.cmp .bar,.lyr{transition:none}}
+</style>
+
+<div class="pbar" id="pbar"></div>
+<div class="deck" id="deck">
+
+<!-- ================= TITLE ================= -->
+<section class="slide" data-plain="1">
+  <div class="col" style="top:200px;width:620px">
+    <div class="kicker">AI Agents for Enterprises · the course plan</div>
+    <h1>From Forms<br>to Agents</h1>
+    <p class="lede" style="margin-top:30px;color:var(--ink-2)">How a 25-year-old, form-based ERP becomes AI-native, built end to end in eight lectures.</p>
+    <p class="small" style="margin-top:26px">Plan v2 · 27 October 2026 · for Dr. Rajat Dandekar<br>Use → and ← to move. Every figure builds as you go.</p>
+  </div>
+  <div class="fig" data-fig="hero" style="left:760px;top:150px;width:740px;height:600px"></div>
+  <div class="cap" style="left:900px;top:770px"><b>Fig. 1.</b> Before, a form full of codes. After, one sentence.</div>
+</section>
+
+<!-- ================= PART ONE: BEFORE ================= -->
+<section class="slide part" data-plain="1">
+  <div class="center">
+    <div class="num">Part One</div>
+    <h1 class="b">Before</h1>
+    <p class="lede">One person, one ordinary task, done the way it has been done for twenty-five years. We watch every screen, every code and every minute.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="A Monday in Pune">
+  <div class="col w">
+    <h2>A Monday in Pune</h2>
+    <p><b>Rasoi Steel Works</b> makes pressure cookers: about 1,80,000 a month.</p>
+    <p class="step">Every cooker needs one silicone <i>gasket</i>, the rubber ring that seals the lid.</p>
+    <p class="step">On Monday morning the store reports <b>9 days</b> of gaskets left. Diwali production starts in three weeks.</p>
+    <p class="step"><b>Kavita</b>, a purchase executive, must order <b>20,000</b> gaskets from the usual supplier, <b>Deccan Polymers</b> in Rajkot.</p>
+    <p class="step small">This one order is the thread of the whole course. Every lecture returns to it.</p>
+  </div>
+  <div class="fig" data-fig="stock" style="left:830px;top:170px;width:660px;height:520px"></div>
+  <div class="cap" style="left:900px;top:720px"><b>Fig. 2.</b> Stock falls by 6,000 a day. Drag the day to see when the line stops.</div>
+</section>
+
+<section class="slide" data-plate="The System She Uses">
+  <div class="col w" style="width:700px">
+    <h2>Her company runs on Bahi ERP</h2>
+    <p><b>Bahi Systems</b> has sold Bahi ERP to Indian manufacturers since 1998. A <i>bahi</i> is the red cloth ledger traders kept for centuries.</p>
+    <p class="step">An <b>ERP</b> (enterprise resource planning system) is the company's book of record: what it owns, buys, makes, sells and owes.</p>
+    <p class="step">It holds two kinds of data. <b>Master data</b> changes slowly: items, suppliers, cost centres. <b>Transactions</b> are documents that move through statuses: a purchase request, a purchase order.</p>
+    <p class="step">People work in it through <b>forms</b>: 412 screens, each a grid of fields and buttons.</p>
+    <p class="step">Bahi is losing new customers to cloud ERPs that ship AI copilots. Its board will not fund a rewrite. <b>That is our client and our brief.</b></p>
+  </div>
+  <div class="fig" style="left:880px;top:170px;width:620px;height:540px">
+    <div class="card" style="height:100%;display:flex;flex-direction:column;gap:14px;font-size:21px">
+      <div class="tag nt" style="align-self:flex-start">Bahi ERP 7.2 · fact sheet (fictional)</div>
+      <table class="t">
+        <tr><td>First release</td><td class="n">1998</td></tr>
+        <tr><td>Screens</td><td class="n">412</td></tr>
+        <tr><td>Stored procedures</td><td class="n">≈3,100</td></tr>
+        <tr><td>Customers</td><td class="n">≈1,200 plants</td></tr>
+        <tr><td>Modules</td><td>Purchase · Inventory · Sales · Finance · HR</td></tr>
+        <tr><td>New deals lost, last year</td><td>to cloud ERPs with copilots</td></tr>
+      </table>
+      <p class="small" style="margin:0">Every name in this course is invented: the vendor, the plant, the people, the suppliers and the data.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-plate="Before · The Order, Screen by Screen">
+  <div class="col" style="width:470px">
+    <h2>Kavita places the order</h2>
+    <ol class="legend">
+      <li class="step"><span class="n">1</span><span>Sign in. Pick her plant's <i>organisation-unit</i> code.</span></li>
+      <li class="step"><span class="n">2</span><span>Find the item code. Three gaskets look alike.</span></li>
+      <li class="step"><span class="n">3</span><span>Check stock in another screen.</span></li>
+      <li class="step"><span class="n">4</span><span>Raise a purchase request. Fetch, then Save, then Submit.</span></li>
+      <li class="step"><span class="n">5</span><span>Her manager Rohit signs in to approve it.</span></li>
+      <li class="step"><span class="n">6</span><span>Turn it into a purchase order. Look up last price in a seventh screen.</span></li>
+      <li class="step"><span class="n">7</span><span>An error code. She phones IT.</span></li>
+      <li class="step"><span class="n">8</span><span>Saved. The status says <b>Draft</b>, in small grey type.</span></li>
+    </ol>
+  </div>
+  <div class="fig" data-fig="legacy" style="left:600px;top:110px;width:920px;height:700px"></div>
+</section>
+
+<section class="slide" data-plate="Before · The Failure Nobody Saw">
+  <div class="col w">
+    <h2>Saved is not the same as done</h2>
+    <p>Cost centre <code>PRD-05</code> was closed for new spending on 15 October. Bahi did not reject the order. It saved it as <b>Draft</b>, and a Draft order is never sent to the supplier.</p>
+    <p class="step">No error. No email. The screen said “saved”.</p>
+    <p class="step">On Friday the store asks where the gaskets are. The line has 2 days left.</p>
+    <p class="step b">Real ERPs are full of these silent outcomes. In one real create-order screen we studied, 48 separate conditions save a document successfully and leave it impossible to approve.</p>
+  </div>
+  <div class="fig" data-fig="silent" style="left:820px;top:160px;width:680px;height:560px"></div>
+  <div class="cap" style="left:880px;top:740px"><b>Fig. 3.</b> The order's real status, day by day.</div>
+</section>
+
+<section class="slide" data-plate="Before · What Kavita Carries in Her Head">
+  <div class="center" style="left:170px;right:170px">
+    <div class="kicker" style="text-align:center">The thing the screens never show</div>
+    <h2 style="font-size:70px;text-align:center">The ERP holds the rules.<br>Kavita holds the route.</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:26px">
+      <div class="card step">Which of the 412 screens to open, and in what order.</div>
+      <div class="card step">That <code>GSK-SIL-05L</code> is the right gasket and <code>-R</code> is the rework one.</div>
+      <div class="card step">That you must press Fetch before Save, or the price comes up empty.</div>
+      <div class="card step">That food-contact parts need a certificate. She learned it from Suresh, the senior buyer.</div>
+      <div class="card step">Her own approval limit, ₹2,50,000, and who signs above it.</div>
+      <div class="card step">To read the tiny status after every save. She forgot once.</div>
+    </div>
+    <p class="step small" style="text-align:center;margin-top:24px">A new buyer needs about three months to learn this. That knowledge, not the database, is what makes a legacy ERP hard to use.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Three Ways Forward">
+  <div class="col" style="width:560px">
+    <h2>Three ways forward</h2>
+    <p><b>1. Train more people.</b> What Bahi's customers do today. Slow, and the knowledge walks out with them.</p>
+    <p class="step"><b>2. Automate the clicks.</b> Record the happy path as a fixed workflow (n8n, RPA). It works until the first variant: a new price, a new supplier, an order over the limit.</p>
+    <p class="step">Each yes/no variant doubles the paths someone must draw by hand.</p>
+    <p class="step"><b class="a">3. Make the ERP AI-native.</b> Keep the ERP. Replace the forms with an agent that knows the route, and let it handle variants as they come.</p>
+  </div>
+  <div class="fig" data-fig="branches" style="left:700px;top:130px;width:820px;height:600px"></div>
+  <div class="cap" style="left:760px;top:750px"><b>Fig. 4.</b> A fixed workflow with one path per combination. Add variants with the slider.</div>
+</section>
+
+<!-- ================= PART TWO: AFTER ================= -->
+<section class="slide part" data-plain="1">
+  <div class="center">
+    <div class="num">Part Two</div>
+    <h1 class="a">After</h1>
+    <p class="lede">The same Monday, the same order, the same ERP underneath. Kavita types one sentence.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="After · The Same Order">
+  <div class="col" style="width:420px">
+    <h2>One sentence</h2>
+    <ol class="legend">
+      <li class="step"><span class="n">1</span><span>Kavita says what she needs, in her own words.</span></li>
+      <li class="step"><span class="n">2</span><span>The agent finds the item and the stock.</span></li>
+      <li class="step"><span class="n">3</span><span>It finds the last order, the new rate, and the closed cost centre.</span></li>
+      <li class="step"><span class="n">4</span><span>It asks one question, only what it cannot look up.</span></li>
+      <li class="step"><span class="n">5</span><span>She answers.</span></li>
+      <li class="step"><span class="n">6</span><span>It shows a preview. Above her limit, so it goes to Rohit.</span></li>
+      <li class="step"><span class="n">7</span><span>Rohit approves with one tap. The order is created and read back.</span></li>
+      <li class="step"><span class="n">8</span><span>Released, with a number she can quote.</span></li>
+    </ol>
+  </div>
+  <div class="fig" data-fig="chat" style="left:560px;top:110px;width:960px;height:700px"></div>
+</section>
+
+<section class="slide" data-plate="Before and After, Side by Side">
+  <div class="col" style="width:440px">
+    <h2>What changed for Kavita</h2>
+    <p>Same order, same ERP, same rules.</p>
+    <p class="step">What disappeared is the work of <i>navigating</i>: screens, codes, the order of buttons, the status nobody reads.</p>
+    <p class="step">What stayed is her judgement: the date, and Rohit's approval.</p>
+    <div class="step ours" style="margin-top:20px">The “before” counts are fixed by the sandbox we will build. The minutes are our estimate; in Lecture 1 students time it themselves.</div>
+  </div>
+  <div class="fig" data-fig="compare" style="left:620px;top:150px;width:880px;height:600px"></div>
+  <div class="cap" style="left:820px;top:770px"><b>Fig. 5.</b> <span class="b">Red</span>, the form-based ERP. <span class="a">Teal</span>, the AI-native ERP.</div>
+</section>
+
+<section class="slide" data-plate="The ERP Stays. The Form Goes.">
+  <div class="col" style="width:520px">
+    <h2>The ERP stays.<br>The form goes.</h2>
+    <p>AI-native does not mean a new ERP.</p>
+    <p class="step">The <b>forms</b>, the layer Kavita navigated, are replaced by a conversation and an agent.</p>
+    <p class="step">The agent reaches the ERP through <b>tools</b>: small, typed functions over the ERP's own services.</p>
+    <p class="step">The <b>services, stored procedures and database</b> do not change. The rules are still enforced where they always were. That is why Bahi can do this without a rewrite.</p>
+  </div>
+  <div class="fig" data-fig="arch" style="left:700px;top:140px;width:820px;height:620px"></div>
+  <div class="cap" style="left:820px;top:780px"><b>Fig. 6.</b> The before stack and the after stack. Only the top changes.</div>
+</section>
+
+<section class="slide" data-plate="The Form Was Doing Nine Jobs">
+  <div class="col" style="width:470px">
+    <h2>The form was doing nine jobs</h2>
+    <ol class="legend" style="font-size:21px">
+      <li class="step"><span class="n">1</span><span>Asked for the right fields.</span></li>
+      <li class="step"><span class="n">2</span><span>Knew the order of screens.</span></li>
+      <li class="step"><span class="n">3</span><span>Looked up codes and facts, and did the work.</span></li>
+      <li class="step"><span class="n">4</span><span>Explained the rules (Help, and Suresh).</span></li>
+      <li class="step"><span class="n">5</span><span>Held the half-filled document.</span></li>
+      <li class="step"><span class="n">6</span><span>Showed only what her role allows.</span></li>
+      <li class="step"><span class="n">7</span><span>Gave a document number as proof.</span></li>
+      <li class="step"><span class="n">8</span><span>When it hung, she checked and retried.</span></li>
+      <li class="step"><span class="n">9</span><span>Was tested by Bahi's QA before release.</span></li>
+    </ol>
+  </div>
+  <div class="fig" data-fig="nine" style="left:610px;top:120px;width:900px;height:640px"></div>
+  <div class="cap" style="left:760px;top:780px"><b>Fig. 7.</b> Where each job lives on an ordinary form.</div>
+</section>
+
+<section class="slide" data-plate="Delete the Form, and Someone Must Do All Nine">
+  <div style="position:absolute;left:100px;right:100px;top:110px">
+    <h2>Delete the form, and someone must do all nine</h2>
+    <p class="small" style="margin-top:-10px">That someone is the <b>harness</b>: everything around the model. This table is the course.</p>
+    <table class="t" style="margin-top:12px">
+      <thead><tr><th>#</th><th>The job the form did</th><th>What the agent needs</th><th>Lecture</th></tr></thead>
+      <tbody>
+        <tr class="step"><td class="n">4</td><td>Explained the rules</td><td>Retrieval over policies and manuals, with citations (RAG, LLM Wiki)</td><td>2 · The Manual</td></tr>
+        <tr class="step"><td class="n">3</td><td>Looked up codes, did the work</td><td>Tools built from screens and services, served over MCP</td><td>3 · The Hands</td></tr>
+        <tr class="step"><td class="n">1 2 5</td><td>Asked, ordered the screens, held the draft</td><td>A control graph, typed decisions, memory (LangGraph, Jev)</td><td>4 · The Route</td></tr>
+        <tr class="step"><td class="n">6 7</td><td>Respected roles, gave proof</td><td>Identity, approvals, receipts, audit trail</td><td>5 · The Signature</td></tr>
+        <tr class="step"><td class="n">9</td><td>Was tested before release</td><td>Scenario suites, metrics, traces (Langfuse)</td><td>6 · The Inspector</td></tr>
+        <tr class="step"><td class="n">8</td><td>Recovered when it hung</td><td>Durable workflows, idempotent writes, deployment (Temporal)</td><td>7 · The Night Shift</td></tr>
+      </tbody>
+    </table>
+    <p class="step small" style="margin-top:14px">Lecture 1 builds the before and the naive after. Lecture 8 is each student's own module, start to finish.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="An Agent Is a Model Plus a Harness">
+  <div class="col" style="width:500px">
+    <h2>An agent is a model plus a harness</h2>
+    <p>A model reads text and writes text. Given tools, it can write a request to call one.</p>
+    <p class="step">On its own it does <i>none</i> of the nine jobs. It does not know Bahi's codes, rules, route, limits or statuses.</p>
+    <p class="step">Each lecture builds the part of the harness that takes over one job. Move the slider to watch the agent fill in.</p>
+    <p class="step small">We build one agent: one model, one control graph, many tools. Multi-agent systems are out of scope on purpose; Lecture 4 says when you would need one.</p>
+  </div>
+  <div class="fig" data-fig="ring" style="left:660px;top:110px;width:860px;height:680px"></div>
+</section>
+
+<section class="slide" data-plate="The Scoreboard">
+  <div style="position:absolute;left:100px;right:100px;top:108px">
+    <h2 style="margin-bottom:8px">The scoreboard</h2>
+    <p class="small">Six scenarios run at the start of every lecture. In Lecture 1 a naive agent fails all six, live. Each lecture turns at least one green, so students always see why the new part exists.</p>
+    <div class="fig" data-fig="score" style="position:relative;width:100%;height:560px"></div>
+  </div>
+</section>
+
+<!-- ================= PART THREE: THE MACHINE ================= -->
+<section class="slide part" data-plain="1">
+  <div class="center">
+    <div class="num">Part Three</div>
+    <h1>The machine students work on</h1>
+    <p class="lede">A small Bahi ERP that runs in Colab, with real screens, services and stored procedures. Small enough to understand, real enough to fail in all the interesting ways.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Inside One Button">
+  <div style="position:absolute;left:100px;right:100px;top:108px">
+    <h2 style="margin-bottom:6px">What happens when Kavita presses Save</h2>
+    <p class="small">Four layers sit under every legacy form. Students learn them on this one button in Lecture 1 and use them to build tools in Lecture 3.</p>
+    <div class="fig" data-fig="zoom" style="position:relative;width:100%;height:600px;margin-top:6px"></div>
+    <span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span>
+  </div>
+</section>
+
+<section class="slide" data-plate="A Budget for Complexity">
+  <div class="col" style="width:560px">
+    <h2>How tangled should it be?</h2>
+    <p>Enough to meet every concept once. Small enough to hold in your head.</p>
+    <p class="step">Every module follows the same budget, including the eight capstone modules.</p>
+    <p class="step"><b>Simplified on purpose:</b> service payloads are flat, at most 12 fields, with a one-page data dictionary. Each screen is a 30-line <code>screen.yaml</code> instead of an activity XML file.</p>
+    <p class="step"><b>Shown once:</b> in Lecture 3 we show what a real screen definition looks like, so students know what they will meet, and then never ask them to read one again.</p>
+  </div>
+  <div class="fig" style="left:720px;top:130px;width:790px;height:640px">
+    <table class="t">
+      <thead><tr><th>Per module</th><th>Count</th><th>Teaches</th></tr></thead>
+      <tbody>
+        <tr><td>Screens</td><td class="n">3</td><td>Screen → task → service → procedure</td></tr>
+        <tr><td>Services</td><td class="n">≈8</td><td>Why raw services are poor tools</td></tr>
+        <tr><td>Stored procedures</td><td class="n">≈10</td><td>Rules live in the ERP; validate once</td></tr>
+        <tr><td>Cascades</td><td class="n">2</td><td>One save triggers other work</td></tr>
+        <tr><td>Variants</td><td class="n">2</td><td>One screen, two paths</td></tr>
+        <tr><td>Screen-state rule</td><td class="n">1</td><td>Fetch before Save</td></tr>
+        <tr><td>Silent outcome</td><td class="n">1</td><td>Saved, but stuck in Draft</td></tr>
+        <tr><td>Shared engine</td><td class="n">1</td><td>Tax or budget check used everywhere</td></tr>
+        <tr><td>Policy documents</td><td class="n">4–6</td><td>Retrieval, citations, freshness</td></tr>
+        <tr><td>Seed records</td><td class="n">≈50</td><td>Duplicates, limits, near-matches</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= PART FOUR: THE LECTURES ================= -->
+<section class="slide part" data-plain="1">
+  <div class="center">
+    <div class="num">Part Four</div>
+    <h1>Eight lectures</h1>
+    <p class="lede">Each lecture takes over one job of the form. Each has the same shape: the failure on Kavita's order, the mechanism from first principles, one measured experiment, a Colab build, and the same layer added to the student's own module.</p>
+    <p class="small" style="margin-top:20px">Saturdays and Sundays, 7–9 AM IST, 31 October to 22 November 2026.</p>
+  </div>
+</section>
+
+<!-- L1 -->
+<section class="slide" data-plate="Lecture 1 · The Job">
+  <div class="lec-top"><div class="kicker">Lecture 1 · Sat 31 Oct · Website topic: LLM foundations → your first agent</div><h2>The Form and Its Nine Jobs</h2><p class="sub">The whole course in one morning: the before, the after we want, and why a model alone does not get us there.</p></div>
+  <div class="ba">
+    <div class="card bf step"><span class="tag bf">Before</span><h3>Students place Kavita's order by hand</h3>In the Bahi sandbox's legacy screens, timed: sign-in, item lookup, stock, request, approval, order, error, Draft.</div>
+    <div class="card af step"><span class="tag af">After, naive</span><h3>A model with the raw services as tools</h3>Sixty lines of Python. It reads Kavita's sentence and calls services directly. No harness.</div>
+  </div>
+  <div class="opens step"><span class="k">Opens with</span>The naive agent runs all six scenarios on GPT, Claude and Gemini. Expected: six failures on every model. A better model does not fix a missing harness.</div>
+</section>
+<section class="slide" data-plate="Lecture 1 · What We Build">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:46px">Lecture 1, nuts and bolts</h2></div>
+  <div class="quad">
+    <div class="card tall"><h3>Taught, in order</h3><ol>
+      <li>What an ERP is: master data, transactions, documents and statuses.</li>
+      <li>Screen → task → service → stored procedure, on one Save button.</li>
+      <li>What a language model does: tokens in, tokens out; the context window is all it sees.</li>
+      <li>Tool calling: the model writes a JSON request; our code runs it and returns the result.</li>
+      <li>Cost and latency per call, from the token counts.</li>
+      <li>Requirements as numbers: a pass bar, never-events, a latency budget, ₹ per resolved request.</li>
+      <li>Agent = model + harness, and the nine jobs as the map.</li>
+    </ol></div>
+    <div class="card"><h3>The experiment</h3>Three models, one naive agent, six scenarios. Measure success, tokens, seconds and ₹ per request. Plus an n8n lab: automate the happy path, then add variants and count branches.</div>
+    <div class="card"><h3>Build · NB1, and your module · A1</h3><b>NB1:</b> boot the sandbox, do the order by hand, call services over HTTP, write the naive agent, fill the scorecard.<br><b>A1:</b> pick a domain module; do its main task by hand; write its before story with counts, its after sentence and its nine-jobs table.</div>
+  </div>
+</section>
+
+<!-- L2 -->
+<section class="slide" data-plate="Lecture 2 · The Job">
+  <div class="lec-top"><div class="kicker">Lecture 2 · Sun 1 Nov · Website topic: Enterprise context, RAG + LLM Wiki</div><h2>The Manual</h2><p class="sub">Job 4: explaining the rules. The agent must answer from Bahi's policies with citations, and know when the answer is not in a document at all.</p></div>
+  <div class="ba">
+    <div class="card bf step"><span class="tag bf">Before</span><h3>A 400-page PDF, and Suresh</h3>The Help button opens the user manual. Nobody reads it. Kavita asks Suresh, who remembers that food-contact parts need a certificate.</div>
+    <div class="card af step"><span class="tag af">After</span><h3>Answers with the clause attached</h3>“Purchase Policy §6.2: parts that touch food need a food-grade certificate before the first order.” Stock and budget still come from the ERP, never from a document.</div>
+  </div>
+  <div class="opens step"><span class="k">Opens with · scenario 1</span>“Can we buy gaskets from a supplier without a food-grade certificate?” The naive agent says yes and cites a section that does not exist.</div>
+</section>
+<section class="slide" data-plate="Lecture 2 · What We Build">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:46px">Lecture 2, nuts and bolts</h2></div>
+  <div class="quad">
+    <div class="card tall"><h3>Taught, in order</h3><ol>
+      <li>Why the model cannot just know: private documents, a training cutoff, and the context window as the only way in.</li>
+      <li>Chunking a document. What a good chunk looks like.</li>
+      <li>Embeddings: a sentence as a list of numbers; similar meaning, similar direction.</li>
+      <li>Keyword search (BM25), then hybrid search with reranking.</li>
+      <li>Citations, and how to check them.</li>
+      <li>The LLM Wiki: compile documents once into linked pages and an index; read pages at question time.</li>
+      <li>Freshness and permissions: an amended policy, a confidential HR page.</li>
+      <li>Documents explain rules; the ERP holds facts. What enters the context window each turn, and its token budget.</li>
+    </ol></div>
+    <div class="card"><h3>The experiment</h3>RAG against Wiki on 40 questions: accuracy, correct citations, freshness after an amendment, tokens per answer, a permission leak test. Five trap questions (“how many gaskets do we have?”) that both must refuse to answer from documents.</div>
+    <div class="card"><h3>Build · NB2, and your module · A2</h3><b>NB2:</b> Bahi's purchase policy, supplier policy, approval matrix, user manual and two amendments, indexed both ways, served as one <code>search_policy</code> tool.<br><b>A2:</b> the same for your module, with a 20-question test set.</div>
+  </div>
+</section>
+
+<!-- L3 -->
+<section class="slide" data-plate="Lecture 3 · The Job">
+  <div class="lec-top"><div class="kicker">Lecture 3 · Sat 7 Nov · Website topic: Tools, APIs + MCP · the heaviest lecture</div><h2>The Hands</h2><p class="sub">Job 3: looking up codes and facts, and doing the work. We turn screens into tools the agent can call safely.</p></div>
+  <div class="ba">
+    <div class="card bf step"><span class="tag bf">Before</span><h3>F2, a list of three gaskets, another screen for the price</h3>Kavita types codes she looked up, presses buttons in the right order, and reads what comes back.</div>
+    <div class="card af step"><span class="tag af">After</span><h3>Eight intent tools</h3><code>find_item</code>, <code>stock_position</code>, <code>last_purchase</code>, <code>find_supplier</code>, <code>create_purchase_order</code> and three more. Each hides the screen order and returns a receipt.</div>
+  </div>
+  <div class="opens step"><span class="k">Opens with · scenario 3</span>Given 38 raw services, the naive agent registers “Deccan Polymer Industries”, a supplier that already exists as “Deccan Polymers”. Now there are two.</div>
+</section>
+<section class="slide" data-plate="Lecture 3 · What We Build">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:46px">Lecture 3, nuts and bolts</h2></div>
+  <div class="quad">
+    <div class="card tall"><h3>Taught, in order</h3><ol>
+      <li>What a tool is: a name, a description, a typed input schema, a function.</li>
+      <li><b>Building tools from screens, in six steps:</b> inventory (screens → tasks → services → procedures) · live runs (record what the legacy UI really calls) · cascades (what each save sets off) · variants (one screen, two paths) · screen state (Fetch before Save) · the intent tool.</li>
+      <li>When services are too tangled, write our own agent API in front of them.</li>
+      <li>The tool contract: types, errors that say what to do next, a preview, an idempotency key, a receipt.</li>
+      <li>Validate once: the ERP enforces its rules; tools do not copy them.</li>
+      <li>MCP, one standard plug: our Bahi server and a marketplace server (email or Slack), used from our harness, from Claude Desktop and from n8n.</li>
+    </ol></div>
+    <div class="card"><h3>The experiment</h3>Tool granularity on 30 tasks: 38 raw services, 8 intent tools, or one generic <code>call_service</code>. Measure success, tool calls, tokens, seconds. Then the same 8 tools inside a marketplace host and inside our harness: the gap sets up Lecture 4.</div>
+    <div class="card"><h3>Build · NB3, and your module · A3</h3><b>NB3:</b> record live runs, draft the tool specs, implement 8 tools, serve them over MCP, connect three clients.<br><b>A3:</b> 5–8 tools and an MCP server for your module, each with the tool checklist.</div>
+  </div>
+</section>
+
+<!-- L4 -->
+<section class="slide" data-plate="Lecture 4 · The Job">
+  <div class="lec-top"><div class="kicker">Lecture 4 · Sun 8 Nov · Website topic: Orchestration, LangGraph + Jev</div><h2>The Route</h2><p class="sub">Jobs 1, 2 and 5: asking for the right fields, knowing the order of steps, holding the half-filled document.</p></div>
+  <div class="ba">
+    <div class="card bf step"><span class="tag bf">Before</span><h3>Asterisks, the menu tree, an open window</h3>Red stars said what was required. The menu said where to go next. The open screen held her half-done order.</div>
+    <div class="card af step"><span class="tag af">After</span><h3>A control graph</h3>Code decides which step comes next and which checks apply. The model fills in the details and talks to Kavita. The draft lives in the graph's state.</div>
+  </div>
+  <div class="opens step"><span class="k">Opens with · scenario 4</span>A new, cheaper supplier, Shakti Seals, has no food-grade certificate. The agent from Lecture 3 registers them and places the order anyway: it treated the process as a checklist.</div>
+</section>
+<section class="slide" data-plate="Lecture 4 · The Control Graph">
+  <div class="col" style="width:470px;top:112px">
+    <h2 style="font-size:46px">One spine, gated detours</h2>
+    <p style="font-size:23px">A process document is a flowchart, not a checklist. In one real engagement an agent handed a 13-step process tried to run 146 services.</p>
+    <p class="step" style="font-size:23px">The <b>spine</b> runs every time. Each <b>detour</b> has a gate, and the default is to <b>skip</b> it.</p>
+    <p class="step" style="font-size:23px">Pick a scenario and watch which detours open.</p>
+    <p class="step small">Also taught: LangGraph's state, nodes, edges, checkpoints and interrupts; <b>Jev</b> for typed decisions with a confidence (is this upload a certificate or a quotation?); memory at four levels: the draft, the session, the user (Kavita's usual cost centre), the company (the Wiki).</p>
+  </div>
+  <div class="fig" data-fig="graph" style="left:600px;top:120px;width:920px;height:640px"></div>
+  <div class="cap" style="left:640px;top:778px;width:860px"><b>Fig. 8.</b> Experiment: a free tool loop against the control graph on 40 multi-step scenarios.</div>
+</section>
+
+<!-- L5 -->
+<section class="slide" data-plate="Lecture 5 · The Job">
+  <div class="lec-top"><div class="kicker">Lecture 5 · Sat 14 Nov · Website topic: Headless ERP + human approvals</div><h2>The Signature</h2><p class="sub">Jobs 6 and 7: doing only what Kavita is allowed to do, and proving what was done.</p></div>
+  <div class="ba">
+    <div class="card bf step"><span class="tag bf">Before</span><h3>Greyed-out menus, a second sign-in, a number in the status bar</h3>Her role hid what she could not do. Rohit signed in to approve. The status bar gave her a document number.</div>
+    <div class="card af step"><span class="tag af">After</span><h3>The agent acts as Kavita, not as an administrator</h3>Approvals reach Rohit as one tap in Slack or the web. Every write returns a receipt and is read back. Every step lands in an audit log.</div>
+  </div>
+  <div class="opens step"><span class="k">Opens with · scenarios 2 and 5</span>The agent, running on a service account, releases a ₹2.8 lakh order with no approval. Then it reports “Done” for an order that is stuck in Draft.</div>
+</section>
+<section class="slide" data-plate="Lecture 5 · What We Build">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:46px">Lecture 5, nuts and bolts</h2></div>
+  <div class="quad">
+    <div class="card tall"><h3>Taught, in order</h3><ol>
+      <li>Headless ERP: the conversation is the interface; the ERP keeps the rules and the records.</li>
+      <li>Identity: acting as the user with her scopes, against acting as a service account.</li>
+      <li>The approval matrix: who may sign what, and routing to them.</li>
+      <li>A request is not an order. Preview, then commit.</li>
+      <li>Read-back: check the document's real status after every write.</li>
+      <li>The audit trail: who asked, what the agent saw, what it did, who approved.</li>
+      <li>Never-events as hard guardrails around the model.</li>
+    </ol></div>
+    <div class="card"><h3>The experiment</h3>With and without read-back on the silent Draft: how often is it caught? Service account against identity passthrough on an order above the limit.</div>
+    <div class="card"><h3>Build · NB5, and your module · A5</h3><b>NB5 + the reference app:</b> chat ↔ agent API ↔ control graph ↔ MCP tools ↔ Bahi, an approval inbox (web and Slack), an audit viewer.<br><b>A5:</b> your module end to end with approvals, on its four scenarios.</div>
+  </div>
+</section>
+
+<!-- L6 -->
+<section class="slide" data-plate="Lecture 6 · The Job">
+  <div class="lec-top"><div class="kicker">Lecture 6 · Sun 15 Nov · Website topic: Evaluation + observability with Langfuse</div><h2>The Inspector</h2><p class="sub">Job 9: being tested before release. A form does the same thing every time. An agent does not, so testing must change.</p></div>
+  <div class="ba">
+    <div class="card bf step"><span class="tag bf">Before</span><h3>Bahi's QA team and a test script per screen</h3>Same input, same output. If a release broke the PO screen, a tester saw it.</div>
+    <div class="card af step"><span class="tag af">After</span><h3>A scenario suite, metrics and traces</h3>Sixty scenarios drawn from the control graph, a simulated Kavita who leaves things out, metrics that are mostly plain code, and a trace of every step.</div>
+  </div>
+  <div class="opens step"><span class="k">Opens with</span>The plant head hears about the Draft order and asks: “How often does it do this?” Nobody in the room has a number.</div>
+</section>
+<section class="slide" data-plate="Lecture 6 · What We Build">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:46px">Lecture 6, nuts and bolts</h2></div>
+  <div class="quad">
+    <div class="card tall"><h3>Taught, in order</h3><ol>
+      <li>Write the tests before the features. Derive scenarios from the control graph: every gate, every variant, every never-event.</li>
+      <li>Single, composite, negative, adversarial and multi-turn scenarios; a simulated user.</li>
+      <li>Code-based metrics first: asked for the missing field; never asked for something it could look up; no forbidden tool; no duplicate write; right final status; right clause cited.</li>
+      <li>A model as judge only for tone, checked against 30 human labels.</li>
+      <li>Test the tests: run deliberately broken bots and confirm each metric catches its bot.</li>
+      <li>Traces in Langfuse: steps, tokens, seconds, ₹ per resolved request, p95.</li>
+      <li>Versioning prompts, tools and models; a regression gate.</li>
+    </ol></div>
+    <div class="card"><h3>The experiment</h3>One large model everywhere, against a small model on the routing and form-filling steps: quality against ₹ per order. Model judge against code metric: how often they agree.</div>
+    <div class="card"><h3>Build · NB6, and your module · A6</h3><b>NB6:</b> the 60-scenario suite, the simulator, the broken bots, the dashboards, a trust scorecard.<br><b>A6:</b> 30 scenarios for your module, the broken-bot check, a scorecard.</div>
+  </div>
+</section>
+
+<!-- L7 -->
+<section class="slide" data-plate="Lecture 7 · The Job">
+  <div class="lec-top"><div class="kicker">Lecture 7 · Sat 21 Nov · Website topic: Deploy + recover with Temporal</div><h2>The Night Shift</h2><p class="sub">Job 8: recovering when something hangs, waiting days for an approval, and running in production.</p></div>
+  <div class="ba">
+    <div class="card bf step"><span class="tag bf">Before</span><h3>Kavita checks, then retries</h3>When Save hung, she opened the PO list to see whether it had gone through. When Rohit was travelling, she phoned him on Wednesday.</div>
+    <div class="card af step"><span class="tag af">After</span><h3>A durable workflow</h3>Every write carries a key, so a retry finds the first order instead of making a second. The workflow waits days for Rohit, reminds him, and survives a crash.</div>
+  </div>
+  <div class="opens step"><span class="k">Opens with · scenario 6</span>Bahi times out after saving. The agent retries. Two orders for 20,000 gaskets each: 40,000 gaskets and ₹5.6 lakh committed.</div>
+</section>
+<section class="slide" data-plate="Lecture 7 · Recovering a Lost Reply">
+  <div class="col" style="width:470px;top:112px">
+    <h2 style="font-size:46px">Check before you retry</h2>
+    <p style="font-size:23px">A timeout does not tell you whether the save happened.</p>
+    <p class="step" style="font-size:23px">A naive retry saves again. An <b>idempotency key</b> lets the second attempt find the first.</p>
+    <p class="step" style="font-size:23px"><b>Temporal</b> runs the commit-and-approval path as a workflow: writes are <i>activities</i> with retries, Rohit's approval is a <i>signal</i>, the reminder is a <i>timer</i>, and a crash resumes where it stopped.</p>
+    <p class="step small">Also taught: containers, secrets, environments, versions, a rollout ladder (shadow → assist → partial → full) with a kill switch, and a runbook.</p>
+  </div>
+  <div class="fig" data-fig="retry" style="left:600px;top:130px;width:920px;height:620px"></div>
+  <div class="cap" style="left:640px;top:780px"><b>Fig. 9.</b> Experiment: naive retry vs idempotent activity over 50 injected timeouts; count the duplicates.</div>
+</section>
+
+<!-- L8 -->
+<section class="slide" data-plate="Lecture 8 · Your Module">
+  <div class="lec-top"><div class="kicker">Lecture 8 · Sun 22 Nov · Website topic: Build and present your domain pilot</div><h2>Your Module</h2><p class="sub">Demo day. Each student shows their own module's before and after, and survives a client's questions.</p></div>
+  <div class="ba" style="top:300px">
+    <div class="card step"><h3>Format</h3>8–10 selected modules, 8 minutes each. Dr. Dandekar plays the client. Each module must absorb a change announced in Lecture 7: a new policy or a new variant. Everyone else submits a 5-minute recorded demo.</div>
+    <div class="card step"><h3>Close</h3>The full Bahi reference system, live: Kavita's sentence to a released order, the crash drill, the scorecard. Then what comes next: multi-agent systems, small fine-tuned routers, more modules.</div>
+  </div>
+</section>
+
+<!-- ================= PART FIVE: THE CAPSTONE ================= -->
+<section class="slide part" data-plain="1">
+  <div class="center">
+    <div class="num">Part Five</div>
+    <h1>Every student builds one</h1>
+    <p class="lede">In class we make Bahi's purchasing AI-native together. Each student picks one more module and gives it its own before and after.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Eight Modules, Eight Befores and Afters">
+  <div style="position:absolute;left:90px;right:90px;top:104px">
+    <h2 style="font-size:46px;margin-bottom:12px">Eight modules, each with a before and an after</h2>
+    <table class="t" style="font-size:19px">
+      <thead><tr><th>Module</th><th><span class="b">Before</span>: the forms</th><th><span class="a">After</span>: one sentence</th></tr></thead>
+      <tbody>
+        <tr><td>Purchasing · amend</td><td>PO list, PO amendment, schedule, re-approval</td><td>“Push Deccan's gasket delivery to 9 November and cut it to 15,000.”</td></tr>
+        <tr><td>Finance · payables</td><td>Invoice entry, three-way match, hold queue</td><td>“Why is Deccan's invoice 4471 on hold, and can we pay it Friday?”</td></tr>
+        <tr><td>HR · leave</td><td>Leave balance, application, manager approval</td><td>“I need Thursday and Friday off for my sister's wedding.”</td></tr>
+        <tr><td>Sales · orders</td><td>Customer, price list, quotation, sales order</td><td>“Quote Annapurna Stores 500 five-litre cookers at dealer price.”</td></tr>
+        <tr><td>Service · warranty</td><td>Serial lookup, warranty check, service ticket</td><td>“A customer's whistle broke after three weeks; replace it.”</td></tr>
+        <tr><td>Inventory · transfers</td><td>Stock enquiry, transfer note, gate pass</td><td>“Move 2,000 gaskets from Chakan to the Pune line tonight.”</td></tr>
+        <tr><td>Travel · claims</td><td>Trip request, booking, expense claim</td><td>“Book me Pune to Rajkot on Tuesday to visit Deccan, back Wednesday.”</td></tr>
+        <tr><td>Legal · contracts</td><td>Contract request, clause review, register</td><td>“Raise an NDA with Shakti Seals on our paper, valid two years.”</td></tr>
+      </tbody>
+    </table>
+    <p class="small" style="margin-top:10px">All eight live inside the same Rasoi Steel Works and the same Bahi sandbox, so modules can call each other. Each follows the complexity budget and ships with its own documents, seed data and four scenarios.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="What a Finished Module Contains">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:46px">What a finished module contains</h2></div>
+  <div class="quad" style="grid-template-columns:1fr 1fr 1fr;top:190px">
+    <div class="card"><h3>The story</h3>Its before, timed by the student; its after sentence; its nine-jobs table. (A1)</div>
+    <div class="card"><h3>The manual</h3>Retrieval over its documents with a 20-question test. (A2)</div>
+    <div class="card"><h3>The hands</h3>5–8 tools and an MCP server, each passing the tool checklist. (A3)</div>
+    <div class="card"><h3>The route</h3>A control graph, a router and a memory policy. (A4)</div>
+    <div class="card"><h3>The signature</h3>Approvals, receipts, read-back, audit, on four scenarios. (A5)</div>
+    <div class="card"><h3>The inspector</h3>30 scenarios, a broken-bot check and a scorecard. (A6)</div>
+    <div class="card"><h3>The night shift</h3>Four failure drills passed and a runbook. (A7)</div>
+    <div class="card" style="grid-column:span 2"><h3>Two tracks, same module</h3>The <b>guided track</b> builds by configuration (screen files, tool specs, graph definitions, scenario sheets) with the code provided. The <b>builder track</b> writes the Python. Graded out of 100: scenario pass rate 25, tools 20, route and authority 15, retrieval 15, operations 15, the demo-day change 10.</div>
+  </div>
+</section>
+
+<!-- ================= PART SIX: PRODUCTION GRADE ================= -->
+<section class="slide" data-plate="What Production Grade Means Here">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:50px">What production grade means here</h2><p class="sub">From the AI FDE talk's four pilot failures: the untested question, the latency surprise, the gap between a harness and a bare API call, and the cost per question.</p></div>
+  <div class="ba" style="top:270px">
+    <div class="card"><h3>Every tool (Lectures 3 and 5)</h3><ul>
+      <li>Typed inputs and outputs, validated</li><li>A description written for a model</li><li>Errors that say what to do next</li><li>A preview before every write</li><li>An idempotency key on every write</li><li>A receipt with the real status</li><li>The user's permissions, nothing more</li><li>Timeout, retry policy, rate limit</li><li>A version number</li></ul></div>
+    <div class="card"><h3>The whole system (Lectures 1, 6 and 7)</h3><ul>
+      <li>Pass bar and never-events agreed first</li><li>A scenario suite and a regression gate</li><li>p95 seconds per turn within budget</li><li>₹ per resolved request within budget</li><li>Harness-vs-bare-model gap measured</li><li>Every turn traced, every write audited</li><li>Prompt injection from documents tested</li><li>Crash, timeout and double-submit drills</li><li>A rollout ladder, a kill switch, a runbook</li></ul></div>
+  </div>
+</section>
+
+<!-- ================= PART SEVEN: MAKING IT ================= -->
+<section class="slide" data-plate="What Gets Made">
+  <div style="position:absolute;left:100px;right:100px;top:108px">
+    <h2 style="font-size:50px;margin-bottom:12px">What gets made</h2>
+    <table class="t">
+      <thead><tr><th>Item</th><th>Count</th><th>Form</th></tr></thead>
+      <tbody>
+        <tr><td>The Bahi reference system</td><td class="n">1</td><td>Sandbox ERP, MCP server, harness, chat app, Temporal worker, scenario suite, deployment, runbook. Built first, thinly through every layer, then deepened a week ahead of each lecture.</td></tr>
+        <tr><td>Lecture decks</td><td class="n">8 + primer</td><td>Plate decks in this style: built-up live figures, one example followed throughout, every number from our own runs.</td></tr>
+        <tr><td>Colab notebooks</td><td class="n">8 + 1</td><td>NB0–NB7 and a module template. Each runs top to bottom on free Colab in under 15 minutes, with a replay mode of recorded model calls so it runs without a key. Each is executed before release.</td></tr>
+        <tr><td>Module kits</td><td class="n">8</td><td>Screens, services, procedures, documents, seed data, four scenarios, a starter test set.</td></tr>
+        <tr><td>Explainer films</td><td class="n">≈8</td><td>One per lecture: follow Kavita's order through the layer, narrated in your voice.</td></tr>
+        <tr><td>The final demo</td><td class="n">1</td><td>The live system and a recorded six-minute walkthrough of before and after.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="slide" data-plate="The Build Calendar">
+  <div style="position:absolute;left:100px;right:100px;top:108px">
+    <h2 style="font-size:50px;margin-bottom:6px">The build calendar</h2>
+    <p class="small">Today is Tuesday 27 October. Lecture 1 is on Saturday, so this week builds a thin version of every layer and the first two lectures.</p>
+    <table class="t" style="margin-top:10px">
+      <thead><tr><th>When</th><th>Built</th></tr></thead>
+      <tbody>
+        <tr><td class="n">27–30 Oct</td><td>Bahi sandbox (purchasing) with the legacy screens · thin slice of the reference agent · primer + NB0 · Lecture 1 deck + NB1 · n8n lab · Lecture 2 policy corpus, deck + NB2 · the eight module briefs and documents · rehearsal on Friday</td></tr>
+        <tr><td class="n">2–6 Nov</td><td>Intent tools + hosted MCP server · granularity experiment run for real · control graph · Jev access and recorded fixtures · module services released by Thursday · decks 3–4</td></tr>
+        <tr><td class="n">9–13 Nov</td><td>Approvals, Slack, receipts, audit · the 60-scenario suite, broken bots, dashboards · decks 5–6</td></tr>
+        <tr><td class="n">16–20 Nov</td><td>Temporal workflows and drills · production deployment · final demo film · deck 7 and demo-day kit</td></tr>
+        <tr><td class="n">23 Nov – 6 Dec</td><td>Module reviews · measured numbers folded back into every plate · the evergreen edition</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="slide" data-plate="Decisions for You">
+  <div style="position:absolute;left:100px;right:100px;top:108px">
+    <h2 style="font-size:50px;margin-bottom:14px">Decisions for you</h2>
+    <ol class="legend" style="font-size:22px">
+      <li class="step"><span class="n">1</span><span><b>The names.</b> Bahi Systems and Bahi ERP; Rasoi Steel Works, Pune; Kavita, Rohit and Suresh; Deccan Polymers and Shakti Seals; the gasket order. <span class="small">Easy to change until Thursday.</span></span></li>
+      <li class="step"><span class="n">2</span><span><b>Lecture titles.</b> The first-principles titles (The Manual, The Hands, The Route…) with the website's topics as subtitles. Every website topic is still taught. <span class="small">Recommended.</span></span></li>
+      <li class="step"><span class="n">3</span><span><b>The website.</b> Its simulation still uses the old supplier story. Update it to Kavita's order after the course starts, or leave it. <span class="small">Recommend updating it in week 2.</span></span></li>
+      <li class="step"><span class="n">4</span><span><b>Module kits.</b> All eight at launch, or four. <span class="small">Recommend eight: one generator, same budget.</span></span></li>
+      <li class="step"><span class="n">5</span><span><b>Final submission.</b> Demo day only, or demo day plus a final version by 6 December. <span class="small">Recommend the two extra weeks.</span></span></li>
+      <li class="step"><span class="n">6</span><span><b>Model access and hosting.</b> Students bring one OpenRouter key and use replay mode; the reference runs on Modal and Vercel with Langfuse Cloud. <span class="small">Recommended.</span></span></li>
+    </ol>
+  </div>
+</section>
+
+<section class="slide" data-plain="1">
+  <div class="center" style="align-items:center;text-align:center">
+    <div class="kicker">The course in one line</div>
+    <h2 style="font-size:66px;max-width:1150px">Delete the form, then rebuild each of its nine jobs, one lecture at a time, until Kavita's sentence becomes a released order.</h2>
+    <p class="small" style="margin-top:20px">Plan v2 · press Home to start again</p>
+  </div>
+</section>
+
+</div>
+
+<div class="chrome"><span class="title">From Forms to Agents · course plan v2</span><span class="sp"></span><span id="count"></span><button id="prev" aria-label="Previous">←</button><button id="next" aria-label="Next">→</button></div>
+
+<script>
+(() => {
+const NS = 'http://www.w3.org/2000/svg';
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const svgEl = (tag, attrs = {}, parent) => { const n = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v); if (parent) parent.appendChild(n); return n; };
+const txt = (parent, x, y, s, style, anchor = 'start') => { const t = svgEl('text', { x, y, 'text-anchor': anchor, style }, parent); t.textContent = s; return t; };
+const fmt = (n) => n.toLocaleString('en-IN');
+const FIGS = {};
+
+/* ---------- Fig 1: hero ---------- */
+FIGS.hero = (el) => {
+  el.innerHTML = `
+  <div style="position:absolute;left:0;top:0;width:470px" class="win">
+    <div class="tb">Bahi ERP 7.2 — Purchase Order Entry<span class="sp"></span><span class="bx">_</span><span class="bx">□</span><span class="bx">×</span></div>
+    <div class="mn">File Edit Masters Purchase Inventory Help</div>
+    <div class="fm" style="grid-template-columns:130px 1fr;padding:10px">
+      ${['Org. unit','Supplier','Item','Quantity','UOM','Rate','Tax code','Cost centre','Pay terms','Need-by','Warehouse'].map((l,i)=>`<label class="req">${l}</label><span class="in ${i%3===0?'code':''}">&nbsp;</span>`).join('')}
+    </div>
+    <div class="bt"><span>Fetch</span><span>Save</span><span>Release</span></div>
+    <div class="sb"><span>Ready</span><span>KJOSHI</span></div>
+  </div>
+  <div style="position:absolute;right:0;bottom:30px;width:420px;background:var(--card);border:1px solid var(--rule);padding:18px;box-shadow:0 10px 30px rgba(27,32,48,.12)">
+    <div class="thread" style="border:0;padding:0;background:none">
+      <div class="msg u"><div class="who">Kavita</div>We need 20,000 silicone gaskets for the 5-litre cooker before the Diwali run. Same supplier as last time.</div>
+      <div class="msg ag"><div class="who">Agent</div>Deccan Polymers, ₹11.90 each. Need-by 2 November? I'll send it to Rohit to approve.</div>
+    </div>
+  </div>`;
+  return { step() {} };
+};
+
+/* ---------- Fig 2: stock ---------- */
+FIGS.stock = (el) => {
+  const W = 660, H = 470;
+  const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H }, el);
+  const x0 = 70, x1 = 630, y0 = 400, y1 = 40, maxS = 60000, days = 12;
+  const X = (d) => x0 + (x1 - x0) * d / days, Y = (s) => y0 - (y0 - y1) * s / maxS;
+  for (let s = 0; s <= maxS; s += 20000) { svgEl('line', { x1: x0, x2: x1, y1: Y(s), y2: Y(s), style: 'stroke:var(--rule);stroke-width:1' }, svg); txt(svg, x0 - 10, Y(s) + 6, fmt(s), 'font:15px var(--mono);fill:var(--ink-3)', 'end'); }
+  for (let d = 0; d <= days; d += 3) txt(svg, X(d), y0 + 26, d === 0 ? 'Mon' : `day ${d}`, 'font:15px var(--mono);fill:var(--ink-3)', 'middle');
+  svgEl('line', { x1: x0, x2: x1, y1: y0, y2: y0, style: 'stroke:var(--ink);stroke-width:1.5' }, svg);
+  const lead = svgEl('rect', { x: X(9) - 0, y: y1, width: X(12) - X(9), height: y0 - y1, style: 'fill:var(--before-soft)' }, svg);
+  svg.insertBefore(lead, svg.firstChild);
+  txt(svg, X(10.5), y1 + 24, 'line stops', 'font:italic 18px var(--display);fill:var(--before)', 'middle');
+  svgEl('line', { x1: X(0), y1: Y(54000), x2: X(9), y2: Y(0), style: 'stroke:var(--ink);stroke-width:3' }, svg);
+  const dot = svgEl('circle', { r: 8, style: 'fill:var(--after)' }, svg);
+  const lab = txt(svg, 0, 0, '', 'font:600 18px var(--mono);fill:var(--after)');
+  const ctl = document.createElement('div'); ctl.className = 'ctl';
+  ctl.innerHTML = `<label for="stockd">Day</label><input id="stockd" type="range" min="0" max="11" step="1" value="0"><output></output>`;
+  el.appendChild(ctl);
+  const inp = ctl.querySelector('input'), out = ctl.querySelector('output');
+  const set = (d) => { const s = Math.max(0, 54000 - 6000 * d); dot.setAttribute('cx', X(Math.min(d, 9))); dot.setAttribute('cy', Y(s)); lab.setAttribute('x', X(Math.min(d, 9)) + 14); lab.setAttribute('y', Y(s) - 12); lab.textContent = s ? `${fmt(s)} left` : 'empty'; out.textContent = s ? `${Math.round(s / 6000)} days of cover` : 'line stopped'; out.style.color = s ? '' : 'var(--before)'; };
+  inp.addEventListener('input', () => set(+inp.value)); set(0);
+  return { step() {} };
+};
+
+/* ---------- legacy window renderer ---------- */
+const TREE = `<div>▸ Masters</div><div>&nbsp;&nbsp;Item</div><div>&nbsp;&nbsp;Supplier</div><div>▾ Purchase</div><div class="TREQ">&nbsp;&nbsp;Request entry</div><div class="gr">&nbsp;&nbsp;Request approval</div><div class="TPO">&nbsp;&nbsp;Order entry</div><div>&nbsp;&nbsp;Order history</div><div class="gr">&nbsp;&nbsp;Order release</div><div>▸ Inventory</div><div>▸ Reports</div>`;
+function winHTML(sc, opts = {}) {
+  const fields = (sc.fields || []).map(([l, v, k = '', req]) => `<label class="${req ? 'req' : ''}">${l}</label><span class="in ${k}">${v}${k.includes('code') && !k.includes('ro') ? '<span class="f2">F2</span>' : ''}</span>`).join('');
+  const list = sc.list ? `<div class="lst"><div class="hd"><span>Item code</span><span>Description</span><span>UOM</span></div>${sc.list.map((r, i) => `<div class="${i === 0 ? 'sel' : ''}"><span>${r[0]}</span><span style="font-family:Tahoma,sans-serif">${r[1]}</span><span>${r[2]}</span></div>`).join('')}</div>` : '';
+  return `<div class="win" style="height:${opts.h || 470}px">
+    <div class="tb">Bahi ERP 7.2 — ${sc.title}<span class="sp"></span><span style="font-weight:400;font-size:13px">${sc.code}</span><span class="bx">_</span><span class="bx">□</span><span class="bx">×</span></div>
+    <div class="mn">File Edit View Masters Purchase Inventory Reports Help</div>
+    <div class="bd"><div class="tree">${TREE.replace(sc.treeOn ? `class="${sc.treeOn}"` : 'XX', 'class="on"')}</div><div class="fm">${fields}${list}</div></div>
+    <div class="bt">${(sc.buttons || []).map((b) => `<span class="${b === sc.hot ? 'hot' : ''}">${b}</span>`).join('')}</div>
+    <div class="sb"><span class="${sc.err ? 'er' : ''}">${sc.status || 'Ready'}</span><span>${sc.user || 'KJOSHI'}</span><span>RSW-PUN-01</span></div></div>`;
+}
+
+const SCREENS = [
+  { title: 'Sign in', code: 'SYS-LGN-01', fields: [['User ID', 'KJOSHI', '', 1], ['Password', '••••••••', '', 1], ['Organisation unit', 'RSW-PUN-01', 'code', 1], ['Role', 'PUR-EXEC', 'code', 1]], buttons: ['Sign in', 'Cancel'], hot: 'Sign in', status: 'Welcome, KJOSHI. Last sign-in 24-10-2026 18:02', add: [1, 4, 2, 1, 0, 2] },
+  { title: 'Item Enquiry', code: 'INV-ITM-03', fields: [['Search text', 'gasket 5L', '']], list: [['GSK-SIL-05L', 'Gasket, silicone, 5 L', 'NOS'], ['GSK-SIL-05L-R', 'Gasket, silicone, 5 L (rework)', 'NOS'], ['GSK-RUB-05L', 'Gasket, rubber, 5 L', 'NOS']], buttons: ['Search', 'Select', 'Close'], hot: 'Select', status: '3 rows found. Press F2 to select.', add: [1, 1, 1, 0, 0, 4] },
+  { title: 'Stock Status Enquiry', code: 'INV-STK-02', fields: [['Item code', 'GSK-SIL-05L', 'code', 1], ['Warehouse', 'WH-PUN-STR', 'code', 1], ['On hand', '54,000', 'ro'], ['Allocated', '0', 'ro'], ['Avg. daily issue', '6,000', 'ro'], ['Cover (days)', '9', 'ro']], buttons: ['Query', 'Close'], hot: 'Query', status: 'Query complete.', add: [1, 2, 1, 0, 0, 3] },
+  { title: 'Purchase Request Entry', code: 'PUR-PR-01', treeOn: 'TREQ', fields: [['Request no.', '(auto)', 'ro'], ['Request type', 'STD', 'code', 1], ['Cost centre', 'PRD-05', 'code', 1], ['Need-by date', '02-11-2026', '', 1], ['Item code', 'GSK-SIL-05L', 'code', 1], ['Quantity', '20,000', '', 1], ['UOM', 'NOS', 'ro'], ['Warehouse', 'WH-PUN-STR', 'code', 1], ['Remarks', 'Diwali run', '']], buttons: ['Fetch', 'Save', 'Submit', 'Close'], hot: 'Submit', status: 'PR/2026/04417 submitted for approval.', add: [1, 8, 3, 0, 0, 9] },
+  { title: 'Purchase Request Approval', code: 'PUR-PR-04', user: 'RMEHTA', fields: [['Request no.', 'PR/2026/04417', 'ro'], ['Raised by', 'KJOSHI', 'ro'], ['Estimated value', '₹2,28,000', 'ro'], ['Decision', 'Approve', '', 1], ['Comment', 'ok', '']], buttons: ['Fetch', 'Confirm', 'Close'], hot: 'Confirm', status: 'PR/2026/04417 approved by RMEHTA.', add: [1, 2, 0, 1, 0, 3] },
+  { title: 'Purchase Order Entry', code: 'PUR-PO-01', treeOn: 'TPO', fields: [['Source request', 'PR/2026/04417', 'code', 1], ['Supplier', 'DP-RJK-0042', 'code', 1], ['Rate (from history)', '11.90', '', 1], ['Tax code', 'GST18-INTRA', 'code', 1], ['Payment terms', 'N45', 'code', 1], ['Delivery date', '02-11-2026', '', 1], ['Status', '—', 'ro']], buttons: ['Fetch', 'Save', 'Release', 'Close'], hot: 'Save', status: 'Rate copied from Order History (PUR-POH-02).', add: [2, 7, 3, 0, 0, 12] },
+  { title: 'Purchase Order Entry', code: 'PUR-PO-01', treeOn: 'TPO', fields: [['Source request', 'PR/2026/04417', 'code', 1], ['Supplier', 'DP-RJK-0042', 'code', 1], ['Rate (from history)', '11.90', '', 1], ['Tax code', 'GST18-INTRA', 'code err', 1], ['Payment terms', 'N45', 'code', 1], ['Delivery date', '02-11-2026', '', 1], ['Status', '—', 'ro']], buttons: ['Fetch', 'Save', 'Release', 'Close'], hot: 'Save', err: 1, status: 'ERR-PO-0412: Tax region does not match supplier state (GJ).', add: [0, 1, 0, 0, 1, 6] },
+  { title: 'Purchase Order Entry', code: 'PUR-PO-01', treeOn: 'TPO', fields: [['Order no.', 'PO/2026/01182', 'ro'], ['Supplier', 'DP-RJK-0042', 'code ro'], ['Rate', '11.90', 'ro'], ['Tax code', 'GST18-INTER', 'code ro'], ['Payment terms', 'N45', 'code ro'], ['Delivery date', '02-11-2026', 'ro'], ['Status', 'DRAFT', 'ro draft']], buttons: ['Fetch', 'Save', 'Release', 'Close'], hot: 'Release', status: 'PO/2026/01182 saved.', add: [0, 0, 0, 0, 0, 1] },
+];
+const METERS = ['Screens opened', 'Fields typed', 'Codes looked up', 'Sign-ins', 'Phone calls', 'Minutes (est.)'];
+
+FIGS.legacy = (el) => {
+  el.innerHTML = `<div class="lw"></div><div class="meters">${METERS.map((m) => `<div class="meter"><div class="v">0</div><div class="k">${m}</div></div>`).join('')}</div>`;
+  const lw = el.querySelector('.lw'), vs = [...el.querySelectorAll('.meter .v')];
+  return {
+    step(k) {
+      if (k === 0) { lw.innerHTML = `<div class="win" style="height:470px;align-items:center;justify-content:center;font-size:22px;background:#3A6EA5;color:#fff;display:flex">Bahi ERP 7.2 &nbsp;·&nbsp; Monday, 26 October, 9:40 AM</div>`; vs.forEach((v) => (v.textContent = 0)); return; }
+      const i = Math.min(k, SCREENS.length) - 1;
+      lw.innerHTML = winHTML(SCREENS[i]);
+      const tot = [0, 0, 0, 0, 0, 0];
+      for (let j = 0; j <= i; j++) SCREENS[j].add.forEach((a, n) => (tot[n] += a));
+      vs.forEach((v, n) => (v.textContent = n === 5 ? `≈${tot[n]}` : tot[n]));
+    },
+  };
+};
+
+/* ---------- Fig 4: silent draft timeline ---------- */
+FIGS.silent = (el) => {
+  const days = [['Mon', 'PO saved', 'DRAFT', 'f'], ['Tue', 'Kavita moves on', 'DRAFT', 'f'], ['Wed', 'Deccan never receives it', 'DRAFT', 'f'], ['Thu', 'No delivery planned', 'DRAFT', 'f'], ['Fri', 'Store: “where are the gaskets?”', '2 days left', 'x']];
+  el.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">${days.map((d, i) => `<div class="dayrow" style="display:grid;grid-template-columns:80px 1fr 150px;gap:14px;align-items:center;border-bottom:1px solid var(--rule);padding:10px 0;transition:opacity .4s">
+    <span style="font:600 22px var(--display)">${d[0]}</span><span style="font-size:22px">${d[1]}</span>
+    <span class="chip ${d[3] === 'x' ? 'f' : 'h'}" style="font-size:14px;text-align:center">${d[2]}</span></div>`).join('')}</div>
+    <p class="small" style="margin-top:22px">What the screen said on Monday: <code>PO/2026/01182 saved.</code></p>`;
+  const rows = [...el.querySelectorAll('.dayrow')];
+  return { step(k) { rows.forEach((r, i) => (r.style.opacity = i <= Math.max(0, k) + (k >= 2 ? 4 : 1) - 1 ? 1 : 0.15)); } };
+};
+
+/* ---------- Fig 6: branch explosion ---------- */
+FIGS.branches = (el) => {
+  const W = 820, H = 520, names = ['price changed?', 'new supplier?', 'over her limit?', 'certificate missing?', 'cost centre closed?', 'ERP timed out?'];
+  const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H }, el);
+  const ctl = document.createElement('div'); ctl.className = 'ctl';
+  ctl.innerHTML = `<label for="brn">Variants</label><input id="brn" type="range" min="0" max="6" step="1" value="1"><output></output>`;
+  el.appendChild(ctl);
+  const inp = ctl.querySelector('input'), out = ctl.querySelector('output');
+  const draw = (n) => {
+    svg.innerHTML = '';
+    const left = 40, right = 600, top = 20, bot = H - 20;
+    const colX = (d) => left + (right - left) * (n ? d / n : 0);
+    const rec = (d, lo, hi) => {
+      const y = (lo + hi) / 2, x = colX(d);
+      if (d === n) { svgEl('circle', { cx: x, cy: y, r: n > 4 ? 2.6 : 5, style: 'fill:var(--before)' }, svg); return; }
+      const m = (lo + hi) / 2;
+      [[lo, m], [m, hi]].forEach(([a, b]) => { svgEl('line', { x1: x, y1: y, x2: colX(d + 1), y2: (a + b) / 2, style: `stroke:var(--ink);stroke-width:${Math.max(0.6, 2.2 - d * 0.3)}` }, svg); rec(d + 1, a, b); });
+    };
+    svgEl('circle', { cx: left, cy: (top + bot) / 2, r: 7, style: 'fill:var(--ink)' }, svg);
+    rec(0, top, bot);
+    for (let d = 0; d < n; d++) txt(svg, (colX(d) + colX(d + 1)) / 2, H - 2, names[d], 'font:13px var(--mono);fill:var(--ink-2)', 'middle');
+    const leaves = 2 ** n;
+    txt(svg, 790, H / 2 - 10, fmt(leaves), 'font:600 64px var(--display);fill:var(--before)', 'end');
+    txt(svg, 790, H / 2 + 24, leaves === 1 ? 'path to draw' : 'paths to draw', 'font:italic 20px var(--display);fill:var(--ink-2)', 'end');
+    out.textContent = n ? names.slice(0, n).join(' · ').slice(0, 60) + (n > 2 ? '…' : '') : 'happy path only';
+  };
+  inp.addEventListener('input', () => draw(+inp.value));
+  draw(1);
+  return { step(k) { if (k >= 2) { inp.value = 4; draw(4); } else { inp.value = 1; draw(1); } } };
+};
+
+/* ---------- Fig 8: the after conversation ---------- */
+FIGS.chat = (el) => {
+  el.innerHTML = `<div class="chat" style="height:680px">
+   <div class="thread">
+    <div class="msg u s1"><div class="who">Kavita · 9:40</div>We need 20,000 silicone gaskets for the 5-litre cooker before the Diwali run. Same supplier as last time.</div>
+    <div class="msg ag s4"><div class="who">Agent</div>Deccan Polymers last supplied these at ₹11.40; their rate since 1 October is ₹11.90. Cost centre PRD-05 closed on 15 October, so I'd use PRD-07 (Diwali production). Need-by 2 November?</div>
+    <div class="msg u s5"><div class="who">Kavita</div>Yes, PRD-07, and 2 November is fine.</div>
+    <div class="msg ag s6"><div class="who">Agent</div>Here is the order. It is above your ₹2,50,000 limit, so I've sent it to Rohit.
+      <div class="pv">Deccan Polymers · DP-RJK-0042<br>GSK-SIL-05L × 20,000 @ ₹11.90<br>₹2,38,000 + GST 18% = <b>₹2,80,840</b><br>Need-by 02-11-2026 · PRD-07</div></div>
+    <div class="msg ag s8"><div class="who">Agent · 10:14</div>Done. <b>PO/2026/01182</b> is released to Deccan Polymers, due 2 November. I'll tell you if they haven't confirmed by Thursday.</div>
+   </div>
+   <div class="trace">
+    <div class="h">What the agent did</div>
+    <div class="l s2">route → <b>reorder</b> <span class="ok">(Jev, 0.97)</span></div>
+    <div class="l s2">find_item("silicone gasket 5 litre") → <b>GSK-SIL-05L</b></div>
+    <div class="l s2">stock_position → <b>54,000</b>, 9 days</div>
+    <div class="l s3">last_purchase → Deccan, ₹11.40, 3 Sep</div>
+    <div class="l s3">rate_card(Deccan) → <b>₹11.90</b> from 1 Oct</div>
+    <div class="l s3">check cost centre PRD-05 → <span class="x">closed 15 Oct</span></div>
+    <div class="l s3">memory: Kavita's open centres → PRD-07</div>
+    <div class="l s6">preview → ₹2,80,840 &gt; limit ₹2,50,000</div>
+    <div class="l s6">request approval → Rohit (Slack)</div>
+    <div class="l s7">signal: <span class="ok">approved 10:12</span></div>
+    <div class="l s7">create_purchase_order(key=7f3a…) → PO/2026/01182</div>
+    <div class="l s7">read back → status <span class="ok">RELEASED ✓</span></div>
+    <div class="l s8">audit log ← 9 entries</div>
+   </div></div>`;
+  const parts = [...el.querySelectorAll('[class*=" s"],[class^="s"]')];
+  return { step(k) { parts.forEach((p) => { const m = p.className.match(/\bs(\d)\b/); p.classList.toggle('hide', !m || +m[1] > k); }); } };
+};
+
+/* ---------- Fig 9: compare ---------- */
+FIGS.compare = (el) => {
+  const rows = [['Screens opened', 7, 0, '7', '0'], ['Fields typed', 25, 2, '25', '2 replies'], ['Codes looked up', 10, 0, '10', '0'], ['Sign-ins', 2, 1, '2', '1 tap (Rohit)'], ['Kavita’s minutes', 40, 2, '≈40', '≈2'], ['Silent Draft caught', 0, 1, 'no', 'yes, before saving']];
+  el.innerHTML = `<div class="cmp">${rows.map((r) => `<div class="row"><div class="lab">${r[0]}</div><div class="br"><div class="bar b" data-w="${r[1]}" style="width:0">${r[3]}</div><div class="bar a" data-w="${r[2]}" style="width:0">${r[4]}</div></div></div>`).join('')}</div>`;
+  const bars = [...el.querySelectorAll('.bar')], last = el.querySelector('.row:last-child');
+  bars.forEach((b) => {
+    const v = +b.dataset.w, w = b.closest('.row') === last ? (v ? 230 : 0) : 600 * v / 40;
+    if (w < 80) { b.classList.add('zero'); b.style.width = 'auto'; b.style.color = b.classList.contains('b') ? 'var(--before)' : 'var(--after)'; }
+    else b.dataset.px = w;
+  });
+  return { step() { requestAnimationFrame(() => bars.forEach((b) => { if (b.dataset.px) b.style.width = b.dataset.px + 'px'; })); } };
+};
+
+/* ---------- Fig 10: architecture ---------- */
+FIGS.arch = (el) => {
+  el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:26px">
+    <div><div class="tag bf">Before</div><div class="stk">
+      <div class="lyr leg">Kavita<span class="tg">person</span></div>
+      <div class="lyr leg f-form">412 forms<span class="tg">navigated by hand</span></div>
+      <div class="lyr k1">Services<span class="tg">HTTP</span></div>
+      <div class="lyr k1">Stored procedures<span class="tg">the rules</span></div>
+      <div class="lyr k1">Database<span class="tg">the records</span></div></div></div>
+    <div class="aft" style="transition:opacity .5s"><div class="tag af">After</div><div class="stk">
+      <div class="lyr">Kavita<span class="tg">person</span></div>
+      <div class="lyr new">Conversation<span class="tg">chat · Slack</span></div>
+      <div class="lyr new">Agent = model + harness<span class="tg">lectures 2–7</span></div>
+      <div class="lyr new t-tools">Tools over MCP<span class="tg">lecture 3</span></div>
+      <div class="lyr k1">Services<span class="tg">unchanged</span></div>
+      <div class="lyr k1">Stored procedures<span class="tg">unchanged</span></div>
+      <div class="lyr k1">Database<span class="tg">unchanged</span></div></div></div></div>`;
+  const aft = el.querySelector('.aft'), form = el.querySelector('.f-form'), tools = el.querySelector('.t-tools'), keep = [...el.querySelectorAll('.k1')];
+  return { step(k) { aft.style.opacity = k >= 1 ? 1 : 0.1; form.classList.toggle('gone', k >= 1); tools.style.opacity = k >= 2 ? 1 : 0.25; keep.forEach((x) => x.classList.toggle('keep', k >= 3)); } };
+};
+
+/* ---------- Fig 11: nine jobs ---------- */
+FIGS.nine = (el) => {
+  el.innerHTML = `<div style="position:relative;width:860px">
+  ${winHTML({ title: 'Purchase Order Entry *', code: 'PUR-PO-01', treeOn: 'TPO', fields: [['Supplier', 'DP-RJK-0042', 'code', 1], ['Item code', 'GSK-SIL-05L', 'code', 1], ['Quantity', '20,000', '', 1], ['Rate', '11.90', '', 1], ['Tax code', 'GST18-INTER', 'code', 1], ['Cost centre', 'PRD-07', 'code', 1], ['Need-by date', '02-11-2026', '', 1]], buttons: ['Help ?', 'Fetch', 'Save', 'Release'], status: 'PO/2026/01182 saved.  ⌛ Server busy…' }, { h: 520 })}
+  <div style="font:13px Tahoma,sans-serif;color:#555;margin-top:6px">Bahi ERP 7.2 · build 4471 · QA certified 12-09-2026</div></div>`;
+  const pins = [[362, 92, 1], [139, 102, 2], [800, 92, 3], [530, 439, 4], [325, 0, 5], [165, 174, 6], [75, 488, 7], [268, 520, 8], [350, 540, 9]];
+  const layer = document.createElement('div'); layer.style.cssText = 'position:absolute;inset:0;pointer-events:none';
+  layer.innerHTML = pins.map(([x, y, n]) => `<div class="pin" style="position:absolute;left:${x}px;top:${y}px;width:34px;height:34px;border-radius:50%;background:var(--before);color:#fff;font:600 19px/34px var(--display);text-align:center;box-shadow:0 0 0 3px var(--paper);transition:opacity .3s,transform .3s">${n}</div>`).join('');
+  el.firstElementChild.appendChild(layer);
+  const ps = [...layer.querySelectorAll('.pin')];
+  return { step(k) { ps.forEach((p, i) => { p.style.opacity = i < k ? 1 : 0; p.style.transform = i < k ? 'scale(1)' : 'scale(.5)'; }); } };
+};
+
+/* ---------- Fig 12: harness ring ---------- */
+FIGS.ring = (el) => {
+  const W = 860, H = 600, cx = 430, cy = 290, R = 215;
+  const jobs = [['Asks for what is missing', 4], ['Knows the route', 4], ['Looks up and acts', 3], ['Explains the rules', 2], ['Holds the draft', 4], ['Respects roles', 5], ['Gives proof', 5], ['Recovers', 7], ['Is tested', 6]];
+  const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H }, el);
+  const nodes = jobs.map(([name, lec], i) => {
+    const a = -Math.PI / 2 + i * 2 * Math.PI / jobs.length, x = cx + R * Math.cos(a), y = cy + R * Math.sin(a);
+    const ln = svgEl('line', { x1: cx, y1: cy, x2: x, y2: y, style: 'stroke:var(--rule);stroke-width:2' }, svg);
+    const c = svgEl('circle', { cx: x, cy: y, r: 40 }, svg);
+    const n = txt(svg, x, y + 9, String(i + 1), 'font:600 26px var(--display)', 'middle');
+    const ax = Math.cos(a), off = ax > 0.3 ? 'start' : ax < -0.3 ? 'end' : 'middle';
+    const lx = x + (off === 'start' ? 52 : off === 'end' ? -52 : 0), ly = y + (off === 'middle' ? (Math.sin(a) < 0 ? -52 : 64) : 0);
+    const t1 = txt(svg, lx, ly - 2, name, 'font:20px var(--serif);fill:var(--ink)', off);
+    const t2 = txt(svg, lx, ly + 20, `Lecture ${lec}`, 'font:14px var(--mono);fill:var(--ink-3)', off);
+    return { c, n, ln, lec, t2 };
+  });
+  svgEl('circle', { cx, cy, r: 78, style: 'fill:var(--ink)' }, svg);
+  txt(svg, cx, cy + 10, 'Model', 'font:600 30px var(--display);fill:var(--paper)', 'middle');
+  const ctl = document.createElement('div'); ctl.className = 'ctl';
+  ctl.innerHTML = `<label for="ringl">After lecture</label><input id="ringl" type="range" min="1" max="8" step="1" value="1"><output></output>`;
+  el.appendChild(ctl);
+  const inp = ctl.querySelector('input'), out = ctl.querySelector('output');
+  const set = (L) => {
+    let n = 0;
+    nodes.forEach((d) => { const on = d.lec <= L; if (on) n++; d.c.setAttribute('style', on ? 'fill:var(--after);stroke:var(--after);stroke-width:2' : 'fill:var(--paper);stroke:var(--ink-3);stroke-width:2;stroke-dasharray:5 5'); d.n.style.fill = on ? 'var(--paper)' : 'var(--ink-3)'; d.ln.style.stroke = on ? 'var(--after)' : 'var(--rule)'; d.t2.style.fill = on ? 'var(--after)' : 'var(--ink-3)'; });
+    out.textContent = `${n} of 9 jobs`;
+  };
+  inp.addEventListener('input', () => set(+inp.value)); set(1);
+  return { step(k) { const L = k >= 2 ? 8 : 1; inp.value = L; set(L); } };
+};
+
+/* ---------- Fig 13: scoreboard ---------- */
+FIGS.score = (el) => {
+  const S = [
+    ['1', 'Policy question: “Can we buy from a supplier without a food-grade certificate?”', ['f', 'p', 'p', 'p', 'p', 'p', 'p']],
+    ['2', 'Kavita’s reorder, above her limit', ['f', 'f', 'h', 'h', 'p', 'p', 'p']],
+    ['3', 'New supplier who already exists under another name', ['f', 'f', 'p', 'p', 'p', 'p', 'p']],
+    ['4', 'New supplier with no food-grade certificate', ['f', 'h', 'h', 'p', 'p', 'p', 'p']],
+    ['5', 'Saved, but silently stuck in Draft', ['f', 'f', 'f', 'h', 'p', 'p', 'p']],
+    ['6', 'ERP times out after saving', ['f', 'f', 'f', 'f', 'h', 'h', 'p']],
+  ];
+  const word = { f: 'fails', h: 'partly', p: 'passes' };
+  el.innerHTML = `<table class="t sg"><thead><tr><th>#</th><th>Scenario</th>${[1, 2, 3, 4, 5, 6, 7].map((l) => `<th class="s" data-l="${l}">L${l}</th>`).join('')}</tr></thead><tbody>
+   ${S.map((r) => `<tr><td class="n">${r[0]}</td><td>${r[1]}</td>${r[2].map((c, i) => `<td class="s" data-l="${i + 1}"><span class="chip ${c}">${word[c]}</span></td>`).join('')}</tr>`).join('')}</tbody></table>
+   <div class="ctl"><label for="scl">After lecture</label><input id="scl" type="range" min="1" max="7" step="1" value="1"><output></output></div>
+   <p class="tiny" style="margin-top:8px">Targets the reference system is built to hit, recorded for real as we build it. Lecture 6 turns these six into a 60-scenario suite and gives each a pass rate.</p>`;
+  const inp = el.querySelector('input'), out = el.querySelector('output'), cells = [...el.querySelectorAll('[data-l]')];
+  const set = (L) => { cells.forEach((c) => { const l = +c.dataset.l; c.classList.toggle('off', l > L); if (c.tagName === 'TH') c.classList.toggle('cur', l === L); }); const pass = S.filter((r) => r[2][L - 1] === 'p').length; out.textContent = `${pass} of 6 pass`; };
+  inp.addEventListener('input', () => set(+inp.value)); set(1);
+  return { step() {} };
+};
+
+/* ---------- Fig 15: zoom into one button ---------- */
+FIGS.zoom = (el) => {
+  el.innerHTML = `<div class="zoom">
+   <div class="zc z1"><span class="k">1 · Screen</span><b>Purchase Order Entry</b><span class="mono">PUR-PO-01</span><div>14 fields, a header and a line grid. What Kavita sees.</div><div class="win" style="margin-top:6px"><div class="tb" style="font-size:12px">PO Entry</div><div class="bt" style="justify-content:flex-start"><span style="font-size:12px;min-width:0">Fetch</span><span class="hot" style="font-size:12px;min-width:0">Save</span><span style="font-size:12px;min-width:0">Release</span></div></div></div>
+   <div class="zc z2"><span class="k">2 · Task</span><b>The Save button</b><div>One button, one task. Rules the screen enforces before calling anything:</div><ul style="margin:4px 0 0;padding-left:18px"><li>Fetch must run first, or the rate is empty</li><li>header before lines</li></ul><div>This is <i>screen state</i>.</div></div>
+   <div class="zc z3"><span class="k">3 · Service</span><b>svc_po_save</b><div>An HTTP endpoint with a flat legacy payload:</div><pre>{ "ou_cd": "RSW-PUN-01",
+  "sup_cd": "DP-RJK-0042",
+  "itm_cd": "GSK-SIL-05L",
+  "qty": 20000,
+  "rate": 11.90,
+  "tax_cd": "GST18-INTER",
+  "cc_cd": "PRD-05",
+  "need_dt": "2026-11-02" }</pre></div>
+   <div class="zc z4"><span class="k">4 · Stored procedures</span><b>Where the rules live</b><pre>sp_po_hdr_save
+ → sp_tax_region_chk   (shared)
+ → sp_budget_chk
+     cc closed? → DRAFT
+ → sp_po_status_set</pre><div>Returns <code>{"doc_no":"PO/2026/01182", "status":"DRAFT"}</code>. The form showed only the number.</div></div>
+  </div>
+  <div class="toolsig"><b class="a">5 · What the agent finally sees</b>, built in Lecture 3: one intent tool that hides steps 1–3, lets step 4 enforce the rules, and returns the real status.
+   <pre>create_purchase_order(supplier, item, quantity, rate, cost_centre, need_by, idempotency_key)
+  → { "doc_no": "PO/2026/01182", "status": "RELEASED", "receipt": "…" }</pre></div>`;
+  const zs = ['.z1', '.z2', '.z3', '.z4', '.toolsig'].map((q) => el.querySelector(q));
+  return { step(k) { zs.forEach((z, i) => (z.style.opacity = i <= k ? 1 : 0.12)); } };
+};
+
+/* ---------- Fig 26: control graph ---------- */
+FIGS.graph = (el) => {
+  const W = 920, H = 560;
+  const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H }, el);
+  const spine = ['Understand', 'Route', 'Collect', 'Check', 'Preview', 'Commit', 'Confirm'];
+  const sy = 280, sx = (i) => 70 + i * 130;
+  const det = { onboard: { at: 1.5, y: 100, name: 'Onboard supplier', gate: 'supplier not found' }, cc: { at: 2, y: 450, name: 'Fix cost centre', gate: 'centre closed' }, cert: { at: 3, y: 100, name: 'Ask for certificate', gate: 'food contact, no cert' }, appr: { at: 4.5, y: 450, name: 'Approval', gate: 'over the limit' } };
+  const scen = {
+    reorder: { label: 'Kavita’s reorder', open: ['cc', 'appr'], stop: null },
+    small: { label: 'Small reorder', open: [], stop: null },
+    newsup: { label: 'Shakti Seals, no certificate', open: ['onboard', 'cert'], stop: 3 },
+  };
+  const els = { sp: [], spl: [], det: {} };
+  spine.forEach((n, i) => {
+    if (i) els.spl.push(svgEl('line', { x1: sx(i - 1) + 50, y1: sy, x2: sx(i) - 50, y2: sy }, svg));
+    const g = svgEl('g', {}, svg);
+    const r = svgEl('rect', { x: sx(i) - 52, y: sy - 26, width: 104, height: 52, rx: 4 }, g);
+    const t = txt(g, sx(i), sy + 6, n, 'font:600 17px var(--serif)', 'middle');
+    els.sp.push({ r, t });
+  });
+  Object.entries(det).forEach(([k, d]) => {
+    const x = sx(d.at);
+    const ln = svgEl('line', { x1: x, y1: d.y < sy ? sy - 26 : sy + 26, x2: x, y2: d.y < sy ? d.y + 26 : d.y - 26 }, svg);
+    const r = svgEl('rect', { x: x - 82, y: d.y - 26, width: 164, height: 52, rx: 26 }, svg);
+    const t = txt(svg, x, d.y + 6, d.name, 'font:17px var(--serif)', 'middle');
+    const gt = txt(svg, k === 'onboard' ? x - 10 : x + 10, (d.y + sy) / 2 + 5, `gate: ${d.gate}`, 'font:13px var(--mono);fill:var(--ink-2)', k === 'onboard' ? 'end' : 'start');
+    els.det[k] = { ln, r, t, gt };
+  });
+  const note = txt(svg, W / 2, H - 8, '', 'font:italic 19px var(--display);fill:var(--ink-2)', 'middle');
+  const ctl = document.createElement('div'); ctl.className = 'ctl';
+  ctl.innerHTML = Object.entries(scen).map(([k, s]) => `<button data-s="${k}">${s.label}</button>`).join('');
+  el.appendChild(ctl);
+  let shownSpine = true, shownDet = true, cur = null;
+  const paint = () => {
+    const s = cur ? scen[cur] : null;
+    els.sp.forEach((e, i) => {
+      const lit = s && (s.stop == null || i <= s.stop), stopped = s && s.stop === i;
+      e.r.setAttribute('style', `fill:${lit ? 'var(--after-soft)' : 'var(--card)'};stroke:${stopped ? 'var(--before)' : lit ? 'var(--after)' : 'var(--ink)'};stroke-width:${lit ? 2.5 : 1.5};opacity:${shownSpine ? 1 : 0.15}`);
+    });
+    els.spl.forEach((l, i) => { const lit = s && (s.stop == null || i < s.stop); l.setAttribute('style', `stroke:${lit ? 'var(--after)' : 'var(--ink)'};stroke-width:${lit ? 3 : 1.5};opacity:${shownSpine ? 1 : 0.15}`); });
+    Object.entries(els.det).forEach(([k, e]) => {
+      const open = s && s.open.includes(k), stop = s && k === 'cert' && s.stop != null;
+      const col = stop ? 'var(--before)' : open ? 'var(--after)' : 'var(--ink-3)';
+      e.r.setAttribute('style', `fill:${stop ? 'var(--before-soft)' : open ? 'var(--after-soft)' : 'var(--paper)'};stroke:${col};stroke-width:${open || stop ? 2.5 : 1.5};stroke-dasharray:${open || stop ? 'none' : '6 5'};opacity:${shownDet ? 1 : 0}`);
+      e.ln.setAttribute('style', `stroke:${col};stroke-width:${open || stop ? 2.5 : 1.5};stroke-dasharray:${open || stop ? 'none' : '6 5'};opacity:${shownDet ? 1 : 0}`);
+      e.t.style.opacity = e.gt.style.opacity = shownDet ? 1 : 0; e.t.style.fill = open || stop ? col : 'var(--ink-2)';
+    });
+    note.textContent = !s ? 'Dashed detours are skipped unless their gate opens.' : cur === 'newsup' ? 'Stops at Check: no certificate, no order. The agent asks for it.' : cur === 'small' ? 'Spine only. Every detour skipped.' : 'Two detours open: the closed cost centre and the approval.';
+    ctl.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.s === cur));
+  };
+  ctl.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; cur = b.dataset.s; paint(); });
+  return { step(k) { shownSpine = true; shownDet = k >= 1; if (k >= 2 && !cur) cur = 'reorder'; if (k < 2) cur = null; paint(); } };
+};
+
+/* ---------- Fig 31: retry ---------- */
+FIGS.retry = (el) => {
+  const lane = (title, cls, items) => `<div style="margin-bottom:22px"><div class="tag ${cls}">${title}</div><div style="display:flex;gap:10px;align-items:stretch">${items.map((it, i) => `<div class="rs card" data-i="${i}" style="flex:1;font-size:20px;padding:12px 14px;${it[1] ? `border-color:${it[1]};background:${it[1] === 'var(--before)' ? 'var(--before-soft)' : 'var(--after-soft)'}` : ''};transition:opacity .4s">${it[0]}</div>`).join('')}</div></div>`;
+  el.innerHTML = lane('Naive retry', 'bf', [['save PO'], ['ERP saves it… reply lost (timeout)'], ['retry: save PO again'], ['<b>Two orders</b>: 40,000 gaskets, ₹5.6 lakh', 'var(--before)']])
+    + lane('Idempotent activity (Temporal)', 'af', [['save PO with key <code>7f3a…</code>'], ['ERP saves it… reply lost (timeout)'], ['retry: find order by key <code>7f3a…</code>'], ['<b>One order</b>, PO/2026/01182, carry on', 'var(--after)']])
+    + `<div class="card rs" data-i="4" style="font-size:21px;transition:opacity .4s"><b>And when Rohit is travelling:</b> the workflow waits for his approval as a <i>signal</i>, reminds him after 24 hours, escalates after 48, and if the server restarts in between, it resumes exactly where it was.</div>`;
+  const rs = [...el.querySelectorAll('.rs')];
+  return { step(k) { rs.forEach((r) => { const i = +r.dataset.i; r.style.opacity = (i < 4 ? i <= k + 1 : k >= 2) ? 1 : 0.12; }); } };
+};
+
+/* ---------- engine ---------- */
+const deck = document.getElementById('deck');
+const slides = [...deck.querySelectorAll('.slide')];
+const roman = (n) => { const m = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]; let s = ''; if (n >= 40) { s += 'XL'; n -= 40; } while (n >= 10) { s += 'X'; n -= 10; } for (const [v, r] of m) while (n >= v) { s += r; n -= v; } return s; };
+let plateNo = 0;
+slides.forEach((sl, i) => {
+  sl.insertAdjacentHTML('afterbegin', '<div class="frame"></div>');
+  if (sl.dataset.plate) { plateNo++; sl.insertAdjacentHTML('beforeend', `<div class="plate-head">Plate ${roman(plateNo)} · ${sl.dataset.plate}</div>`); }
+  sl.insertAdjacentHTML('beforeend', `<div class="folio">— ${i + 1} —</div>`);
+});
+const mounted = new Map();
+let cur = 0;
+const steps = (i) => [...slides[i].querySelectorAll('.step')];
+const fit = () => { const w = innerWidth, h = innerHeight; const s = Math.min(w / 1600, (h - 40) / 900); deck.style.transform = `translate(-50%, calc(-50% - 20px)) scale(${s})`; };
+const told = (i, instant) => {
+  const k = steps(i).filter((e) => e.classList.contains('shown')).length;
+  slides[i].querySelectorAll('[data-fig]').forEach((f) => {
+    if (!mounted.has(f)) { try { mounted.set(f, FIGS[f.dataset.fig](f)); } catch (err) { console.error(err); mounted.set(f, { step() {} }); } }
+    try { mounted.get(f).step(k, instant); } catch (err) { console.error(err); }
+  });
+};
+const show = (i, all = false) => {
+  i = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((s, k) => s.classList.toggle('active', k === i));
+  steps(i).forEach((e) => e.classList.toggle('shown', all));
+  cur = i;
+  document.getElementById('pbar').style.width = (100 * (i + 1) / slides.length) + '%';
+  document.getElementById('count').textContent = `${i + 1} / ${slides.length}`;
+  try { history.replaceState(null, '', '#' + (i + 1)); } catch (e) {}
+  told(i, true);
+};
+const next = () => { const h = steps(cur).find((e) => !e.classList.contains('shown')); if (h) { h.classList.add('shown'); told(cur, false); } else if (cur < slides.length - 1) show(cur + 1); };
+const prev = () => { const s = steps(cur).filter((e) => e.classList.contains('shown')); if (s.length) { s[s.length - 1].classList.remove('shown'); told(cur, false); } else if (cur > 0) show(cur - 1, true); };
+const busy = (t) => t && t.closest && t.closest('input,button,.ctl');
+addEventListener('keydown', (e) => {
+  if (e.target.closest && e.target.closest('input')) return;
+  if (['ArrowRight', ' ', 'PageDown', 'Enter'].includes(e.key)) { e.preventDefault(); next(); }
+  else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); prev(); }
+  else if (e.key === 'Home') show(0);
+  else if (e.key === 'End') show(slides.length - 1, true);
+});
+document.getElementById('next').addEventListener('click', next);
+document.getElementById('prev').addEventListener('click', prev);
+deck.addEventListener('click', (e) => { if (busy(e.target)) return; const r = deck.getBoundingClientRect(); (e.clientX - r.left > r.width * 0.25 ? next : prev)(); });
+let x0 = null;
+addEventListener('touchstart', (e) => { x0 = busy(e.target) ? null : e.touches[0].clientX; }, { passive: true });
+addEventListener('touchend', (e) => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) (dx < 0 ? next : prev)(); x0 = null; });
+addEventListener('resize', fit);
+fit();
+const start = parseInt((location.hash || '').slice(1), 10);
+show(Number.isFinite(start) ? start - 1 : 0, Number.isFinite(start));
+window.deckApi = { next, prev, show, get cur() { return cur; }, count: slides.length };
+})();
+</script>

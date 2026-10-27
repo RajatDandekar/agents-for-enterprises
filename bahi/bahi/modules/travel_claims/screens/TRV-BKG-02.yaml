@@ -1,0 +1,28 @@
+code: TRV-BKG-02
+title: TRAVEL DESK BOOKING
+menu: Admin > Travel > Desk Booking
+roles: [TRV-DESK]
+fields:
+  - {name: status, label: STATUS, type: str, req: false, help: "AP = approved, to book; WL = next-day batch"}
+  - {name: trip_no, label: TRIP NO, type: str, req: true}
+  - {name: leg, label: LEG, type: str, req: true, help: OUT/RET}
+  - {name: fare_cd, label: FARE CD, type: str, req: true}
+  - {name: pnr, label: PNR, type: str, req: true}
+  - {name: fares, label: FARE GRID, type: grid, readonly: true}
+tasks:
+  - button: Queue
+    service: tv_trip_list
+    sends: [status]
+    fills: [trip_no]
+  - button: Fares
+    service: tv_fare_list
+    sends: [trip_no]
+    fills: [fares]
+    needs: [Queue]
+  - button: Book Leg
+    service: tv_bkg_save
+    sends: [trip_no, leg, fare_cd, pnr]
+    fills: [status]
+    needs: [Fares]
+state:
+  - {rule: "Only APPROVED trips can be booked; both legs booked = BK", error: ERR-TV-0515}

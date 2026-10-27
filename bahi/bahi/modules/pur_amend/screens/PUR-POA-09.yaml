@@ -1,0 +1,23 @@
+code: PUR-POA-09
+title: AMENDMENT APPROVAL
+menu: Purchase > Approvals > Order Amendments
+roles: [PUR-SR, PUR-MGR, PLANT-HEAD]
+fields:
+  - {name: approver, label: APPROVER, type: str, req: false, help: blank = you}
+  - {name: status, label: STATUS, type: str, req: false, help: PA}
+  - {name: po_no, label: PO NO, type: str, req: false}
+  - {name: amd_no, label: AMD NO, type: str, req: true}
+  - {name: decision, label: DECISION, type: str, req: true, help: A/R}
+  - {name: comment, label: COMMENT, type: str, req: false}
+tasks:
+  - button: Inbox
+    service: pa_amd_list
+    sends: [approver, status, po_no]
+    fills: [amd_no]
+  - button: Decide
+    service: pa_amd_approve
+    sends: [amd_no, decision, comment]
+    fills: [status]
+    needs: [Inbox]
+state:
+  - {rule: "Only the named approver decides; nobody approves an amendment they raised", error: ERR-PA-0504}

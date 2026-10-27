@@ -1,0 +1,364 @@
+{
+  "name": "Bahi · Kavita's reorder, happy path (Lecture 1 lab)",
+  "id": "BahiL1HappyPath1",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "bahi-start",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "o0",
+              "name": "bahi_url",
+              "value": "http://127.0.0.1:8077",
+              "type": "string"
+            },
+            {
+              "id": "o1",
+              "name": "itm_cd",
+              "value": "GSK-SIL-05L",
+              "type": "string"
+            },
+            {
+              "id": "o2",
+              "name": "qty",
+              "value": 15000,
+              "type": "number"
+            },
+            {
+              "id": "o3",
+              "name": "need_dt",
+              "value": "2026-11-02",
+              "type": "string"
+            },
+            {
+              "id": "o4",
+              "name": "cc_cd",
+              "value": "PRD-07",
+              "type": "string"
+            },
+            {
+              "id": "o5",
+              "name": "sup_cd",
+              "value": "DP-RJK-0042",
+              "type": "string"
+            },
+            {
+              "id": "o6",
+              "name": "tax_cd",
+              "value": "GST18-INTER",
+              "type": "string"
+            },
+            {
+              "id": "o7",
+              "name": "whs_cd",
+              "value": "WH-PUN-STR",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bahi-order",
+      "name": "Order",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        300
+      ],
+      "notes": "Edit these values. bahi_url: http://127.0.0.1:8077 if n8n runs on your machine, http://host.docker.internal:8077 if n8n runs in Docker."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Order').item.json.bahi_url }}/login",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"user_id\": \"KJOSHI\",\n  \"password\": \"kavita@123\"\n}",
+        "options": {}
+      },
+      "id": "bahi-login-kavita",
+      "name": "Login Kavita",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Order').item.json.bahi_url }}/svc/pr_save",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Login Kavita').item.json.token }}"
+            },
+            {
+              "name": "X-Screen",
+              "value": "PUR-PR-01"
+            },
+            {
+              "name": "X-Task",
+              "value": "Save"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"pr_type\": \"STD\",\n  \"cc_cd\": \"{{ $('Order').item.json.cc_cd }}\",\n  \"need_dt\": \"{{ $('Order').item.json.need_dt }}\",\n  \"itm_cd\": \"{{ $('Order').item.json.itm_cd }}\",\n  \"qty\": {{ $('Order').item.json.qty }},\n  \"whs_cd\": \"{{ $('Order').item.json.whs_cd }}\",\n  \"remarks\": \"n8n workflow\"\n}",
+        "options": {}
+      },
+      "id": "bahi-pr-save",
+      "name": "PR Save",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Order').item.json.bahi_url }}/svc/pr_submit",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Login Kavita').item.json.token }}"
+            },
+            {
+              "name": "X-Screen",
+              "value": "PUR-PR-01"
+            },
+            {
+              "name": "X-Task",
+              "value": "Submit"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"pr_no\": \"{{ $('PR Save').item.json.data.pr_no }}\"\n}",
+        "options": {}
+      },
+      "id": "bahi-pr-submit",
+      "name": "PR Submit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Order').item.json.bahi_url }}/svc/po_fetch",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Login Kavita').item.json.token }}"
+            },
+            {
+              "name": "X-Screen",
+              "value": "PUR-PO-01"
+            },
+            {
+              "name": "X-Task",
+              "value": "Fetch"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"sup_cd\": \"{{ $('Order').item.json.sup_cd }}\",\n  \"itm_cd\": \"{{ $('Order').item.json.itm_cd }}\",\n  \"pr_no\": \"{{ $('PR Save').item.json.data.pr_no }}\"\n}",
+        "options": {}
+      },
+      "id": "bahi-po-fetch",
+      "name": "PO Fetch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Order').item.json.bahi_url }}/svc/po_save",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Login Kavita').item.json.token }}"
+            },
+            {
+              "name": "X-Screen",
+              "value": "PUR-PO-01"
+            },
+            {
+              "name": "X-Task",
+              "value": "Save"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"po_type\": \"STD\",\n  \"pr_no\": \"{{ $('PR Save').item.json.data.pr_no }}\",\n  \"sup_cd\": \"{{ $('Order').item.json.sup_cd }}\",\n  \"itm_cd\": \"{{ $('Order').item.json.itm_cd }}\",\n  \"qty\": {{ $('Order').item.json.qty }},\n  \"rate\": {{ $('PO Fetch').item.json.data.rate }},\n  \"tax_cd\": \"{{ $('Order').item.json.tax_cd }}\",\n  \"cc_cd\": \"{{ $('Order').item.json.cc_cd }}\",\n  \"need_dt\": \"{{ $('Order').item.json.need_dt }}\",\n  \"whs_cd\": \"{{ $('Order').item.json.whs_cd }}\",\n  \"fetch_tok\": \"{{ $('PO Fetch').item.json.data.fetch_tok }}\"\n}",
+        "options": {}
+      },
+      "id": "bahi-po-save",
+      "name": "PO Save",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Order').item.json.bahi_url }}/svc/po_release",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Login Kavita').item.json.token }}"
+            },
+            {
+              "name": "X-Screen",
+              "value": "PUR-POR-05"
+            },
+            {
+              "name": "X-Task",
+              "value": "Release"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"po_no\": \"{{ $('PO Save').item.json.data.doc_no }}\"\n}",
+        "options": {}
+      },
+      "id": "bahi-po-release",
+      "name": "PO Release",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order": {
+      "main": [
+        [
+          {
+            "node": "Login Kavita",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Login Kavita": {
+      "main": [
+        [
+          {
+            "node": "PR Save",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PR Save": {
+      "main": [
+        [
+          {
+            "node": "PR Submit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PR Submit": {
+      "main": [
+        [
+          {
+            "node": "PO Fetch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PO Fetch": {
+      "main": [
+        [
+          {
+            "node": "PO Save",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PO Save": {
+      "main": [
+        [
+          {
+            "node": "PO Release",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

@@ -1,0 +1,28 @@
+code: FIN-AP-01
+title: SUPPLIER INVOICE ENTRY
+menu: Finance > Payables > Invoice Entry
+roles: [AP-EXEC, FIN-CTRL]
+fields:
+  - {name: inv_type, label: INV TYPE, type: str, req: true, help: "PO / NPO"}
+  - {name: sup_cd, label: SUP CD, type: str, req: true}
+  - {name: sup_inv_no, label: SUP INV NO, type: str, req: true}
+  - {name: inv_dt, label: INV DT, type: date, req: true}
+  - {name: po_no, label: PO NO, type: str, req: false, help: PO invoices only}
+  - {name: qty, label: QTY BILLED, type: int, req: false}
+  - {name: rate, label: RATE BILLED, type: float, req: false}
+  - {name: amount, label: BASIC AMT, type: float, req: false, help: NPO only}
+  - {name: tax_cd, label: TAX CD, type: str, req: true}
+  - {name: cc_cd, label: CC CD, type: str, req: false, help: NPO only}
+  - {name: match_tok, label: (hidden), type: str, req: false}
+tasks:
+  - button: Match
+    service: ap_match
+    sends: [inv_type, sup_cd, po_no, qty, rate, amount, cc_cd]
+    fills: [match_tok]
+  - button: Save
+    service: ap_save
+    sends: [inv_type, sup_cd, sup_inv_no, inv_dt, po_no, qty, rate, amount, tax_cd, cc_cd, match_tok]
+    fills: [ap_no, status]
+    needs: [Match]
+state:
+  - {rule: "Save needs Match for the same SUP CD and PO NO", error: ERR-SCR-0221}

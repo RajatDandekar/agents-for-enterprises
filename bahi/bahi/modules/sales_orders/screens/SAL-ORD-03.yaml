@@ -1,0 +1,28 @@
+code: SAL-ORD-03
+title: SALES ORDER
+menu: Sales > Orders > Sales Order
+roles: [SAL-EXEC, SAL-MGR]
+fields:
+  - {name: ord_type, label: ORD TYPE, type: str, req: false, help: "STD (from quotation) / CSH"}
+  - {name: qtn_no, label: QT NO, type: str, req: false, help: STD only}
+  - {name: cust_cd, label: CUST CD, type: str, req: false, help: CSH only}
+  - {name: itm_cd, label: ITEM CD, type: str, req: false, help: CSH only}
+  - {name: qty, label: QTY, type: int, req: false}
+  - {name: tax_cd, label: TAX CD, type: str, req: false, help: CSH only}
+  - {name: ord_no, label: SO NO, type: str, readonly: true}
+tasks:
+  - button: List
+    service: so_list
+    sends: [doc_no, cust_cd, status]
+    fills: [qtn_no]
+  - button: Save
+    service: so_ord_save
+    sends: [ord_type, qtn_no, cust_cd, itm_cd, qty, tax_cd]
+    fills: [ord_no, status]
+  - button: Release
+    service: so_ord_release
+    sends: [ord_no]
+    fills: [status]
+    needs: [Save]
+state:
+  - {rule: "An order over the customer's credit saves as CH; the reply only says SAVED", error: W-SO-114}

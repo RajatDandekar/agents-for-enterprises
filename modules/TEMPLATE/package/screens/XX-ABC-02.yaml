@@ -1,0 +1,23 @@
+code: XX-ABC-02
+title: DOCUMENT ENTRY
+menu: Area > Module > Entry
+roles: [PUR-EXEC]
+fields:
+  - {name: party, label: PARTY, type: str, req: true}
+  - {name: qty, label: QTY, type: int, req: true}
+  - {name: amount, label: AMT, type: float, req: true}
+  - {name: cc_cd, label: CC CD, type: str, req: true, help: filled by Fetch}
+  - {name: fetch_tok, label: (hidden), type: str, req: false}
+tasks:
+  - button: Fetch
+    service: xx_fetch
+    sends: [party]
+    fills: [cc_cd, fetch_tok]
+  - button: Save
+    service: xx_save
+    sends: [party, qty, amount, cc_cd, fetch_tok]
+    fills: [doc_no, status]
+    needs: [Fetch]
+state:
+  - {rule: "Save needs Fetch for the same PARTY", error: ERR-SCR-0221}
+  - {rule: "A closed cost centre saves as HD; the reply only says SAVED", error: W-XX-101}

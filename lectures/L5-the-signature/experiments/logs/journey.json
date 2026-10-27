@@ -1,0 +1,2138 @@
+{
+ "steps": [
+  {
+   "who": "KJOSHI",
+   "what": "sign in",
+   "response": {
+    "user_id": "KJOSHI",
+    "role_cd": "PUR-EXEC"
+   }
+  },
+  {
+   "who": "KJOSHI",
+   "what": "new conversation",
+   "response": {
+    "conv": "kjoshi-1",
+    "acts_as": {
+     "kind": "passthrough",
+     "user": "KJOSHI",
+     "acts_as": "KJOSHI"
+    }
+   }
+  },
+  {
+   "who": "KJOSHI",
+   "what": "message",
+   "body": {
+    "text": "We need 20,000 silicone gaskets for the 5-litre cooker before the Diwali run. Same supplier as last time."
+   },
+   "response": {
+    "reply": "Cost centre PRD-05 · closed on 15 Oct 2026 · Bahi would save the order as a Draft\nOpen: PRD-07 Diwali production run, PRD-03 3-litre line, MNT-01 Plant maintenance, ADM-01 Administration\n\nCost centre PRD-05 has been closed since 2026-10-15, so Bahi would keep this order as a draft and never send it. Which open cost centre should I charge?",
+    "waiting_on": null,
+    "trace": [
+     "find_supplier → Deccan Polymers DP-RJK-0042 (1.0) · Blocked codes, never use: DP-RJK-0009.",
+     "check_cost_centre → PRD-05 CLOSED 2026-10-15",
+     "check_cost_centre → open: PRD-07, PRD-03, MNT-01, ADM-01",
+     "6 direct Bahi reads by the graph"
+    ]
+   }
+  },
+  {
+   "who": "KJOSHI",
+   "what": "message",
+   "body": {
+    "text": "PRD-07, the Diwali production run. Need-by 2 November."
+   },
+   "response": {
+    "reply": "Supplier     Deccan Polymers (DP-RJK-0042)\nItem         Gasket, silicone, 5 L (GSK-SIL-05L)\nQuantity     20,000 at ₹11.90 (contract rate)\nValue        ₹2,38,000 + GST18-INTER = ₹2,80,840 gross\nCost centre  PRD-07 · need by 2 Nov 2026\nRoute        purchase request, then order\nApproval     above your limit of ₹2,50,000: goes to Rohit Mehta (RMEHTA)\n\nHere is the preview of your order priced by Bahi, and nothing is saved yet. Supplier DP-RJK-0042 is your usual one with 2 of your 2 orders for GSK-SIL-05L, and approval will be needed from Rohit Mehta (RMEHTA). Shall I go ahead?",
+    "waiting_on": null,
+    "trace": [
+     "check_cost_centre → PRD-07 open",
+     "create_purchase_order → preview · ₹2,80,840 gross > limit ₹2,50,000 → RMEHTA",
+     "2 direct Bahi reads by the graph"
+    ]
+   }
+  },
+  {
+   "who": "KJOSHI",
+   "what": "message",
+   "body": {
+    "text": "Yes, go ahead."
+   },
+   "response": {
+    "reply": "Purchase request PR/2026/04417 has been submitted to Rohit Mehta (RMEHTA) for approval because the order exceeds your limit. The purchase order will be created after it is approved.\n\nBahi status · PR/2026/04417 · WAITING FOR APPROVAL by Rohit Mehta (RMEHTA)",
+    "waiting_on": {
+     "id": "APR-0001",
+     "kind": "PR",
+     "doc_no": "PR/2026/04417",
+     "status": "PENDING",
+     "approver": "RMEHTA"
+    },
+    "trace": [
+     "create_purchase_order → PR/2026/04417 · WAITING FOR APPROVAL by RMEHTA",
+     "PR/2026/04417 routed by Bahi to RMEHTA (POL-APR-002 §3.3: above Kavita's ₹2,50,000: Rohit Mehta signs)",
+     "posted to @rohit via mcp",
+     "2 direct Bahi reads by the graph",
+     "Bahi status · PR/2026/04417 · WAITING FOR APPROVAL by Rohit Mehta (RMEHTA)"
+    ]
+   }
+  },
+  {
+   "who": "KJOSHI",
+   "what": "tries to approve her own request",
+   "response": {
+    "status": 403,
+    "detail": "Bahi refused: ACCESS DENIED (ERR-SEC-0001)"
+   }
+  },
+  {
+   "who": "RMEHTA",
+   "what": "opens the inbox",
+   "response": {
+    "items": [
+     {
+      "id": "APR-0002",
+      "kind": "PO",
+      "doc_no": "PO/2026/01179",
+      "summary": "4,000 × LID-SS-05L @ ₹96 · OSM-PUN-0031 · ₹4,53,120 gross",
+      "value": 453120.0,
+      "rule": "POL-APR-002 §3.3"
+     },
+     {
+      "id": "APR-0001",
+      "kind": "PR",
+      "doc_no": "PR/2026/04417",
+      "summary": "20,000 × GSK-SIL-05L · PRD-07 · ₹2,80,840 gross (est.)",
+      "value": 280840.0,
+      "rule": "POL-APR-002 §3.3"
+     }
+    ],
+    "slack": [
+     "Purchase request PR/2026/04417 · 20,000 × GSK-SIL-05L · PRD-07 · ₹2,80,840 gross (est.) · raised by Kavita Joshi [Approve] [Reject] /app/inbox#APR-0001"
+    ]
+   }
+  },
+  {
+   "who": "RMEHTA",
+   "what": "one tap: approve",
+   "body": {
+    "item": "APR-0001"
+   },
+   "response": {
+    "bahi": {
+     "rc": "S",
+     "err_cd": null,
+     "msg": "PR/2026/04417 APPROVED BY RMEHTA",
+     "data": {
+      "pr_no": "PR/2026/04417",
+      "status": "AP"
+     }
+    },
+    "item_status": "APPROVED",
+    "kavita_sees": "PO/2026/01182 has been released to Deccan Polymers.\n\nBahi status · PO/2026/01182 · RELEASED to the supplier · approved by RMEHTA"
+   }
+  }
+ ],
+ "checks": {
+  "no_token_refused": true,
+  "kavita_cannot_approve": true,
+  "released": true,
+  "po_is_01182": true,
+  "approved_by_rohit": true,
+  "created_by_kavita": true,
+  "gross_280840": true,
+  "no_service_account_in_bahi": true,
+  "every_write_read_back": true,
+  "rohit_got_slack": true,
+  "approval_in_audit": true,
+  "one_gasket_order": true
+ },
+ "conv": "kjoshi-1",
+ "me": {
+  "user": "KJOSHI",
+  "name": "Kavita Joshi",
+  "role": "PUR-EXEC",
+  "limit": 250000.0,
+  "tools": [
+   "find_item",
+   "stock_position",
+   "last_purchase",
+   "find_supplier",
+   "check_cost_centre",
+   "create_purchase_order",
+   "release_purchase_order",
+   "order_status",
+   "amend_purchase_order",
+   "register_supplier",
+   "record_certificate"
+  ],
+  "menu": [
+   {
+    "screen": "INV-ITM-03",
+    "menu": "Masters > Item enquiry",
+    "allowed": true
+   },
+   {
+    "screen": "INV-STK-02",
+    "menu": "Inventory > Stock status",
+    "allowed": true
+   },
+   {
+    "screen": "PUR-PO-01",
+    "menu": "Purchase > Order entry",
+    "allowed": true
+   },
+   {
+    "screen": "PUR-POA-04",
+    "menu": "Purchase > Order approval",
+    "allowed": false
+   },
+   {
+    "screen": "PUR-POH-02",
+    "menu": "Purchase > Order history",
+    "allowed": true
+   },
+   {
+    "screen": "PUR-POR-05",
+    "menu": "Purchase > Order release",
+    "allowed": true
+   },
+   {
+    "screen": "PUR-PR-01",
+    "menu": "Purchase > Request entry",
+    "allowed": true
+   },
+   {
+    "screen": "PUR-PR-04",
+    "menu": "Purchase > Request approval",
+    "allowed": false
+   },
+   {
+    "screen": "PUR-SUP-01",
+    "menu": "Masters > Supplier create",
+    "allowed": true
+   },
+   {
+    "screen": "SYS-LGN-01",
+    "menu": "File > Sign in",
+    "allowed": true
+   }
+  ],
+  "slack": "@kavita"
+ },
+ "transcript": [
+  {
+   "role": "user",
+   "who": "KJOSHI",
+   "text": "We need 20,000 silicone gaskets for the 5-litre cooker before the Diwali run. Same supplier as last time."
+  },
+  {
+   "role": "agent",
+   "who": "agent",
+   "text": "Cost centre PRD-05 · closed on 15 Oct 2026 · Bahi would save the order as a Draft\nOpen: PRD-07 Diwali production run, PRD-03 3-litre line, MNT-01 Plant maintenance, ADM-01 Administration\n\nCost centre PRD-05 has been closed since 2026-10-15, so Bahi would keep this order as a draft and never send it. Which open cost centre should I charge?"
+  },
+  {
+   "role": "user",
+   "who": "KJOSHI",
+   "text": "PRD-07, the Diwali production run. Need-by 2 November."
+  },
+  {
+   "role": "agent",
+   "who": "agent",
+   "text": "Supplier     Deccan Polymers (DP-RJK-0042)\nItem         Gasket, silicone, 5 L (GSK-SIL-05L)\nQuantity     20,000 at ₹11.90 (contract rate)\nValue        ₹2,38,000 + GST18-INTER = ₹2,80,840 gross\nCost centre  PRD-07 · need by 2 Nov 2026\nRoute        purchase request, then order\nApproval     above your limit of ₹2,50,000: goes to Rohit Mehta (RMEHTA)\n\nHere is the preview of your order priced by Bahi, and nothing is saved yet. Supplier DP-RJK-0042 is your usual one with 2 of your 2 orders for GSK-SIL-05L, and approval will be needed from Rohit Mehta (RMEHTA). Shall I go ahead?"
+  },
+  {
+   "role": "user",
+   "who": "KJOSHI",
+   "text": "Yes, go ahead."
+  },
+  {
+   "role": "agent",
+   "who": "agent",
+   "text": "Purchase request PR/2026/04417 has been submitted to Rohit Mehta (RMEHTA) for approval because the order exceeds your limit. The purchase order will be created after it is approved.\n\nBahi status · PR/2026/04417 · WAITING FOR APPROVAL by Rohit Mehta (RMEHTA)"
+  },
+  {
+   "role": "event",
+   "who": "inbox",
+   "text": "Approval decided in Bahi for PR/2026/04417."
+  },
+  {
+   "role": "agent",
+   "who": "agent",
+   "text": "PO/2026/01182 has been released to Deccan Polymers.\n\nBahi status · PO/2026/01182 · RELEASED to the supplier · approved by RMEHTA"
+  }
+ ],
+ "trace": [
+  {
+   "seq": 2,
+   "kind": "tool",
+   "line": "find_supplier → Deccan Polymers DP-RJK-0042 (1.0) · Blocked codes, never use: DP-RJK-0009.",
+   "writes": false,
+   "read_back": null,
+   "bahi": [
+    "KJOSHI sup_search S",
+    "KJOSHI sup_search S",
+    "KJOSHI sup_search S",
+    "KJOSHI sup_cert_get S",
+    "KJOSHI sup_cert_get S",
+    "KJOSHI sup_cert_get S"
+   ]
+  },
+  {
+   "seq": 3,
+   "kind": "tool",
+   "line": "check_cost_centre → PRD-05 CLOSED 2026-10-15",
+   "writes": false,
+   "read_back": null,
+   "bahi": [
+    "KJOSHI cc_get S",
+    "KJOSHI bud_check S"
+   ]
+  },
+  {
+   "seq": 4,
+   "kind": "tool",
+   "line": "check_cost_centre → open: PRD-07, PRD-03, MNT-01, ADM-01",
+   "writes": false,
+   "read_back": null,
+   "bahi": [
+    "KJOSHI cc_list S"
+   ]
+  },
+  {
+   "seq": 5,
+   "kind": "reads",
+   "line": "6 direct Bahi reads by the graph",
+   "bahi": [
+    "KJOSHI itm_search S",
+    "KJOSHI itm_search S",
+    "KJOSHI itm_search S",
+    "KJOSHI itm_get S",
+    "KJOSHI sup_get S",
+    "KJOSHI sup_rate_get S"
+   ]
+  },
+  {
+   "seq": 7,
+   "kind": "tool",
+   "line": "check_cost_centre → PRD-07 open",
+   "writes": false,
+   "read_back": null,
+   "bahi": [
+    "KJOSHI cc_get S",
+    "KJOSHI bud_check S"
+   ]
+  },
+  {
+   "seq": 8,
+   "kind": "tool",
+   "line": "create_purchase_order → preview · ₹2,80,840 gross > limit ₹2,50,000 → RMEHTA",
+   "writes": false,
+   "read_back": null,
+   "bahi": [
+    "KJOSHI po_search S",
+    "KJOSHI po_search S",
+    "KJOSHI sup_get S",
+    "KJOSHI itm_get S",
+    "KJOSHI sup_rate_get S",
+    "KJOSHI sup_get S",
+    "KJOSHI usr_get S",
+    "KJOSHI tax_compute S",
+    "KJOSHI usr_get S",
+    "KJOSHI bud_check S",
+    "KJOSHI sup_cert_get S"
+   ]
+  },
+  {
+   "seq": 9,
+   "kind": "reads",
+   "line": "2 direct Bahi reads by the graph",
+   "bahi": [
+    "KJOSHI itm_get S",
+    "KJOSHI usr_get S"
+   ]
+  },
+  {
+   "seq": 11,
+   "kind": "tool",
+   "line": "create_purchase_order → PR/2026/04417 · WAITING FOR APPROVAL by RMEHTA",
+   "writes": true,
+   "read_back": {
+    "doc": "PR/2026/04417",
+    "status_code": "PA",
+    "approved_by": null,
+    "est_value": 280840.0
+   },
+   "bahi": [
+    "KJOSHI sup_get S",
+    "KJOSHI usr_get S",
+    "KJOSHI tax_compute S",
+    "KJOSHI pr_search S",
+    "KJOSHI pr_save S",
+    "KJOSHI pr_submit S",
+    "KJOSHI pr_get S",
+    "KJOSHI pr_get S",
+    "KJOSHI pr_get S"
+   ]
+  },
+  {
+   "seq": 12,
+   "kind": "approval_request",
+   "line": "PR/2026/04417 routed by Bahi to RMEHTA (POL-APR-002 §3.3: above Kavita's ₹2,50,000: Rohit Mehta signs)",
+   "actor": "agent"
+  },
+  {
+   "seq": 13,
+   "kind": "notify",
+   "line": "posted to @rohit via mcp",
+   "actor": "agent"
+  },
+  {
+   "seq": 14,
+   "kind": "reads",
+   "line": "2 direct Bahi reads by the graph",
+   "bahi": [
+    "KJOSHI sup_cert_get S",
+    "KJOSHI pr_get S"
+   ]
+  },
+  {
+   "seq": 14,
+   "kind": "status",
+   "line": "Bahi status · PR/2026/04417 · WAITING FOR APPROVAL by Rohit Mehta (RMEHTA)"
+  },
+  {
+   "seq": 15,
+   "kind": "refused",
+   "line": "KJOSHI tried to approve PR/2026/04417: ACCESS DENIED",
+   "actor": "KJOSHI"
+  },
+  {
+   "seq": 17,
+   "kind": "approval",
+   "line": "Rohit Mehta approved PR/2026/04417 in his own session (POL-APR-002 §3.3)",
+   "actor": "RMEHTA"
+  },
+  {
+   "seq": 19,
+   "kind": "tool",
+   "line": "create_purchase_order → PO/2026/01182 · RL · approved by RMEHTA",
+   "writes": true,
+   "read_back": {
+    "doc": "PO/2026/01182",
+    "status_code": "RL",
+    "status": "RELEASED to the supplier",
+    "warning": null,
+    "approved_by": "RMEHTA",
+    "created_by": "KJOSHI",
+    "gross_value": 280840.0,
+    "cost_centre": "PRD-07",
+    "matches_receipt": true
+   },
+   "bahi": [
+    "KJOSHI po_search S",
+    "KJOSHI sup_get S",
+    "KJOSHI usr_get S",
+    "KJOSHI tax_compute S",
+    "KJOSHI po_fetch S",
+    "KJOSHI po_save S",
+    "KJOSHI po_get S",
+    "KJOSHI po_get S",
+    "KJOSHI po_release S",
+    "KJOSHI po_get S",
+    "KJOSHI po_get S",
+    "KJOSHI po_get S"
+   ]
+  },
+  {
+   "seq": 20,
+   "kind": "tool",
+   "line": "order_status → PO/2026/01182 · RL · approved by RMEHTA",
+   "writes": false,
+   "read_back": {
+    "doc": "PO/2026/01182",
+    "status_code": "RL",
+    "status": "RELEASED to the supplier",
+    "warning": null,
+    "approved_by": "RMEHTA",
+    "created_by": "KJOSHI",
+    "gross_value": 280840.0,
+    "cost_centre": "PRD-07",
+    "matches_receipt": true
+   },
+   "bahi": [
+    "KJOSHI po_get S",
+    "KJOSHI po_get S"
+   ]
+  },
+  {
+   "seq": 21,
+   "kind": "reads",
+   "line": "4 direct Bahi reads by the graph",
+   "bahi": [
+    "KJOSHI pr_get S",
+    "KJOSHI pr_get S",
+    "KJOSHI sup_cert_get S",
+    "KJOSHI po_get S"
+   ]
+  },
+  {
+   "seq": 21,
+   "kind": "status",
+   "line": "Bahi status · PO/2026/01182 · RELEASED to the supplier · approved by RMEHTA"
+  }
+ ],
+ "audit": [
+  {
+   "seq": 1,
+   "t": "2026-10-26T09:01:24+05:30",
+   "conv": "kjoshi-1",
+   "kind": "ask",
+   "actor": "KJOSHI",
+   "on_behalf_of": "KJOSHI",
+   "text": "We need 20,000 silicone gaskets for the 5-litre cooker before the Diwali run. Same supplier as last time."
+  },
+  {
+   "seq": 2,
+   "t": "2026-10-26T09:02:41+05:30",
+   "conv": "kjoshi-1",
+   "kind": "tool",
+   "actor": "agent",
+   "on_behalf_of": "KJOSHI",
+   "acts_as": "KJOSHI",
+   "tool": "find_supplier",
+   "args": {
+    "name": "Deccan Polymers",
+    "city": "Rajkot"
+   },
+   "writes": false,
+   "saw": "Deccan Polymers DP-RJK-0042 (1.0) · Blocked codes, never use: DP-RJK-0009.",
+   "doc": null,
+   "status": null,
+   "read_back": null,
+   "bahi": [
+    {
+     "id": 18,
+     "ts": "2026-10-26T09:02:06+05:30",
+     "user": "KJOSHI",
+     "svc": "sup_search",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 19,
+     "ts": "2026-10-26T09:02:13+05:30",
+     "user": "KJOSHI",
+     "svc": "sup_search",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 20,
+     "ts": "2026-10-26T09:02:20+05:30",
+     "user": "KJOSHI",
+     "svc": "sup_search",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 21,
+     "ts": "2026-10-26T09:02:27+05:30",
+     "user": "KJOSHI",
+     "svc": "sup_cert_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 22,
+     "ts": "2026-10-26T09:02:34+05:30",
+     "user": "KJOSHI",
+     "svc": "sup_cert_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 23,
+     "ts": "2026-10-26T09:02:41+05:30",
+     "user": "KJOSHI",
+     "svc": "sup_cert_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    }
+   ]
+  },
+  {
+   "seq": 3,
+   "t": "2026-10-26T09:03:02+05:30",
+   "conv": "kjoshi-1",
+   "kind": "tool",
+   "actor": "agent",
+   "on_behalf_of": "KJOSHI",
+   "acts_as": "KJOSHI",
+   "tool": "check_cost_centre",
+   "args": {
+    "code": "PRD-05"
+   },
+   "writes": false,
+   "saw": "PRD-05 CLOSED 2026-10-15",
+   "doc": null,
+   "status": null,
+   "read_back": null,
+   "bahi": [
+    {
+     "id": 25,
+     "ts": "2026-10-26T09:02:55+05:30",
+     "user": "KJOSHI",
+     "svc": "cc_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 26,
+     "ts": "2026-10-26T09:03:02+05:30",
+     "user": "KJOSHI",
+     "svc": "bud_check",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    }
+   ]
+  },
+  {
+   "seq": 4,
+   "t": "2026-10-26T09:03:09+05:30",
+   "conv": "kjoshi-1",
+   "kind": "tool",
+   "actor": "agent",
+   "on_behalf_of": "KJOSHI",
+   "acts_as": "KJOSHI",
+   "tool": "check_cost_centre",
+   "args": {},
+   "writes": false,
+   "saw": "open: PRD-07, PRD-03, MNT-01, ADM-01",
+   "doc": null,
+   "status": null,
+   "read_back": null,
+   "bahi": [
+    {
+     "id": 27,
+     "ts": "2026-10-26T09:03:09+05:30",
+     "user": "KJOSHI",
+     "svc": "cc_list",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    }
+   ]
+  },
+  {
+   "seq": 5,
+   "t": "2026-10-26T09:03:09+05:30",
+   "conv": "kjoshi-1",
+   "kind": "reply",
+   "actor": "agent",
+   "text": "Cost centre PRD-05 · closed on 15 Oct 2026 · Bahi would save the order as a Draft\nOpen: PRD-07 Diwali production run, PRD-03 3-litre line, MNT-01 Plant maintenance, ADM-01 Administration\n\nCost centre PRD-05 has been closed since 2026-10-15, so Bahi would keep this order as a draft and never send it. Which open cost centre should I charge?",
+   "stage": "",
+   "path": [
+    "understand",
+    "route",
+    "collect",
+    "fix_cost_centre"
+   ],
+   "status_line": "",
+   "bahi": [
+    {
+     "id": 13,
+     "ts": "2026-10-26T09:01:31+05:30",
+     "user": "KJOSHI",
+     "svc": "itm_search",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 14,
+     "ts": "2026-10-26T09:01:38+05:30",
+     "user": "KJOSHI",
+     "svc": "itm_search",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 15,
+     "ts": "2026-10-26T09:01:45+05:30",
+     "user": "KJOSHI",
+     "svc": "itm_search",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 16,
+     "ts": "2026-10-26T09:01:52+05:30",
+     "user": "KJOSHI",
+     "svc": "itm_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 17,
+     "ts": "2026-10-26T09:01:59+05:30",
+     "user": "KJOSHI",
+     "svc": "sup_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 24,
+     "ts": "2026-10-26T09:02:48+05:30",
+     "user": "KJOSHI",
+     "svc": "sup_rate_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    }
+   ]
+  },
+  {
+   "seq": 6,
+   "t": "2026-10-26T09:03:09+05:30",
+   "conv": "kjoshi-1",
+   "kind": "ask",
+   "actor": "KJOSHI",
+   "on_behalf_of": "KJOSHI",
+   "text": "PRD-07, the Diwali production run. Need-by 2 November."
+  },
+  {
+   "seq": 7,
+   "t": "2026-10-26T09:03:30+05:30",
+   "conv": "kjoshi-1",
+   "kind": "tool",
+   "actor": "agent",
+   "on_behalf_of": "KJOSHI",
+   "acts_as": "KJOSHI",
+   "tool": "check_cost_centre",
+   "args": {
+    "code": "PRD-07"
+   },
+   "writes": false,
+   "saw": "PRD-07 open",
+   "doc": null,
+   "status": null,
+   "read_back": null,
+   "bahi": [
+    {
+     "id": 29,
+     "ts": "2026-10-26T09:03:23+05:30",
+     "user": "KJOSHI",
+     "svc": "cc_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 30,
+     "ts": "2026-10-26T09:03:30+05:30",
+     "user": "KJOSHI",
+     "svc": "bud_check",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    }
+   ]
+  },
+  {
+   "seq": 8,
+   "t": "2026-10-26T09:04:47+05:30",
+   "conv": "kjoshi-1",
+   "kind": "tool",
+   "actor": "agent",
+   "on_behalf_of": "KJOSHI",
+   "acts_as": "KJOSHI",
+   "tool": "create_purchase_order",
+   "args": {
+    "supplier_code": "DP-RJK-0042",
+    "item_code": "GSK-SIL-05L",
+    "quantity": 20000,
+    "cost_centre": "PRD-07",
+    "need_by": "2026-11-02",
+    "rate": 11.9,
+    "idempotency_key": "L4-b67e2dee9a92",
+    "confirm": false
+   },
+   "writes": false,
+   "saw": "preview · ₹2,80,840 gross > limit ₹2,50,000 → RMEHTA",
+   "doc": null,
+   "status": null,
+   "read_back": null,
+   "bahi": [
+    {
+     "id": 31,
+     "ts": "2026-10-26T09:03:37+05:30",
+     "user": "KJOSHI",
+     "svc": "po_search",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 32,
+     "ts": "2026-10-26T09:03:44+05:30",
+     "user": "KJOSHI",
+     "svc": "po_search",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 33,
+     "ts": "2026-10-26T09:03:51+05:30",
+     "user": "KJOSHI",
+     "svc": "sup_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 34,
+     "ts": "2026-10-26T09:03:58+05:30",
+     "user": "KJOSHI",
+     "svc": "itm_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 35,
+     "ts": "2026-10-26T09:04:05+05:30",
+     "user": "KJOSHI",
+     "svc": "sup_rate_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 36,
+     "ts": "2026-10-26T09:04:12+05:30",
+     "user": "KJOSHI",
+     "svc": "sup_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 37,
+     "ts": "2026-10-26T09:04:19+05:30",
+     "user": "KJOSHI",
+     "svc": "usr_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 38,
+     "ts": "2026-10-26T09:04:26+05:30",
+     "user": "KJOSHI",
+     "svc": "tax_compute",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 39,
+     "ts": "2026-10-26T09:04:33+05:30",
+     "user": "KJOSHI",
+     "svc": "usr_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 40,
+     "ts": "2026-10-26T09:04:40+05:30",
+     "user": "KJOSHI",
+     "svc": "bud_check",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 41,
+     "ts": "2026-10-26T09:04:47+05:30",
+     "user": "KJOSHI",
+     "svc": "sup_cert_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    }
+   ]
+  },
+  {
+   "seq": 9,
+   "t": "2026-10-26T09:04:54+05:30",
+   "conv": "kjoshi-1",
+   "kind": "reply",
+   "actor": "agent",
+   "text": "Supplier     Deccan Polymers (DP-RJK-0042)\nItem         Gasket, silicone, 5 L (GSK-SIL-05L)\nQuantity     20,000 at ₹11.90 (contract rate)\nValue        ₹2,38,000 + GST18-INTER = ₹2,80,840 gross\nCost centre  PRD-07 · need by 2 Nov 2026\nRoute        purchase request, then order\nApproval     above your limit of ₹2,50,000: goes to Rohit Mehta (RMEHTA)\n\nHere is the preview of your order priced by Bahi, and nothing is saved yet. Supplier DP-RJK-0042 is your usual one with 2 of your 2 orders for GSK-SIL-05L, and approval will be needed from Rohit Mehta (RMEHTA). Shall I go ahead?",
+   "stage": "",
+   "path": [
+    "understand",
+    "route",
+    "collect",
+    "fix_cost_centre",
+    "ask_kavita",
+    "understand",
+    "route",
+    "collect",
+    "check",
+    "preview"
+   ],
+   "status_line": "",
+   "bahi": [
+    {
+     "id": 28,
+     "ts": "2026-10-26T09:03:16+05:30",
+     "user": "KJOSHI",
+     "svc": "itm_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 42,
+     "ts": "2026-10-26T09:04:54+05:30",
+     "user": "KJOSHI",
+     "svc": "usr_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    }
+   ]
+  },
+  {
+   "seq": 10,
+   "t": "2026-10-26T09:04:54+05:30",
+   "conv": "kjoshi-1",
+   "kind": "ask",
+   "actor": "KJOSHI",
+   "on_behalf_of": "KJOSHI",
+   "text": "Yes, go ahead."
+  },
+  {
+   "seq": 11,
+   "t": "2026-10-26T09:06:25+05:30",
+   "conv": "kjoshi-1",
+   "kind": "tool",
+   "actor": "agent",
+   "on_behalf_of": "KJOSHI",
+   "acts_as": "KJOSHI",
+   "tool": "create_purchase_order",
+   "args": {
+    "supplier_code": "DP-RJK-0042",
+    "item_code": "GSK-SIL-05L",
+    "quantity": 20000,
+    "cost_centre": "PRD-07",
+    "need_by": "2026-11-02",
+    "rate": 11.9,
+    "idempotency_key": "L4-b67e2dee9a92",
+    "confirm": true
+   },
+   "writes": true,
+   "saw": "PR/2026/04417 · WAITING FOR APPROVAL by RMEHTA",
+   "doc": "PR/2026/04417",
+   "status": "PA",
+   "read_back": {
+    "doc": "PR/2026/04417",
+    "status_code": "PA",
+    "approved_by": null,
+    "est_value": 280840.0
+   },
+   "bahi": [
+    {
+     "id": 44,
+     "ts": "2026-10-26T09:05:08+05:30",
+     "user": "KJOSHI",
+     "svc": "sup_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 45,
+     "ts": "2026-10-26T09:05:15+05:30",
+     "user": "KJOSHI",
+     "svc": "usr_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 46,
+     "ts": "2026-10-26T09:05:22+05:30",
+     "user": "KJOSHI",
+     "svc": "tax_compute",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 47,
+     "ts": "2026-10-26T09:05:29+05:30",
+     "user": "KJOSHI",
+     "svc": "pr_search",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 48,
+     "ts": "2026-10-26T09:05:36+05:30",
+     "user": "KJOSHI",
+     "svc": "pr_save",
+     "rc": "S",
+     "err": null,
+     "kind": "write"
+    },
+    {
+     "id": 49,
+     "ts": "2026-10-26T09:05:50+05:30",
+     "user": "KJOSHI",
+     "svc": "pr_submit",
+     "rc": "S",
+     "err": null,
+     "kind": "write"
+    },
+    {
+     "id": 50,
+     "ts": "2026-10-26T09:06:11+05:30",
+     "user": "KJOSHI",
+     "svc": "pr_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 51,
+     "ts": "2026-10-26T09:06:18+05:30",
+     "user": "KJOSHI",
+     "svc": "pr_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 52,
+     "ts": "2026-10-26T09:06:25+05:30",
+     "user": "KJOSHI",
+     "svc": "pr_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    }
+   ]
+  },
+  {
+   "seq": 12,
+   "t": "2026-10-26T09:06:32+05:30",
+   "conv": "kjoshi-1",
+   "kind": "approval_request",
+   "actor": "agent",
+   "item": "APR-0001",
+   "doc": "PR/2026/04417",
+   "approver": "RMEHTA",
+   "what": "PR/2026/04417 routed by Bahi to RMEHTA (POL-APR-002 §3.3: above Kavita's ₹2,50,000: Rohit Mehta signs)"
+  },
+  {
+   "seq": 13,
+   "t": "2026-10-26T09:06:32+05:30",
+   "conv": "kjoshi-1",
+   "kind": "notify",
+   "actor": "agent",
+   "what": "posted to @rohit via mcp",
+   "item": "APR-0001",
+   "message": "MSG-0001",
+   "text": "Purchase request PR/2026/04417 · 20,000 × GSK-SIL-05L · PRD-07 · ₹2,80,840 gross (est.) · raised by Kavita Joshi [Approve] [Reject] /app/inbox#APR-0001"
+  },
+  {
+   "seq": 14,
+   "t": "2026-10-26T09:06:32+05:30",
+   "conv": "kjoshi-1",
+   "kind": "reply",
+   "actor": "agent",
+   "text": "Purchase request PR/2026/04417 has been submitted to Rohit Mehta (RMEHTA) for approval because the order exceeds your limit. The purchase order will be created after it is approved.\n\nBahi status · PR/2026/04417 · WAITING FOR APPROVAL by Rohit Mehta (RMEHTA)",
+   "stage": "waiting_approval",
+   "path": [
+    "route",
+    "collect",
+    "fix_cost_centre",
+    "ask_kavita",
+    "understand",
+    "route",
+    "collect",
+    "check",
+    "preview",
+    "ask_kavita",
+    "understand",
+    "approval"
+   ],
+   "status_line": "Bahi status · PR/2026/04417 · WAITING FOR APPROVAL by Rohit Mehta (RMEHTA)",
+   "bahi": [
+    {
+     "id": 43,
+     "ts": "2026-10-26T09:05:01+05:30",
+     "user": "KJOSHI",
+     "svc": "sup_cert_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 53,
+     "ts": "2026-10-26T09:06:32+05:30",
+     "user": "KJOSHI",
+     "svc": "pr_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    }
+   ]
+  },
+  {
+   "seq": 15,
+   "t": "2026-10-26T09:06:39+05:30",
+   "conv": "kjoshi-1",
+   "kind": "refused",
+   "actor": "KJOSHI",
+   "item": "APR-0001",
+   "doc": "PR/2026/04417",
+   "what": "KJOSHI tried to approve PR/2026/04417: ACCESS DENIED",
+   "bahi": [
+    {
+     "id": 54,
+     "ts": "2026-10-26T09:06:39+05:30",
+     "user": "KJOSHI",
+     "svc": "pr_approve",
+     "rc": "E",
+     "err": "ERR-SEC-0001",
+     "kind": "write"
+    }
+   ]
+  },
+  {
+   "seq": 17,
+   "t": "2026-10-26T09:07:28+05:30",
+   "conv": "kjoshi-1",
+   "kind": "approval",
+   "actor": "RMEHTA",
+   "item": "APR-0001",
+   "doc": "PR/2026/04417",
+   "decision": "APPROVED",
+   "what": "Rohit Mehta approved PR/2026/04417 in his own session (POL-APR-002 §3.3)",
+   "bahi": [
+    {
+     "id": 59,
+     "ts": "2026-10-26T09:07:14+05:30",
+     "user": "RMEHTA",
+     "svc": "pr_approve",
+     "rc": "S",
+     "err": null,
+     "kind": "write"
+    },
+    {
+     "id": 60,
+     "ts": "2026-10-26T09:07:28+05:30",
+     "user": "RMEHTA",
+     "svc": "pr_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    }
+   ]
+  },
+  {
+   "seq": 18,
+   "t": "2026-10-26T09:07:28+05:30",
+   "conv": "kjoshi-1",
+   "kind": "ask",
+   "actor": "inbox",
+   "on_behalf_of": "KJOSHI",
+   "text": "Approval decided in Bahi for PR/2026/04417."
+  },
+  {
+   "seq": 19,
+   "t": "2026-10-26T09:09:48+05:30",
+   "conv": "kjoshi-1",
+   "kind": "tool",
+   "actor": "agent",
+   "on_behalf_of": "KJOSHI",
+   "acts_as": "KJOSHI",
+   "tool": "create_purchase_order",
+   "args": {
+    "supplier_code": "DP-RJK-0042",
+    "item_code": "GSK-SIL-05L",
+    "quantity": 20000,
+    "cost_centre": "PRD-07",
+    "need_by": "2026-11-02",
+    "rate": 11.9,
+    "idempotency_key": "L4-b67e2dee9a92",
+    "confirm": true
+   },
+   "writes": true,
+   "saw": "PO/2026/01182 · RL · approved by RMEHTA",
+   "doc": "PO/2026/01182",
+   "status": "RL",
+   "read_back": {
+    "doc": "PO/2026/01182",
+    "status_code": "RL",
+    "status": "RELEASED to the supplier",
+    "warning": null,
+    "approved_by": "RMEHTA",
+    "created_by": "KJOSHI",
+    "gross_value": 280840.0,
+    "cost_centre": "PRD-07",
+    "matches_receipt": true
+   },
+   "bahi": [
+    {
+     "id": 64,
+     "ts": "2026-10-26T09:07:56+05:30",
+     "user": "KJOSHI",
+     "svc": "po_search",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 65,
+     "ts": "2026-10-26T09:08:03+05:30",
+     "user": "KJOSHI",
+     "svc": "sup_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 66,
+     "ts": "2026-10-26T09:08:10+05:30",
+     "user": "KJOSHI",
+     "svc": "usr_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 67,
+     "ts": "2026-10-26T09:08:17+05:30",
+     "user": "KJOSHI",
+     "svc": "tax_compute",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 68,
+     "ts": "2026-10-26T09:08:24+05:30",
+     "user": "KJOSHI",
+     "svc": "po_fetch",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 69,
+     "ts": "2026-10-26T09:08:38+05:30",
+     "user": "KJOSHI",
+     "svc": "po_save",
+     "rc": "S",
+     "err": null,
+     "kind": "write"
+    },
+    {
+     "id": 70,
+     "ts": "2026-10-26T09:08:59+05:30",
+     "user": "KJOSHI",
+     "svc": "po_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 71,
+     "ts": "2026-10-26T09:09:06+05:30",
+     "user": "KJOSHI",
+     "svc": "po_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 72,
+     "ts": "2026-10-26T09:09:13+05:30",
+     "user": "KJOSHI",
+     "svc": "po_release",
+     "rc": "S",
+     "err": null,
+     "kind": "write"
+    },
+    {
+     "id": 73,
+     "ts": "2026-10-26T09:09:34+05:30",
+     "user": "KJOSHI",
+     "svc": "po_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 74,
+     "ts": "2026-10-26T09:09:41+05:30",
+     "user": "KJOSHI",
+     "svc": "po_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 75,
+     "ts": "2026-10-26T09:09:48+05:30",
+     "user": "KJOSHI",
+     "svc": "po_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    }
+   ]
+  },
+  {
+   "seq": 20,
+   "t": "2026-10-26T09:10:02+05:30",
+   "conv": "kjoshi-1",
+   "kind": "tool",
+   "actor": "agent",
+   "on_behalf_of": "KJOSHI",
+   "acts_as": "KJOSHI",
+   "tool": "order_status",
+   "args": {
+    "po_no": "PO/2026/01182"
+   },
+   "writes": false,
+   "saw": "PO/2026/01182 · RL · approved by RMEHTA",
+   "doc": "PO/2026/01182",
+   "status": "RL",
+   "read_back": {
+    "doc": "PO/2026/01182",
+    "status_code": "RL",
+    "status": "RELEASED to the supplier",
+    "warning": null,
+    "approved_by": "RMEHTA",
+    "created_by": "KJOSHI",
+    "gross_value": 280840.0,
+    "cost_centre": "PRD-07",
+    "matches_receipt": true
+   },
+   "bahi": [
+    {
+     "id": 76,
+     "ts": "2026-10-26T09:09:55+05:30",
+     "user": "KJOSHI",
+     "svc": "po_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 77,
+     "ts": "2026-10-26T09:10:02+05:30",
+     "user": "KJOSHI",
+     "svc": "po_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    }
+   ]
+  },
+  {
+   "seq": 21,
+   "t": "2026-10-26T09:10:09+05:30",
+   "conv": "kjoshi-1",
+   "kind": "reply",
+   "actor": "agent",
+   "text": "PO/2026/01182 has been released to Deccan Polymers.\n\nBahi status · PO/2026/01182 · RELEASED to the supplier · approved by RMEHTA",
+   "stage": "done",
+   "path": [
+    "ask_kavita",
+    "understand",
+    "route",
+    "collect",
+    "check",
+    "preview",
+    "ask_kavita",
+    "understand",
+    "approval",
+    "wait_approval",
+    "commit",
+    "confirm"
+   ],
+   "status_line": "Bahi status · PO/2026/01182 · RELEASED to the supplier · approved by RMEHTA",
+   "bahi": [
+    {
+     "id": 61,
+     "ts": "2026-10-26T09:07:35+05:30",
+     "user": "KJOSHI",
+     "svc": "pr_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 62,
+     "ts": "2026-10-26T09:07:42+05:30",
+     "user": "KJOSHI",
+     "svc": "pr_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 63,
+     "ts": "2026-10-26T09:07:49+05:30",
+     "user": "KJOSHI",
+     "svc": "sup_cert_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    },
+    {
+     "id": 78,
+     "ts": "2026-10-26T09:10:09+05:30",
+     "user": "KJOSHI",
+     "svc": "po_get",
+     "rc": "S",
+     "err": null,
+     "kind": "read"
+    }
+   ]
+  }
+ ],
+ "audit_summary": {
+  "entries": 20,
+  "bahi_rows": 62,
+  "bahi_writes": 5,
+  "users_in_bahi": [
+   "KJOSHI",
+   "RMEHTA"
+  ],
+  "refusals": 1,
+  "read_backs": 3
+ },
+ "bahi_rows": [
+  {
+   "id": 1,
+   "ts": "2026-10-26T09:00:07+05:30",
+   "user_id": "KJOSHI",
+   "svc": "usr_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 2,
+   "ts": "2026-10-26T09:00:14+05:30",
+   "user_id": "KJOSHI",
+   "svc": "usr_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 3,
+   "ts": "2026-10-26T09:00:21+05:30",
+   "user_id": "KJOSHI",
+   "svc": "usr_roles",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 4,
+   "ts": "2026-10-26T09:00:28+05:30",
+   "user_id": "KJOSHI",
+   "svc": "usr_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 5,
+   "ts": "2026-10-26T09:00:35+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_search",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 6,
+   "ts": "2026-10-26T09:00:42+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 7,
+   "ts": "2026-10-26T09:00:49+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 8,
+   "ts": "2026-10-26T09:00:56+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 9,
+   "ts": "2026-10-26T09:01:03+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 10,
+   "ts": "2026-10-26T09:01:10+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 11,
+   "ts": "2026-10-26T09:01:17+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 12,
+   "ts": "2026-10-26T09:01:24+05:30",
+   "user_id": "KJOSHI",
+   "svc": "usr_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 13,
+   "ts": "2026-10-26T09:01:31+05:30",
+   "user_id": "KJOSHI",
+   "svc": "itm_search",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 14,
+   "ts": "2026-10-26T09:01:38+05:30",
+   "user_id": "KJOSHI",
+   "svc": "itm_search",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 15,
+   "ts": "2026-10-26T09:01:45+05:30",
+   "user_id": "KJOSHI",
+   "svc": "itm_search",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 16,
+   "ts": "2026-10-26T09:01:52+05:30",
+   "user_id": "KJOSHI",
+   "svc": "itm_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 17,
+   "ts": "2026-10-26T09:01:59+05:30",
+   "user_id": "KJOSHI",
+   "svc": "sup_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 18,
+   "ts": "2026-10-26T09:02:06+05:30",
+   "user_id": "KJOSHI",
+   "svc": "sup_search",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 19,
+   "ts": "2026-10-26T09:02:13+05:30",
+   "user_id": "KJOSHI",
+   "svc": "sup_search",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 20,
+   "ts": "2026-10-26T09:02:20+05:30",
+   "user_id": "KJOSHI",
+   "svc": "sup_search",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 21,
+   "ts": "2026-10-26T09:02:27+05:30",
+   "user_id": "KJOSHI",
+   "svc": "sup_cert_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 22,
+   "ts": "2026-10-26T09:02:34+05:30",
+   "user_id": "KJOSHI",
+   "svc": "sup_cert_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 23,
+   "ts": "2026-10-26T09:02:41+05:30",
+   "user_id": "KJOSHI",
+   "svc": "sup_cert_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 24,
+   "ts": "2026-10-26T09:02:48+05:30",
+   "user_id": "KJOSHI",
+   "svc": "sup_rate_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 25,
+   "ts": "2026-10-26T09:02:55+05:30",
+   "user_id": "KJOSHI",
+   "svc": "cc_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 26,
+   "ts": "2026-10-26T09:03:02+05:30",
+   "user_id": "KJOSHI",
+   "svc": "bud_check",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 27,
+   "ts": "2026-10-26T09:03:09+05:30",
+   "user_id": "KJOSHI",
+   "svc": "cc_list",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 28,
+   "ts": "2026-10-26T09:03:16+05:30",
+   "user_id": "KJOSHI",
+   "svc": "itm_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 29,
+   "ts": "2026-10-26T09:03:23+05:30",
+   "user_id": "KJOSHI",
+   "svc": "cc_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 30,
+   "ts": "2026-10-26T09:03:30+05:30",
+   "user_id": "KJOSHI",
+   "svc": "bud_check",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 31,
+   "ts": "2026-10-26T09:03:37+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_search",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 32,
+   "ts": "2026-10-26T09:03:44+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_search",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 33,
+   "ts": "2026-10-26T09:03:51+05:30",
+   "user_id": "KJOSHI",
+   "svc": "sup_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 34,
+   "ts": "2026-10-26T09:03:58+05:30",
+   "user_id": "KJOSHI",
+   "svc": "itm_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 35,
+   "ts": "2026-10-26T09:04:05+05:30",
+   "user_id": "KJOSHI",
+   "svc": "sup_rate_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 36,
+   "ts": "2026-10-26T09:04:12+05:30",
+   "user_id": "KJOSHI",
+   "svc": "sup_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 37,
+   "ts": "2026-10-26T09:04:19+05:30",
+   "user_id": "KJOSHI",
+   "svc": "usr_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 38,
+   "ts": "2026-10-26T09:04:26+05:30",
+   "user_id": "KJOSHI",
+   "svc": "tax_compute",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 39,
+   "ts": "2026-10-26T09:04:33+05:30",
+   "user_id": "KJOSHI",
+   "svc": "usr_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 40,
+   "ts": "2026-10-26T09:04:40+05:30",
+   "user_id": "KJOSHI",
+   "svc": "bud_check",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 41,
+   "ts": "2026-10-26T09:04:47+05:30",
+   "user_id": "KJOSHI",
+   "svc": "sup_cert_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 42,
+   "ts": "2026-10-26T09:04:54+05:30",
+   "user_id": "KJOSHI",
+   "svc": "usr_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 43,
+   "ts": "2026-10-26T09:05:01+05:30",
+   "user_id": "KJOSHI",
+   "svc": "sup_cert_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 44,
+   "ts": "2026-10-26T09:05:08+05:30",
+   "user_id": "KJOSHI",
+   "svc": "sup_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 45,
+   "ts": "2026-10-26T09:05:15+05:30",
+   "user_id": "KJOSHI",
+   "svc": "usr_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 46,
+   "ts": "2026-10-26T09:05:22+05:30",
+   "user_id": "KJOSHI",
+   "svc": "tax_compute",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 47,
+   "ts": "2026-10-26T09:05:29+05:30",
+   "user_id": "KJOSHI",
+   "svc": "pr_search",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 48,
+   "ts": "2026-10-26T09:05:36+05:30",
+   "user_id": "KJOSHI",
+   "svc": "pr_save",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 49,
+   "ts": "2026-10-26T09:05:50+05:30",
+   "user_id": "KJOSHI",
+   "svc": "pr_submit",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 50,
+   "ts": "2026-10-26T09:06:11+05:30",
+   "user_id": "KJOSHI",
+   "svc": "pr_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 51,
+   "ts": "2026-10-26T09:06:18+05:30",
+   "user_id": "KJOSHI",
+   "svc": "pr_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 52,
+   "ts": "2026-10-26T09:06:25+05:30",
+   "user_id": "KJOSHI",
+   "svc": "pr_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 53,
+   "ts": "2026-10-26T09:06:32+05:30",
+   "user_id": "KJOSHI",
+   "svc": "pr_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 54,
+   "ts": "2026-10-26T09:06:39+05:30",
+   "user_id": "KJOSHI",
+   "svc": "pr_approve",
+   "rc": "E",
+   "err_cd": "ERR-SEC-0001"
+  },
+  {
+   "id": 55,
+   "ts": "2026-10-26T09:06:46+05:30",
+   "user_id": "RMEHTA",
+   "svc": "usr_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 56,
+   "ts": "2026-10-26T09:06:53+05:30",
+   "user_id": "KJOSHI",
+   "svc": "pr_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 57,
+   "ts": "2026-10-26T09:07:00+05:30",
+   "user_id": "RMEHTA",
+   "svc": "po_pending_appr",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 58,
+   "ts": "2026-10-26T09:07:07+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 59,
+   "ts": "2026-10-26T09:07:14+05:30",
+   "user_id": "RMEHTA",
+   "svc": "pr_approve",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 60,
+   "ts": "2026-10-26T09:07:28+05:30",
+   "user_id": "RMEHTA",
+   "svc": "pr_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 61,
+   "ts": "2026-10-26T09:07:35+05:30",
+   "user_id": "KJOSHI",
+   "svc": "pr_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 62,
+   "ts": "2026-10-26T09:07:42+05:30",
+   "user_id": "KJOSHI",
+   "svc": "pr_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 63,
+   "ts": "2026-10-26T09:07:49+05:30",
+   "user_id": "KJOSHI",
+   "svc": "sup_cert_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 64,
+   "ts": "2026-10-26T09:07:56+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_search",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 65,
+   "ts": "2026-10-26T09:08:03+05:30",
+   "user_id": "KJOSHI",
+   "svc": "sup_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 66,
+   "ts": "2026-10-26T09:08:10+05:30",
+   "user_id": "KJOSHI",
+   "svc": "usr_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 67,
+   "ts": "2026-10-26T09:08:17+05:30",
+   "user_id": "KJOSHI",
+   "svc": "tax_compute",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 68,
+   "ts": "2026-10-26T09:08:24+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_fetch",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 69,
+   "ts": "2026-10-26T09:08:38+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_save",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 70,
+   "ts": "2026-10-26T09:08:59+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 71,
+   "ts": "2026-10-26T09:09:06+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 72,
+   "ts": "2026-10-26T09:09:13+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_release",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 73,
+   "ts": "2026-10-26T09:09:34+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 74,
+   "ts": "2026-10-26T09:09:41+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 75,
+   "ts": "2026-10-26T09:09:48+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 76,
+   "ts": "2026-10-26T09:09:55+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 77,
+   "ts": "2026-10-26T09:10:02+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_get",
+   "rc": "S",
+   "err_cd": null
+  },
+  {
+   "id": 78,
+   "ts": "2026-10-26T09:10:09+05:30",
+   "user_id": "KJOSHI",
+   "svc": "po_get",
+   "rc": "S",
+   "err_cd": null
+  }
+ ],
+ "outbox": {
+  "via": "mcp",
+  "messages": [
+   {
+    "id": "MSG-0001",
+    "kind": "chat",
+    "channel": "@rohit",
+    "text": "Purchase request PR/2026/04417 · 20,000 × GSK-SIL-05L · PRD-07 · ₹2,80,840 gross (est.) · raised by Kavita Joshi [Approve] [Reject] /app/inbox#APR-0001",
+    "status": "QUEUED (sandbox: not sent)",
+    "item": "APR-0001",
+    "actions": [
+     "approve",
+     "reject"
+    ],
+    "approver": "RMEHTA"
+   },
+   {
+    "id": "MSG-0002",
+    "kind": "chat",
+    "channel": "@kavita",
+    "text": "PR/2026/04417 approved by Rohit Mehta.",
+    "status": "QUEUED (sandbox: not sent)",
+    "item": "APR-0001",
+    "actions": []
+   }
+  ]
+ },
+ "final_po": {
+  "po_no": "PO/2026/01182",
+  "ou_cd": "RSW-PUN-01",
+  "sup_cd": "DP-RJK-0042",
+  "pr_no": "PR/2026/04417",
+  "po_type": "STD",
+  "cc_cd": "PRD-07",
+  "tax_cd": "GST18-INTER",
+  "pt_cd": "N45",
+  "need_dt": "2026-11-02",
+  "whs_cd": "WH-PUN-STR",
+  "status": "RL",
+  "basic_value": 238000.0,
+  "tax_value": 42840.0,
+  "gross_value": 280840.0,
+  "created_by": "KJOSHI",
+  "created_on": "2026-10-26T09:08:45+05:30",
+  "approved_by": "RMEHTA",
+  "approved_on": "2026-10-26T09:08:52+05:30",
+  "released_on": "2026-10-26T09:09:20+05:30",
+  "client_ref": "L4-b67e2dee9a92",
+  "warn_cd": null,
+  "lines": [
+   {
+    "po_no": "PO/2026/01182",
+    "line_no": 1,
+    "itm_cd": "GSK-SIL-05L",
+    "qty": 20000,
+    "uom_cd": "NOS",
+    "rate": 11.9
+   }
+  ]
+ },
+ "acts_as": {
+  "kind": "passthrough",
+  "user": "KJOSHI",
+  "acts_as": "KJOSHI"
+ },
+ "llm": {
+  "calls": 12,
+  "tokens_in": 3296,
+  "tokens_out": 527,
+  "seconds": 54.25,
+  "cost_inr": 0.2841
+ },
+ "ok": true,
+ "durable": true
+}

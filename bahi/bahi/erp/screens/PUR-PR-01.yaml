@@ -1,0 +1,31 @@
+code: PUR-PR-01
+title: PURCHASE REQUEST ENTRY
+menu: Purchase > Request entry
+roles: [PUR-EXEC, PUR-SR, SYS-ADMIN]
+help: >-
+  Press Fetch after the item code to bring in the unit, warehouse, your default cost centre and the last
+  price. Save gives a request number in Draft. Submit approves it within your limit, or routes it up.
+fields:
+  - {name: pr_no, label: PR NO, type: str, readonly: true}
+  - {name: pr_type, label: PR TYPE, type: str, req: true, default: STD}
+  - {name: itm_cd, label: ITEM CD, type: str, req: true, lookup: itm_search}
+  - {name: uom_cd, label: UOM, type: str, readonly: true}
+  - {name: qty, label: QTY, type: int, req: true}
+  - {name: need_dt, label: NEED DT, type: date, req: true}
+  - {name: cc_cd, label: CC CD, type: str, req: true, lookup: cc_list, help: Fetch fills your default}
+  - {name: whs_cd, label: WHS CD, type: str, req: true, lookup: whs_list}
+  - {name: est_rate, label: EST RATE, type: float, req: false, help: Fetch fills the last price}
+  - {name: remarks, label: REMARKS, type: str, req: false}
+  - {name: est_value, label: EST VALUE (GROSS), type: float, readonly: true, help: assumes 18% GST}
+  - {name: status, label: STATUS, type: str, readonly: true}
+tasks:
+  - {button: Fetch, service: pr_fetch, sends: [itm_cd], fills: [uom_cd, whs_cd, cc_cd, est_rate, pr_type]}
+  - button: Save
+    service: pr_save
+    sends: [pr_type, cc_cd, need_dt, itm_cd, qty, whs_cd, est_rate, remarks]
+    fills: [pr_no, est_value, status]
+  - {button: Submit, service: pr_submit, sends: [pr_no], fills: [status], needs: [Save]}
+  - {button: Close, service: null}
+state:
+  - {rule: "Need-by date in the past", error: ERR-PR-0105}
+  - {rule: "Saving does not check whether the cost centre is open", error: null}

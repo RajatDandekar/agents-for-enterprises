@@ -1,0 +1,50 @@
+# The rollout ladder for the purchasing agent. One rung at a time; a rung is left only when its exit gate passes.
+# The stage lives in the flags file (BAHI_FLAGS_FILE); change it with  POST /flags {"stage": "..."}  (admin token).
+# The kill switch sits above every rung:  POST /flags {"kill": true, "reason": "..."}  stops all writes at once.
+
+ladder:
+  - stage: shadow
+    who: everyone's requests, read-only
+    writes: none. The agent runs on real requests; what it would have written is logged as a proposal.
+    compare: each proposal against what the buyer actually did in Bahi that day
+    exit_gate:
+      days: 10
+      proposals_compared: ">= 200"
+      agreement_with_buyer: ">= 95%"          # same supplier, item, quantity, cost centre
+      never_events: 0                          # NE1-NE5, checked by code (Lecture 6)
+      p95_seconds_per_turn: "<= 20"
+  - stage: assist
+    who: the purchase team (KJOSHI, SKULKARNI)
+    writes: only when a person presses Confirm in the app (by_human = true)
+    exit_gate:
+      days: 10
+      confirmed_orders: ">= 100"
+      edits_before_confirm: "<= 10%"           # how often the person had to change the agent's draft
+      duplicates: 0                            # deploy/runbook.md: duplicates query
+      scenario_suite_pass: ">= 95%"            # the Lecture 6 regression gate, on this exact build (versions.yaml)
+  - stage: partial
+    who: cohort in the flags file, e.g. [SKULKARNI] first, then KJOSHI
+    writes: the agent commits for cohort users after their chat confirmation
+    exit_gate:
+      days: 15
+      orders: ">= 150"
+      duplicates: 0
+      stuck_approvals_over_120h: 0             # workflows that expired without anyone acting
+      inr_per_resolved_request: "<= 5"         # model cost, from traces (Lecture 6)
+  - stage: full
+    who: everyone with purchase rights
+    writes: as partial, for all users
+
+kill_switch:
+  pull_it_when:
+    - any duplicate order (same supplier + item, two live orders, same day) that a person did not ask for
+    - any never-event in production (NE1-NE5)
+    - Bahi returning errors on more than 20% of writes for 10 minutes
+    - a model or prompt change that was not in versions.yaml reached the environment
+  what_it_does:
+    - intent tools return "nothing was saved" for every write
+    - running workflows pause before their next write and re-check every 10 minutes; nothing is lost
+    - reads, previews and the chat keep working, so people can still ask and look
+  who_may_pull_it: anyone on the on-call rota (admin token in the secret store); no approval needed
+  who_may_release_it: the lead, after the runbook's checks
+  moving_down_a_rung: same flags file; e.g. full -> assist while a fix is tested. Running workflows are unaffected.

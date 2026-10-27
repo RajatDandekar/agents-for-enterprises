@@ -1,0 +1,20 @@
+code: INV-ITM-03
+title: ITEM ENQUIRY
+menu: Masters > Item enquiry
+roles: [ALL]
+help: >-
+  Type part of the description or the code and press Search. Several items look alike:
+  -R codes are rework stock and are never ordered from suppliers.
+fields:
+  - {name: q, label: SEARCH TEXT, type: str, req: true}
+  - {name: rows, label: RESULTS, type: grid, readonly: true, columns: [itm_cd, descr, uom_cd, active], pick: itm_cd}
+  - {name: itm_cd, label: SELECTED ITEM, type: str, readonly: true}
+tasks:
+  - button: Search
+    service: itm_search
+    sends: [q]
+    fills: [rows]
+  - {button: Select, service: null}   # client side: copies the highlighted row's code
+  - {button: Close, service: null}
+state:
+  - {rule: "Screens do not share the selected code; it must be typed again on the next screen", error: null}

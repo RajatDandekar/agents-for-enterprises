@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Bahi ERP 7.2 activity definition. FICTIONAL, written for the course to show what a real screen file is like. -->
+<bahi:activity xmlns:bahi="urn:bahi:uidef:7" code="PUR-PO-01" component="PUR" version="7.2.14" layout="HDR_GRID">
+  <bahi:meta created="2003-06-18" createdBy="DEV_PUR_04" modified="2025-11-02" modifiedBy="CUST_RSW_PATCH_118"/>
+  <bahi:title lang="en">Purchase Order Entry</bahi:title>
+  <bahi:title lang="hi">क्रय आदेश प्रविष्टि</bahi:title>
+  <bahi:menuPath>PUR/TRANSACTIONS/PO/ENTRY</bahi:menuPath>
+  <bahi:roles><bahi:role code="PUR-EXEC" mode="FULL"/><bahi:role code="PUR-SR" mode="FULL"/><bahi:role code="STORES" mode="VIEW"/></bahi:roles>
+  <bahi:context>
+    <bahi:ctxParam name="OU_CD" source="SESSION" mandatory="true"/>
+    <bahi:ctxParam name="USER_ID" source="SESSION" mandatory="true"/>
+    <bahi:ctxParam name="LANG_ID" source="SESSION" mandatory="true"/>
+    <bahi:ctxParam name="FIN_YEAR" source="SESSION" mandatory="true"/>
+    <bahi:ctxParam name="SESSION_GUID" source="SESSION" mandatory="true"/>
+    <bahi:ctxParam name="CLIENT_TZ" source="SESSION" mandatory="true"/>
+    <bahi:ctxParam name="DATE_FMT" source="SESSION" mandatory="true"/>
+  </bahi:context>
+  <bahi:sections>
+    <bahi:section id="HDR" type="FORM" columns="2">
+      <bahi:control id="txt_po_no" field="PO_NO" label="Order no." datatype="DOC_NO" mandatory="false" readonly="true" visible="true" tabIndex="10">
+      </bahi:control>
+      <bahi:control id="txt_po_type" field="PO_TYPE" label="Order type" datatype="CHAR(3)" mandatory="true" readonly="false" visible="true" tabIndex="20">
+        <bahi:listValues><bahi:value code="STD" label="Against request"/><bahi:value code="DIR" label="Direct"/></bahi:listValues>
+      </bahi:control>
+      <bahi:control id="txt_pr_no" field="PR_NO" label="Source request" datatype="DOC_NO" mandatory="false" readonly="false" visible="true" tabIndex="30">
+        <bahi:help key="F2" service="pr_search" returnField="PR_NO" multiSelect="false" pageSize="20"/>
+        <bahi:event on="LOSTFOCUS" action="VALIDATE_PR_NO" async="false"/>
+      </bahi:control>
+      <bahi:control id="txt_sup_cd" field="SUP_CD" label="Supplier" datatype="CODE(12)" mandatory="true" readonly="false" visible="true" tabIndex="40">
+        <bahi:help key="F2" service="sup_search" returnField="SUP_CD" multiSelect="false" pageSize="20"/>
+        <bahi:event on="LOSTFOCUS" action="VALIDATE_SUP_CD" async="false"/>
+      </bahi:control>
+      <bahi:control id="txt_sup_name" field="SUP_NAME" label="Supplier name" datatype="CHAR(60)" mandatory="false" readonly="true" visible="true" tabIndex="50">
+      </bahi:control>
+      <bahi:control id="txt_itm_cd" field="ITM_CD" label="Item code" datatype="CODE(15)" mandatory="true" readonly="false" visible="true" tabIndex="60">
+        <bahi:help key="F2" service="itm_search" returnField="ITM_CD" multiSelect="false" pageSize="20"/>
+        <bahi:event on="LOSTFOCUS" action="VALIDATE_ITM_CD" async="false"/>
+      </bahi:control>
+      <bahi:control id="txt_itm_descr" field="ITM_DESCR" label="Description" datatype="CHAR(60)" mandatory="false" readonly="true" visible="true" tabIndex="70">
+      </bahi:control>
+      <bahi:control id="txt_uom_cd" field="UOM_CD" label="UOM" datatype="CODE(5)" mandatory="false" readonly="true" visible="true" tabIndex="80">
+      </bahi:control>
+      <bahi:control id="txt_qty" field="QTY" label="Quantity" datatype="QTY" mandatory="true" readonly="false" visible="true" tabIndex="90">
+        <bahi:event on="CHANGE" action="RECALC_VALUES"/>
+        <bahi:validation rule="GT_ZERO" errCd="ERR-PO-0201"/>
+      </bahi:control>
+      <bahi:control id="txt_rate" field="RATE" label="Rate" datatype="AMT" mandatory="true" readonly="false" visible="true" tabIndex="100">
+      </bahi:control>
+      <bahi:control id="txt_tax_cd" field="TAX_CD" label="Tax code" datatype="CODE(12)" mandatory="true" readonly="false" visible="true" tabIndex="110">
+        <bahi:help key="F2" service="tax_list" returnField="TAX_CD" multiSelect="false" pageSize="20"/>
+        <bahi:event on="LOSTFOCUS" action="VALIDATE_TAX_CD" async="false"/>
+        <bahi:default source="FETCH" expr="OU_STATE_DEFAULT_TAX"/>  <!-- defaults to the plant's own state -->
+      </bahi:control>
+      <bahi:control id="txt_pt_cd" field="PT_CD" label="Payment terms" datatype="CODE(5)" mandatory="false" readonly="true" visible="true" tabIndex="120">
+      </bahi:control>
+      <bahi:control id="txt_cc_cd" field="CC_CD" label="Cost centre" datatype="CODE(8)" mandatory="true" readonly="false" visible="true" tabIndex="130">
+        <bahi:help key="F2" service="cc_list" returnField="CC_CD" multiSelect="false" pageSize="20"/>
+        <bahi:event on="LOSTFOCUS" action="VALIDATE_CC_CD" async="false"/>
+      </bahi:control>
+      <bahi:control id="txt_need_dt" field="NEED_DT" label="Need-by date" datatype="DATE" mandatory="true" readonly="false" visible="true" tabIndex="140">
+        <bahi:validation rule="GE_SYSDATE" errCd="ERR-PO-0105"/>
+      </bahi:control>
+      <bahi:control id="txt_whs_cd" field="WHS_CD" label="Warehouse" datatype="CODE(10)" mandatory="false" readonly="false" visible="true" tabIndex="150">
+        <bahi:help key="F2" service="whs_list" returnField="WHS_CD" multiSelect="false" pageSize="20"/>
+        <bahi:event on="LOSTFOCUS" action="VALIDATE_WHS_CD" async="false"/>
+      </bahi:control>
+      <bahi:control id="txt_basic_value" field="BASIC_VALUE" label="Basic value" datatype="AMT" mandatory="false" readonly="true" visible="true" tabIndex="160">
+      </bahi:control>
+      <bahi:control id="txt_tax_value" field="TAX_VALUE" label="Tax value" datatype="AMT" mandatory="false" readonly="true" visible="true" tabIndex="170">
+      </bahi:control>
+      <bahi:control id="txt_gross_value" field="GROSS_VALUE" label="Gross value" datatype="AMT" mandatory="false" readonly="true" visible="true" tabIndex="180">
+      </bahi:control>
+      <bahi:control id="txt_status" field="STATUS" label="Status" datatype="CHAR(2)" mandatory="false" readonly="true" visible="true" tabIndex="190">
+      </bahi:control>
+      <bahi:control id="txt_fetch_tok" field="FETCH_TOK" label="" datatype="CHAR(8)" mandatory="false" readonly="false" visible="false" tabIndex="200">
+      </bahi:control>
+      <bahi:control id="txt_client_ref" field="CLIENT_REF" label="" datatype="CHAR(40)" mandatory="false" readonly="false" visible="false" tabIndex="210">
+      </bahi:control>
+    </bahi:section>
+    <bahi:section id="LINES" type="GRID" maxRows="1" bindTo="PO_LINE">
+      <bahi:column field="LINE_NO" width="90" editable="false"/>
+      <bahi:column field="ITM_CD" width="160" editable="false"/>
+      <bahi:column field="QTY" width="90" editable="true"/>
+      <bahi:column field="UOM_CD" width="90" editable="false"/>
+      <bahi:column field="RATE" width="90" editable="true"/>
+      <bahi:column field="LINE_VALUE" width="90" editable="false"/>
+    </bahi:section>
+  </bahi:sections>
+  <bahi:tasks>
+    <bahi:task id="FETCH" label="Fetch" type="TRANSACTION" hotkey="Alt+F">
+      <bahi:service name="po_fetch" endpoint="/svc/po_fetch" method="POST" timeoutMs="30000" retry="0">
+        <bahi:in field="SUP_CD" param="sup_cd"/>
+        <bahi:in field="ITM_CD" param="itm_cd"/>
+        <bahi:in field="PR_NO" param="pr_no"/>
+        <bahi:out param="rate" field="RATE"/>
+        <bahi:out param="tax_cd" field="TAX_CD"/>
+        <bahi:out param="pt_cd" field="PT_CD"/>
+        <bahi:out param="whs_cd" field="WHS_CD"/>
+        <bahi:out param="fetch_tok" field="FETCH_TOK"/>
+        <bahi:out param="cc_cd" field="CC_CD"/>
+        <bahi:out param="need_dt" field="NEED_DT"/>
+        <bahi:out param="qty" field="QTY"/>
+      </bahi:service>
+    </bahi:task>
+    <bahi:task id="SAVE" label="Save" type="TRANSACTION" hotkey="Alt+S">
+      <bahi:precondition task="FETCH" scope="SCREEN_STATE" errCd="ERR-SCR-0221" message="FETCH NOT DONE"/>
+      <bahi:service name="po_save" endpoint="/svc/po_save" method="POST" timeoutMs="30000" retry="0">
+        <bahi:in field="PO_TYPE" param="po_type"/>
+        <bahi:in field="PR_NO" param="pr_no"/>
+        <bahi:in field="SUP_CD" param="sup_cd"/>
+        <bahi:in field="ITM_CD" param="itm_cd"/>
+        <bahi:in field="QTY" param="qty"/>
+        <bahi:in field="RATE" param="rate"/>
+        <bahi:in field="TAX_CD" param="tax_cd"/>
+        <bahi:in field="CC_CD" param="cc_cd"/>
+        <bahi:in field="NEED_DT" param="need_dt"/>
+        <bahi:in field="WHS_CD" param="whs_cd"/>
+        <bahi:in field="FETCH_TOK" param="fetch_tok"/>
+        <bahi:in field="CLIENT_REF" param="client_ref"/>
+        <bahi:out param="po_no" field="PO_NO"/>
+        <bahi:out param="status" field="STATUS"/>
+      </bahi:service>
+      <bahi:onSuccess><bahi:message type="INFO" text="{DOC_NO} SAVED"/><bahi:refresh section="HDR"/></bahi:onSuccess>
+      <bahi:onError><bahi:message type="ERROR" text="{ERR_CD}: {MSG}"/><bahi:focus field="{ERR_FIELD}"/></bahi:onError>
+    </bahi:task>
+    <bahi:task id="CLOSE" label="Close" type="UI" hotkey="Alt+C">
+    </bahi:task>
+  </bahi:tasks>
+  <bahi:linkedActivities>
+    <bahi:link activity="PUR-POR-05" label="Release" passContext="PO_NO,OU_CD"/>
+    <bahi:link activity="PUR-POH-02" label="History" passContext="PO_NO,OU_CD"/>
+    <bahi:link activity="PUR-PR-01" label="Request" passContext="PO_NO,OU_CD"/>
+    <bahi:link activity="PUR-SUP-03" label="Supplier enquiry" passContext="PO_NO,OU_CD"/>
+  </bahi:linkedActivities>
+  <bahi:customisations>
+    <bahi:patch id="CUST_RSW_PATCH_041" date="2014-03-11" note="hide warehouse for Chakan users"><bahi:hide control="txt_whs_cd" when="OU_CD=RSW-CHK-01"/></bahi:patch>
+    <bahi:patch id="CUST_RSW_PATCH_118" date="2025-11-02" note="status shown as code only"><bahi:format control="txt_status" as="CODE"/></bahi:patch>
+  </bahi:customisations>
+</bahi:activity>

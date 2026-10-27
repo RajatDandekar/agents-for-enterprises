@@ -1,0 +1,64 @@
+# TEMPLATE: invent your own module
+
+Use this if none of the eight modules fits your work. Your module must live inside the same Rasoi Steel Works and the same Bahi sandbox, so it can reuse purchasing's people, cost centres, suppliers, items and shared procedures. Keep to the same complexity budget as everyone else, so that the grading is fair.
+
+## Steps
+
+1. **Pick the job.** It should be one a real person at a plant does on forms every week, and it should end in one sentence they would rather type. Write it down: *"…"*. It must create or change a document, not only look something up.
+2. **Pick a prefix.** Two letters and an underscore, not used by any other module (`pa_ ap_ lv_ so_ wr_ tr_ tv_ ct_` are taken). Every service, table, procedure (`sp_<prefix>`), document series and approval `doc_type` starts with it.
+3. **Copy the package.** Copy `modules/TEMPLATE/package/` to `bahi/bahi/modules/<your_module>/`. Replace `xx_`, `XX` and `XX-ABC` everywhere. It installs as it is (`ERP(modules=["<your_module>"])`), so you can grow it one piece at a time and keep it running.
+4. **Design the three screens first** (`screens/*.yaml`, format in `modules/README.md`). Then write the services each button calls, then the procedures behind them.
+5. **Seed about 50 records**, with the traps on purpose: a duplicate, a near-match name, a value just over a limit, a closed or expired record. Need people? Use `_kit.PEOPLE` (add_people). If you need a new person, ask the lead to add them there; never redefine an existing one.
+6. **Write 4–6 policy documents.** Include at least one rule that Bahi does not enforce (it lives only in the document) and one stale, superseded document.
+7. **Write `legacy.py`.** `happy_path(erp)` is your before, done screen by screen. `TRAPS` triggers each item of the budget.
+8. **Write four scenarios and the never-events** in `scenarios.py`. Add a careful `REFERENCE` run and a careless `NAIVE` run for each one, to prove your `check()` is right.
+9. **Test on Modal.** Run `/Users/raj/.venv/bin/modal run tools/modal_run.py --script modules/test_kits.py --args "--only <your_module>"` until it says RESULT: PASS. Fill in the brief below with the measured numbers.
+
+## The budget you must meet
+
+| Item | Budget | Yours |
+|---|---|---|
+| Screens | 3 | |
+| Services | ≈8, flat payloads, at most 12 fields | |
+| Stored procedures | ≈10 | |
+| Cascades | 2 (one save triggers other work) | |
+| Variants | 2 (one screen, two paths) | |
+| Screen-state rule | 1 (Fetch before Save → ERR-SCR-0221, using `sp_fetch_tok_new` / `sp_fetch_tok_chk`) | |
+| Silent outcome | 1 (rc S, "… SAVED", but the document is stuck) | |
+| Shared engine | 1 (reuse `sp_tax_compute`, `sp_tax_region_chk`, `sp_budget_chk` or `sp_appr_route`) | |
+| Policy documents | 4–6 | |
+| Seed records | ≈50 | |
+| Scenarios | 4, with code checks and never-events | |
+
+## Rules
+
+- Everything is fictional. Do not use a real company, product, person, screen code or document from your workplace. Invent them in Bahi's style.
+- Validate once. The rules live in your stored procedures. An agent calls your services and reports what Bahi says; it never re-implements a rule.
+- Status always goes in `data`, never in `msg`. The message says only "… SAVED". That is what makes the silent outcome silent.
+- `play_approvers` acts only on your own `doc_type`, so modules installed together do not approve each other's documents.
+
+## Your brief (copy into `modules/<your_module>/README.md`)
+
+```markdown
+# <Area> · <module>
+
+**After:** <who> types *"<the sentence>"*
+**Before:** <three screens, the codes they must know, the trap>.
+
+## The before, step by step
+| # | Screen | Button | Service | What they type or read |
+Measured on our run: N service calls, N screens, N fields typed.
+
+## The nine jobs, in this module
+| Job | What the form did | What the harness must do |   (all nine rows)
+
+## Complexity budget
+| Item | Budget | In this module |
+
+## The traps
+1. The silent outcome ... 2. The near-match ... 3. The rule only the policy knows ... 4. The stale document ... 5. The service account
+
+## The four scenarios
+| # | Who | Ask | Passes when |
+Never-events: NE1 ... NE5
+```

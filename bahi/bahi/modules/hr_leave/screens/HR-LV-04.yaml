@@ -1,0 +1,27 @@
+code: HR-LV-04
+title: LEAVE APPROVAL
+menu: HR > Leave > Approvals
+roles: [PUR-SR, PUR-MGR, PLANT-HEAD, HR-EXEC]
+fields:
+  - {name: approver, label: APPROVER, type: str, req: false, help: blank = you}
+  - {name: status, label: STATUS, type: str, req: false, help: "PA for managers, HD for HR"}
+  - {name: lv_no, label: LV NO, type: str, req: true}
+  - {name: decision, label: DECISION, type: str, req: true, help: "A/R (managers), L/R (HR)"}
+  - {name: comment, label: COMMENT, type: str, req: false}
+tasks:
+  - button: Inbox
+    service: lv_list
+    sends: [approver, status]
+    fills: [lv_no]
+  - button: Decide
+    service: lv_approve
+    sends: [lv_no, decision, comment]
+    fills: [status]
+    needs: [Inbox]
+  - button: Clear Held
+    service: lv_hr_clear
+    sends: [lv_no, decision, comment]
+    fills: [status]
+    needs: [Inbox]
+state:
+  - {rule: "Only the named approver may decide; nobody approves their own leave", error: ERR-LV-0504}

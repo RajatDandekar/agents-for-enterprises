@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Primer · Before Lecture 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../../engine/plates.css">
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- 1 -->
+<section class="slide" data-plain="1">
+  <div class="col" style="top:150px;width:680px">
+    <div class="kicker">From Forms to Agents · Primer · before Sat 31 Oct 2026</div>
+    <h1 style="font-size:84px">Python, HTTP,<br>an ERP, and one<br>model call</h1>
+    <p class="lede" style="margin-top:28px;color:var(--ink-2)">Everything Lecture 1 assumes, in about 45 minutes, on the system we use all course.</p>
+    <p class="small" style="margin-top:18px">Notebook: <span class="nb-ref">NB0 · primer</span> · runs on free Colab with no API key.</p>
+  </div>
+  <div class="fig" data-fig="envelope" style="left:860px;top:190px;width:640px;height:560px"></div>
+  <div class="cap" style="left:860px;top:780px;width:640px"><b>Fig. 1.</b> The first thing you will read: Bahi’s real reply to a stock enquiry.</div>
+</section>
+
+<!-- 2 -->
+<section class="slide" data-plate="One Order, Eight Lectures">
+  <!-- by-hand counts: lectures/L1-the-form/experiments/logs/by_hand.json (monday_counts: screens opened 8, fields typed 17, sign-ins 2) -->
+  <div class="col" style="width:560px;font-size:24px">
+    <h2>One order, the whole course</h2>
+    <p><b>Rasoi Steel Works</b>, Pune, makes pressure cookers. It runs <b>Bahi ERP 7.2</b>, a form-based ERP from 1998.</p>
+    <p class="step"><b>Kavita Joshi</b>, a purchase executive, must order 20,000 silicone gaskets before the Diwali run.</p>
+    <p class="step">Done by hand in the sandbox, it takes eight screens, seventeen typed fields and two sign-ins. We will make it one sentence.</p>
+    <p class="step">The form was doing <b>nine jobs</b>: asking for fields, knowing the route, looking things up, explaining rules, holding the draft, roles, proof, recovery, testing. Each lecture rebuilds some of them.</p>
+    <p class="step small">Everything here is fictional: the ERP vendor, the plant, the people, the suppliers and the numbers.</p>
+  </div>
+  <div class="fig" data-fig="order" style="left:720px;top:140px;width:780px;height:600px"></div>
+  <div class="cap" style="left:720px;top:770px;width:780px"><b>Fig. 2.</b> The order every lecture returns to. Stock and gross value from our run of NB0.</div>
+</section>
+
+<!-- 3 -->
+<section class="slide" data-plate="What This Primer Gives You">
+  <div class="col" style="width:520px">
+    <h2>Four things you need on Saturday</h2>
+    <p>Lecture 1 starts by placing Kavita’s order by hand, then hands it to a model with tools.</p>
+    <p class="step">To follow it you need to read a JSON reply, make an HTTP call,</p>
+    <p class="step">know what master data, documents and statuses are,</p>
+    <p class="step">and know what one model call costs and what it can see,</p>
+    <p class="step">and how a model asks your code to run a tool.</p>
+  </div>
+  <div class="fig" data-fig="map" style="left:690px;top:150px;width:810px;height:620px"></div>
+</section>
+
+<!-- 4 -->
+<section class="slide" data-plate="Python and JSON">
+  <div class="col" style="width:540px">
+    <h2>A reply is a dict</h2>
+    <p>Bahi answers every request with the same <span class="term">envelope</span>. On the wire it is JSON text; in Python it is a dict of dicts.</p>
+    <p class="step"><code>rc</code> says whether it worked.</p>
+    <p class="step"><code>err_cd</code> and <code>msg</code> explain a failure, tersely.</p>
+    <p class="step"><code>data</code> holds the answer. Read it with <code>env["data"]["on_hand"]</code>.</p>
+    <div class="def step" style="margin-top:6px"><b>json.dumps / json.loads</b>Turn a dict into JSON text, and back. Our 210-character envelope survives the round trip unchanged.</div>
+  </div>
+  <div class="fig" data-fig="envelope" style="left:700px;top:140px;width:800px;height:640px"></div>
+</section>
+
+<!-- 5 -->
+<section class="slide" data-plate="HTTP: A Request and a Reply">
+  <div class="col" style="width:520px">
+    <h2>How other systems reach Bahi</h2>
+    <p>The legacy client, an n8n workflow and your agent all send the same thing: an <b>HTTP request</b>.</p>
+    <p>A <b>method</b> and a <b>URL</b>, some <b>headers</b>, and a JSON <b>body</b>.</p>
+    <p class="step">The reply has a <b>status code</b>: 200 worked, 401 means you are not signed in, 504 means no reply in time. Toggle the token to see the 401 we got.</p>
+  </div>
+  <div class="fig" data-fig="http" style="left:680px;top:140px;width:820px;height:620px"></div>
+  <div class="cap" style="left:680px;top:780px;width:820px"><b>Fig. 3.</b> One call to <code>/svc/stk_query</code>, with and without the token. Replies from our run.</div>
+</section>
+
+<!-- 6 -->
+<section class="slide" data-plate="Sign In, Then Call">
+  <div class="col" style="width:500px">
+    <h2>Sign in once, then call</h2>
+    <p><code>POST /login</code> with a user and password returns a <span class="term">token</span>.</p>
+    <p class="step">Every service call sends it in the <code>Authorization</code> header. That is how Bahi knows the call is Kavita’s, and checks her role.</p>
+    <p class="step">The same services the screens use are open to any program that signs in.</p>
+    <p class="step small">In Lecture 1 this matters: the agent will sign in as someone. Who it signs in as decides what it may do.</p>
+  </div>
+  <div class="fig" data-fig="seq" style="left:640px;top:130px;width:860px;height:600px"></div>
+  <div class="cap" style="left:660px;top:760px;width:820px"><b>Fig. 4.</b> Sign-in, a call, and a call without the token, as recorded in NB0.</div>
+</section>
+
+<!-- 7 -->
+<section class="slide" data-plate="A Small Client">
+  <div class="col" style="width:520px">
+    <h2>BahiClient keeps the token</h2>
+    <p>Writing headers by hand gets old. <code>bahi/client.py</code> signs in once and adds the token to every call.</p>
+    <p class="step">It returns the same envelope you have already seen.</p>
+    <p class="step">Exercise 2 reads Kavita’s last gasket order this way.</p>
+  </div>
+  <div class="fig" data-fig="client" style="left:690px;top:150px;width:810px;height:620px"></div>
+</section>
+
+<!-- 8 -->
+<section class="slide" data-plate="What an ERP Is">
+  <div class="col" style="width:520px">
+    <h2>A company’s book of record</h2>
+    <p>An <b>ERP</b> keeps what a company owns, buys, makes, sells and owes, in tables.</p>
+    <p class="step"><b>Master data</b> changes slowly: items, suppliers, cost centres, users.</p>
+    <p class="step"><b>Transactions</b> are business events written as <b>documents</b>: a purchase request, a purchase order. Each has a number, a header and lines.</p>
+    <p class="step">Documents point at master data by <b>code</b>. People learn the codes by heart.</p>
+  </div>
+  <div class="fig" data-fig="tables" style="left:680px;top:110px;width:830px;height:700px"></div>
+</section>
+
+<!-- 9 -->
+<section class="slide" data-plate="Codes Are Where People Slip">
+  <div class="col" style="width:520px">
+    <h2>Codes are where people slip</h2>
+    <p>Bahi has eight suppliers and five cost centres. Three rows are traps.</p>
+    <p class="step">Deccan Polymers has two codes. The old one is blocked.</p>
+    <p class="step">“Deccan Paints &amp; Inks” is a different company with a similar name.</p>
+    <p class="step"><code>PRD-05</code>, Kavita’s default cost centre, closed on 15 October.</p>
+  </div>
+  <div class="fig" data-fig="codes" style="left:680px;top:130px;width:830px;height:660px"></div>
+</section>
+
+<!-- 10 -->
+<section class="slide" data-plate="Documents Move Through Statuses">
+  <div class="col" style="width:500px">
+    <h2>Every document has a status</h2>
+    <p>A purchase order starts as a <b>Draft</b>.</p>
+    <p class="step">Above the raiser’s limit, it waits for <b>approval</b>.</p>
+    <p class="step">Approved is not sent.</p>
+    <p class="step">Only <b class="a">Released</b> means the supplier has the order.</p>
+    <p class="step">Some paths end: rejected, cancelled, or closed. Click a status to read it.</p>
+  </div>
+  <div class="fig" data-fig="life" style="left:640px;top:150px;width:870px;height:560px"></div>
+  <div class="cap" style="left:660px;top:740px;width:820px"><b>Fig. 6.</b> Status codes of a Bahi document. The seed has 5 released orders and 1 waiting for approval.</div>
+</section>
+
+<!-- 11 -->
+<section class="slide" data-plate="The Rules Live in the Services">
+  <div class="col" style="width:520px">
+    <h2>Bahi enforces the moves</h2>
+    <p>You cannot release an order that is still waiting for approval. The service refuses, with a code.</p>
+    <p class="step">But not every rule is a refusal. Some outcomes are silent, and the code alone will not tell you something went wrong.</p>
+    <p class="step small">That is where Lecture 1 begins.</p>
+  </div>
+  <div class="fig" data-fig="release" style="left:690px;top:140px;width:810px;height:640px"></div>
+</section>
+
+<!-- 12 -->
+<section class="slide" data-plate="What a Model Call Is">
+  <div class="col" style="width:470px">
+    <h2>Messages in, text out</h2>
+    <p>A language model reads a list of <b>messages</b> and writes the next one. That is all it does.</p>
+    <p class="step">Text is cut into <span class="term">tokens</span>, pieces of words.</p>
+    <p class="step">You pay per token in and per token out, and you wait for each one written.</p>
+    <div class="def step"><b>Token</b>The unit a model reads and writes: roughly four characters of English. Our eight-word question was 11 tokens.</div>
+  </div>
+  <div class="fig" data-fig="call" style="left:620px;top:160px;width:880px;height:560px"></div>
+  <div class="cap" style="left:640px;top:760px;width:840px"><b>Fig. 7.</b> Our first recorded call, with its real token counts, seconds and cost.</div>
+</section>
+
+<!-- 13 -->
+<section class="slide" data-plate="From Tokens to Rupees">
+  <div class="col" style="width:500px">
+    <h2>From tokens to rupees</h2>
+    <p>Each model has a list price in dollars per million tokens, one for input and one for output. The course fixes ₹88 to the dollar.</p>
+    <p class="step">Multiply, add, convert. NB0 exercise 4 writes this function.</p>
+    <p class="step">One short call costs a fraction of a paisa. An agent that re-sends a long conversation many times does not: drag to 1,00,000 tokens in.</p>
+  </div>
+  <div class="fig" data-fig="tokens" style="left:660px;top:130px;width:850px;height:660px"></div>
+</section>
+
+<!-- 14 -->
+<section class="slide" data-plate="Two Tiers, One Question">
+  <div class="col" style="width:500px">
+    <h2>A smaller model, a smaller bill</h2>
+    <p>We asked both tiers the same question, once each.</p>
+    <p class="step">The small model answered faster and for about a seventh of the price.</p>
+    <p class="step">On a one-line definition the two answers are equally good. On Kavita’s order they will not be equally good, and neither will be good enough alone.</p>
+  </div>
+  <div class="fig" data-fig="tiers" style="left:680px;top:150px;width:830px;height:600px"></div>
+  <div class="cap" style="left:680px;top:770px;width:830px"><b>Fig. 8.</b> Seconds, ₹ and tokens per call, measured in NB0 (one call each).</div>
+</section>
+
+<!-- 15 -->
+<section class="slide" data-plate="The Context Is All It Sees">
+  <div class="col" style="width:500px">
+    <h2>It only knows what you send</h2>
+    <p>Asked for Kavita’s approval limit, the model cannot know it. It says so.</p>
+    <p class="step">Put Bahi’s own user record in the messages and it answers correctly. The extra 90 tokens are the fact.</p>
+    <div class="def step"><b>Context window</b>Everything the model can read in one call. An agent is mostly code that decides what goes into it.</div>
+  </div>
+  <div class="fig" data-fig="context" style="left:670px;top:130px;width:840px;height:660px"></div>
+</section>
+
+<!-- 16 -->
+<section class="slide" data-plate="Tool Calling">
+  <div class="col" style="width:470px">
+    <h2>The model asks; your code acts</h2>
+    <p>We describe one tool: Bahi’s stock enquiry.</p>
+    <p class="step">The model does not run anything. It writes a small JSON request and stops.</p>
+    <p class="step">Our code runs it against Bahi, as Kavita, with her permissions.</p>
+    <p class="step">The result goes back as a message.</p>
+    <p class="step">Now the model can answer with real numbers.</p>
+  </div>
+  <div class="fig" data-fig="toolcall" style="left:620px;top:120px;width:890px;height:700px"></div>
+</section>
+
+<!-- 17 -->
+<section class="slide" data-plate="A Tool Is a Schema">
+  <div class="col" style="width:470px">
+    <h2>What the model sees of a tool</h2>
+    <p>Not code. A name, a sentence, and the fields it takes.</p>
+    <p class="step">The description decides when the model reaches for it.</p>
+    <p class="step">The fields decide what it must fill in.</p>
+    <p class="step">Bad names and terse descriptions make bad tool calls. Lecture 3 is about writing good ones.</p>
+  </div>
+  <div class="fig" data-fig="schema" style="left:640px;top:150px;width:870px;height:620px"></div>
+</section>
+
+<!-- 18 -->
+<section class="slide" data-plate="The Loop">
+  <div class="col" style="width:520px">
+    <h2>Put it in a loop: an agent</h2>
+    <p>Model, tool call, our code, result, model again, until the model answers without a tool call.</p>
+    <p class="step">That loop is a few dozen lines of Python. You write it in Lecture 1.</p>
+    <p class="step">Then we give it every Bahi service as a tool and Kavita’s six hardest requests, and watch what a model alone gets wrong.</p>
+  </div>
+  <div class="fig" data-fig="loop" style="left:720px;top:140px;width:780px;height:600px"></div>
+</section>
+
+<!-- 19 -->
+<section class="slide" data-plate="What the Primer Cost">
+  <div class="col" style="width:470px">
+    <h2>Every call, counted</h2>
+    <p>NB0 makes eight model calls. The notebook prints this table from its own replies.</p>
+    <p class="step">The answer after a tool call costs the most: it carries the question, the tool call and the result.</p>
+  </div>
+  <div class="fig" data-fig="cost" style="left:620px;top:150px;width:890px;height:600px"></div>
+  <div class="cap" style="left:640px;top:770px;width:860px"><b>Fig. 9.</b> ₹ per call in NB0. Teal: default tier. Gold: small tier. Source: <code>experiments/logs/primer_numbers.json</code>.</div>
+</section>
+
+<!-- 20 -->
+<section class="slide" data-plate="Before Saturday">
+  <div class="col" style="width:520px">
+    <h2>Before Saturday</h2>
+    <p>Run NB0 in Colab. It needs no key: every model call replays from our recording.</p>
+    <p class="step">GPT and Claude work through an OpenRouter key with the same client, but we have not run them. Every model number in this course is from Gemini, unless a plate says otherwise.</p>
+    <p class="step small">Tick the list as you go.</p>
+  </div>
+  <div class="fig" data-fig="setup" style="left:690px;top:140px;width:810px;height:660px"></div>
+</section>
+
+<!-- 21 -->
+<section class="slide" data-plain="1">
+  <div class="center" style="align-items:center;text-align:center">
+    <div class="kicker">Lecture 1 · Saturday 31 October · 7–9 AM IST</div>
+    <h2 style="font-size:72px;max-width:1150px">The Form and Its Nine Jobs</h2>
+    <p class="lede" style="max-width:1050px;margin-top:20px;color:var(--ink-2)">We place Kavita’s order by hand, count every screen, then give a model Bahi’s services and see what it gets wrong.</p>
+    <p class="small" style="margin-top:20px">Bring NB0, run once. Press Home to start again.</p>
+  </div>
+</section>
+
+</div>
+<script src="figs.js"></script>
+<script src="../../engine/plates.js"></script>
+</body>
+</html>

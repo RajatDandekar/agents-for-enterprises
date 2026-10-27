@@ -1,0 +1,258 @@
+{
+ "version": "1.0",
+ "checklist": [
+  {
+   "item": "Types",
+   "means": "Typed input schema; arguments checked once, at the door, with a readable error."
+  },
+  {
+   "item": "Errors that say what to do next",
+   "means": "Every failure returns ok=false, what went wrong, and next_step."
+  },
+  {
+   "item": "Preview",
+   "means": "A write previews first (confirm=false) and commits only on confirm=true."
+  },
+  {
+   "item": "Idempotency key",
+   "means": "A retry with the same key returns the first result, never a second document."
+  },
+  {
+   "item": "Receipt",
+   "means": "The document's real status, read back from Bahi after the write."
+  },
+  {
+   "item": "Validate once",
+   "means": "Bahi's procedures enforce the rules; the tool asks them, never copies them."
+  },
+  {
+   "item": "Permissions = the user's",
+   "means": "The tool runs in the user's own Bahi session, never a service account."
+  },
+  {
+   "item": "Timeout and retry",
+   "means": "Reads retry; a write that times out is looked up by its key before anything else."
+  },
+  {
+   "item": "Version",
+   "means": "Each tool has a version number, carried on receipts and published over MCP."
+  }
+ ],
+ "tools": [
+  {
+   "name": "find_item",
+   "version": "1.0",
+   "writes": false,
+   "services": [
+    "itm_search",
+    "itm_get"
+   ],
+   "required": [
+    "query"
+   ],
+   "params": [
+    "query"
+   ],
+   "description": "Find stock items by description or code (e.g. '5 litre silicone gasket'). Returns active items, best match first, with their code, unit and whether they touch food."
+  },
+  {
+   "name": "stock_position",
+   "version": "1.0",
+   "writes": false,
+   "services": [
+    "whs_list",
+    "stk_query"
+   ],
+   "required": [
+    "item_code"
+   ],
+   "params": [
+    "item_code"
+   ],
+   "description": "Stock on hand, on order and days of cover for an item, in every warehouse."
+  },
+  {
+   "name": "last_purchase",
+   "version": "1.0",
+   "writes": false,
+   "services": [
+    "po_hist",
+    "sup_rate_get"
+   ],
+   "required": [
+    "item_code"
+   ],
+   "params": [
+    "item_code",
+    "supplier_code"
+   ],
+   "description": "Recent released orders for an item (supplier, quantity, rate, date) and each supplier's CURRENT contract rate. Use the contract rate for a new order, not an old order's rate."
+  },
+  {
+   "name": "find_supplier",
+   "version": "1.0",
+   "writes": false,
+   "services": [
+    "sup_search",
+    "sup_cert_get"
+   ],
+   "required": [
+    "name"
+   ],
+   "params": [
+    "name",
+    "city"
+   ],
+   "description": "Look a supplier up by name, tolerating different spellings. Returns the closest matches with their status and food-grade certificate. ALWAYS use this before registering a supplier."
+  },
+  {
+   "name": "check_cost_centre",
+   "version": "1.0",
+   "writes": false,
+   "services": [
+    "cc_list",
+    "cc_get",
+    "bud_check"
+   ],
+   "required": [],
+   "params": [
+    "code"
+   ],
+   "description": "Is a cost centre open, and how much budget is left this quarter? Without a code, lists every open cost centre."
+  },
+  {
+   "name": "create_purchase_order",
+   "version": "1.0",
+   "writes": true,
+   "services": [
+    "po_search",
+    "sup_get",
+    "itm_get",
+    "sup_rate_get",
+    "usr_get",
+    "tax_compute",
+    "bud_check",
+    "sup_cert_get",
+    "pr_search",
+    "pr_get",
+    "pr_save",
+    "pr_submit",
+    "po_fetch",
+    "po_save",
+    "po_get"
+   ],
+   "required": [
+    "supplier_code",
+    "item_code",
+    "quantity",
+    "cost_centre",
+    "need_by"
+   ],
+   "params": [
+    "supplier_code",
+    "item_code",
+    "quantity",
+    "cost_centre",
+    "need_by",
+    "rate",
+    "idempotency_key",
+    "confirm"
+   ],
+   "description": "Order an item from a supplier. With confirm=false (the default) it only PREVIEWS: price, tax, gross value, whether approval is needed and who approves. Show the preview to the user; call again with confirm=true to commit. Above ₹50,000 it raises the purchase request first; if that needs approval it returns WAITING FOR APPROVAL and you call again with the same arguments once approved. Returns a receipt with the real status."
+  },
+  {
+   "name": "release_purchase_order",
+   "version": "1.0",
+   "writes": true,
+   "services": [
+    "po_get",
+    "po_release"
+   ],
+   "required": [
+    "po_no"
+   ],
+   "params": [
+    "po_no"
+   ],
+   "description": "Release an APPROVED order to the supplier. Returns a receipt with the real status."
+  },
+  {
+   "name": "order_status",
+   "version": "1.0",
+   "writes": false,
+   "services": [
+    "po_search",
+    "po_get"
+   ],
+   "required": [],
+   "params": [
+    "po_no",
+    "idempotency_key"
+   ],
+   "description": "The real status of a purchase order, with its approval and any warning, read from Bahi."
+  },
+  {
+   "name": "amend_purchase_order",
+   "version": "1.0",
+   "writes": true,
+   "services": [
+    "po_amend",
+    "po_get"
+   ],
+   "required": [
+    "po_no"
+   ],
+   "params": [
+    "po_no",
+    "quantity",
+    "need_by",
+    "cost_centre"
+   ],
+   "description": "Change an order's quantity, need-by date or cost centre (e.g. to move a DRAFT off a closed cost centre). Bahi re-checks budget and approval. Returns a receipt with the real status."
+  },
+  {
+   "name": "register_supplier",
+   "version": "1.0",
+   "writes": true,
+   "services": [
+    "sup_search",
+    "sup_get",
+    "sup_create"
+   ],
+   "required": [
+    "name",
+    "city",
+    "state",
+    "gstin"
+   ],
+   "params": [
+    "name",
+    "city",
+    "state",
+    "gstin",
+    "confirm"
+   ],
+   "description": "Register a NEW supplier. Only after find_supplier shows no existing match and the user has confirmed the details. Food-contact parts still need a food-grade certificate before any order."
+  },
+  {
+   "name": "record_certificate",
+   "version": "1.0",
+   "writes": true,
+   "services": [
+    "sup_cert_get",
+    "sup_cert_upload"
+   ],
+   "required": [
+    "supplier_code",
+    "document_ref",
+    "valid_to"
+   ],
+   "params": [
+    "supplier_code",
+    "document_ref",
+    "valid_to"
+   ],
+   "description": "Record a supplier's food-grade certificate that the user has provided (document reference and expiry). Never invent one."
+  }
+ ]
+}

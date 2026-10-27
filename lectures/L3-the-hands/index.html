@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 3 · The Hands</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../../engine/plates.css">
+<style>
+/* Lecture 3: keep every text at 18px or more */
+.code,.json,.trace,.zc pre,.toolsig pre{font-size:18px}
+.ctl,.ctl button{font-size:18px}
+.top{position:absolute;left:100px;right:100px;top:100px}
+.top h2{margin-bottom:6px}
+.top .sub{font-size:24px;color:var(--ink-2)}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- 1 -->
+<section class="slide" data-plain="1">
+  <div class="center">
+    <div class="kicker">From Forms to Agents · Lecture 3 · Sat 7 Nov 2026 · Dr. Rajat Dandekar</div>
+    <h1>The Hands</h1>
+    <p class="lede" style="max-width:1100px;margin-top:26px">Job 3 of the form: looking up codes and facts, and doing the work. We turn Bahi's screens into tools an agent can call safely, and plug them in over MCP.</p>
+    <p class="small" style="margin-top:18px">Website topic: Tools, APIs + MCP · the heaviest lecture · notebook NB3 · assignment A3</p>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="slide" data-plate="Last Time, This Time">
+  <div class="col" style="width:600px">
+    <h2>Last time, the manual. This time, the hands.</h2>
+    <p><b>Lecture 2</b> gave the agent Bahi's policies, with citations: job 4, explaining the rules.</p>
+    <p class="step">The agent can now say <i>why</i>. It still cannot <i>do</i> anything well. In Lecture 1 it had Bahi's 38 raw services and fumbled through them as the service account.</p>
+    <p class="step"><b>Today:</b> job 3. Kavita presses F2, picks one of three gaskets, opens another screen for the price, types codes, presses buttons in the right order and reads what comes back. We give the agent eight tools that do that work, safely, in her name.</p>
+  </div>
+  <div class="fig" data-fig="ring" data-now="3" data-done="4" style="left:770px;top:130px;width:760px;height:600px"></div>
+  <div class="cap" style="left:800px;top:750px;width:700px"><b>Fig. 1.</b> The nine jobs of the form. Job 4 done in Lecture 2; job 3 today.</div>
+</section>
+
+<!-- 3 -->
+<section class="slide" data-plate="Opens With · Scenario 3">
+  <div class="top">
+    <h2 style="font-size:46px">“From Deccan Polymer Industries.” The naive agent, for real.</h2>
+    <p class="sub">Kavita: <i>“Place an order for 4,000 long bakelite handles from Deccan Polymer Industries, need-by 5 November, cost centre PRD-07.”</i> Lecture 1's agent: 38 raw services, the service account, no harness. Scrub through every call it made.</p>
+  </div>
+  <div class="fig" data-fig="naive3" style="left:100px;top:255px;width:1400px;height:600px"></div>
+  <span class="step"></span><span class="step"></span>
+</section>
+
+<!-- 4 -->
+<section class="slide" data-plate="What Really Happened">
+  <div class="col" style="width:620px">
+    <h2>We expected two Deccans. We got something else.</h2>
+    <p>On this sentence, no tier registered a duplicate. The models searched “Deccan Polymer” and found the right one.</p>
+    <p class="step">What we got instead (flash): <b>31 calls</b>, two refused saves, <b>2,04,894 tokens</b>, and an order <b>raised and approved by SVC_AGENT</b>, not Kavita. The audit trail now lies.</p>
+    <p class="step">On 3.1-pro it said “successfully placed” while the order sat at APPROVED, never released (NE5).</p>
+    <div class="measured step">The duplicate needs only a little pressure: asked to register the firm first (A15), the raw-service agent made a second Deccan on both tiers.</div>
+  </div>
+  <div class="fig" style="left:780px;top:150px;width:720px;height:640px">
+    <table class="t" style="font-size:21px"><thead><tr><th>Scenario 3, naive agent</th><th>flash</th><th>flash-lite</th><th>3.1-pro</th></tr></thead><tbody>
+      <tr><td>Passed the code check</td><td class="n">yes</td><td class="n">yes</td><td class="n" style="color:var(--before)">no · NE5</td></tr>
+      <tr><td>Service calls</td><td class="n">31</td><td class="n">22</td><td class="n">12</td></tr>
+      <tr><td>Refused by Bahi</td><td class="n">2</td><td class="n">3</td><td class="n">3</td></tr>
+      <tr><td>Tokens</td><td class="n">2,04,894</td><td class="n">76,031</td><td class="n">57,278</td></tr>
+      <tr><td>₹</td><td class="n">9.34</td><td class="n">0.70</td><td class="n">10.95</td></tr>
+      <tr><td>Order raised by</td><td class="n" style="color:var(--before)">SVC_AGENT</td><td class="n" style="color:var(--before)">SVC_AGENT</td><td class="n" style="color:var(--before)">SVC_AGENT</td></tr>
+      <tr><td>Suppliers created</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
+      <tr><td><b>Lecture 3 agent</b>, same sentence</td><td class="n" style="color:var(--after)">pass · 14,257 tok</td><td class="n" style="color:var(--after)">pass · 14,395</td><td class="n" style="color:var(--after)">pass · 13,770</td></tr>
+    </tbody></table>
+  </div>
+  <div class="cap" style="left:780px;top:770px;width:720px">Logs: <code>experiments/logs/naive_s3_gemini_*.json</code>, cassette L3_naive.</div>
+</section>
+
+<!-- 5 -->
+<section class="slide" data-plate="Where the Second Deccan Comes From">
+  <div class="top">
+    <h2 style="font-size:44px">Task A15: “Register Deccan Polymer Industries of Rajkot, then order”</h2>
+    <p class="sub">Bahi's <code>sup_search</code> does a plain LIKE on the full name: “Deccan Polymer Industries” → <b>0 ROWS FOUND</b>. Bahi only refuses a duplicate GSTIN, and this one is different. Same task, same model (gemini-3.8-flash), two tool sets.</p>
+  </div>
+  <div class="fig" data-fig="dup" style="left:100px;top:270px;width:1400px;height:590px"></div>
+  <span class="step"></span><span class="step"></span>
+</section>
+
+<!-- 6 -->
+<section class="slide" data-plate="The Job, Before and After">
+  <div class="lec-top"><div class="kicker">Job 3 of nine · Lecture 3</div><h2>The Hands</h2><p class="sub">Looking up codes and facts, and doing the work, in Kavita's name and within her permissions.</p></div>
+  <div class="ba">
+    <div class="card bf step"><span class="tag bf">Before</span><h3>F2, a list of three gaskets, another screen for the price</h3>Kavita types codes she looked up, presses Fetch before Save, fixes the tax code Fetch got wrong, and reads “PO/2026/01182 SAVED”, which meant Draft.</div>
+    <div class="card af step"><span class="tag af">After</span><h3>Eight intent tools</h3><code>find_item</code>, <code>stock_position</code>, <code>last_purchase</code>, <code>find_supplier</code>, <code>check_cost_centre</code>, <code>create_purchase_order</code>, <code>release_purchase_order</code>, <code>order_status</code>. Each hides the screen order and returns a receipt.</div>
+  </div>
+  <div class="opens step"><span class="k">What we measure</span>30 tasks, four ways of giving the same model the same ERP: 38 raw services, one generic call, 8 intent tools in our harness, and the same 8 tools in a generic MCP host.</div>
+</section>
+
+<!-- 7 -->
+<section class="slide" data-plate="What a Tool Is">
+  <div class="col" style="width:520px">
+    <h2>A tool has four parts</h2>
+    <ol class="legend" style="font-size:24px">
+      <li class="step"><span class="n">1</span><span>A <span class="term">name</span> the model writes in its request.</span></li>
+      <li class="step"><span class="n">2</span><span>A <span class="term">description</span>, written for a model, not a Bahi consultant: what it does, what it returns.</span></li>
+      <li class="step"><span class="n">3</span><span>A <span class="term">typed input schema</span>: the arguments, in the user's words.</span></li>
+      <li class="step"><span class="n">4</span><span>A <span class="term">function</span> our code runs. The model never runs anything.</span></li>
+    </ol>
+  </div>
+  <div class="fig" data-fig="anatomy" style="left:660px;top:150px;width:860px;height:600px"></div>
+  <div class="cap" style="left:660px;top:780px;width:860px"><b>Fig. 2.</b> <code>find_item</code>, exactly as the model receives it (<code>logs/tool_defs.json</code>).</div>
+</section>
+
+<!-- 8 -->
+<section class="slide" data-plate="38 Terse Schemas or 8 Intent Tools">
+  <div class="col" style="width:400px">
+    <h2>Every tool costs tokens on every call</h2>
+    <p>Bahi's 38 services could all be tools. Click any name to see how Bahi describes it.</p>
+    <p class="step">Eight intent tools say what they do in the user's words. Click one.</p>
+    <p class="step">We measured the definitions in Gemini's own tokens: same request with and without the tools.</p>
+    <div class="measured step" style="margin-top:6px">One generic tool is cheapest to describe (714). It is not cheapest to use: see the experiment.</div>
+  </div>
+  <div class="fig" data-fig="toollist" style="left:540px;top:120px;width:980px;height:720px"></div>
+</section>
+
+<!-- 9 -->
+<section class="slide" data-plate="Building Tools from Screens, in Six Steps">
+  <div class="top">
+    <h2 style="font-size:46px">How to build tools from a legacy screen, in six steps</h2>
+    <p class="sub">Done for real on Bahi's purchase-order screen. Each step leaves a log the notebook and this deck read.</p>
+  </div>
+  <div class="fig" data-fig="sixsteps" style="left:100px;top:250px;width:1400px;height:560px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span>
+</section>
+
+<!-- 10 -->
+<section class="slide" data-plate="Step 1 · Inventory">
+  <div class="col" style="width:470px">
+    <h2>Screens, tasks, services, procedures</h2>
+    <p>A <span class="term">screen</span> is what Kavita sees. A <span class="term">task</span> is one button. Each task calls a <span class="term">service</span>; each service runs <span class="term">stored procedures</span>, where the rules live.</p>
+    <p class="step">The registry has 38 services (26 read, 12 write) and 13 procedures. The live runs tell us which ones each button really uses. Click a screen.</p>
+    <p class="step small">Most reads run no procedure. Every rule that matters sits behind a write.</p>
+  </div>
+  <div class="fig" data-fig="inventory" style="left:620px;top:130px;width:900px;height:700px"></div>
+</section>
+
+<!-- 11 -->
+<section class="slide" data-plate="What a Real Screen Definition Looks Like">
+  <div class="col" style="width:420px">
+    <h2>Shown once</h2>
+    <p>Real ERPs define each screen in a long activity file: controls, help keys, events, preconditions, service bindings, years of patches.</p>
+    <p class="step">You will meet these in a real engagement. Read them for the <b>tasks</b>, the <b>services</b> and the <b>preconditions</b>. The rest is layout.</p>
+    <p class="step">In the sandbox each screen is a ~30-line <code>screen.yaml</code> that keeps exactly those three things. We never read XML again.</p>
+    <p class="small step">The XML is fictional, written for the course. Scroll it: it does not fit, which is the point.</p>
+  </div>
+  <div class="fig" data-fig="screendef" style="left:560px;top:120px;width:960px;height:700px"></div>
+</section>
+
+<!-- 12 -->
+<section class="slide" data-plate="Step 2 · Live Runs">
+  <div class="col" style="width:380px">
+    <h2>Record what the screens really call</h2>
+    <p>We drive Kavita's order through the legacy screens, tagging each call with its screen and button. <code>erp.live_run()</code> returns the log.</p>
+    <p class="step">Call 10: Save refused. Fetch's tax code is Maharashtra's; Deccan is in Gujarat.</p>
+    <p class="step">Call 11: “SAVED”. The data says status <b>DR</b>.</p>
+    <p class="step">Call 12: Release refused. It was a Draft all along.</p>
+  </div>
+  <div class="fig" data-fig="liverun" style="left:510px;top:120px;width:1010px;height:700px"></div>
+</section>
+
+<!-- 13 -->
+<section class="slide" data-plate="Inside One Button">
+  <div style="position:absolute;left:100px;right:100px;top:100px">
+    <h2 style="font-size:44px;margin-bottom:4px">What happens when Kavita presses Save</h2>
+    <p class="small">From the live-run log, call by call. Toggle the cost centre to see the one procedure that changes.</p>
+  </div>
+  <div class="fig" data-fig="zoom" style="left:100px;top:210px;width:1400px;height:640px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span>
+</section>
+
+<!-- 14 -->
+<section class="slide" data-plate="Step 3 · Cascades">
+  <div class="col" style="width:400px">
+    <h2>What each save sets off</h2>
+    <p>We snapshot the tables before and after each write and diff them.</p>
+    <p class="step">Submitting the request routes it to Rohit and emails him.</p>
+    <p class="step">Saving the order commits ₹2,80,840 against PRD-07's budget; releasing it emails Deccan and puts 20,000 gaskets on order.</p>
+    <p class="step">On PRD-05 the Save sets off <b class="b">nothing</b>: no budget, no approval, no email. That silence is the Draft.</p>
+  </div>
+  <div class="fig" data-fig="cascades" style="left:530px;top:120px;width:990px;height:700px"></div>
+</section>
+
+<!-- 15 -->
+<section class="slide" data-plate="Step 4 · Variants">
+  <div class="top">
+    <h2 style="font-size:44px">One Save button, two legal paths</h2>
+    <p class="sub"><b>STD</b> needs an approved purchase request. <b>DIR</b> needs none, but only up to ₹50,000 gross. Bahi enforces it in <code>sp_po_hdr_save</code>; the tool must pick the path, not the model.</p>
+  </div>
+  <div class="fig" data-fig="variants" style="left:100px;top:270px;width:1400px;height:480px"></div>
+  <div class="cap" style="left:100px;top:770px;width:1400px">Six saves on a fresh sandbox (<code>logs/variants.json</code>). In NB3 you find the DIR limit by probing Bahi, not by reading the policy.</div>
+  <span class="step"></span>
+</section>
+
+<!-- 16 -->
+<section class="slide" data-plate="Step 5 · Screen State">
+  <div class="col" style="width:420px">
+    <h2>Fetch before Save</h2>
+    <p>The screen will not Save until Fetch has filled the defaults. Bahi enforces it with a <span class="term">fetch token</span>: issued by Fetch for this user, screen, supplier and item; spent by Save.</p>
+    <div class="def step"><b>Screen state</b>What the screen remembers between buttons. A model knows nothing about buttons, so the tool must carry it.</div>
+  </div>
+  <div class="fig" data-fig="screenstate" style="left:560px;top:130px;width:960px;height:680px"></div>
+  <span class="step"></span><span class="step"></span>
+</section>
+
+<!-- 17 -->
+<section class="slide" data-plate="Step 6 · The Intent Tool">
+  <div style="position:absolute;left:100px;right:100px;top:100px">
+    <h2 style="font-size:42px;margin-bottom:2px">create_purchase_order on Kavita's order, call by call</h2>
+    <p class="small">Each row is one tool call; the chips are the Bahi services it ran underneath (writes in red, gold underline = ran stored procedures).</p>
+  </div>
+  <div class="fig" data-fig="facade" style="left:100px;top:200px;width:1400px;height:640px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span>
+</section>
+
+<!-- 18 -->
+<section class="slide" data-plate="Our Own Agent API in Front">
+  <div class="col" style="width:480px">
+    <h2>When services are too tangled, write a façade</h2>
+    <p>Bahi's order needs a request, an approval, a Fetch, a Save with the right tax code and token, and a read-back. No single service does that.</p>
+    <p class="step">So we write <b>our own agent API</b> in front of Bahi: one call per job. It still lets Bahi's procedures enforce every rule.</p>
+    <p class="step">It may add what Bahi lacks: a read Bahi does not offer (<code>_peek</code>, ask IT for a view) and a near-duplicate check Bahi never had.</p>
+  </div>
+  <pre class="code fig" style="left:640px;top:130px;width:880px;height:690px;font-size:18px"><span class="c"># bahi/agent/tools.py  (abridged)</span>
+<span class="k">def</span> create_purchase_order(s, supplier_code, item_code, quantity,
+                          cost_centre, need_by, idempotency_key=<span class="k">None</span>,
+                          rate=<span class="k">None</span>, confirm=<span class="k">False</span>):
+    key = idempotency_key <span class="k">or</span> content_key(s.user_id, supplier_code,
+              item_code, quantity, cost_centre, need_by)        <span class="c"># 1 key</span>
+    <span class="k">if</span> po_search(client_ref=key): <span class="k">return</span> already_done + receipt
+    gross = tax_compute(...)  ;  cc = bud_check(...)          <span class="c"># 2 ask Bahi</span>
+    <span class="k">if not</span> confirm: <span class="k">return</span> {<span class="s">"preview"</span>: ..., <span class="s">"warnings"</span>: ...}
+    <span class="k">if</span> gross > 50000:                                       <span class="c"># 3 variant</span>
+        pr = find_request(key) <span class="k">or</span> pr_save(...) + pr_submit(...)
+        <span class="k">if</span> pr is waiting: <span class="k">return</span> {<span class="s">"status"</span>: <span class="s">"WAITING FOR APPROVAL"</span>}
+    tok = po_fetch(...)[<span class="s">"fetch_tok"</span>]                         <span class="c"># 4 screen state</span>
+    <span class="k">try</span>: po = po_save(..., fetch_tok=tok, client_ref=key)
+    <span class="k">except</span> ServiceTimeout:                                   <span class="c"># 5 lost reply</span>
+        po = po_search(client_ref=key)
+    <span class="k">return</span> _receipt(po)                                       <span class="c"># 6 read back</span></pre>
+</section>
+
+<!-- 19 -->
+<section class="slide" data-plate="The Tool Contract">
+  <div class="col" style="width:380px">
+    <h2>Nine promises every tool keeps</h2>
+    <p>Tool set v1.0 in <code>bahi/agent/tools.py</code> meets all nine. A3 asks the same of yours.</p>
+    <p class="step">Click a tool below the table to see its version, its arguments and the Bahi services it may call.</p>
+    <p class="step small">The next plates show four of them working: errors, preview, idempotency, receipt.</p>
+  </div>
+  <div class="fig" data-fig="contract" style="left:510px;top:120px;width:1010px;height:720px"></div>
+</section>
+
+<!-- 20 -->
+<section class="slide" data-plate="Errors That Say What to Do Next">
+  <div class="top">
+    <h2 style="font-size:44px">A legacy code is a dead end. A tool error is a next step.</h2>
+    <p class="sub">The same four mistakes, as Bahi reports them and as the tools report them (<code>logs/intent_tool.json</code>).</p>
+  </div>
+  <div class="fig" data-fig="errors" style="left:100px;top:240px;width:1400px;height:620px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span>
+</section>
+
+<!-- 21 -->
+<section class="slide" data-plate="Preview Before Commit">
+  <div class="top">
+    <h2 style="font-size:44px">confirm=false: price it, check it, save nothing</h2>
+    <p class="sub">The preview asks Bahi's own tax engine and budget check (validate once), so Kavita sees the gross value, the path and the approver before anything is written.</p>
+  </div>
+  <div class="fig" data-fig="preview" style="left:100px;top:240px;width:1400px;height:620px"></div>
+  <span class="step"></span>
+</section>
+
+<!-- 22 -->
+<section class="slide" data-plate="Idempotency">
+  <div class="col" style="width:420px">
+    <h2>The reply was lost. Retry safely.</h2>
+    <p>We make Bahi save the order and then drop the reply, the way a 504 does.</p>
+    <p class="step">A raw client cannot tell “not saved” from “saved, reply lost”. It retries and writes a second order: never-event NE2.</p>
+    <div class="def step"><b>Idempotency key</b>A key that names the order. A retry with the same key finds the first result. Derive it from the order's content (a hash), never <code>uuid4()</code>: a fresh random key on the retry looks like a new order.</div>
+  </div>
+  <div class="fig" data-fig="idem" style="left:560px;top:130px;width:960px;height:700px"></div>
+</section>
+
+<!-- 23 -->
+<section class="slide" data-plate="The Receipt">
+  <div class="top">
+    <h2 style="font-size:44px">Read it back: the status Bahi holds, not the message it printed</h2>
+  </div>
+  <div class="fig" data-fig="receipt" style="left:100px;top:180px;width:1400px;height:660px"></div>
+</section>
+
+<!-- 24 -->
+<section class="slide" data-plate="Validate Once · Permissions Are the User's">
+  <div class="ba" style="top:120px">
+    <div class="card af"><span class="tag af">Validate once</span><h3>Bahi enforces its rules. Tools ask, never copy.</h3>
+      The preview calls <code>tax_compute</code> and <code>bud_check</code>, so Bahi's <code>sp_tax_compute</code> and <code>sp_budget_chk</code> answer. Save still runs <code>sp_tax_region_chk</code>, <code>sp_budget_chk</code> and the variant rules. If finance changes a rule, the tools change with it.
+      <p class="small" style="margin-top:10px">The food-grade rule is not in Bahi at all (Purchase Policy §6.2). The tools report the certificate as a fact; enforcing it is Lecture 5's job.</p></div>
+    <div class="card bf step"><span class="tag bf">Permissions</span><h3>The tools act in Kavita's session</h3>
+      The same call, <code>po_approve("PO/2026/01179")</code>, ₹4,53,120:
+      <pre class="json" style="font-size:18px;margin-top:8px">as KJOSHI    → ERR-SEC-0001 ACCESS DENIED
+as SVC_AGENT → PO/2026/01179 APPROVED
+               approved_by: SVC_AGENT</pre>
+      The service account IT made “for the bot” can approve anything. <code>IntentTools(erp.session("KJOSHI"))</code> can do exactly what Kavita can.</div>
+  </div>
+  <div class="cap" style="left:100px;top:780px;width:1400px">Log: <code>logs/intent_tool.json</code> (permissions).</div>
+</section>
+
+<!-- 25 -->
+<section class="slide" data-plate="MCP, One Standard Plug">
+  <div class="top">
+    <h2 style="font-size:44px">Write the tools once. Plug them into any host.</h2>
+    <p class="sub"><span class="term">MCP</span> (Model Context Protocol): a server lists its tools and runs them; a client discovers and calls them. Our Bahi server, a marketplace-style email and chat server, three clients.</p>
+  </div>
+  <div class="fig" data-fig="mcp" style="left:100px;top:250px;width:1400px;height:600px"></div>
+  <span class="step"></span><span class="step"></span>
+</section>
+
+<!-- 26 -->
+<section class="slide" data-plate="On the Wire">
+  <div class="top">
+    <h2 style="font-size:44px">What goes over the plug</h2>
+    <p class="sub">From our MCP client's log: one entry of <code>tools/list</code> (with the tool's version and hints), and one <code>tools/call</code> with its result.</p>
+  </div>
+  <div class="fig" data-fig="wire" style="left:100px;top:230px;width:1400px;height:630px"></div>
+  <span class="step"></span>
+</section>
+
+<!-- 27 -->
+<section class="slide" data-plate="Our Harness, Two Servers">
+  <div class="top">
+    <h2 style="font-size:42px">One request, two servers: an order in Bahi, a note to Rohit</h2>
+    <p class="sub">ToolLoopAgent with <code>MCPClientTools(bahi, outbox)</code>, gemini-3.8-flash (<code>logs/mcp_demo.json</code>, cassette L3_mcp).</p>
+  </div>
+  <div class="fig" data-fig="mcpharness" style="left:100px;top:220px;width:1400px;height:640px"></div>
+  <span class="step"></span><span class="step"></span>
+</section>
+
+<!-- 28 -->
+<section class="slide" data-plate="Connecting Claude Desktop and n8n">
+  <div class="col" style="width:560px">
+    <h2>The same server, other hosts</h2>
+    <p><b>Claude Desktop</b> launches the server as a process and talks over stdio. Add it to <code>claude_desktop_config.json</code>.</p>
+    <p class="step"><b>n8n</b>: run the server over HTTP; add an AI Agent node with an <i>MCP Client Tool</i> sub-node. Endpoint <code>http://&lt;host&gt;:8765/mcp</code>, transport HTTP Streamable.</p>
+    <p class="step small">We tested the stdio command and the HTTP endpoint on Modal. We did not run Claude Desktop or n8n themselves: they cannot run there. Outside a sandbox, put per-user authentication in front: whoever reaches the endpoint acts as Kavita (Lecture 5).</p>
+  </div>
+  <pre class="code fig" style="left:720px;top:140px;width:800px;height:620px;font-size:18px"><span class="c">// claude_desktop_config.json</span>
+{ <span class="s">"mcpServers"</span>: {
+    <span class="s">"bahi"</span>:   { <span class="s">"command"</span>: <span class="s">"python"</span>,
+                <span class="s">"args"</span>: [<span class="s">"-m"</span>, <span class="s">"bahi.mcp_server"</span>,
+                         <span class="s">"--user"</span>, <span class="s">"KJOSHI"</span>] },
+    <span class="s">"outbox"</span>: { <span class="s">"command"</span>: <span class="s">"python"</span>,
+                <span class="s">"args"</span>: [<span class="s">"-m"</span>, <span class="s">"bahi.mcp_server"</span>,
+                         <span class="s">"--server"</span>, <span class="s">"outbox"</span>] } } }
+
+<span class="c"># for n8n: streamable HTTP at /mcp</span>
+python -m bahi.mcp_server --user KJOSHI \
+       --transport http --port 8765
+
+<span class="c"># n8n · MCP Client Tool node</span>
+Endpoint          http://&lt;host&gt;:8765/mcp
+Server Transport  HTTP Streamable
+Tools to include  All</pre>
+</section>
+
+<!-- 29 -->
+<section class="slide" data-plate="The Experiment">
+  <div class="col" style="width:560px">
+    <h2>How big should a tool be?</h2>
+    <p><b>30 tasks</b>: 15 lookups and 15 actions, each on a real sandbox trap, checked by code. Never-events NE2, NE4, NE5 on every task.</p>
+    <p class="step"><b>Four agents</b>, same loop and model, in Kavita's session: 38 raw services · one <code>call_service</code> · 8 intent tools in our harness · the same 8 over MCP in a generic host.</p>
+    <p class="step"><b>Measured</b>: passed, tool calls, tokens, seconds, ₹, on gemini-3.8-flash and 3.5-flash-lite. Rohit approves; “Yes, go ahead” when asked.</p>
+  </div>
+  <div class="fig" style="left:720px;top:130px;width:800px;height:700px">
+    <table class="t" style="font-size:19px"><thead><tr><th>Action</th><th>Trap</th></tr></thead><tbody>
+      <tr><td class="n">A01</td><td>above her limit: request, approval, variant, tax code</td></tr>
+      <tr><td class="n">A03</td><td>supplier under another name</td></tr>
+      <tr><td class="n">A05</td><td>silent Draft on PRD-05</td></tr>
+      <tr><td class="n">A06</td><td>₹56,640: just over the direct-order limit</td></tr>
+      <tr><td class="n">A08</td><td>release an order not yet approved</td></tr>
+      <tr><td class="n">A09</td><td>Kaveri Rubber: expired certificate</td></tr>
+      <tr><td class="n">A10</td><td>Shakti Seals: not in master, no certificate</td></tr>
+      <tr><td class="n">A13</td><td>no cost centre given; default is closed</td></tr>
+      <tr><td class="n">A14</td><td>blocked code DP-RJK-0009</td></tr>
+      <tr><td class="n">A15</td><td>register a duplicate supplier, under pressure</td></tr>
+    </tbody></table>
+    <p class="small" style="margin-top:8px">Full list with code checks: <code>experiments/tasks.py</code>.</p>
+  </div>
+</section>
+
+<!-- 30 -->
+<section class="slide" data-plate="What We Measured · Granularity">
+  <div style="position:absolute;left:100px;right:100px;top:100px">
+    <h2 style="font-size:44px;margin-bottom:2px">Intent tools: all 30 tasks, at a seventh of the tokens (default model)</h2>
+    <p class="small">Means over 30 tasks per agent (<code>logs/analysis.json</code> from <code>logs/granularity_gemini_*.json</code>). Switch the model tier.</p>
+  </div>
+  <div class="fig" data-fig="gran" style="left:100px;top:210px;width:1400px;height:640px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span>
+</section>
+
+<!-- 31 -->
+<section class="slide" data-plate="Where Each One Failed">
+  <div style="position:absolute;left:100px;right:100px;top:100px">
+    <h2 style="font-size:44px;margin-bottom:2px">30 tasks × 4 agents</h2>
+    <p class="small">Red = failed the code check. Hover a cell for the reason. The failures sit on the traps: duplicate supplier, uncertified suppliers, the request path.</p>
+  </div>
+  <div class="fig" data-fig="grid" style="left:100px;top:210px;width:1400px;height:640px"></div>
+</section>
+
+<!-- 32 -->
+<section class="slide" data-plate="Marketplace Host vs Our Harness">
+  <div class="col" style="width:470px">
+    <h2>Same tools, different host</h2>
+    <p>On outcomes the tools carry nearly everything: a generic MCP host with a generic prompt passed as many tasks as our harness on the default model.</p>
+    <p class="step">The gap is in <i>how</i>. On the small model, the generic host wrote 10 of 15 orders before Kavita said yes; our harness, none. The only difference is one paragraph of instructions.</p>
+    <p class="step">And instructions are not guarantees. In scenario 1 our own harness set <code>confirm=true</code> itself and wrote an order nobody asked for. <b>Lecture 4</b> turns the route into code.</p>
+  </div>
+  <div class="fig" data-fig="gap" style="left:620px;top:130px;width:900px;height:700px"></div>
+</section>
+
+<!-- 33 -->
+<section class="slide" data-plate="The Scorecard at Lecture 3">
+  <div style="position:absolute;left:100px;right:100px;top:100px">
+    <h2 style="font-size:44px;margin-bottom:6px">Six scenarios, with this lecture's layer</h2>
+    <p class="small">ToolLoopAgent + the 8 intent tools in Kavita's session (<code>logs/scorecard_gemini_*.json</code>, cassette L3_scorecard). Lecture 1's naive agent from <code>L1-the-form/experiments/logs/naive_sweep.json</code>.</p>
+  </div>
+  <div class="fig" data-fig="score" style="left:100px;top:230px;width:1400px;height:620px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span>
+</section>
+
+<!-- 34 -->
+<section class="slide" data-plate="Build · Record a Live Run">
+  <div class="col" style="width:440px">
+    <h2>NB3, part 1</h2>
+    <p>Drive the legacy order with screen and task tags, then read the log.</p>
+    <p class="step"><b>Exercise 1</b>: <code>procedures_behind(live, screen, task)</code>.</p>
+    <p class="step"><b>Exercise 2</b>: find the DIR limit by probing Bahi with a binary search. Learn the rule from the ERP, not from the PDF.</p>
+    <span class="nb-ref">NB3_the_hands.ipynb · sections 2–3</span>
+  </div>
+  <pre class="code fig" style="left:600px;top:130px;width:920px;height:690px;font-size:18px">erp = ERP()
+K, R = erp.session(<span class="s">"KJOSHI"</span>), erp.session(<span class="s">"RMEHTA"</span>)
+f = K.call(<span class="s">"pr_fetch"</span>, screen=<span class="s">"PUR-PR-01"</span>, task=<span class="s">"Fetch"</span>,
+           itm_cd=<span class="s">"GSK-SIL-05L"</span>)[<span class="s">"data"</span>]
+pr = K.call(<span class="s">"pr_save"</span>, screen=<span class="s">"PUR-PR-01"</span>, task=<span class="s">"Save"</span>,
+            cc_cd=<span class="s">"PRD-05"</span>, need_dt=<span class="s">"2026-11-02"</span>, qty=20000, ...)
+...
+r = K.call(<span class="s">"po_save"</span>, screen=<span class="s">"PUR-PO-01"</span>, task=<span class="s">"Save"</span>,
+           tax_cd=fx[<span class="s">"tax_cd"</span>], **base)   <span class="c"># ERR-PO-0412</span>
+
+<span class="k">for</span> c <span class="k">in</span> erp.live_run():
+    print(c[<span class="s">"screen"</span>], c[<span class="s">"task"</span>], c[<span class="s">"svc"</span>], c[<span class="s">"rc"</span>], c[<span class="s">"sps"</span>])
+
+<span class="c"># exercise 2: Bahi as the oracle</span>
+<span class="k">while</span> lo &lt; hi:
+    mid = (lo + hi + 1) // 2
+    <span class="k">if</span> probe(mid)[<span class="s">"rc"</span>] == <span class="s">"S"</span>: lo = mid
+    <span class="k">else</span>: hi = mid - 1</pre>
+</section>
+
+<!-- 35 -->
+<section class="slide" data-plate="Build · find_supplier">
+  <div class="col" style="width:440px">
+    <h2>NB3, part 2</h2>
+    <p><b>Exercise 3</b>: the lookup that stops the second Deccan.</p>
+    <p class="step">Search the full name, then each word. Score a normalised name. Add the certificate. Active first. A hint that says what to do next.</p>
+    <p class="step">Tested: “Deccan Polymer Industries” must come back as DP-RJK-0042; “Shakti Seals” must come back empty.</p>
+    <span class="nb-ref">NB3 · section 3</span>
+  </div>
+  <pre class="code fig" style="left:600px;top:130px;width:920px;height:690px;font-size:18px"><span class="k">def</span> my_find_supplier(s, name, city=<span class="k">None</span>):
+    seen = {}
+    <span class="k">for</span> q <span class="k">in</span> [name] + [w <span class="k">for</span> w <span class="k">in</span> re.split(<span class="s">r"\W+"</span>, name)
+                     <span class="k">if</span> len(w) >= 3 <span class="k">and</span> w.lower() <span class="k">not in</span> T._LEGAL]:
+        <span class="k">for</span> r <span class="k">in</span> T._bahi(s, <span class="s">"sup_search"</span>, q=q)[<span class="s">"rows"</span>]:
+            seen[r[<span class="s">"sup_cd"</span>]] = r
+    out = []
+    <span class="k">for</span> r <span class="k">in</span> seen.values():
+        score = difflib.SequenceMatcher(<span class="k">None</span>,
+                   T.name_key(name), T.name_key(r[<span class="s">"name"</span>])).ratio()
+        certs = ... sup_cert_get ...  <span class="c"># valid / expired / none</span>
+        out.append({..., <span class="s">"match"</span>: round(score, 2)})
+    out.sort(key=<span class="k">lambda</span> x: (x[<span class="s">"status"</span>] != <span class="s">"ACTIVE"</span>, -x[<span class="s">"match"</span>]))
+    hint = <span class="s">"Probably Deccan Polymers (DP-RJK-0042). Confirm with</span>
+<span class="s">            the user; do NOT register a new supplier."</span>
+    <span class="k">return</span> {<span class="s">"ok"</span>: <span class="k">True</span>, <span class="s">"matches"</span>: out[:5], <span class="s">"hint"</span>: hint}</pre>
+</section>
+
+<!-- 36 -->
+<section class="slide" data-plate="Build · The Façade and MCP">
+  <div class="col" style="width:440px">
+    <h2>NB3, parts 3 and 4</h2>
+    <p><b>Exercise 4</b>: write <code>create_purchase_order</code> in six steps. Two tests: the silent Draft must come back as DR, and a lost reply must leave exactly one order.</p>
+    <p class="step"><b>Exercise 5</b>: add an <code>open_orders()</code> tool to a FastMCP server and call it through an MCP client.</p>
+    <p class="step">Then the harness over two servers, the 30-task results, and the scorecard.</p>
+    <span class="nb-ref">NB3 · sections 3–7</span>
+  </div>
+  <pre class="code fig" style="left:600px;top:130px;width:920px;height:690px;font-size:18px"><span class="k">from</span> bahi.mcp_server <span class="k">import</span> (build_bahi_server, build_outbox_server,
+                             MCPClient, MCPClientTools, Outbox)
+erp, box = ERP(), Outbox()
+b = MCPClient(build_bahi_server(erp, <span class="s">"KJOSHI"</span>))  <span class="c"># Kavita's session</span>
+m = MCPClient(build_outbox_server(box))
+agent = ToolLoopAgent(erp, <span class="s">"KJOSHI"</span>,
+            llm=LLM(<span class="s">"gemini:gemini-3.8-flash"</span>, cassette=<span class="s">"L3_nb"</span>),
+            tools=MCPClientTools(b, m))
+agent.respond(<span class="s">"Order 3,000 standard whistles ... email Rohit"</span>)
+print(box.items)
+
+<span class="c"># exercise 5</span>
+mcp = FastMCP(<span class="s">"my-bahi-extras"</span>)
+<span class="k">def</span> open_orders() -> dict:
+    <span class="s">"""Kavita's orders not yet sent to the supplier."""</span>
+    rows = T._bahi(s, <span class="s">"po_search"</span>)[<span class="s">"rows"</span>]
+    <span class="k">return</span> {<span class="s">"orders"</span>: [r <span class="k">for</span> r <span class="k">in</span> rows
+                       <span class="k">if</span> r[<span class="s">"status"</span>] <span class="k">in</span> (<span class="s">"DR"</span>, <span class="s">"PA"</span>, <span class="s">"AP"</span>)]}
+mcp.tool(open_orders)</pre>
+</section>
+
+<!-- 37 -->
+<section class="slide" data-plate="A3 · Your Module">
+  <div class="col" style="width:640px">
+    <h2>A3: 5–8 tools and an MCP server for your module</h2>
+    <ol class="legend" style="font-size:22px">
+      <li><span class="n">1</span><span>Run the six steps on your module: inventory, live runs (<code>legacy.happy_path</code>), cascades, variants, screen state.</span></li>
+      <li class="step"><span class="n">2</span><span>Write 5–8 intent tools, each with the nine-item contract and a version.</span></li>
+      <li class="step"><span class="n">3</span><span>Serve them over MCP, bound to the speaker's session; call them through <code>MCPClient</code>.</span></li>
+      <li class="step"><span class="n">4</span><span>Run your module's four scenarios with <code>ToolLoopAgent</code>; submit the scorecard.</span></li>
+    </ol>
+  </div>
+  <div class="fig" style="left:820px;top:140px;width:700px;height:660px">
+    <div class="card"><h3>Graded (feeds the /100 rubric)</h3>
+      <b>Tools · 20</b>: contract met per tool, receipts read back, a lost-reply test passes.<br>
+      <b>Scenario pass rate · 25</b>: your four scenarios, never-events included.<br>
+      Guided track: configure tools from your module's screens with the kit's helpers.<br>Builder track: write the façade yourself in Python.</div>
+    <p class="small" style="margin-top:12px">Details and checklist: <code>lectures/L3-the-hands/A3.md</code>. Starter: NB3 section 8.</p>
+  </div>
+</section>
+
+<!-- 38 -->
+<section class="slide" data-plate="Where We Are">
+  <div class="col" style="width:580px">
+    <h2>Two jobs of nine</h2>
+    <p>The agent can explain the rules (L2) and look up and act (L3), in Kavita's name, with receipts.</p>
+    <p class="step">Still open: it decides for itself when to commit, asks for missing fields only if it feels like it, and holds no half-filled order between turns. That is the route: jobs 1, 2 and 5. <b>Lecture 4, The Route</b>, tomorrow.</p>
+    <p class="step small">Lecture 3 delivered: <code>bahi/agent/tools.py</code> v1.0, <code>bahi/agent/loop.py</code>, <code>bahi/mcp_server.py</code>, NB3, A3.</p>
+  </div>
+  <div class="fig" data-fig="ring" data-now="3" data-done="4" style="left:770px;top:130px;width:760px;height:600px"></div>
+</section>
+
+</div>
+<script src="figs.js"></script>
+<script src="../../engine/plates.js"></script>
+</body>
+</html>

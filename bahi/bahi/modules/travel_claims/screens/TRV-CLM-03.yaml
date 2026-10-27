@@ -1,0 +1,26 @@
+code: TRV-CLM-03
+title: EXPENSE CLAIM
+menu: Admin > Travel > Expense Claim
+roles: [PUR-EXEC, PUR-SR, PUR-MGR, PLANT-HEAD, STORES, FIN-CTRL]
+fields:
+  - {name: trip_no, label: TRIP NO, type: str, req: true}
+  - {name: hotel_amt, label: HOTEL AMT, type: float, req: false}
+  - {name: nights, label: NIGHTS, type: int, req: false}
+  - {name: local_amt, label: LOCAL CONV, type: float, req: false}
+  - {name: bills, label: BILLS ATTACHED, type: str, req: false, help: Y/N}
+  - {name: remarks, label: REMARKS, type: str, req: false}
+  - {name: claim_no, label: CLAIM NO, type: str, req: false}
+  - {name: comment, label: COMMENT, type: str, req: false}
+tasks:
+  - {button: Trips, service: tv_trip_list, sends: [trip_no], fills: [trip_no]}
+  - button: Submit
+    service: tv_claim_save
+    sends: [trip_no, hotel_amt, nights, local_amt, bills, remarks]
+    fills: [claim_no, status]
+  - button: Settle
+    service: tv_claim_settle
+    sends: [claim_no, comment]
+    fills: [status]
+    needs: [Submit]
+state:
+  - {rule: "One claim per trip, within 30 days of return; finance settles, never the traveller", error: ERR-TV-0705}

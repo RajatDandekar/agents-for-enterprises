@@ -1,0 +1,27 @@
+code: SVC-WAV-03
+title: GOODWILL WAIVER
+menu: Service > Warranty > Goodwill Waiver
+roles: [SVC-DESK, SVC-MGR, PLANT-HEAD]
+fields:
+  - {name: tkt_no, label: TKT NO, type: str, req: true}
+  - {name: reason, label: REASON, type: str, req: true}
+  - {name: fwd_to, label: FWD TO, type: str, req: false, help: blank = Bahi decides by amount}
+  - {name: approver, label: APPROVER, type: str, req: false, help: inbox filter}
+  - {name: decision, label: DECISION, type: str, req: true, help: A/R}
+  - {name: comment, label: COMMENT, type: str, req: false}
+tasks:
+  - button: Request Waiver
+    service: wr_waive
+    sends: [tkt_no, reason, fwd_to]
+    fills: [status]
+  - button: Inbox
+    service: wr_tkt_list
+    sends: [approver]
+    fills: [tkt_no]
+  - button: Decide
+    service: wr_waive_apr
+    sends: [tkt_no, decision, comment]
+    fills: [status]
+    needs: [Inbox]
+state:
+  - {rule: "Within the desk's own limit a waiver is granted at once, whatever the cause", error: none}

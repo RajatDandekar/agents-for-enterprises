@@ -1,0 +1,21 @@
+code: LEG-REG-03
+title: CONTRACT REGISTER
+menu: Legal > Contracts > Register
+roles: [PUR-EXEC, PUR-SR, PUR-MGR, PLANT-HEAD, LEGAL]
+fields:
+  - {name: party_cd, label: PARTY CD, type: str, req: false}
+  - {name: ct_type, label: CT TYPE, type: str, req: false}
+  - {name: status, label: ACTIVE/EXPIRED, type: str, req: false}
+  - {name: rows, label: REGISTER GRID, type: grid, readonly: true, help: "end date, signed by, renewal reminder"}
+  - {name: ct_no, label: CT NO, type: str, req: false}
+tasks:
+  - button: Show
+    service: ct_reg_list
+    sends: [party_cd, ct_type, status]
+    fills: [rows]
+  - button: Requests
+    service: ct_list
+    sends: [party_cd, status]
+    fills: [ct_no]
+state:
+  - {rule: "The register shows executed contracts only; a parked (PK) request is visible under Requests", error: none}

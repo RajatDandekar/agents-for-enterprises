@@ -1,0 +1,36 @@
+code: SVC-TKT-02
+title: SERVICE TICKET
+menu: Service > Warranty > Ticket
+roles: [SVC-DESK, SVC-MGR]
+fields:
+  - {name: serial, label: SERIAL NO, type: str, req: true}
+  - {name: part_cd, label: PART CD, type: str, req: true}
+  - {name: cmp_cd, label: COMPLAINT, type: str, req: true, help: "BRK/LEK/NWS/CRK"}
+  - {name: cause_cd, label: CAUSE, type: str, req: false, help: "MFD/WRN/PHY/NGP/OVH/UNK"}
+  - {name: chg, label: CHARGEABLE, type: str, req: false, help: "blank = from Verify"}
+  - {name: dealer_cd, label: DEALER CD, type: str, req: false}
+  - {name: remarks, label: REMARKS, type: str, req: false}
+  - {name: fetch_tok, label: (hidden), type: str, req: false}
+  - {name: rcpt_no, label: CUST RCPT NO, type: str, req: false, help: chargeable only}
+tasks:
+  - button: Verify
+    service: wr_verify
+    sends: [serial, part_cd]
+    fills: [fetch_tok]
+  - button: Save
+    service: wr_tkt_save
+    sends: [serial, part_cd, cmp_cd, cause_cd, chg, dealer_cd, remarks, fetch_tok]
+    fills: [tkt_no, status]
+    needs: [Verify]
+  - button: Issue Part
+    service: wr_issue
+    sends: [tkt_no, rcpt_no]
+    fills: [status]
+    needs: [Save]
+  - button: Close
+    service: wr_close
+    sends: [tkt_no, remarks]
+    fills: [status]
+    needs: [Issue Part]
+state:
+  - {rule: "Save needs Verify for the same serial and part", error: ERR-SCR-0221}

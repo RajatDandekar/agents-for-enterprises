@@ -1,0 +1,243 @@
+{
+ "returncode": 0,
+ "stdout": "PASS healthz \nPASS versions pinned (prompts, tools, workflow) \n\u001b[2m2026-10-27T11:50:29.373886Z\u001b[0m \u001b[33m WARN\u001b[0m \u001b[2mtemporalio_sdk_core::worker\u001b[0m\u001b[2m:\u001b[0m Temporal Server 1.16.0 or newer is required to guarantee that the latest heartbeat details are preserved when an activity fails; the server did not advertise the activity_failure_include_heartbeat capability, so heartbeat details may be lost on failure\nPASS order starts and waits for Rohit \nPASS same order twice -> same workflow, one request \nPASS Kavita cannot approve her own request (Bahi refuses: her role has no approve service) \nPASS Rohit approves -> order released \nPASS readyz \nPASS kill switch needs the admin token \nPASS kill switch on -> new order pauses before any write \nPASS ... and wrote nothing to Bahi \nPASS switch back on -> the paused order carries on \n{\"passed\": 11, \"of\": 11}\n",
+ "stderr": "Completing activity as failed ({'activity_id': '1', 'activity_type': 'raise_request', 'attempt': 1, 'namespace': 'default', 'task_queue': 'bahi-purchasing', 'workflow_id': 'po-K4B884214F3D9', 'workflow_run_id': 'caeef806-98a2-42c9-817e-6c8e766a3465', 'workflow_type': 'PurchaseOrder'})\nTraceback (most recent call last):\n  File \"/app/bahi/bahi/durable/activities.py\", line 63, in _guard\n    self.flags.check_write(user, by_human=True)  # the workflow only runs orders a person confirmed\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/bahi/bahi/durable/killswitch.py\", line 85, in check_write\n    raise WritesPaused(f\"Writes are switched off: {f['reason'] or 'kill switch on'}\", \"kill_switch\")\nbahi.durable.killswitch.WritesPaused: Writes are switched off: smoke\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/usr/local/lib/python3.11/site-packages/temporalio/worker/_activity.py\", line 351, in _handle_start_activity_task\n    result = await self._execute_activity(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/temporalio/worker/_activity.py\", line 681, in _execute_activity\n    return await impl.execute_activity(input)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/temporalio/worker/_activity.py\", line 889, in execute_activity\n    return await input.fn(*input.args)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/bahi/bahi/durable/activities.py\", line 116, in raise_request\n    self._guard(o.user)\n  File \"/app/bahi/bahi/durable/activities.py\", line 65, in _guard\n    raise ApplicationError(e.why, type=\"KillSwitchOn\")\ntemporalio.exceptions.ApplicationError: KillSwitchOn: Writes are switched off: smoke\n",
+ "checks": [
+  {
+   "check": "healthz",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "check": "versions pinned (prompts, tools, workflow)",
+   "ok": true,
+   "detail": []
+  },
+  {
+   "check": "order starts and waits for Rohit",
+   "ok": true,
+   "detail": {
+    "workflow_id": "po-K5097AAE042EB",
+    "checks": 0,
+    "diary": [
+     {
+      "at_h": 0.0,
+      "key": "K5097AAE042EB",
+      "what": "started"
+     },
+     {
+      "approver": "RMEHTA",
+      "at_h": 0.0,
+      "request_no": "PR/2026/04417",
+      "status": "PA",
+      "what": "request raised"
+     }
+    ],
+    "escalated": false,
+    "paused_minutes": 0,
+    "po_no": null,
+    "reminders": 0,
+    "request_no": "PR/2026/04417",
+    "stage": "waiting for approval"
+   }
+  },
+  {
+   "check": "same order twice -> same workflow, one request",
+   "ok": true,
+   "detail": {
+    "workflow_id": "po-K5097AAE042EB",
+    "checks": 0,
+    "diary": [
+     {
+      "at_h": 0.0,
+      "key": "K5097AAE042EB",
+      "what": "started"
+     },
+     {
+      "approver": "RMEHTA",
+      "at_h": 0.0,
+      "request_no": "PR/2026/04417",
+      "status": "PA",
+      "what": "request raised"
+     }
+    ],
+    "escalated": false,
+    "paused_minutes": 0,
+    "po_no": null,
+    "reminders": 0,
+    "request_no": "PR/2026/04417",
+    "stage": "waiting for approval"
+   }
+  },
+  {
+   "check": "Kavita cannot approve her own request (Bahi refuses: her role has no approve service)",
+   "ok": true,
+   "detail": "{\"detail\":\"ERR-SEC-0001 ACCESS DENIED\"}"
+  },
+  {
+   "check": "Rohit approves -> order released",
+   "ok": true,
+   "detail": {
+    "diary": [
+     {
+      "at_h": 0.0,
+      "key": "K5097AAE042EB",
+      "what": "started"
+     },
+     {
+      "approver": "RMEHTA",
+      "at_h": 0.0,
+      "request_no": "PR/2026/04417",
+      "status": "PA",
+      "what": "request raised"
+     },
+     {
+      "at_h": 0.0,
+      "by": "KJOSHI",
+      "decision": "A",
+      "what": "signal: approval_decided"
+     },
+     {
+      "approved_by": null,
+      "at_h": 0.0,
+      "status": "PA",
+      "what": "read back request",
+      "why": "signal"
+     },
+     {
+      "at_h": 0.0,
+      "by": "RMEHTA",
+      "decision": "A",
+      "what": "signal: approval_decided"
+     },
+     {
+      "approved_by": "RMEHTA",
+      "at_h": 0.0,
+      "status": "AP",
+      "what": "read back request",
+      "why": "signal"
+     },
+     {
+      "at_h": 0.0,
+      "found_by_key": false,
+      "po_no": "PO/2026/01182",
+      "status": "AP",
+      "what": "order saved"
+     },
+     {
+      "at_h": 0.0,
+      "po_no": "PO/2026/01182",
+      "status": "RL",
+      "what": "released"
+     },
+     {
+      "at_h": 0.0,
+      "outcome": "released",
+      "what": "finished"
+     }
+    ],
+    "escalated": false,
+    "hours": 0.0,
+    "outcome": "released",
+    "paused_minutes": 0,
+    "po_no": "PO/2026/01182",
+    "receipt": {
+     "approved_by": "RMEHTA",
+     "client_ref": "K5097AAE042EB",
+     "cost_centre": "PRD-07",
+     "gross_value": 280840.0,
+     "item_code": "GSK-SIL-05L",
+     "po_no": "PO/2026/01182",
+     "quantity": 20000,
+     "rate": 11.9,
+     "status_code": "RL",
+     "supplier_code": "DP-RJK-0042",
+     "warning": null
+    },
+    "reminders": 0,
+    "request_no": "PR/2026/04417"
+   }
+  },
+  {
+   "check": "readyz",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "check": "kill switch needs the admin token",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "check": "kill switch on -> new order pauses before any write",
+   "ok": true,
+   "detail": {
+    "workflow_id": "po-K4B884214F3D9",
+    "checks": 0,
+    "diary": [
+     {
+      "at_h": 0.0,
+      "key": "K4B884214F3D9",
+      "what": "started"
+     },
+     {
+      "activity": "raise_request",
+      "at_h": 0.0,
+      "what": "paused: kill switch on"
+     }
+    ],
+    "escalated": false,
+    "paused_minutes": 0,
+    "po_no": null,
+    "reminders": 0,
+    "request_no": null,
+    "stage": "paused"
+   }
+  },
+  {
+   "check": "... and wrote nothing to Bahi",
+   "ok": true,
+   "detail": 1
+  },
+  {
+   "check": "switch back on -> the paused order carries on",
+   "ok": true,
+   "detail": {
+    "checks": 0,
+    "diary": [
+     {
+      "at_h": 0.0,
+      "key": "K4B884214F3D9",
+      "what": "started"
+     },
+     {
+      "activity": "raise_request",
+      "at_h": 0.0,
+      "what": "paused: kill switch on"
+     },
+     {
+      "after_minutes": 10,
+      "at_h": 0.17,
+      "what": "resumed: writes enabled again"
+     },
+     {
+      "approver": "RMEHTA",
+      "at_h": 0.17,
+      "request_no": "PR/2026/04418",
+      "status": "PA",
+      "what": "request raised"
+     }
+    ],
+    "escalated": false,
+    "paused_minutes": 10,
+    "po_no": null,
+    "reminders": 0,
+    "request_no": "PR/2026/04418",
+    "stage": "waiting for approval"
+   }
+  }
+ ],
+ "python": "3.11.18",
+ "temporalio": "1.34.0",
+ "fastapi": "0.162.0"
+}

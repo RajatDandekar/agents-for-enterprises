@@ -1,0 +1,19 @@
+code: PUR-POR-05
+title: PURCHASE ORDER RELEASE
+menu: Purchase > Order release
+roles: [PUR-EXEC, PUR-SR, PUR-MGR, SYS-ADMIN]
+help: >-
+  Release sends an approved order to the supplier by e-mail and books it as stock on order.
+  Only orders in status AP can be released.
+fields:
+  - {name: po_no, label: PO NO, type: str, req: true, lookup: po_search}
+  - {name: sup_cd, label: SUP CD, type: str, readonly: true}
+  - {name: gross_value, label: GROSS VALUE, type: float, readonly: true}
+  - {name: cc_cd, label: CC CD, type: str, readonly: true}
+  - {name: status, label: STATUS, type: str, readonly: true}
+tasks:
+  - {button: Fetch, service: po_get, sends: [po_no], fills: [sup_cd, gross_value, cc_cd, status]}
+  - {button: Release, service: po_release, sends: [po_no], fills: [status]}
+  - {button: Close, service: null}
+state:
+  - {rule: "Only orders in AP can be released (a Draft is refused here, days later)", error: ERR-PO-0715}

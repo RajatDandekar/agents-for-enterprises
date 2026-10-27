@@ -1,0 +1,27 @@
+code: INV-GTP-05
+title: GATE PASS AND RECEIPT
+menu: Inventory > Transfers > Gate Pass
+roles: [STORES, SECURITY]
+fields:
+  - {name: tn_no, label: TN NO, type: str, req: true}
+  - {name: vehicle, label: VEH NO, type: str, req: false}
+  - {name: ewb_no, label: EWB NO, type: str, req: false, help: "mandatory above Rs 50,000"}
+  - {name: gp_no, label: GP NO, type: str, req: true}
+  - {name: qty_rcvd, label: QTY RCVD, type: int, req: true}
+  - {name: remarks, label: REMARKS, type: str, req: false}
+tasks:
+  - button: Create
+    service: tr_gp_create
+    sends: [tn_no, vehicle, ewb_no]
+    fills: [gp_no]
+  - button: Check Out
+    service: tr_gp_out
+    sends: [gp_no]
+    fills: []
+    needs: [Create]
+  - button: Receive
+    service: tr_receive
+    sends: [tn_no, qty_rcvd, remarks]
+    fills: []
+state:
+  - {rule: "Create only by the issuing unit, Check Out only at its gate, Receive only by the receiving unit", error: ERR-TR-0603}
