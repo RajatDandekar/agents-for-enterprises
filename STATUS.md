@@ -92,6 +92,7 @@ Each lecture folder holds a deck (index.html + figs.js, generated from experimen
 
 ## Live (2026-10-27)
 - **Course hub (private artifact):** https://claude.ai/artifact/BxkGjPwuBwLEhoaVyuroii (source `hub.html`; republish the same path to update).
+- **Slides site (public):** https://forms-to-agents.vercel.app (Vercel project forms-to-agents, scope rajatdandekars-projects). Redeploy after any deck edit with `tools/build_site.sh --deploy` (decks, engine and images only).
 - **Staging app:** https://rajatworkspace--bahi-agent-staging.us-east.modal.run
   - Modal app `bahi-agent-staging`. The admin token is in Modal secret `bahi-staging`.
   - Operate it with `BAHI_ENV=staging modal run deploy/admin.py --cmd status|kill|revive|model-off|model-on|smoke`.
