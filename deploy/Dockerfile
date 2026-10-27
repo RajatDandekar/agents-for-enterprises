@@ -16,7 +16,7 @@ WORKDIR /app
 # 1. dependencies first (cached layer): the package metadata only
 COPY bahi/pyproject.toml /app/bahi/pyproject.toml
 COPY bahi/bahi/__init__.py /app/bahi/bahi/__init__.py
-RUN pip install --upgrade pip && pip install "/app/bahi[server,durable]" && pip uninstall -y bahi-erp
+RUN pip install --upgrade pip && pip install "/app/bahi[all]" && pip uninstall -y bahi-erp
 
 # 2. the code: the Bahi package (ERP, agent, durable workflow) and the deploy entrypoint
 COPY bahi /app/bahi

@@ -8,8 +8,9 @@ const P = () => window.Plates;
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmt = (n) => Number(n).toLocaleString('en-IN');
 const inr = (n, d = 0) => '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: d, maximumFractionDigits: d });
-const TIERS = ['small', 'default', 'large'];
-const TNAME = { small: 'small · gemini-3.5-flash-lite', default: 'default · gemini-3.8-flash', large: 'large · gemini-3.1-pro-preview' };
+const TIERS = ['small', 'default', 'large', 'gpt', 'claude'];
+const TNAME = { small: 'Gemini small · gemini-3.5-flash-lite', default: 'Gemini default · gemini-3.8-flash', large: 'Gemini large · gemini-3.1-pro-preview',
+  gpt: 'GPT · openai/gpt-6.1-terra', claude: 'Claude · anthropic/claude-sonnet-5.5' };
 const SCN = ['Policy question', 'Reorder above limit', 'Duplicate supplier', 'Uncertified supplier', 'Silent Draft', 'Lost reply'];
 const ctl = (el, html) => { const c = document.createElement('div'); c.className = 'ctl'; c.innerHTML = html; el.appendChild(c); return c; };
 
@@ -70,7 +71,7 @@ FIGS.stock = (el) => {
 FIGS.opens = (el) => {
   const rows = TIERS.map((t) => `<tr class="tr-${t}"><td style="font:600 17px var(--mono)">${TNAME[t].replace(' · ', '<br><span style="font-weight:400;color:var(--ink-3)">') + '</span>'}</td>${D.sweep[t].per_scenario.map((s) => `<td class="s"><span class="chip ${s.passed ? 'p' : 'f'}">${s.passed ? 'pass' : 'fail'}</span><div class="chipn">${s.ne.join(' ')}</div></td>`).join('')}<td class="n" style="font-size:22px">${D.sweep[t].passed}/6</td></tr>`).join('');
   el.innerHTML = `<table class="t sg" style="font-size:19px"><thead><tr><th>Model</th>${SCN.map((s, i) => `<th class="s" title="${s}">S${i + 1}</th>`).join('')}<th>Passed</th></tr></thead><tbody>${rows}</tbody></table>
-   <div class="tx" style="margin-top:22px;height:250px"><div class="c">default model · scenario 2 · its last words to Kavita</div><div class="say">${esc(D.moments.self_approval.told.split('\n')[0])}</div>
+   <div class="tx" style="margin-top:18px"><div class="c">Gemini default · scenario 2 · its last words to Kavita</div><div class="say">${esc(D.moments.self_approval.told.split('\n')[0])}</div>
    <div class="r e">Rohit's inbox: empty. The request was approved by <b>SVC_AGENT</b>, the bot's own account (NE1).</div></div>`;
   const trs = TIERS.map((t) => el.querySelector('.tr-' + t)), tx = el.querySelector('.tx');
   return { step(k) { trs.forEach((tr, i) => (tr.style.opacity = k >= 1 || i === 0 ? 1 : 0.15)); tx.style.opacity = k >= 2 ? 1 : 0; } };
@@ -273,7 +274,7 @@ FIGS.growth = (el) => {
   return { step(k) { const n = k >= 1 ? pc.length : 1; inp.value = n; set(n); } };
 };
 
-/* ---------- Fig: scores (3 tiers x 6 scenarios with measured numbers) ---------- */
+/* ---------- Fig: scores (5 models x 6 scenarios with measured numbers) ---------- */
 FIGS.scores = (el) => {
   const c = ctl(el, TIERS.map((t) => `<button data-t="${t}">${TNAME[t]}</button>`).join(''));
   const box = document.createElement('div'); el.appendChild(box);
@@ -283,7 +284,7 @@ FIGS.scores = (el) => {
     box.innerHTML = `<table class="t sg" style="font-size:19px;margin-top:10px"><thead><tr><th>#</th><th>Scenario</th><th>Result</th><th>Never-events</th><th>Tool calls</th><th>Model calls</th><th>Tokens</th><th>Seconds</th><th>₹</th></tr></thead><tbody>
      ${S.per_scenario.map((s) => `<tr><td class="n">${s.id}</td><td>${SCN[s.id - 1]}</td><td><span class="chip ${s.passed ? 'p' : 'f'}">${s.passed ? 'pass' : 'fail'}</span></td><td class="n b">${s.ne.join(' ')}</td><td class="n">${s.tools}</td><td class="n">${s.llm_calls}</td><td class="n">${fmt(s.tokens)}</td><td class="n">${s.seconds}</td><td class="n">${inr(s.inr, 2)}</td></tr>`).join('')}
      <tr style="border-top:2px solid var(--ink)"><td></td><td><b>Total</b></td><td class="n"><b>${S.passed}/6</b></td><td class="n b">${S.never_events}</td><td class="n">${S.tool_calls}</td><td class="n">${S.llm_calls}</td><td class="n">${fmt(S.tokens_in + S.tokens_out)}</td><td class="n">${S.model_seconds}</td><td class="n">${inr(S.cost_inr, 2)}</td></tr></tbody></table>
-     <p class="tiny" style="margin-top:8px">${S.model} · one run each · tokens and seconds as reported by the provider · <code>experiments/logs/naive_sweep.json</code></p>`;
+     <p class="tiny" style="margin-top:8px">${S.model} · one run each · tokens and seconds as reported by the provider · <code>experiments/logs/naive_sweep.json</code></p>${t === 'claude' ? '<div class="measured" style="margin-top:6px">Claude\'s two NE5 flags (S2, S4) are our checker reading “I\'ve created PO/2026/01182, but I haven\'t released it” as “done”. The orders were AP, not released. NE1 and NE3 stand. We report the checker as it ran.</div>' : ''}`;
   };
   c.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => show(b.dataset.t)));
   show('default');
@@ -309,15 +310,15 @@ FIGS.moment = (el) => {
 /* ---------- Fig: timeout (scenario 6 on all three tiers, after the lost reply) ---------- */
 FIGS.timeout = (el) => {
   const T = D.moments.timeout;
-  const short = (o) => !o ? '' : o.err_cd ? o.err_cd : o.msg ? o.msg : (o.data && o.data.rows) ? `${o.data.rows.length} row(s): ${(o.data.rows[0] || {}).po_no || ''}` : (o.data && o.data.status) ? `status ${o.data.status}` : 'S';
-  el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;height:690px">${TIERS.map((t) => {
+  const short = (o) => !o ? '' : o.err_cd ? o.err_cd : o.msg ? o.msg.replace(/^PO\/2026\/\d+ /, '') : (o.data && o.data.rows) ? `${o.data.rows.length} row${o.data.rows.length === 1 ? '' : 's'}` : (o.data && o.data.status) ? `status ${o.data.status}` : 'S';
+  el.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">${TIERS.map((t) => {
     const cs = T[t].calls, i = cs.findIndex((c) => c.out && c.out.err_cd === 'TIMEOUT');
-    return `<div class="card tt" style="display:flex;flex-direction:column;gap:8px;font-size:18px"><span class="tag nt">${t}</span><div class="tiny" style="margin-top:-6px">${TNAME[t].split(' · ')[1]}</div>
-      ${cs.slice(i).map((c) => `<div style="font:600 17px var(--mono)">${c.name}</div><div style="font:16px var(--mono);padding-left:10px;border-left:2px solid ${c.out && c.out.rc === 'E' ? 'var(--before)' : 'var(--rule)'};color:${c.out && c.out.rc === 'E' ? 'var(--before)' : 'var(--ink-2)'}">→ ${esc(short(c.out))}</div>`).join('')}
-      <div style="flex:1"></div><div style="font:600 18px var(--mono);color:var(--before)">${T[t].ne.map((x) => x.split(' ')[0]).join(' · ')} · ${T[t].passed ? 'pass' : 'fail'}</div></div>`;
+    return `<div class="card tt" style="padding:12px 16px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="tag nt">${TNAME[t]}</span>
+      <span style="font:600 18px var(--mono);color:var(--before)">${T[t].ne.map((x) => x.split(' ')[0]).join(' · ')} · ${T[t].passed ? 'pass' : 'fail'}</span></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px 14px;font:18px var(--mono)">${cs.slice(i).map((c) => `<span><b>${c.name}</b> <span style="color:${c.out && c.out.rc === 'E' ? 'var(--before)' : 'var(--ink-2)'}">→ ${esc(short(c.out))}</span></span>`).join('<span style="color:var(--ink-3)">·</span>')}</div></div>`;
   }).join('')}</div>`;
   const cards = [...el.querySelectorAll('.tt')];
-  return { step(k) { cards.forEach((c, i) => (c.style.opacity = i <= k ? 1 : 0.12)); } };
+  return { step(k) { cards.forEach((c, i) => (c.style.opacity = i <= k + 1 ? 1 : 0.12)); } };
 };
 
 /* ---------- Fig: cost (per tier, from token counts) ---------- */
@@ -325,14 +326,14 @@ FIGS.cost = (el) => {
   const MET = [['₹ per scenario', (s) => s.avg_inr, (v) => inr(v, 2)], ['tokens per scenario', (s) => s.avg_tokens, fmt], ['model seconds per scenario', (s) => s.avg_seconds, (v) => v + ' s'], ['₹ per resolved request', (s) => s.inr_per_pass, (v) => (v == null ? 'none resolved' : inr(v, 2))]];
   const c = ctl(el, MET.map((m, i) => `<button data-i="${i}">${m[0]}</button>`).join(''));
   const box = document.createElement('div'); box.className = 'cmp'; box.style.marginTop = '24px'; el.appendChild(box);
-  box.innerHTML = TIERS.map((t) => `<div class="row"><div class="lab">${TNAME[t].split(' · ')[0]}<br><span class="tiny">${TNAME[t].split(' · ')[1]}</span></div><div class="br"><div class="bar b" style="width:0;height:44px;font-size:19px"></div></div></div>`).join('');
+  box.innerHTML = TIERS.map((t) => `<div class="row"><div class="lab">${TNAME[t].split(' · ')[0]}<br><span class="tiny">${TNAME[t].split(' · ')[1]}</span></div><div class="br"><div class="bar b" style="width:0;height:36px;font-size:18px"></div></div></div>`).join('');
   const note = document.createElement('p'); note.className = 'small'; note.style.marginTop = '22px'; el.appendChild(note);
   const bars = [...box.querySelectorAll('.bar')];
   const show = (i) => {
     c.querySelectorAll('button').forEach((b) => b.classList.toggle('on', +b.dataset.i === i));
     const [, get, f] = MET[i], vals = TIERS.map((t) => get(D.sweep[t])), mx = Math.max(...vals.filter((v) => v != null));
     bars.forEach((b, j) => { const v = vals[j]; b.style.width = v == null ? '0px' : Math.max(110, 560 * v / mx) + 'px'; b.textContent = f(v); b.classList.toggle('zero', v == null); if (v == null) { b.style.width = 'auto'; b.style.color = 'var(--before)'; } else b.style.color = ''; });
-    note.textContent = `Totals for 6 scenarios: small ${inr(D.sweep.small.cost_inr, 2)}, default ${inr(D.sweep.default.cost_inr, 2)}, large ${inr(D.sweep.large.cost_inr, 2)}.`;
+    note.textContent = 'Totals for 6 scenarios: ' + TIERS.map((t) => `${TNAME[t].split(' · ')[0]} ${inr(D.sweep[t].cost_inr, 2)}`).join(', ') + '.';
   };
   c.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => show(+b.dataset.i)));
   return { step(k) { show(Math.min(k, 3)); } };
@@ -344,7 +345,7 @@ FIGS.req = (el) => {
     ['Never-events', '0', (s) => String(s.never_events), (s) => s.never_events === 0],
     ['Worst scenario, model seconds', '≤ 30 s', (s) => Math.max(...s.per_scenario.map((x) => x.seconds)) + ' s', (s) => Math.max(...s.per_scenario.map((x) => x.seconds)) <= 30],
     ['₹ per resolved request', '≤ ₹5', (s) => (s.inr_per_pass == null ? 'none resolved' : inr(s.inr_per_pass, 2)), (s) => s.inr_per_pass != null && s.inr_per_pass <= 5]];
-  el.innerHTML = `<table class="t" style="font-size:21px"><thead><tr><th>Requirement</th><th>Target</th>${TIERS.map((t) => `<th>${t}</th>`).join('')}</tr></thead><tbody>${R.map((r, i) => `<tr class="rq" data-i="${i}"><td>${r[0]}</td><td class="n g">${r[1]}</td>${TIERS.map((t) => `<td class="n"><span class="chip ${r[3](D.sweep[t]) ? 'p' : 'f'}" style="font-size:14px">${r[2](D.sweep[t])}</span></td>`).join('')}</tr>`).join('')}</tbody></table>
+  el.innerHTML = `<table class="t" style="font-size:21px"><thead><tr><th>Requirement</th><th>Target</th>${TIERS.map((t) => `<th>${TNAME[t].split(' · ')[0].replace('Gemini ', '')}</th>`).join('')}</tr></thead><tbody>${R.map((r, i) => `<tr class="rq" data-i="${i}"><td>${r[0]}</td><td class="n g">${r[1]}</td>${TIERS.map((t) => `<td class="n"><span class="chip ${r[3](D.sweep[t]) ? 'p' : 'f'}" style="font-size:14px">${r[2](D.sweep[t])}</span></td>`).join('')}</tr>`).join('')}</tbody></table>
    <p class="small" style="margin-top:16px">Seconds are model time per scenario, not counting Rohit. Lecture 6 adds p95 per turn over sixty scenarios.</p>`;
   const trs = [...el.querySelectorAll('.rq')];
   return { step(k) { trs.forEach((tr, i) => (tr.style.opacity = i < 2 + 2 * k ? 1 : 0.12)); } };
@@ -367,9 +368,9 @@ FIGS.nine = (el) => {
 FIGS.ninetable = (el) => {
   const S = D.sweep, ne = (code) => TIERS.reduce((a, t) => a + S[t].per_scenario.filter((s) => s.ne.includes(code)).length, 0);
   const rows = [
-    [1, 'Ask for the right fields', 'Required fields, red asterisks', `Asked Kavita a question in ${TIERS.reduce((a, t) => a + S[t].per_scenario.filter((s) => s.asked_kavita).length, 0)} of 18 runs; filled every code itself`, 'L4 The Route'],
+    [1, 'Ask for the right fields', 'Required fields, red asterisks', `Asked Kavita a question in ${TIERS.reduce((a, t) => a + S[t].per_scenario.filter((s) => s.asked_kavita).length, 0)} of ${TIERS.length * 6} runs; filled every code itself`, 'L4 The Route'],
     [2, 'Know the order of screens', 'The menu, and Kavita', 'Trial and error: ERR-PO-0602, then ERR-PO-0610, then a request', 'L4 The Route'],
-    [3, 'Look up codes, do the work', 'F2 lookups, Fetch', `${fmt(S.small.tool_calls + S.default.tool_calls + S.large.tool_calls)} raw service calls over 18 runs`, 'L3 The Hands'],
+    [3, 'Look up codes, do the work', 'F2 lookups, Fetch', `${fmt(TIERS.reduce((a, t) => a + S[t].tool_calls, 0))} raw service calls over ${TIERS.length * 6} runs`, 'L3 The Hands'],
     [4, 'Explain the rules', 'Help, and Suresh', `No policy: never cited §6.2; uncertified supplier ordered (NE3 × ${ne('NE3')})`, 'L2 The Manual'],
     [5, 'Hold the half-filled document', 'The open screen', 'Only the chat history, re-sent every round', 'L4 The Route'],
     [6, 'Respect roles', 'Greyed menus, limits', `Service account, no limit (NE1 × ${ne('NE1')})`, 'L5 The Signature'],

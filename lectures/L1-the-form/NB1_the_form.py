@@ -12,7 +12,7 @@
 # 2. read the server's **live run**: which service and which stored procedures sat behind each button;
 # 3. call the same services over **HTTP** with a small client;
 # 4. **write the naive agent**: a model, Bahi's 38 raw services as tools, and a loop;
-# 5. run it on the **six scenarios** at three model sizes and fill the scorecard;
+# 5. run it on the **six scenarios** with five models (Gemini at three sizes, GPT, Claude) and fill the scorecard;
 # 6. turn token counts into **₹ and seconds**, and write **requirements as numbers**;
 # 7. start **your module** (assignment A1).
 #
@@ -377,7 +377,7 @@ class MyNaiveAgent:
 print(inspect.getsource(MyNaiveAgent.respond).count("\n"), "lines in the loop")
 
 # %% [markdown]
-# ## 8. The opening experiment: six scenarios, three model sizes
+# ## 8. The opening experiment: six scenarios, five models
 #
 # `run_scenario` builds a fresh ERP, plays Kavita (and Rohit, if an approval is waiting), then **checks the
 # database with code**. Five **never-events** fail a scenario whatever else happened:
@@ -392,7 +392,8 @@ for sc in SCENARIOS:
     print(sc.id, sc.name, "·", sc.ask[:95])
 
 # %%
-TIERS = {"small": "gemini:gemini-3.5-flash-lite", "default": "gemini:gemini-3.8-flash", "large": "gemini:gemini-3.1-pro-preview"}
+TIERS = {"small": "gemini:gemini-3.5-flash-lite", "default": "gemini:gemini-3.8-flash", "large": "gemini:gemini-3.1-pro-preview",
+         "gpt": "openrouter:openai/gpt-6.1-terra", "claude": "openrouter:anthropic/claude-sonnet-5.5"}   # GPT and Claude via OpenRouter
 results, agents = {}, {}
 for tier, model in TIERS.items():
     tllm = LLM(model, cassette="L1_naive")
@@ -411,7 +412,7 @@ for tier in TIERS:
     display(scorecard(results[tier]))
 
 # %% [markdown]
-# A bigger model did not help: the large tier passed none. Read the moment it goes wrong. In scenario 2 (the
+# A bigger model did not help: the large Gemini passed none, and GPT and Claude broke the same never-events. Read the moment it goes wrong. In scenario 2 (the
 # default tier) the bot submits the ₹2,80,840 request **as the service account, which has no limit**, so Bahi
 # approves it on the spot: Rohit is never asked (NE1).
 
@@ -448,13 +449,13 @@ print("\nnever-events:", results["default"][3].never_events)
 
 # %%
 SOLUTION = True
-print({m: PRICES[m] for m in ("gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.1-pro-preview")}, "· ₹/$", USD_INR)
+print({m: PRICES[m] for m in ("gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.1-pro-preview", "gpt-6.1-terra", "claude-sonnet-5.5")}, "· ₹/$", USD_INR)
 
 
 def cost_inr(tokens_in, tokens_out, model):
     if not SOLUTION:
         raise NotImplementedError("exercise 6")
-    p_in, p_out = PRICES[model.split(":")[-1]]
+    p_in, p_out = PRICES[model.split(":")[-1].split("/")[-1]]
     return (tokens_in * p_in + tokens_out * p_out) / 1e6 * USD_INR
 
 

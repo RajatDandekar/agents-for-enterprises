@@ -14,16 +14,40 @@ over to a real ERP. The first rule for anything that writes money: **switch writ
 | Flags | kill switch and rollout stage | `BAHI_FLAGS_FILE` on a volume that survives restarts |
 | Versions | pinned prompts, tool schemas, workflow, model | `deploy/versions.yaml`, checked at build and at `/version` |
 
+## Staging, as deployed
+
+* **URL:** https://rajatworkspace--bahi-agent-staging.us-east.modal.run (Modal workspace rajatworkspace, app `bahi-agent-staging`).
+  The chat is at `/app/chat` (Kavita: KJOSHI / kavita@123), the inbox at `/app/inbox` (Rohit: RMEHTA / rohit@123),
+  `/app/slack`, `/app/audit`. The sandbox passwords are public course material; the data is fictional.
+* **Temporal:** there is no Temporal Cloud. Staging runs `BAHI_TEMPORAL=local`: an in-process Temporal dev server
+  started by `WorkflowEnvironment.start_local()`, with real timers. Its workflows, like the sandbox ERP, live in the
+  container's memory: when the container stops (20 idle minutes, a redeploy, a crash) both reset together. That is
+  fine for a sandbox and wrong for prod, where `BAHI_TEMPORAL=connect` points at a real cluster.
+* **Secrets:** Modal secret `bahi-staging` (GEMINI_API_KEY, BAHI_ADMIN_TOKEN, OPENROUTER_*, LANGFUSE_*). The admin token
+  exists only there. Use it through `deploy/admin.py`, which runs inside Modal and never prints it. To rotate it,
+  recreate the secret with `--force` and redeploy.
+* **Cost controls,** all in front of the model, all in `deploy/app.py`:
+  - model switch: `modal run deploy/admin.py --cmd model-off` (chat answers 503; Bahi, the inbox and the pages still work);
+  - a daily cap: `BAHI_DAILY_CAP_INR` (₹250 per IST day), estimated from `bahi.llm` list prices, kept in
+    `/var/bahi/spend.json`; past it, model routes answer 429 until midnight IST. `GET /spend` shows today's total;
+  - rate limits: 20 model-bearing requests a minute in all, 6 per signed-in user;
+  - one container at most (`max_containers=1`), scaled to zero after 20 idle minutes.
+* **Do not use `/admin/reset` on the reference app:** it replaces Bahi's tenant while the app keeps the old one.
+  To reset staging, stop the app (`modal app stop bahi-agent-staging`); the next request starts a fresh sandbox.
+* Operator commands: `BAHI_ENV=staging modal run deploy/admin.py --cmd status|kill|revive|model-off|model-on|stage|smoke`.
+
 Useful calls (admin token from the secret store, never pasted into chat):
 
 ```
 GET  /healthz                 is the process up
 GET  /readyz                  can it read Bahi, is the worker running, are writes on, which stage
 GET  /version                 what this build runs vs what is pinned
-GET  /flags                   kill switch and stage
+GET  /flags                   kill switches (writes, model) and stage
+GET  /spend                   today's model spend against the cap
 POST /flags {"kill": true, "reason": "..."}      X-Admin-Token: ...      writes off, everywhere, now
 POST /flags {"revive": true}                                             writes back on
 POST /flags {"stage": "assist"}                                          move down (or up) the ladder
+POST /flags {"model": false}                                             the assistant stops calling the model
 GET  /orders/{workflow_id}    a workflow's stage, request, PO, reminders, diary
 ```
 

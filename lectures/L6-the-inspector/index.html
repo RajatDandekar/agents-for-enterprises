@@ -375,9 +375,21 @@ Answer only with JSON: {"tone_ok": true|false, "worst_line": "...",
       <tr class="step"><td>naive · 38 raw services</td><td class="n">69</td><td class="n">85.5</td><td class="n">112.9</td><td class="n">1,375</td><td class="n">1,03,61,159</td><td class="n">₹473.53</td><td class="n">1</td><td class="n">₹473.53</td></tr>
     </tbody>
   </table>
-  <div class="ours step" style="margin-top:22px">Langfuse: the exporter in <code>bahi/evals/trace.py</code> runs only when LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY are set. We had no keys, so every trace here comes from the local store (<code>logs/traces_*.jsonl</code>); the export path has not been run by us.</div>
+  <p class="small step" style="margin-top:18px">The same spans go to Langfuse Cloud: next plate.</p>
   <p class="tiny step" style="margin-top:10px">₹ is the cost of each case as if it ran alone, from recorded tokens at the prices in <code>bahi/llm.py</code> (₹88/USD). Cases that shared an identical prompt were billed once, so our actual bill was lower.</p>
   </div>
+</section>
+
+<!-- 27b -->
+<section class="slide" data-plate="The Same Traces in Langfuse">
+  <div class="col" style="width:440px">
+    <h2 style="font-size:46px">The same traces, in Langfuse</h2>
+    <p style="font-size:21px">We sent the graph's 60-case run to Langfuse Cloud over OpenTelemetry, then read it back through Langfuse's API.</p>
+    <p class="step" style="font-size:21px"><b>60 of 60</b> traces arrived: <b>649</b> generations, <b>2,488</b> Bahi service spans, <b>340</b> scores (passed, and each code metric). Tokens <b>1,79,180</b> in and <b>30,727</b> out, the same as our local store.</p>
+    <p class="step" style="font-size:21px">Langfuse's cost: <b>$0.1818</b>, ₹16.00 at ₹88. A conversation took <b>44.2 s</b> at p50 and <b>78.7 s</b> at p95; a model call 3.6 s and 8.6 s.</p>
+    <div class="measured step" style="font-size:18px">Langfuse Cloud's older ingestion API stops taking traces on 16 Nov 2026, the day after this lecture. We used OpenTelemetry (<code>/api/public/otel/v1/traces</code>) and the v2 read API. <code>logs/langfuse.json</code></div>
+  </div>
+  <div class="fig" data-fig="langfuse" style="left:540px;top:110px;width:960px;height:720px"></div>
 </section>
 
 <!-- 28 -->
@@ -544,7 +556,7 @@ models.words: gemini-3.8-flash -> gemini-3.5-flash-lite</span></div>
     <p class="step" style="margin-top:14px;font-size:22px">Replays top to bottom with no key. Six exercises: a case, a metric, the interval, a broken bot, p95, a gate rule.</p>
     <p class="step" style="font-size:22px">Lecture 8's final scorecard is one command against the baseline. A6 builds the same for your module.</p>
   </div>
-  <div class="code step" style="position:absolute;left:600px;top:130px;width:900px;font-size:15px">from bahi.evals import suite, runner, gate, scorecard
+  <div class="code step" style="position:absolute;left:600px;top:130px;width:900px;font-size:15px">from bahi.evals import suite, runner, gate, scorecard, trace
 from bahi.evals.agents import GraphFactory, LoopFactory, NaiveFactory
 
 cases = suite.select("all")          <span class="c"># or "G", "adversarial", "S1,S2,G05"</span>
@@ -553,6 +565,7 @@ run = runner.run_suite(GraphFactory("gemini:gemini-3.8-flash"), cases,
 run["summary"]   <span class="c"># passed, ci95, never_events, metric_failures,</span>
                  <span class="c"># turn_p95, inr_per_resolved_order, ...</span>
 run["cases"][0]["spans"]           <span class="c"># the trace of one conversation</span>
+trace.export_langfuse(run["cases"], run["meta"])   <span class="c"># when LANGFUSE_* keys are set</span>
 
 g = gate.evaluate(run, baseline, strict=True)
 print(gate.report(g))

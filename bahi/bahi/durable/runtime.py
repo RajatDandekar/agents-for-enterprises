@@ -146,7 +146,10 @@ async def history(h: WorkflowHandle) -> list[dict]:
 class DurableBahi:
     """A synchronous handle on a Temporal server + one worker, running on a background thread."""
 
-    def __init__(self, erp: ERP, kind: str = "time_skipping", flags=None, identity: str = "bahi-worker-1"):
+    def __init__(self, erp: ERP, kind: str | None = None, flags=None, identity: str = "bahi-worker-1"):
+        # kind defaults to BAHI_TEMPORAL (time_skipping | local | connect), so an app that builds DurableBahi(erp)
+        # with no arguments (the Lecture 5 app) runs on whatever Temporal the deployment chose.
+        kind = kind or os.environ.get("BAHI_TEMPORAL", "time_skipping")
         self.erp = erp
         self.acts = BahiActivities(erp, flags)
         self.loop = asyncio.new_event_loop()

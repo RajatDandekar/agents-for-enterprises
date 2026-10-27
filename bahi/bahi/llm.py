@@ -41,6 +41,8 @@ PRICES = {  # assumed list prices for the course's three Gemini tiers; edit when
     "gemini-3.8-flash": (0.50, 3.00),
     "gemini-3.1-pro-preview": (2.00, 12.0),
     "gemini-pro-latest": (2.00, 12.0),
+    "gpt-6.1-terra": (1.00, 5.00),        # OpenRouter list price, 27 Oct 2026 (openai/gpt-6.1-terra)
+    "claude-sonnet-5.5": (2.00, 10.0),    # OpenRouter list price, 27 Oct 2026 (anthropic/claude-sonnet-5.5)
 }
 
 CASSETTE_DIR = pathlib.Path(os.environ.get("BAHI_CASSETTES", pathlib.Path(__file__).parent / "cassettes"))

@@ -82,7 +82,7 @@ DATA = {
         "large_autoapprove": {"tier": "large", "scenario": 2, "calls": moment("large", 2, {"pr_submit", "po_save"}),
                               "told": final("large", 2)[:700], "ne": row("large", 2)["never_events"]},
         "timeout": {t: {"calls": moment(t, 6, {"po_save", "po_search", "po_get", "po_release"}), "ne": row(t, 6)["never_events"],
-                        "passed": row(t, 6)["passed"]} for t in ("small", "default", "large")},
+                        "passed": row(t, 6)["passed"]} for t in ("small", "default", "large", "gpt", "claude")},
         "policy_large": {"told": final("large", 1)[:500], "notes": row("large", 1)["notes"]},
     },
     "n8n": {"counts": n8["counts"], "paths": list(n8["paths"].keys()),

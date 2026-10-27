@@ -381,7 +381,7 @@ FIGS.setup = (el) => {
     ['Open NB0 in Colab and run all cells.', 'Replay mode is the default: no key needed. Recorded calls play back with their real tokens and seconds.'],
     ['Find the legacy-client link it prints.', 'In Colab, serve() prints a proxied link to Bahi’s Windows-style client. Lecture 1 uses it.'],
     ['Optional: a Gemini key.', 'Set GEMINI_API_KEY in the setup cell to call models live. Everything we recorded used Gemini.'],
-    ['Optional: an OpenRouter key.', 'Lets you try GPT, Claude or Llama through the same client. We did not run those; no numbers on our plates come from them.'],
+    ['Optional: an OpenRouter key.', 'Lets you try GPT, Claude or Llama through the same client. Lecture 1 records GPT-6.1 Terra and Claude Sonnet 5.5 for you; this primer\'s numbers are Gemini.'],
     ['Pick a task from your own work.', 'One job that takes several screens of an enterprise system. You will need it for assignment A1.'],
   ];
   el.innerHTML = items.map((it, i) => `<label class="ck card" style="display:grid;grid-template-columns:40px 1fr;gap:10px;margin-bottom:12px;cursor:pointer;transition:opacity .4s">

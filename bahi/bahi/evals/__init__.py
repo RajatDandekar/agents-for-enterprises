@@ -7,7 +7,7 @@
                   no duplicate write, right final status, right clause, never-events NE1–NE5
     judge.py      a model judge for tone only (checked against 30 course-team labels in labels/tone_30.json)
     broken.py     ten deliberately broken bots, to test the tests
-    trace.py      per-step traces (local JSON lines; Langfuse only if LANGFUSE_* keys are set)
+    trace.py      per-step traces: a local JSON-lines store, and export to Langfuse with read-back (when keys are set)
     versions.py   fingerprints of prompts, tools (TOOLSET_VERSION), models, route and suite
     gate.py       the regression gate:  python -m bahi.evals.gate --agent graph --baseline <file>
     scorecard.py  the trust scorecard

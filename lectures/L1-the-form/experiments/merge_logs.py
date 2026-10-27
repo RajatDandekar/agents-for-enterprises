@@ -9,17 +9,21 @@ import pathlib
 HERE = pathlib.Path(__file__).parent
 LOGS = HERE / "logs"
 CAS = HERE.parents[2] / "bahi" / "bahi" / "cassettes"
-TIERS = [("small", "gemini:gemini-3.5-flash-lite"), ("default", "gemini:gemini-3.8-flash"), ("large", "gemini:gemini-3.1-pro-preview")]
+TIERS = [("small", "gemini:gemini-3.5-flash-lite"), ("default", "gemini:gemini-3.8-flash"), ("large", "gemini:gemini-3.1-pro-preview"),
+         ("gpt", "openrouter:openai/gpt-6.1-terra"), ("claude", "openrouter:anthropic/claude-sonnet-5.5")]
+ORDER = [t for t, _ in TIERS]
 
 rows = []
 for tier, _ in TIERS:
     for p in sorted(LOGS.glob(f"naive_{tier}_s*.json")):
         rows += json.loads(p.read_text())
-rows.sort(key=lambda r: (["small", "default", "large"].index(r["tier"]), r["scenario"]))
+rows.sort(key=lambda r: (ORDER.index(r["tier"]), r["scenario"]))
 
 summary = {}
 for tier, model in TIERS:
     rs = [r for r in rows if r["tier"] == tier]
+    if not rs:
+        continue
     ok = [r for r in rs if r.get("error") is None]
     summary[tier] = {
         "model": model, "scenarios_run": len(rs), "errors": [r["error"] for r in rs if r.get("error")],
@@ -47,7 +51,9 @@ for tier, model in TIERS:
 parts = sorted(CAS.glob("L1_naive_part_*.jsonl"))
 if parts:
     seen, out = set(), []
-    for p in parts:
+    for p in [CAS / "L1_naive.jsonl", *parts]:
+        if not p.exists():
+            continue
         for line in p.read_text().splitlines():
             if line.strip():
                 k = json.loads(line)["key"]

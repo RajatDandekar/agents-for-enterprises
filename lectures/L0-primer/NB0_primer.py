@@ -401,6 +401,6 @@ if os.environ.get("BAHI_IN_MODAL"):
 # - [ ] You know the difference between master data and a document, and which status means the supplier has the order (RL).
 # - [ ] You can say where a model call's rupees come from (tokens in and out × price).
 # - [ ] You can describe tool calling in one sentence: the model writes a JSON request; our code runs it.
-# - [ ] Optional: a Gemini key, or an OpenRouter key if you want to try GPT or Claude (we did not run those; the
-#   recorded numbers in this course are from Gemini).
+# - [ ] Optional: a Gemini key, or an OpenRouter key if you want to try GPT or Claude live (this primer's
+#   recorded numbers are from Gemini; Lecture 1's experiment also records GPT-6.1 Terra and Claude Sonnet 5.5).
 # - [ ] Think of one task in your own work that takes several screens of an enterprise system. You will need it for assignment A1.

@@ -79,8 +79,7 @@ runs = {}
 for tag in ("graph", "loop", "naive", "tier_pro", "tier_mix", "tier_flashlite", "tier_lite"):
     d = load(f"suite_{tag}.json")
     if d:
-        runs[tag] = {"agent": d["meta"]["agent"], "models": d["meta"].get("models"), "summary": summ(d), "cases": per_case(d),
-                     "langfuse": d["meta"].get("langfuse")}
+        runs[tag] = {"agent": d["meta"]["agent"], "models": d["meta"].get("models"), "summary": summ(d), "cases": per_case(d)}
 OUT["runs"] = runs
 # live (first) runs vs the final scoring, for the honesty note
 live = {}
@@ -162,6 +161,25 @@ if GD:
                    "verdicts": {k: {"passed": v["passed"], "reasons": v["reasons"], "cand": v["candidate"],
                                     "newly_failing": v["newly_failing"], "changes": v["changes"][:8]} for k, v in GD["verdicts"].items()},
                    "cli": GD["cli"]}
+LF = load("langfuse.json")
+if LF and LF.get("verify"):
+    import datetime as _dt
+    v, e = LF["verify"], LF["export"]
+    obs = (v.get("sample") or {}).get("observations") or []
+    ts = lambda x: _dt.datetime.fromisoformat(x.replace("Z", "+00:00")).timestamp()  # noqa: E731
+    root = next((o for o in obs if not o["parent"]), None)
+    turns = {o["id"] for o in obs if root and o["parent"] == root["id"]}
+    r0 = ts(root["start"]) if root else 0
+    tree = sorted([{"t": round(ts(o["start"]) - r0, 3), "d": round(o["latency"] or 0, 3), "type": o["type"], "name": o["name"],
+                    "depth": 0 if not o["parent"] else 1 if o["id"] in turns else 2,
+                    "tok": (o.get("usage") or {}).get("total"), "usd": o.get("cost"), "model": o.get("model")} for o in obs],
+                  key=lambda x: (x["t"], x["depth"]))
+    OUT["langfuse"] = {"host": LF["host"], "tag": LF["tag"], "exported": e["exported"], "spans": e["spans"],
+                       "generations": e["generations"], "scores_sent": e["scores"], "errors": len(e["errors"]),
+                       "traces_found": v["traces_found"], "by_type": v["by_type"], "by_model": v["by_model"],
+                       "conversations": v.get("conversations"), "scores": v.get("scores"), "window": v["window"],
+                       "sample_trace": e["trace_ids"].get("S2"), "tree": tree, "local_S2": LF.get("local_S2"),
+                       "replay_same_verdicts": LF.get("replay_same_verdicts")}
 SP = load("spend.json")
 if SP:
     OUT["spend"] = SP

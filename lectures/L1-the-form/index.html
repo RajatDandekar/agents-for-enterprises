@@ -49,7 +49,7 @@
     <div class="card af"><span class="tag af">Today</span><h3>What we do this morning</h3><ol style="margin:6px 0 0;padding-left:24px">
       <li>Place Kavita's order by hand, and count it.</li>
       <li>Open the ERP: data, documents, statuses, and one button down to its stored procedures.</li>
-      <li>Give a model all 38 services as tools. Watch it on six scenarios, three model sizes.</li>
+      <li>Give a model all 38 services as tools. Watch it on six scenarios, five models: Gemini at three sizes, GPT and Claude.</li>
       <li>Turn the failures into numbers, and into a map: the nine jobs.</li></ol></div>
   </div>
   <div class="opens step"><span class="k">Notebook</span><span class="nb-ref">NB1</span> &nbsp;runs everything on these plates in Colab, in replay mode, with no API key. Every number here came out of it or out of <code>experiments/</code>.</div>
@@ -70,12 +70,12 @@
 
 <section class="slide" data-plate="Opens With">
   <div class="col" style="width:520px">
-    <h2>One sentence, six scenarios, three models</h2>
+    <h2>One sentence, six scenarios, five models</h2>
     <p>We gave a model Bahi's 38 services as tools and Kavita's sentence. No harness: a model and a loop.</p>
-    <p class="step">The small model passed 1 of 6, the default 2, the large <b class="b">none</b>.</p>
+    <p class="step">Gemini small passed 1 of 6, default 2, large <b class="b">none</b>. GPT-6.1 Terra 2, Claude Sonnet 5.5 2.</p>
     <p class="step">The default model told Kavita her order was <i>“raised and released”</i>. Rohit never saw it.</p>
     <p class="step b">A bigger model did not fix a missing harness. This lecture is about why.</p>
-    <div class="measured step" style="margin-top:14px">We expected six failures on every model. Two scenarios passed on the default model, one on the small. We show why they passed, too.</div>
+    <div class="measured step" style="margin-top:14px">We expected six failures on every model. Scenarios 3 and 5 passed on three of the five; the never-events did not go away on any.</div>
   </div>
   <div class="fig" data-fig="opens" style="left:690px;top:130px;width:820px;height:640px"></div>
   <div class="cap" style="left:700px;top:790px"><b>Fig. 2.</b> Pass or fail per scenario, with never-events. From <code>experiments/logs/naive_sweep.json</code>.</div>
@@ -371,7 +371,7 @@
   <div class="center">
     <div class="num">Part Five</div>
     <h1>The opening experiment</h1>
-    <p class="lede">The naive agent, three model sizes, the six scenarios that run at the start of every lecture. Checked by code, against the database.</p>
+    <p class="lede">The naive agent, five models from three vendors, the six scenarios that run at the start of every lecture. Checked by code, against the database.</p>
   </div>
 </section>
 
@@ -438,8 +438,8 @@
   <div class="col" style="width:430px">
     <h2>When the reply is lost</h2>
     <p>Scenario 6: Bahi saves the order, then the reply never arrives.</p>
-    <p class="step">All three models searched for the order first. None saved it twice (no NE2). The large one then stopped at AP and said done (NE5).</p>
-    <p class="step">All three had approved it themselves (NE1). The recovery came from the model, not from anything we built.</p>
+    <p class="step">All five models searched for the order first. None saved it twice (no NE2). The large Gemini then stopped at AP and said done (NE5).</p>
+    <p class="step">All five had approved it themselves (NE1). The recovery came from the model, not from anything we built.</p>
     <p class="step small">Lecture 7 makes this a property: idempotency keys, read-back, durable workflows.</p>
   </div>
   <div class="fig" data-fig="timeout" style="left:580px;top:110px;width:940px;height:710px"></div>
@@ -449,8 +449,8 @@
   <div class="col" style="width:440px">
     <h2>Cost and latency</h2>
     <p>₹ = (tokens in × input price + tokens out × output price) ÷ 10⁶ × ₹88.</p>
-    <p class="step">Course prices, US$ per million tokens (in / out): small 0.10 / 0.40, default 0.50 / 3.00, large 2.00 / 12.0.</p>
-    <p class="step">The small model was cheapest per scenario. The default spent the most tokens. The large was the dearest per token and resolved nothing: ₹ per resolved request is undefined.</p>
+    <p class="step">US$ per million tokens (in / out): Gemini small 0.10 / 0.40, default 0.50 / 3.00, large 2.00 / 12.0; GPT-6.1 Terra 1.00 / 5.00; Claude Sonnet 5.5 2.00 / 10.0.</p>
+    <p class="step">Cheapest per scenario: Gemini small. Dearest: Claude. GPT used the fewest tokens per scenario; the default Gemini the most. The large Gemini resolved nothing, so its ₹ per resolved request is undefined.</p>
     <p class="step">Seconds are model time only, from the recorded calls.</p>
   </div>
   <div class="fig" data-fig="cost" style="left:620px;top:120px;width:890px;height:690px"></div>
@@ -461,7 +461,7 @@
     <h2>Say what good means, in numbers</h2>
     <p>Before building the harness, agree the bar with the client. Then every lecture is measured against it.</p>
     <p class="step">A <b>pass bar</b> on the scenarios. <b>Zero</b> never-events. A <b>latency budget</b>. A <b>₹ per resolved request</b>.</p>
-    <p class="step">The naive agent misses all four on every model.</p>
+    <p class="step">No model meets the pass bar or zero never-events. The small Gemini is fast and cheap enough, and wrong.</p>
     <div class="ours step">The targets are ours for the Bahi reference agent. Lecture 6 turns six scenarios into sixty and reports a pass rate.</div>
   </div>
   <div class="fig" data-fig="req" style="left:620px;top:140px;width:890px;height:640px"></div>
@@ -548,11 +548,11 @@
         <tr class="step"><td class="n">4</td><td>Read the live run; zoom into Save; read <code>sp_budget_chk</code></td><td></td></tr>
         <tr class="step"><td class="n">5</td><td>Call services over HTTP with <code>BahiClient</code></td><td>3 · amend to PRD-07, release</td></tr>
         <tr class="step"><td class="n">6–7</td><td>Build the tool list; one model call by hand; write the loop</td><td>4 · <code>my_raw_tools()</code><br>5 · <code>respond()</code></td></tr>
-        <tr class="step"><td class="n">8–10</td><td>Six scenarios × three models (replay), the failure moments, cost, requirements</td><td>6 · ₹ from tokens</td></tr>
+        <tr class="step"><td class="n">8–10</td><td>Six scenarios × five models (replay), the failure moments, cost, requirements</td><td>6 · ₹ from tokens</td></tr>
         <tr class="step"><td class="n">11–12</td><td>The nine jobs; start your module</td><td>A1</td></tr>
       </tbody>
     </table>
-    <p class="step small" style="margin-top:12px">Runs top to bottom in replay mode with no key. With your own key (<code>BAHI_LLM_MODE=live</code>) you can rerun the agent live; GPT and Claude via OpenRouter, which we have not run.</p>
+    <p class="step small" style="margin-top:12px">Runs top to bottom in replay mode with no key. With your own key (<code>BAHI_LLM_MODE=live</code>) you can rerun the agent live on any of the five models (GPT and Claude through an OpenRouter key).</p>
   </div>
 </section>
 
@@ -573,7 +573,7 @@
 <section class="slide" data-plain="1">
   <div class="center" style="align-items:center;text-align:center">
     <div class="kicker">Where we are</div>
-    <h2 style="font-size:60px;max-width:1150px">A model with every tool and no harness: 0 of 9 jobs, 3 of 18 scenario runs passed, 16 never-events.</h2>
+    <h2 style="font-size:60px;max-width:1150px">A model with every tool and no harness: 0 of 9 jobs, 7 of 30 scenario runs passed, 24 never-events.</h2>
     <div class="fig" data-fig="close" style="position:relative;width:1100px;height:250px;margin-top:20px"></div>
     <p class="small" style="margin-top:8px">Next, Lecture 2 · The Manual (Sun 1 Nov): job 4, the rules Suresh carries in his head, with citations.</p>
   </div>

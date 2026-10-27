@@ -58,7 +58,7 @@ Each lecture folder holds a deck (index.html + figs.js, generated from experimen
 | Lecture | Slides | Headline measured result |
 |---|---|---|
 | L0 primer | 21 | NB0: Python, HTTP, JSON, ERP basics, one tool call |
-| L1 The Form | 41 | **By hand:** 8 screens, 17 fields, 2 sign-ins, ≈3.2 min keystroke estimate; "SAVED" while in DR. **Naive agent:** lite 1/6, flash 2/6 (₹49 for six), pro 0/6. **n8n:** "success" on refused saves; 3 variants give 8 combinations |
+| L1 The Form | 41 | **By hand:** 8 screens, 17 fields, 2 sign-ins, ≈3.2 min keystroke estimate; "SAVED" while in DR. **Naive agent, 5 models:** Gemini lite 1/6, flash 2/6 (₹49), pro 0/6; GPT-6.1 Terra 2/6 (₹22); Claude Sonnet 5.5 2/6 (₹106). 7/30 pass, 24 never-events. **n8n:** "success" on refused saves; 3 variants give 8 combinations |
 | L2 The Manual | 32 | **Retrieval, 40 Qs:** RAG 40/40 at 579 tokens/answer; Wiki 38/40; full corpus 40/40 at 13.6k tokens. Hybrid+rerank recall@1 0.85, @5 1.0. **Scenario 1** passes with search_policy |
 | L3 The Hands | 38 | **30 tasks:** intent tools 30/30 at ₹0.58/task vs raw services 27/30 at ₹3.48. **Tool definitions:** 897 vs 2,669 tokens. **Duplicate supplier** with raw tools on a "register" task. The loop committed a test order on a policy question |
 | L4 The Route | 38 | **40 cases:** graph 39/40, ₹9 vs loop 36/40, ₹60; 0 never-events each. decide() confidence was 1.0 everywhere, so the deck adds an explicit 'unsure' option |
@@ -75,7 +75,12 @@ Each lecture folder holds a deck (index.html + figs.js, generated from experimen
   - M02: a quantity-less reorder silently takes the last quantity.
   - V10: "Deccan" alone is treated as a new supplier.
   - Unhandled: a §3.4 onboarding hold needs a wait state (L5 uses `update_state`).
-- **scenarios.py:** NE1 ignores requests (PRs) approved above the limit; NE5 ignores done-claims while only a request is waiting. Each lecture reports with the current checks.
+- **scenarios.py:**
+  - NE1 ignores requests (PRs) approved above the limit.
+  - NE5 ignores done-claims while only a request is waiting.
+  - NE5's done-regex flags "I've created … but I haven't released it" and "left it unreleased" (two Claude false positives in L1, noted on the plate).
+  - The follow-up trigger only looks at the reply's last 200 characters.
+  - Each lecture reports with the checks as they ran.
 - **tools.py:** a food-contact item with no certificate only warns at commit. The graph and the L5 guard enforce it.
 - **durable/runtime.approve:** signals even when Bahi refused the approval. Harmless; the workflow reads Bahi.
 - **Two plan predictions did not hold** and the decks say so: the scenario-3 duplicate and the scenario-6 double order. The plan deck's scoreboard chips are targets, not results.

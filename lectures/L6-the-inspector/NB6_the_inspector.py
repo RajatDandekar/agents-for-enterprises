@@ -383,10 +383,43 @@ def p95(xs):
     return xs[max(1, math.ceil(0.95 * len(xs))) - 1]
 secs = [t["seconds"] for r in RUNS["graph"]["cases"] for t in r["turns"]]
 print(len(secs), "turns · p95 mine:", p95(secs), "· logged:", RUNS["graph"]["summary"]["turn_p95"])
-print("Langfuse:", RUNS["graph"]["meta"].get("langfuse"))
 
 # %% [markdown]
-# **Langfuse.** `bahi.evals.trace.export_langfuse` sends the same spans to Langfuse when `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are set. We had no keys, so in our runs the traces stayed in the local store (above). The exporter has not been run by the course team.
+# **Langfuse.** The same spans go to Langfuse Cloud. `export_langfuse` sends each conversation over OpenTelemetry (`POST /api/public/otel/v1/traces`): a root span for the conversation, a span per turn, a *generation* per model call with its tokens and cost, a span per Bahi service call; the code metrics go as scores. `verify_langfuse` then reads back through Langfuse's v2 API what actually arrived. (Langfuse Cloud's older ingestion API stops taking traces on 16 November 2026, so we use OpenTelemetry.)
+#
+# First, what our full export of the graph's 60-case run holds (`experiments/langfuse_export.py`, logged in `langfuse.json`):
+
+# %%
+LF = load_log("langfuse.json")
+if LF:
+    v, e = LF["verify"], LF["export"]
+    m = (v.get("by_model") or [{}])[0]
+    print(f"sent {e['exported']} traces, {e['generations']} generations, {e['spans']} spans, {e['scores']} scores, {len(e['errors'])} errors")
+    print(f"Langfuse holds {v['traces_found']} of {v['expected']} traces for tag {v['tag']}")
+    print(f"tokens {m.get('sum_inputTokens'):,} in / {m.get('sum_outputTokens'):,} out · cost ${m.get('sum_totalCost', 0):.4f}"
+          f" = ₹{m.get('sum_totalCost', 0) * 88:.2f} (our local store: ₹{RUNS['graph']['summary']['inr']:.2f})")
+    c = v.get("conversations") or {}
+    print(f"conversation latency p50 {c.get('p50_latency', 0) / 1000:.1f} s · p95 {c.get('p95_latency', 0) / 1000:.1f} s")
+    tree = pd.DataFrame(v["sample"]["observations"])
+    print("\nscenario 2 as Langfuse stores it:", len(tree), "observations")
+    display(tree.groupby("type").agg(n=("id", "count"), seconds=("latency", "sum"), usd=("cost", "sum")))
+
+# %% [markdown]
+# Now send something yourself. With `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` set (and `LANGFUSE_HOST`), this cell exports the six course scenarios under the tag `NB6-demo` and reads them back. Without keys (Colab, replay) it says so and moves on. Exporting twice updates the same traces: the ids are hashes, never random.
+
+# %%
+import time
+from bahi.evals.trace import langfuse_ready, export_langfuse, verify_langfuse, _iso
+ok, why = langfuse_ready()
+if ok:
+    six = [r for r in RUNS["graph"]["cases"] if r["id"].startswith("S")]
+    t0 = time.time() - 1800
+    e = export_langfuse(six, RUNS["graph"]["meta"], tag="NB6-demo", t0=t0)
+    print(f"exported {e['exported']} traces, {e['generations']} generations, {e['spans']} spans, {e['scores']} scores; errors: {len(e['errors'])}")
+    v = verify_langfuse("NB6-demo", expect=len(six), t0=_iso(t0 - 60), t1=_iso(t0 + 900), wait=240)
+    print(f"read back: Langfuse holds {v['traces_found']} of {len(six)} traces for tag NB6-demo")
+else:
+    print("Langfuse:", why)
 
 # %% [markdown]
 # ## 8 · A model judge, for tone only
