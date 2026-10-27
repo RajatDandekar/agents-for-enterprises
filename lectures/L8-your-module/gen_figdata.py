@@ -155,6 +155,9 @@ D["score"] = {"summary": {k: sc["summary"][k] for k in ("cases", "passed", "pass
                                                          "tokens", "by")},
               "gate": sc["gate"], "card": sc["trust_scorecard"], "failed": sc["failed_cases"], "compare": sc["compare_l6"],
               "mode": sc["mode"], "six": sc["six_scenarios"]}
+ni = J("demo/logs/scorecard_no_inbox.json")
+D["score"]["no_inbox"] = {"passed": ni["summary"]["passed"], "cases": ni["summary"]["cases"], "failed": [r["id"] for r in ni["failed_cases"]],
+                          "gate": ni["gate"]["passed"]}
 src("score", "demo/logs/scorecard.json (suite: demo/logs/scorecard_suite.json, gate: demo/logs/scorecard_gate.json)")
 D["before"] = {"monday": by["monday_counts"], "by_person": by["monday_by_person"], "saved": by["status_bar_after_save"],
                "status": by["status_field_after_save"], "tax_error": by["tax_error"], "friday": by["friday_release"],

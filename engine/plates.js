@@ -34,16 +34,19 @@ if (!document.getElementById('count')) document.body.insertAdjacentHTML('beforee
 const deck = deckEl;
 const slides = [...deck.querySelectorAll('.slide')];
 const roman = (n) => { const m = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]; let s = ''; if (n >= 40) { s += 'XL'; n -= 40; } while (n >= 10) { s += 'X'; n -= 10; } for (const [v, r] of m) while (n >= v) { s += r; n -= v; } return s; };
-let plateNo = 0;
+let plateNo = 0, partNo = 0;
+const lecNo = (document.title.match(/Lecture\s+(\d+)/i) || [])[1] ?? (/primer/i.test(document.title) ? '0' : '');
 slides.forEach((sl, i) => {
   sl.insertAdjacentHTML('afterbegin', '<div class="frame"></div>');
-  if (sl.dataset.plate) { plateNo++; sl.insertAdjacentHTML('beforeend', `<div class="plate-head">Plate ${roman(plateNo)} · ${sl.dataset.plate}</div>`); }
+  if (i === 0 && sl.dataset.plain && !sl.classList.contains('nohero')) { sl.classList.add('hero'); if (lecNo !== '') sl.insertAdjacentHTML('afterbegin', `<div class="hero-num" aria-hidden="true">${lecNo}</div>`); }
+  if (sl.classList.contains('part')) { partNo++; sl.classList.add('hero'); sl.insertAdjacentHTML('afterbegin', `<div class="hero-num" aria-hidden="true">${sl.dataset.num || partNo}</div>`); }
+  if (sl.dataset.plate) { plateNo++; sl.insertAdjacentHTML('beforeend', `<div class="plate-head"><span class="pn">${plateNo}</span><span>${sl.dataset.plate}</span></div>`); }
   sl.insertAdjacentHTML('beforeend', `<div class="folio">— ${i + 1} —</div>`);
 });
 const mounted = new Map();
 let cur = 0;
 const steps = (i) => [...slides[i].querySelectorAll('.step')];
-const fit = () => { const w = innerWidth, h = innerHeight; const s = Math.min(w / 1600, (h - 40) / 900); deck.style.transform = `translate(-50%, calc(-50% - 20px)) scale(${s})`; };
+const fit = () => { const w = innerWidth, h = innerHeight; const s = Math.min(w / 1600, h / 900); deck.style.transform = `translate(-50%, -50%) scale(${s})`; };
 const told = (i, instant) => {
   const k = steps(i).filter((e) => e.classList.contains('shown')).length;
   slides[i].querySelectorAll('[data-fig]').forEach((f) => {
@@ -56,6 +59,7 @@ const show = (i, all = false) => {
   slides.forEach((s, k) => s.classList.toggle('active', k === i));
   steps(i).forEach((e) => e.classList.toggle('shown', all));
   cur = i;
+  document.body.dataset.kind = slides[i].classList.contains('hero') ? 'hero' : 'plate';
   document.getElementById('pbar').style.width = (100 * (i + 1) / slides.length) + '%';
   document.getElementById('count').textContent = `${i + 1} / ${slides.length}`;
   try { history.replaceState(null, '', '#' + (i + 1)); } catch (e) {}

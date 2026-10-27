@@ -1483,12 +1483,12 @@ true
 "rb": null,
 "decision": null,
 "doc": null,
-"nb": 4
+"nb": 3
 }
 ],
 "audit_summary": {
 "entries": 20,
-"bahi_rows": 62,
+"bahi_rows": 61,
 "bahi_writes": 5,
 "users_in_bahi": [
 "KJOSHI",
@@ -2199,7 +2199,25 @@ true
 }
 ]
 }
-]
+],
+"no_inbox": {
+"passed": 49,
+"cases": 60,
+"failed": [
+"G08",
+"G09",
+"G10",
+"G11",
+"G12",
+"G13",
+"G14",
+"G15",
+"V10",
+"V11",
+"M02"
+],
+"gate": false
+}
 },
 "before": {
 "monday": {

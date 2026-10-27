@@ -11,7 +11,7 @@ window.__deckQA = async () => {
     const lim = { l: sr.left + 20 * sc, r: sr.right - 20 * sc, t: sr.top + 20 * sc, b: sr.bottom - 20 * sc };
     const issues = [];
     s.querySelectorAll('*').forEach((e) => {
-      if (e.closest('.frame') || e.classList.contains('folio') || e.classList.contains('plate-head')) return;
+      if (e.closest('.frame') || e.closest('.hero-num') || e.classList.contains('folio') || e.classList.contains('plate-head')) return;
       const cs = getComputedStyle(e);
       if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity === 0) return;
       const r = e.getBoundingClientRect();

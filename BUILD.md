@@ -92,11 +92,13 @@ Use these and nothing else. The numbers come from `bahi/bahi/erp/seed.py`.
   - A live figure is `<div class="fig" data-fig="name" style="left:…;top:…;width:…;height:…"></div>`. It is defined in `figs.js` as `FIGS.name = (el) => ({ step(k, instant) {…} })`, where `k` = number of steps shown.
   - `window.Plates` gives you `svgEl`, `txt`, `fmt` (Indian digit grouping), `winHTML(screen)` (legacy window) and `TREE`.
   - `?print=1` stacks every slide fully revealed.
-- **Style:** the plan deck's.
-  - Colours: cool ledger paper `--paper:#F3F5F2`, ink `#1B2030`, ledger red `--before:#A3372B` for the legacy form-based ERP, deep teal `--after:#136C76` for AI-native, gold `#8E6E12` for terms and targets.
-  - Type: Newsreader display, Source Serif 4 body, IBM Plex Mono code. Legacy windows are Windows-2000 grey with Tahoma.
-  - Use the plan deck's classes: `.card.bf/.af`, `.tag`, `table.t`, `.legend`, `.win`, `.chat/.thread/.msg`, `.trace`, `.cmp` bars, `.lyr` stacks, `.code` (dark code block), `.json`, `.def` (a term's definition), `.ours`, `.measured`.
-  - Body text is 24–27px and never below 18px anywhere.
+- **Style:** the "Sky" theme (Rajat, 2026-10-27), matching Vizuara's planning pages.
+  - Google Sans Flex in light weights (450–500) for everything. Google Sans Code for code.
+  - White, full-bleed pages with soft sky light. Title and part slides are sky-gradient heroes with a giant glassy numeral (added automatically).
+  - Soft rounded cards (`--card #f0f4f9`, 24px radius); pastel gradient cards for before (`--g4`, ember) and after (`--g1`, sky); frosted pill buttons; a floating pill nav.
+  - Colours: ember `--before #c4511f` = the legacy form ERP; sky `--after #0b57d0` = AI-native; green `--gold #138a60` = terms and targets.
+  - Legacy Bahi windows stay Windows-2000 grey on purpose.
+  - Use the existing classes; never hardcode old fonts.
 - **Depth:** the mech-interp course standard.
   - Nothing is used before it is taught.
   - Follow Kavita's one order through every mechanism, with its real numbers and real payloads copied from our runs: the actual JSON a tool returned, the actual tokens counted, the actual trace.
