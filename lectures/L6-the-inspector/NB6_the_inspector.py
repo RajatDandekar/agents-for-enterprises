@@ -37,7 +37,7 @@ from bahi.evals import suite, runner, metrics, judge, versions, gate, scorecard,
 from bahi.evals.agents import GraphFactory, FLASH
 from bahi.evals.simulator import ScriptedKavita, LLMKavita
 LOGS = pathlib.Path("experiments/logs")
-RAW = "https://raw.githubusercontent.com/VizuaraAI/agents-for-enterprises/main/lectures/L6-the-inspector/experiments/logs/"
+RAW = "https://raw.githubusercontent.com/RajatDandekar/agents-for-enterprises/main/lectures/L6-the-inspector/experiments/logs/"
 def load_log(name):
     """Our recorded experiment logs: from the course folder, or from the course repo on Colab."""
     p = LOGS / name

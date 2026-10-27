@@ -98,9 +98,9 @@ Each lecture folder holds a deck (index.html + figs.js, generated from experimen
   - Daily cap ₹250. Rate limits are 20/min overall and 6/min per user.
 - **Langfuse:** 60 L6 suite traces under tag `L6-suite`, exported over OTel. The old ingestion API retires on 16 Nov 2026.
 - **Keys:** `.env` (gitignored) holds OpenRouter and Langfuse. The Gemini key comes from `wm-lecture6-ijepa/.env`.
-- **Repo:** committed locally. The public push needs Rajat to run `gh repo create VizuaraAI/agents-for-enterprises --public --source . --push` (the classifier blocked Claude).
+- **Repo:** `RajatDandekar/agents-for-enterprises` (moved from VizuaraAI on 2026-10-28: VizuaraAI is a personal account, so RajatDandekar cannot create repos there). Rajat runs the `gh repo create … --public --source . --push` himself; the classifier blocked Claude.
 - **Theme:** Sky (Google Sans Flex, full-bleed). All 9 decks pass deck QA after the re-theme.
 
 ## Open
-- **Course repo for Colab installs:** `nb_setup.txt` points at `github.com/VizuaraAI/agents-for-enterprises` (not created yet). Needs Rajat's OK to publish; it is fictional data only.
+- **Course repo for Colab installs:** every notebook, the hub, the README and `nb_setup.txt` point at `github.com/RajatDandekar/agents-for-enterprises`. Once pushed, verify the install on Modal.
 - **Explainer films:** not started.

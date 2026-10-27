@@ -26,7 +26,7 @@ from bahi.llm import LLM, ReplayMiss
 from bahi.scenarios import SCENARIOS, run_scenario, scorecard
 MODEL = "gemini:gemini-3.8-flash"
 LOGS = pathlib.Path("experiments/logs")
-RAW = "https://raw.githubusercontent.com/VizuaraAI/agents-for-enterprises/main/lectures/L4-the-route/experiments/logs/"
+RAW = "https://raw.githubusercontent.com/RajatDandekar/agents-for-enterprises/main/lectures/L4-the-route/experiments/logs/"
 def load_log(name):
     """Our recorded experiment logs: from the course folder, or from the course repo on Colab."""
     p = LOGS / name

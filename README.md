@@ -24,7 +24,7 @@ One story runs through the whole course:
 Open any `lectures/*/NB*.ipynb` in Colab and run all cells. The first cell installs the sandbox:
 
 ```
-pip install "bahi-erp[all] @ git+https://github.com/VizuaraAI/agents-for-enterprises.git#subdirectory=bahi"
+pip install "bahi-erp[all] @ git+https://github.com/RajatDandekar/agents-for-enterprises.git#subdirectory=bahi"
 ```
 
 No API key is needed. Every model call is recorded, and replay mode plays the recordings back. To call models live, set `GEMINI_API_KEY` or `OPENROUTER_API_KEY`.

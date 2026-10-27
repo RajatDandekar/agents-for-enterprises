@@ -5,7 +5,7 @@ A fixed workflow is the second way forward (after "train more people"): draw the
 ## 1. Run Bahi
 
 ```bash
-pip install "bahi-erp[server] @ git+https://github.com/VizuaraAI/agents-for-enterprises.git#subdirectory=bahi"
+pip install "bahi-erp[server] @ git+https://github.com/RajatDandekar/agents-for-enterprises.git#subdirectory=bahi"
 python -m bahi.server            # http://127.0.0.1:8077   (legacy client at /legacy)
 ```
 

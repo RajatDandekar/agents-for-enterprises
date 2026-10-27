@@ -33,7 +33,7 @@ def load_log(name):
     for p in [pathlib.Path("experiments/logs") / name, pathlib.Path("lectures/L2-the-manual/experiments/logs") / name]:
         if p.exists():
             return json.loads(p.read_text())
-    url = f"https://raw.githubusercontent.com/VizuaraAI/agents-for-enterprises/main/lectures/L2-the-manual/experiments/logs/{name}"
+    url = f"https://raw.githubusercontent.com/RajatDandekar/agents-for-enterprises/main/lectures/L2-the-manual/experiments/logs/{name}"
     return json.loads(urllib.request.urlopen(url).read())
 
 # %% [markdown]
