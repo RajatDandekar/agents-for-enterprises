@@ -1,0 +1,229 @@
+{
+ "workflow": {
+  "id": "diwali-gasket-order",
+  "name": "Diwali gasket order",
+  "nodes": [
+   {
+    "id": "start",
+    "type": "trigger",
+    "config": {
+     "kind": "manual"
+    }
+   },
+   {
+    "id": "stock",
+    "type": "tool",
+    "config": {
+     "tool": "check_stock",
+     "as": "KJOSHI",
+     "args": {
+      "item_code": "GSK-SIL-05L"
+     }
+    }
+   },
+   {
+    "id": "pr",
+    "type": "tool",
+    "config": {
+     "tool": "create_purchase_request",
+     "as": "KJOSHI",
+     "confirm": true,
+     "args": {
+      "item_code": "{{nodes.stock.item_code}}",
+      "quantity": 20000,
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-09"
+     }
+    }
+   },
+   {
+    "id": "rohit",
+    "type": "approval",
+    "config": {
+     "doc_no": "{{nodes.pr.request_no}}",
+     "approver": "RMEHTA"
+    }
+   },
+   {
+    "id": "po",
+    "type": "tool",
+    "config": {
+     "tool": "create_purchase_order",
+     "as": "KJOSHI",
+     "confirm": true,
+     "args": {
+      "supplier_code": "DP-RJK-0042",
+      "request_no": "{{nodes.pr.request_no}}"
+     }
+    }
+   },
+   {
+    "id": "release",
+    "type": "tool",
+    "config": {
+     "tool": "release_purchase_order",
+     "as": "KJOSHI",
+     "args": {
+      "po_no": "{{nodes.po.po_no}}"
+     }
+    }
+   },
+   {
+    "id": "tell",
+    "type": "message",
+    "config": {
+     "to": "@rohit",
+     "as": "KJOSHI",
+     "text": "{{nodes.release.po_no}} released to Deccan Polymers: {{nodes.po.gross_value}} gross. Thanks for approving {{nodes.pr.request_no}}."
+    }
+   }
+  ],
+  "edges": [
+   {
+    "from": "start",
+    "to": "stock"
+   },
+   {
+    "from": "stock",
+    "to": "pr"
+   },
+   {
+    "from": "pr",
+    "to": "rohit"
+   },
+   {
+    "from": "rohit",
+    "to": "po"
+   },
+   {
+    "from": "po",
+    "to": "release"
+   },
+   {
+    "from": "release",
+    "to": "tell"
+   }
+  ]
+ },
+ "status": "waiting",
+ "trigger": {},
+ "nodes": {
+  "start": {
+   "status": "done",
+   "output": {},
+   "seconds": 0.0
+  },
+  "stock": {
+   "status": "done",
+   "output": {
+    "ok": true,
+    "item_code": "GSK-SIL-05L",
+    "description": "Gasket, silicone, 5 L",
+    "unit": "NOS",
+    "warehouses": [
+     {
+      "warehouse": "WH-PUN-STR",
+      "name": "Pune main stores",
+      "on_hand": 54000,
+      "allocated": 0,
+      "on_order": 0,
+      "free": 54000
+     },
+     {
+      "warehouse": "WH-CHK-STR",
+      "name": "Chakan stores",
+      "on_hand": 12000,
+      "allocated": 0,
+      "on_order": 0,
+      "free": 12000
+     }
+    ],
+    "free_total": 66000,
+    "on_order_total": 0,
+    "reorder_level": 30000,
+    "cover_days": 11,
+    "below_reorder": false
+   },
+   "seconds": 0.0007
+  },
+  "pr": {
+   "status": "done",
+   "output": {
+    "ok": true,
+    "request_no": "PR/2026/04417",
+    "status": "WAITING FOR APPROVAL",
+    "status_code": "PA",
+    "item_code": "GSK-SIL-05L",
+    "quantity": 20000,
+    "estimated_value": 269040.0,
+    "cost_centre": "PRD-07",
+    "need_by": "2026-11-09",
+    "approver": "RMEHTA",
+    "approved_by": null,
+    "next_step": "Waiting for RMEHTA. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+   },
+   "seconds": 0.0012
+  },
+  "rohit": {
+   "status": "waiting",
+   "waited": true,
+   "output": {
+    "doc_no": "PR/2026/04417",
+    "approver": "RMEHTA"
+   },
+   "seconds": 0.0001
+  },
+  "po": {
+   "status": "pending"
+  },
+  "release": {
+   "status": "pending"
+  },
+  "tell": {
+   "status": "pending"
+  }
+ },
+ "taken": [
+  [
+   "start",
+   "stock",
+   "out"
+  ],
+  [
+   "stock",
+   "pr",
+   "out"
+  ],
+  [
+   "pr",
+   "rohit",
+   "out"
+  ]
+ ],
+ "log": [
+  {
+   "node": "start",
+   "event": "done",
+   "text": "started (manual)"
+  },
+  {
+   "node": "stock",
+   "event": "done",
+   "text": "free_total=66000 \u00b7 below_reorder=False"
+  },
+  {
+   "node": "pr",
+   "event": "done",
+   "text": "request_no=PR/2026/04417 \u00b7 status=WAITING FOR APPROVAL"
+  },
+  {
+   "node": "rohit",
+   "event": "waiting",
+   "text": "waiting for RMEHTA"
+  }
+ ],
+ "waiting_for": {
+  "doc_no": "PR/2026/04417",
+  "approver": "RMEHTA"
+ }
+}
