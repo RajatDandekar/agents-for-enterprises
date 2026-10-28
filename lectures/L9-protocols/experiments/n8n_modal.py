@@ -21,7 +21,8 @@ import time
 
 import modal
 
-ROOT = pathlib.Path(__file__).resolve().parents[3]
+_P = pathlib.Path(__file__).resolve()
+ROOT = _P.parents[3] if len(_P.parents) > 3 else pathlib.Path("/course")  # /root/n8n_modal.py inside Modal
 HERE = "lectures/L9-protocols"
 SKIP = {".git", "node_modules", "__pycache__", "cassettes", "_index", ".ipynb_checkpoints", "qa", "site-dist", ".venv"}
 NODE = "v24.22.1"
@@ -52,7 +53,7 @@ N8N_ENV = {"N8N_USER_FOLDER": "/tmp/n8n", "DB_TYPE": "sqlite", "N8N_DIAGNOSTICS_
            "WEBHOOK_URL": "http://localhost:5678/", "N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS": "false",
            "N8N_PERSONALIZATION_ENABLED": "false", "N8N_VERSION_NOTIFICATIONS_ENABLED": "false",
            "N8N_TEMPLATES_ENABLED": "false", "N8N_HIRING_BANNER_ENABLED": "false", "GENERIC_TIMEZONE": "Asia/Kolkata",
-           "N8N_RUNNERS_ENABLED": "true", "N8N_BLOCK_ENV_ACCESS_IN_NODE": "false", "N8N_LOG_LEVEL": "info"}
+           "N8N_WEBHOOK_URL": "http://localhost:5678/", "N8N_BLOCK_ENV_ACCESS_IN_NODE": "false", "N8N_LOG_LEVEL": "info"}
 
 
 def _sh(cmd, **kw):
@@ -177,24 +178,45 @@ def start_toolbox(port=8765):
     return erp
 
 
-async def mcp_call(url, tool, args):
+async def _mcp_call(url, tool, args):
     from fastmcp import Client
     async with Client(url) as c:
         r = await c.call_tool(tool, args)
         return json.loads(r.content[0].text)
 
 
+def mcp_call(url, tool, args):
+    """Call one tool over MCP from a fresh thread (Playwright's sync API owns this thread's event loop)."""
+    import asyncio
+    import concurrent.futures
+    with concurrent.futures.ThreadPoolExecutor(1) as ex:
+        return ex.submit(lambda: asyncio.run(_mcp_call(url, tool, args))).result()
+
+
 # ----------------------------------------------------------------------------------------------- the run
 @app.function(timeout=2400, cpu=4, memory=8192)
 def run(workflow_json: str) -> dict:
+    import traceback
+    files, log = {}, {"versions": {"node": _sh("node --version"), "n8n": _sh("n8n --version"), "fastmcp": FASTMCP}}
+    try:
+        _run(workflow_json, files, log)
+    except Exception:
+        log["FAILED"] = traceback.format_exc()[-4000:]
+        log["toolbox_requests"] = REQS
+        if os.path.exists("/tmp/n8n.log"):
+            log["n8n_log_tail"] = pathlib.Path("/tmp/n8n.log").read_text()[-4000:]
+        files[f"{HERE}/experiments/logs/n8n_run.json"] = json.dumps(log, indent=1, ensure_ascii=False, default=str).encode()
+    return files
+
+
+def _run(workflow_json, files, log):
     import asyncio
 
     import httpx
 
     t_start = time.time()
-    files, log = {}, {"versions": {"node": _sh("node --version"), "n8n": _sh("n8n --version"), "fastmcp": FASTMCP}}
     erp = start_toolbox()
-    log["toolbox_check"] = asyncio.run(mcp_call("http://127.0.0.1:8765/kavita/mcp", "check_stock",
+    log["toolbox_check"] = (mcp_call("http://127.0.0.1:8765/kavita/mcp", "check_stock",
                                                 {"item_code": "GSK-SIL-05L"}))
     REQS.clear()
 
@@ -202,14 +224,15 @@ def run(workflow_json: str) -> dict:
     n8n_log = open("/tmp/n8n.log", "w")
     proc = subprocess.Popen(["n8n", "start"], env=env, stdout=n8n_log, stderr=subprocess.STDOUT)
     base = "http://localhost:5678"
-    for i in range(240):
+    for i in range(420):
         try:
-            if httpx.get(base + "/healthz", timeout=2).status_code == 200:
+            rr = httpx.get(base + "/rest/settings", timeout=2)
+            if rr.status_code == 200 and "json" in rr.headers.get("content-type", ""):
                 break
         except Exception:
             pass
         time.sleep(1)
-    time.sleep(3)
+    time.sleep(2)
     log["n8n_boot_seconds"] = round(time.time() - t_start, 1)
 
     import secrets
@@ -228,12 +251,14 @@ def run(workflow_json: str) -> dict:
         except Exception as e:
             log["survey"] = str(e)[:100]
 
-    wf = json.loads(workflow_json)
+    wf = json.loads(workflow_json.replace("http://127.0.0.1:8765/mcp", "http://127.0.0.1:8765/kavita/mcp"))
+    log["workflow_nodes"] = [{"name": n["name"], "type": n["type"], "typeVersion": n["typeVersion"],
+                              "tool": (n["parameters"].get("tool") or {}).get("value")} for n in wf["nodes"]]
     body = {k: wf[k] for k in ("name", "nodes", "connections", "settings") if k in wf}
     r = s.post("/rest/workflows", json=body)
     log["import_status"] = r.status_code
-    if r.status_code >= 400:
-        log["import_err"] = r.text[:1500]
+    log["import_body"] = r.text[:800]
+    log["import_ctype"] = r.headers.get("content-type")
     wid = r.json()["data"]["id"]
     vid = r.json()["data"].get("versionId")
     log["workflow_id"] = wid
@@ -294,8 +319,21 @@ def run(workflow_json: str) -> dict:
             document.querySelectorAll(sel).forEach(e => e.remove()) } }""")
         page.wait_for_timeout(300)
 
-    def shot(name):
-        tidy()
+    def open_node(label):
+        """Double-click a canvas node: find its label, then click the node box just above it."""
+        for fr in [page] + list(page.frames):
+            loc = fr.get_by_text(label, exact=True)
+            if loc.count():
+                b = loc.first.bounding_box()
+                if b:
+                    page.mouse.dblclick(b["x"] + b["width"] / 2, b["y"] - 40)
+                    page.wait_for_timeout(2500)
+                    return True
+        return False
+
+    def shot(name, clean=True):
+        if clean:
+            tidy()
         data = page.screenshot()
         files[f"{HERE}/figs/shots/{name}.png"] = data
         return name
@@ -312,9 +350,9 @@ def run(workflow_json: str) -> dict:
     shots["n8n_01_canvas"] = shot("n8n_01_canvas")
     # open an MCP node's parameter panel
     try:
-        page.get_by_text("Raise the PR", exact=True).first.dblclick()
-        page.wait_for_timeout(2500)
-        shots["n8n_02_mcp_node_params"] = shot("n8n_02_mcp_node_params")
+        tidy()
+        open_node("Raise the PR")
+        shots["n8n_02_mcp_node_params"] = shot("n8n_02_mcp_node_params", clean=False)
         page.keyboard.press("Escape")
         page.wait_for_timeout(800)
     except Exception as e:
@@ -335,7 +373,7 @@ def run(workflow_json: str) -> dict:
     except Exception:
         pass
     # the PR number: read from the toolbox requests' result is not logged, so ask Rohit's inbox
-    inbox = asyncio.run(mcp_call("http://127.0.0.1:8765/rohit/mcp", "list_my_approvals", {}))
+    inbox = (mcp_call("http://127.0.0.1:8765/rohit/mcp", "list_my_approvals", {}))
     log["rohit_inbox"] = inbox
     try:
         w = inbox.get("waiting") or []
@@ -344,12 +382,20 @@ def run(workflow_json: str) -> dict:
         pr_no = None
     log["pr_no_from_inbox"] = pr_no
     t_appr = time.time()
-    log["rohit_approval"] = asyncio.run(mcp_call("http://127.0.0.1:8765/rohit/mcp", "approve_purchase_request",
+    log["rohit_approval"] = (mcp_call("http://127.0.0.1:8765/rohit/mcp", "approve_purchase_request",
                                                  {"request_no": pr_no, "decision": "approve",
                                                   "comment": "Approved for the Diwali run."}))
     log["rohit_approval_seconds"] = round(time.time() - t_appr, 3)
     # resume the Wait node
-    resume = f"{base}/webhook-waiting/{eid}"
+    # the Wait node's resume URL travelled to Rohit inside the "Ask Rohit" message (send_message over MCP)
+    asked = [r for r in REQS if r.get("tool") == "send_message"]
+    resume = None
+    if asked:
+        import re
+        m = re.search(r"(http\S+)", asked[0]["args"]["text"])
+        resume = m.group(1) if m else None
+    log["resume_url_source"] = "send_message args" if resume else "fallback /webhook-waiting/<id>"
+    resume = resume or f"{base}/webhook-waiting/{eid}"
     rr = httpx.post(resume, json={"approved_by": "RMEHTA", "request_no": pr_no}, timeout=120)
     log["resume"] = {"url": resume.replace(base, ""), "status": rr.status_code, "body": rr.text[:300]}
     for _ in range(90):
@@ -394,10 +440,10 @@ def run(workflow_json: str) -> dict:
     # open the PR node in the finished execution to show its output
     for label, nm in [("Raise the PR", "n8n_05_pr_output"), ("Release to supplier", "n8n_06_release_output")]:
         try:
-            frame = page.frame_locator("iframe").first if page.locator("iframe").count() else page
-            frame.get_by_text(label, exact=True).first.dblclick()
-            page.wait_for_timeout(2500)
-            shots[nm] = shot(nm)
+            tidy()
+            open_node(label)
+            page.wait_for_timeout(1500)
+            shots[nm] = shot(nm, clean=False)
             page.keyboard.press("Escape")
             page.wait_for_timeout(800)
         except Exception as e:
@@ -425,7 +471,6 @@ def run(workflow_json: str) -> dict:
     n8n_log.close()
     log["n8n_log_tail"] = pathlib.Path("/tmp/n8n.log").read_text()[-3000:]
     files[f"{HERE}/experiments/logs/n8n_run.json"] = json.dumps(log, indent=1, ensure_ascii=False, default=str).encode()
-    return files
 
 
 def _dig(o, key):

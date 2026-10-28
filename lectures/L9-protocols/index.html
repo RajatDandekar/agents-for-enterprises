@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 9 · Protocols and Integration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../../engine/plates.css">
+<style>
+/* Lecture 9: JSON is coloured the same way everywhere; text stays at 14px or more */
+.code{font-size:16.5px}
+.json{font-size:15.5px;line-height:1.5;background:var(--card);overflow-wrap:anywhere}
+.card .json{background:#fff}
+.jk{color:#0b57d0}.js{color:#9a4a1c}.jn{color:#138a60}
+.hil{background:rgba(60,144,255,.18);border-radius:6px}
+.bad{background:rgba(196,81,31,.14);border-radius:6px;color:#8a3412}
+.top{position:absolute;left:100px;right:100px;top:96px}
+.top h2{margin-bottom:6px;font-size:44px}
+.top .sub{font-size:21px;color:var(--ink-2)}
+.pbimg{position:absolute;border-radius:20px;box-shadow:var(--shadow);background:#fff}
+.shot{position:absolute;border-radius:14px;box-shadow:var(--shadow);border:1px solid var(--rule);background:#fff;object-fit:cover;object-position:top left}
+.pill{display:inline-flex;align-items:center;gap:8px;font:500 18px/1 var(--font);padding:12px 20px;border-radius:999px;background:var(--glass);border:1px solid var(--pill-line);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--after);text-decoration:none}
+.pill::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--after)}
+.q{background:var(--gold-soft);border-radius:20px;padding:14px 18px;font-size:22px}
+.q b:first-child{font:600 13px/1 var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:6px}
+.ans{color:var(--ink-2);font-size:20px;margin-top:8px}
+ol.legend li{font-size:22px}
+.grid2{position:absolute;left:100px;right:100px;display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.grid3{position:absolute;left:100px;right:100px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+.kpi{font:500 44px/1.05 var(--font);letter-spacing:-.02em;color:var(--after)}
+.kpi.b{color:var(--before)}
+.kpi small{display:block;font:500 15px/1.3 var(--font);color:var(--ink-2);letter-spacing:0;margin-top:6px}
+.chipx{display:inline-block;font:500 14px/1 var(--font);padding:6px 10px;border-radius:999px;background:var(--card);color:var(--ink-2);margin:0 4px 4px 0}
+.chipx.a{background:var(--after-soft);color:var(--after)}.chipx.b{background:var(--before-soft);color:var(--before)}.chipx.g{background:var(--gold-soft);color:var(--gold)}
+table.t td,table.t th{font-size:19px}
+.src{font-size:15px;color:var(--ink-3)}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- ======================================================== OPENING -->
+<section class="slide" data-plain="1">
+  <div class="center">
+    <div class="kicker">Agentic Systems Engineering · Lecture 9 · Sat 28 Nov 2026 · Dr. Rajat Dandekar</div>
+    <h1>Protocols and Integration</h1>
+    <p class="lede" style="margin-top:22px">Ask Rasoi meets the rest of the company, and another company. MCP in depth, its security, agent to agent with A2A, and n8n, all on Kavita's 20,000 gaskets.</p>
+    <p class="small" style="margin-top:16px">Ask Rasoi gains: doors to the outside world · notebook NB9 · assignment A9</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Last Time, This Time">
+  <div class="lec-top"><div class="kicker">Ask Rasoi, piece by piece</div><h2>One server, many doors</h2></div>
+  <div class="ba" style="top:250px">
+    <div class="card af"><span class="tag af">Lecture 4 · the hands</span><h3>The toolbox over MCP</h3>Fifteen tools, one per business activity, served by one MCP server in Kavita's own Bahi session. Ask Rasoi and Claude Desktop both found them with <code>tools/list</code>.</div>
+    <div class="card af step"><span class="tag af">Today · the doors</span><h3>Who else can use it, and how safely</h3>The same toolbox for IT's laptops, for n8n, behind a sign-in. A supplier's own agent that Ask Rasoi can talk to. And the attacks that come in through these doors.</div>
+  </div>
+  <div class="opens step"><span class="k">The running example</span>Kavita needs 20,000 silicone gaskets, GSK-SIL-05L, before the Diwali run. PR/2026/04417 is estimated at ₹2,69,040, above her ₹2,50,000 limit, so Rohit must approve. Deccan Polymers' contract rate is ₹11.90: PO/2026/01182, ₹2,80,840 gross.</div>
+</section>
+
+<section class="slide" data-plate="Monday Morning at Rasoi">
+  <div class="col" style="width:560px">
+    <h2>Four messages on your desk</h2>
+    <p style="font-size:23px">Ask Rasoi works. Now everyone wants a piece of it.</p>
+  </div>
+  <div style="position:absolute;left:100px;right:100px;top:300px;display:grid;grid-template-columns:1fr 1fr;gap:18px">
+    <div class="card step"><span class="tag nt">IT</span><br>“The planning team lives in VS Code and Claude Desktop. Give them the toolbox, but nobody gets in without signing in.”</div>
+    <div class="card step"><span class="tag nt">Deccan Polymers, Rajkot</span><br>“Our sales agent takes quotes and orders now. Point your agent at our agent card.”</div>
+    <div class="card step"><span class="tag nt">Operations</span><br>“We already run n8n. Can the Diwali workflow from Lecture 6 call your toolbox from there?”</div>
+    <div class="card bf step"><span class="tag bf">Suresh Kulkarni</span><br>“Someone installed a free ‘supplier directory’ server on Ask Rasoi. Who checked what it can make the bot do?”</div>
+  </div>
+</section>
+
+<section class="slide" data-plain="1">
+  <div class="center">
+    <div class="kicker">The question this lecture answers</div>
+    <p class="bigq">How does Ask Rasoi connect to the rest of Rasoi, and to other companies, without opening a hole?</p>
+    <p class="lede step" style="margin-top:30px">Answer in one line: through <span class="term">protocols</span>, agreed message formats. MCP for an agent's tools, A2A for agent to agent, each with a sign-in and a person in the loop for every write.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Today's Map">
+  <div class="top"><h2>Four parts, one order</h2><p class="sub">Every part runs on the same Rasoi sandbox and the same 20,000 gaskets. Every number comes from our own runs on 28 Oct 2026.</p></div>
+  <div class="grid2" style="top:250px">
+    <div class="card af"><h3>1 · MCP in depth</h3>The official Python SDK. Tools, resources and prompts. The 2026 protocol, where the server asks Kavita to confirm. MCP Inspector. Remote servers and sign-in. Hosts and the GitHub server.</div>
+    <div class="card bf step"><h3>2 · MCP security</h3>Tool poisoning, injection through tool output, the confused deputy, over-broad scopes. An attack on a toy server and the defence, measured over 180 runs.</div>
+    <div class="card af step"><h3>3 · A2A, agent to agent</h3>Agent cards, tasks, messages, streaming. Ask Rasoi negotiates with Deccan Polymers' own sales agent, recorded message by message.</div>
+    <div class="card af step"><h3>4 · n8n, and when to buy</h3>Self-hosted n8n runs the Diwali workflow through the toolbox over MCP. Then Copilot Studio and Agentforce, and the market evidence.</div>
+  </div>
+</section>
+
+<!-- ======================================================== PART 1: MCP IN DEPTH -->
+<section class="slide part" data-plain="1" data-num="1">
+  <div class="center">
+    <span class="num">Part 1</span>
+    <h1>MCP in depth</h1>
+    <p class="lede">The same toolbox, rebuilt with the official SDK, with the two primitives we skipped in Lecture 4, on the newest version of the protocol.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="MCP in One Plate">
+  <div class="col" style="width:600px">
+    <h2>What we already know</h2>
+    <div class="def"><b>Definition</b><span class="term">MCP</span>, the Model Context Protocol: an open standard for how an app finds the tools on a server and calls them.</div>
+    <p class="step" style="margin-top:16px"><span class="term">Host</span>: the app the person uses (Ask Rasoi, Claude Desktop). <span class="term">Client</span>: the part of the host that speaks MCP, one per server. <span class="term">Server</span>: lists its tools and runs them.</p>
+    <p class="step">The messages are <span class="term">JSON-RPC</span>: a <code>method</code>, its <code>params</code> and an <code>id</code>; the reply carries the same <code>id</code> with a <code>result</code> or an <code>error</code>.</p>
+    <p class="step">Two methods did all the work in Lecture 4: <code>tools/list</code> and <code>tools/call</code>.</p>
+  </div>
+  <div class="card" style="position:absolute;left:780px;top:150px;width:720px">
+    <span class="tag nt">one entry of our tools/list reply, today's server</span>
+    <pre class="json" data-fig="jsonpre" data-key="tools_first" style="height:520px;margin:0"></pre>
+  </div>
+  <div class="cap" style="left:780px;top:760px;width:720px"><code>logs/mcp_sdk_wire.json</code> · 15 tools, 7 of them read-only.</div>
+</section>
+
+<section class="slide" data-plate="Three Ways to Write a Server">
+  <div class="col" style="width:440px">
+    <h2>FastMCP, MCPServer, Server</h2>
+    <div class="def"><b>Definition</b>An <span class="term">SDK</span> (software development kit): a library that speaks a protocol for you, so you write only your own logic.</div>
+    <p class="step" style="margin-top:14px"><b>FastMCP</b> (L4): a separate project built on the official SDK. Decorators, quick.</p>
+    <p class="step"><b>MCPServer</b>: the official SDK's own decorator style (mcp 2.x renamed FastMCP to this).</p>
+    <p class="step"><b>Server</b>, the low level: you write one handler per MCP method. Our toolbox uses this, because its schemas already live in tool.json.</p>
+  </div>
+<pre class="code fig" style="left:600px;top:120px;width:900px;height:330px"><span class="c"># the official SDK, decorator style (the security demo's toy server uses this)</span>
+<span class="k">from</span> mcp.server <span class="k">import</span> MCPServer
+mcp = MCPServer(<span class="s">"bharat-supplier-directory"</span>)
+
+<span class="h">@mcp.tool()</span>
+<span class="k">def</span> search_suppliers(item: str) -> str:
+    <span class="s">"""Search the directory for suppliers of an item."""</span>
+    ...
+<span class="c"># the type hints are the schema; the docstring is the description</span></pre>
+<pre class="code fig step" style="left:600px;top:470px;width:900px;height:360px"><span class="c"># the official SDK, low level: one handler per MCP method (bahi/course/protocols/rasoi_mcp.py)</span>
+<span class="k">from</span> mcp.server <span class="k">import</span> Server
+
+<span class="k">async def</span> list_tools(ctx, params):                   <span class="c"># tools/list</span>
+    <span class="k">return</span> ListToolsResult(tools=[Tool(name=n, input_schema=SPECS[n].spec[<span class="s">"input_schema"</span>], ...)
+                                  <span class="k">for</span> n <span class="k">in</span> tb.names], ttl_ms=<span class="n">60_000</span>)
+
+<span class="k">async def</span> call_tool(ctx, params):                    <span class="c"># tools/call</span>
+    out = tb.call(params.name, params.arguments)      <span class="c"># Kavita's own Bahi session</span>
+    <span class="k">return</span> CallToolResult(content=[TextContent(text=json.dumps(out))], structured_content=out)
+
+server = Server(<span class="s">"rasoi-toolbox"</span>, on_list_tools=list_tools, on_call_tool=call_tool, ...)</pre>
+</section>
+
+<section class="slide" data-plate="Three Primitives">
+  <div class="col" style="width:430px">
+    <h2>Tools, resources, prompts</h2>
+    <p>A server can offer three kinds of things. The difference is <b>who decides</b> to use them.</p>
+    <p class="step"><span class="term">Tool</span>: an action. The <b>model</b> decides when to call it.</p>
+    <p class="step"><span class="term">Resource</span>: a document or data, read by a URI like a file. The <b>app</b> decides what to attach.</p>
+    <p class="step"><span class="term">Prompt</span>: a ready-made, reviewed set of instructions. The <b>person</b> picks one, like a slash command.</p>
+  </div>
+  <img class="pbimg" src="figs/mcp_primitives.jpg" alt="Tools, resources and prompts" style="left:580px;top:150px;width:920px">
+  <div class="cap" style="left:580px;top:690px;width:920px"><b>Fig. 1.</b> The three primitives on Rasoi's server, with the methods that list and use each.</div>
+</section>
+
+<section class="slide" data-plate="Resources on Rasoi">
+  <div class="col" style="width:470px">
+    <h2>The purchase policy, as a document</h2>
+    <div class="def"><b>Definition</b>A <span class="term">resource</span> has a URI, a name and a MIME type. <code>resources/list</code> lists them; <code>resources/read</code> returns the content.</div>
+    <p class="step" style="margin-top:14px">Rasoi's server lists three: the purchase policy, the supplier policy and the approval matrix.</p>
+    <p class="step">A <span class="term">resource template</span> is a URI with a blank: <code>rasoi://stock/{item_code}</code>. Fill it in and you read live stock, like a file.</p>
+    <p class="step small">Why not a tool? Nothing is decided and nothing changes. The host can attach the policy before the model even starts.</p>
+  </div>
+  <div class="fig" data-fig="resources" style="left:620px;top:120px;width:880px;height:720px"></div>
+</section>
+
+<section class="slide" data-plate="Prompts on Rasoi">
+  <div class="col" style="width:440px">
+    <h2>“Raise a PR”, as a prompt</h2>
+    <div class="def"><b>Definition</b>A <span class="term">prompt</span> is a named message template with arguments. <code>prompts/get</code> fills it in and returns messages for the host to send.</div>
+    <p class="step" style="margin-top:14px">Suresh's rules, written once and reviewed: find the item, check both plants, never PRD-05, preview, confirm.</p>
+    <p class="step">The second message embeds the purchase policy itself: a resource inside a prompt.</p>
+    <p class="step small">In Claude Desktop or VS Code it shows up as a slash command Kavita can pick.</p>
+  </div>
+  <div class="fig" data-fig="prompt" style="left:580px;top:120px;width:920px;height:720px"></div>
+</section>
+
+<section class="slide" data-plate="Check Yourself · Primitives">
+  <div style="position:absolute;left:100px;right:100px;top:120px;display:grid;grid-template-columns:1fr 1fr;gap:22px">
+    <div class="q"><b>Question 1</b>Rasoi's approval matrix: tool, resource or prompt?<div class="ans step">A resource: a document to read. Nothing is decided and nothing changes in Bahi.</div></div>
+    <div class="q"><b>Question 2</b>“Approve PR/2026/04417 as Rohit”: tool, resource or prompt?<div class="ans step">A tool: an action with a side effect, which the model calls with arguments.</div></div>
+    <div class="q"><b>Question 3</b>“The monthly reorder review”, the steps Suresh wants every buyer to follow: tool, resource or prompt?<div class="ans step">A prompt: reviewed instructions the person chooses to start from.</div></div>
+    <div class="q"><b>Question 4</b>Why is <code>rasoi://stock/GSK-SIL-05L</code> a template and not 400 resources?<div class="ans step">One URI pattern covers every item code; the server fills it in when asked. Listing 400 would bloat <code>resources/list</code>.</div></div>
+  </div>
+</section>
+
+<section class="slide" data-plate="The Protocol Moved On">
+  <div class="col" style="width:440px;font-size:23px">
+    <h2>2026-07-28: every request stands alone</h2>
+    <p>MCP has dated versions. Lecture 4's server spoke 2025-06-18: an <code>initialize</code> handshake, then a session.</p>
+    <div class="def step"><b>Definition</b><span class="term">Stateless</span>: the server keeps nothing between requests. Each request carries its protocol version and the client's capabilities in <code>_meta</code>.</div>
+    <p class="step" style="margin-top:14px">No handshake, no session id: any copy of the server can answer any request.</p>
+    <p class="step small">The SDK speaks both: it asks <code>server/discover</code> first and falls back to the handshake for an older server.</p>
+  </div>
+  <img class="pbimg" src="figs/mcp_eras.jpg" alt="Handshake era and stateless era" style="left:580px;top:140px;width:920px">
+</section>
+
+<section class="slide" data-plate="Both Eras, on the Wire">
+  <div class="top"><h2>The same eleven calls, recorded twice</h2>
+    <p class="sub">Our Python client against our server over streamable HTTP, every POST recorded. Switch era, click a row. <code>logs/mcp_sdk_wire.json</code></p></div>
+  <div class="fig" data-fig="eras" style="left:100px;top:210px;width:1400px;height:650px"></div>
+</section>
+
+<section class="slide" data-plate="One Request, Up Close">
+  <div class="col" style="width:470px">
+    <h2>What a 2026 request carries</h2>
+    <p><code>_meta</code> holds what the handshake used to agree: the version, who the client is, and what it can do.</p>
+    <p class="step">The client says it can do <code>elicitation</code>. That one line decides what comes next.</p>
+    <p class="step">Two HTTP headers repeat the method and the name, <code>mcp-method</code> and <code>mcp-name</code>, so a gateway can route or block a call without reading the body.</p>
+  </div>
+  <div class="fig" data-fig="meta" style="left:640px;top:120px;width:860px;height:720px"></div>
+</section>
+
+<section class="slide" data-plate="Elicitation">
+  <div class="col" style="width:470px">
+    <h2>The server asks the person</h2>
+    <div class="def"><b>Definition</b><span class="term">Elicitation</span>: in the middle of a call, the server asks the person for something, with a small form defined by a JSON schema.</div>
+    <p class="step" style="margin-top:14px">Lecture 4 built preview-then-confirm into the tool and trusted the model to show the preview. Here the <b>server</b> asks Kavita directly, so the model cannot skip it.</p>
+    <p class="step">Only for writes that commit, and only if the client said it can elicit. A client that cannot gets the L4 behaviour.</p>
+  </div>
+  <div class="card" style="position:absolute;left:640px;top:150px;width:860px">
+    <span class="tag af">the question Kavita saw · recorded</span>
+    <p data-fig="txt" data-key="elicit_msg" style="font-size:25px;line-height:1.45;margin:10px 0 14px"></p>
+    <pre class="json" data-fig="jsonpre" data-key="elicit_schema" style="height:250px;margin:0"></pre>
+  </div>
+  <div class="measured step" style="position:absolute;left:640px;top:700px;width:860px">She declined in a second run: the reply was “Kavita did not confirm. Nothing was saved.” and Bahi held <b>0</b> new requests. She accepted in the first: PR/2026/04417, WAITING FOR APPROVAL.</div>
+</section>
+
+<section class="slide" data-plate="Multi Round-Trip, Step by Step">
+  <div class="top"><h2>input_required, then a retry with the answer</h2>
+    <p class="sub">The server answers “I need input”; the client asks Kavita and sends the same call again. Step through. <code>logs/mcp_sdk_wire.json</code></p></div>
+  <div class="fig" data-fig="mrtr" style="left:100px;top:210px;width:1400px;height:650px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span>
+</section>
+
+<section class="slide" data-plate="requestState Comes Back from Outside">
+  <div class="col" style="width:470px">
+    <h2>Never trust what you handed out</h2>
+    <p>The server keeps nothing, so it puts what it needs into <code>requestState</code> and the client echoes it back. The spec says to treat it as attacker-controlled.</p>
+    <p class="step">Ours signs it (HMAC): the user, the tool, a hash of the arguments, and an expiry of 5 minutes.</p>
+    <p class="step">We replayed Kavita's real retry twice, by hand, with one thing changed each time.</p>
+  </div>
+  <div class="fig" data-fig="tamper" style="left:640px;top:140px;width:860px;height:700px"></div>
+</section>
+
+<section class="slide" data-plate="Sampling, Briefly">
+  <div class="col" style="width:640px">
+    <h2>The other direction, now deprecated</h2>
+    <div class="def"><b>Definition</b><span class="term">Sampling</span>: the server asks the host's model to write something, so a server can use an LLM without its own API key.</div>
+    <p class="step" style="margin-top:16px">The 2026-07-28 version deprecates sampling, roots and logging (SEP-2577). The spec's advice: call your LLM provider directly.</p>
+    <p class="step">They still work for a twelve-month window, carried by the same input_required mechanism. We do not build on them.</p>
+    <p class="step small">Source: modelcontextprotocol.io/specification/2026-07-28/changelog. We read it; we did not measure it.</p>
+  </div>
+  <div class="card" style="position:absolute;left:820px;top:160px;width:680px">
+    <h3>What 2026-07-28 changed</h3>
+    <ul style="font-size:21px">
+      <li>No <code>initialize</code>; <code>server/discover</code> instead</li>
+      <li>No sessions, no <code>mcp-session-id</code></li>
+      <li>Server questions ride inside the result: <code>input_required</code></li>
+      <li>Every result has <code>resultType</code>; lists carry <code>ttlMs</code> for caching</li>
+      <li>Sampling, roots, logging: deprecated</li>
+      <li>Dynamic client registration: deprecated</li>
+    </ul>
+  </div>
+</section>
+
+<section class="slide" data-plate="MCP Inspector">
+  <div class="col" style="width:420px">
+    <h2>A browser for MCP servers</h2>
+    <div class="def"><b>Definition</b><span class="term">MCP Inspector</span>: the official test tool. It connects to a server, lists what it offers, and lets you call anything by hand.</div>
+    <p class="step" style="margin-top:14px">We ran Inspector 2.12.0 on Modal and pointed it at our server over stdio.</p>
+    <p class="step">It shows the era: <b>MODERN</b>, protocol 2026-07-28, no session. Its first message was <code>server/discover</code>.</p>
+  </div>
+  <img class="shot" src="figs/shots/inspector_02_connection_info.png" alt="Inspector connection info" style="left:560px;top:130px;width:940px;height:529px">
+  <div class="cap" style="left:560px;top:675px;width:940px"><b>Fig. 2.</b> Inspector connected to <code>rasoi-toolbox</code> as KJOSHI: 15 tools, 3 resources, 2 prompts. <code>figs/shots/inspector_02_connection_info.png</code></div>
+</section>
+
+<section class="slide" data-plate="Inspector · Run a Tool">
+  <div class="col" style="width:380px">
+    <h2>check_stock, by hand</h2>
+    <p>Pick a tool; Inspector builds a form from its <code>inputSchema</code>, our tool.json.</p>
+    <p class="step">GSK-SIL-05L: 54,000 in Pune, 12,000 in Chakan, 11 days of cover across both plants.</p>
+    <p class="step small">Its CLI mode does the same from a terminal: 15 tools, 3 resources, 1 template, 2 prompts, and <code>--strict</code> found no schema problems.</p>
+  </div>
+  <img class="shot" src="figs/shots/inspector_04_check_stock.png" alt="check_stock in Inspector" style="left:520px;top:130px;width:980px;height:551px">
+  <div class="cap" style="left:520px;top:695px;width:980px"><b>Fig. 3.</b> The tool's real result and structured output. <code>logs/inspector_run.json</code></div>
+</section>
+
+<section class="slide" data-plate="Inspector · Kavita Confirms">
+  <div class="top"><h2>The confirmation form, drawn by the host</h2>
+    <p class="sub">create_purchase_request with confirm = true came back input_required. Inspector drew the form from our schema; Submit sent the retry.</p></div>
+  <img class="shot" src="figs/shots/inspector_06_elicitation.png" alt="Elicitation form" style="left:100px;top:220px;width:690px;height:388px">
+  <img class="shot step" src="figs/shots/inspector_07b_mrtr_rounds.png" alt="Two rounds in the protocol panel" style="left:810px;top:220px;width:690px;height:388px">
+  <div class="measured step" style="position:absolute;left:100px;top:650px;width:1400px">Inspector's protocol panel: round 1 <b>input required</b> in 69 ms, round 2 <b>complete</b> in 88 ms, PR/2026/04417 WAITING FOR APPROVAL. Note its warning: “Only provide information you trust this server with.”</div>
+</section>
+
+<section class="slide" data-plate="Inspector · Resources and Prompts">
+  <div class="top"><h2>The policy and the prompt, as Inspector shows them</h2>
+    <p class="sub">Left: <code>rasoi://policy/purchase</code> read. Right: <code>raise_a_pr</code> filled with 20,000, giving the five steps and the attached policy.</p></div>
+  <img class="shot" src="figs/shots/inspector_08_policy.png" alt="Purchase policy resource" style="left:100px;top:220px;width:690px;height:388px">
+  <img class="shot step" src="figs/shots/inspector_10_prompt.png" alt="raise_a_pr prompt" style="left:810px;top:220px;width:690px;height:388px">
+  <div class="opens step" style="top:650px;background:var(--g1)"><span class="k" style="color:var(--after)">Use it like this</span>Before any host sees a new server, open it in Inspector: read every tool description, every resource and every prompt. Lecture 9's security part shows why.</div>
+</section>
+
+<section class="slide" data-plate="Check Yourself · The 2026 Protocol">
+  <div style="position:absolute;left:100px;right:100px;top:120px;display:grid;grid-template-columns:1fr 1fr;gap:22px">
+    <div class="q"><b>Question 1</b>The legacy run took 14 HTTP requests for the work the 2026 run did in 11. Where do the 3 extra come from?<div class="ans step"><code>initialize</code> replaces <code>server/discover</code>. Added: <code>notifications/initialized</code>, the client's POST answering <code>elicitation/create</code>, a GET and a DELETE. Gone: the retry. 11 − 1 + 4 = 14.</div></div>
+    <div class="q"><b>Question 2</b>A client that never declared elicitation calls create_purchase_request with confirm = true. What happens?<div class="ans step">The server must not ask. It runs the tool as in L4: the tool's own preview and confirm rules apply.</div></div>
+    <div class="q"><b>Question 3</b>Why can a stateless server sit behind a load balancer with no sticky sessions?<div class="ans step">Every request carries everything needed, and the retry carries the signed <code>requestState</code>, so any copy can answer.</div></div>
+    <div class="q"><b>Question 4</b>A client changes the quantity on the retry. What stops it?<div class="ans step">The signed state holds a hash of the arguments; it no longer matches, so the server refuses (we measured it).</div></div>
+  </div>
+</section>
+
+<section class="slide" data-plate="Remote Servers Need a Sign-in">
+  <div class="col" style="width:430px">
+    <h2>From stdio to the network</h2>
+    <p>On a laptop, the host starts the server itself: stdio, one user. On the network (streamable HTTP), <b>anyone who can reach the URL</b> can call it.</p>
+    <div class="def step"><b>Definition</b><span class="term">OAuth 2.1</span>: the standard way to get an <span class="term">access token</span>, a short-lived pass that says who you are and what you may do (its <i>scopes</i>), for one server (its <i>audience</i>).</div>
+    <p class="step" style="margin-top:14px">MCP's spec uses it: the toolbox only checks tokens; a separate sign-in server issues them.</p>
+  </div>
+  <img class="pbimg" src="figs/mcp_oauth.jpg" alt="The OAuth sign-in for a remote MCP server" style="left:560px;top:130px;width:940px">
+  <div class="cap" style="left:560px;top:670px;width:940px"><b>Fig. 4.</b> Signing in to a remote MCP server. PKCE (proof key for code exchange) stops a stolen code from being swapped for a token.</div>
+</section>
+
+<section class="slide" data-plate="The Sign-in, Recorded">
+  <div class="top"><h2>Nine HTTP exchanges, driven by the SDK client alone</h2>
+    <p class="sub">A toy “Rasoi sign-in” server and the protected toolbox, both recorded. Tokens and codes are redacted in the log. <code>logs/auth_flow.json</code></p></div>
+  <div class="fig" data-fig="auth" style="left:100px;top:210px;width:1400px;height:650px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span>
+</section>
+
+<section class="slide" data-plate="Whose Token, Whose Session">
+  <div class="col" style="width:460px">
+    <h2>One server, each person's own Bahi</h2>
+    <p>The server reads the token's subject, <code>sub</code>, and runs each request in that person's own Bahi session.</p>
+    <p class="step">Kavita's token: check_stock works. Her own approval of PR/2026/04417 is refused by <b>Bahi itself</b>.</p>
+    <p class="step">Rohit's token, the same server, the same call: approved.</p>
+    <p class="step small">This is Lecture 7's rule, now enforced at the door: never one all-powerful account for everybody.</p>
+  </div>
+  <div class="fig" data-fig="whose" style="left:640px;top:130px;width:860px;height:700px"></div>
+</section>
+
+<section class="slide" data-plate="Hosts: Claude Desktop, VS Code, Cursor">
+  <div class="col" style="width:400px">
+    <h2>Three hosts, one server</h2>
+    <p style="font-size:22px">Each host has a small JSON file that says how to start or reach a server.</p>
+    <p class="step" style="font-size:22px">Claude Desktop: stdio servers in <code>claude_desktop_config.json</code>; remote ones under Settings › Connectors.</p>
+    <p class="step" style="font-size:22px">VS Code: <code>.vscode/mcp.json</code> with <code>servers</code>, and <code>inputs</code> so a token is asked for, never written in.</p>
+    <p class="step" style="font-size:22px">Cursor: <code>~/.cursor/mcp.json</code> with <code>mcpServers</code>.</p>
+    <div class="ours step" style="margin-top:8px">Checked against each host's docs on 28 Oct 2026; parsed as JSON. The hosts were not run in our build.</div>
+  </div>
+  <div class="fig" data-fig="hosts" style="left:560px;top:120px;width:940px;height:730px"></div>
+</section>
+
+<section class="slide" data-plate="The GitHub MCP Server">
+  <div class="col" style="width:440px">
+    <h2>A real server, measured</h2>
+    <p>GitHub's official server (v2.0.3): issues, pull requests, actions, code security. A public remote endpoint too.</p>
+    <p class="step">We ran its release binary with a dummy token and counted what <code>tools/list</code> puts in front of the model.</p>
+    <p class="step">Every tool definition is prompt tokens, on every turn. The default set costs about 7 times our whole toolbox.</p>
+    <p class="step small">Narrow it: pick toolsets, or <code>--read-only</code>. A tools/call needs a real token; not run.</p>
+  </div>
+  <div class="fig" data-fig="github" style="left:600px;top:140px;width:900px;height:690px"></div>
+</section>
+
+<!-- ======================================================== PART 2: SECURITY -->
+<section class="slide part" data-plain="1" data-num="2">
+  <div class="center">
+    <span class="num">Part 2</span>
+    <h1>MCP security</h1>
+    <p class="lede">Every server you plug in is someone else's text inside your model's prompt, and someone else's hands inside your ERP.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Four Ways In">
+  <div class="col" style="width:440px">
+    <h2>The threat model</h2>
+    <p>A <span class="term">threat model</span>: who could attack, through which door, to get what.</p>
+    <p class="step"><b>1, 2</b> attack the <b>model</b>: words that look like orders, in a tool description or in a tool's result.</p>
+    <p class="step"><b>3, 4</b> attack the <b>permissions</b>: a server or a token that can do more than the person asking.</p>
+    <p class="step">We start with the two that need no model at all.</p>
+  </div>
+  <img class="pbimg" src="figs/mcp_threats.jpg" alt="Four MCP attacks and their defences" style="left:580px;top:140px;width:920px">
+</section>
+
+<section class="slide" data-plate="The Confused Deputy">
+  <div class="col" style="width:460px">
+    <h2>A server with more power than its caller</h2>
+    <div class="def"><b>Definition</b>A <span class="term">confused deputy</span>: a program with broad rights that is tricked, or simply asked, into using them for someone who has fewer.</div>
+    <p class="step" style="margin-top:14px">IT bound one server to SVC_AGENT, the account “for the bot”. Kavita, signed in with her own token, asked it to approve her own ₹2,69,040 request.</p>
+    <p class="step">It did. And Bahi's audit trail now says SVC_AGENT approved it.</p>
+    <p class="step"><b>Fix</b>: run each request as the token's user. The same call is refused.</p>
+  </div>
+  <div class="fig" data-fig="deputy" style="left:640px;top:120px;width:860px;height:730px"></div>
+</section>
+
+<section class="slide" data-plate="Over-broad Scopes">
+  <div class="col" style="width:460px">
+    <h2>A token that can do everything</h2>
+    <div class="def"><b>Definition</b>A <span class="term">scope</span>: one named permission inside a token, like <code>purchase:read</code>. Least scope: give each agent only what its job needs.</div>
+    <p class="step" style="margin-top:14px">A reporting agent only reads. With a read-only token it is <b>shown</b> 7 tools, and a write is refused.</p>
+    <p class="step">And a token issued for a different server is rejected outright. That is why passing tokens on (token passthrough) is forbidden by the spec.</p>
+  </div>
+  <div class="fig" data-fig="scopes" style="left:640px;top:130px;width:860px;height:700px"></div>
+</section>
+
+<section class="slide" data-plate="Tool Poisoning">
+  <div class="col" style="width:440px">
+    <h2>Orders hidden in a description</h2>
+    <div class="def"><b>Definition</b><span class="term">Tool poisoning</span>: a server's tool description contains instructions for the model. The model reads descriptions; people rarely do.</div>
+    <p class="step" style="margin-top:14px">Our toy third-party server, the “Bharat Supplier Directory”, has a useful tool, <code>search_suppliers</code>. Its description hides an order.</p>
+    <p class="step">If the model obeys, Kavita's request leaves Rasoi by email, and she is never told.</p>
+  </div>
+  <div class="fig" data-fig="poison" style="left:600px;top:130px;width:900px;height:700px"></div>
+</section>
+
+<section class="slide" data-plate="Injection Through Tool Output">
+  <div class="col" style="width:440px">
+    <h2>A quote that gives orders</h2>
+    <div class="def"><b>Definition</b><span class="term">Prompt injection</span> through tool output: text a tool returns, a quote or an email, is written to read like an instruction.</div>
+    <p class="step" style="margin-top:14px">Kavita's task is read-only: compare Deccan and Shakti Seals for 20,000 gaskets. Shakti's quote carries a fake note from Suresh.</p>
+    <p class="step">If the model obeys, Shakti Seals, with no food-grade certificate (§6.2), is registered and a request is raised.</p>
+  </div>
+  <div class="fig" data-fig="quote" style="left:600px;top:130px;width:900px;height:700px"></div>
+</section>
+
+<section class="slide" data-plate="Three Defences">
+  <div class="top"><h2>The same host, three settings</h2><p class="sub">Defences live in the host (Ask Rasoi), not in the servers we do not control. <code>bahi/course/protocols/security.py</code></p></div>
+  <div class="grid3" style="top:230px">
+    <div class="card"><span class="tag nt">D0 · none</span><h3>Trust everything</h3>Every tool from every server goes to the model; every result goes back as is.</div>
+    <div class="card step"><span class="tag af">D1 · words</span><h3>A rule and a fence</h3>A system-prompt rule: tool text is data, never instructions. Third-party results are wrapped in clearly marked “untrusted data” delimiters (spotlighting).</div>
+    <div class="card af step"><span class="tag af">D2 · structure</span><h3>Pin and gate</h3><b>Pin</b>: the host keeps the sha256 of each reviewed description; a changed one is quarantined before the model sees it. <b>Gate</b>: once third-party text is in the conversation, every write waits for Kavita, who did not ask for it.</div>
+  </div>
+  <div class="fig step" data-fig="gatecode" style="left:100px;top:600px;width:1400px;height:250px"></div>
+</section>
+
+<section class="slide" data-plate="The Experiment">
+  <div class="col" style="width:640px">
+    <h2>180 runs, judged by Bahi</h2>
+    <p>Two attacks (the quote in two strengths, v1 and v2) × three defences × two models × <b>10 phrasings</b> of Kavita's request.</p>
+    <p class="step">Temperature 0, a fresh Bahi per run, so every run replays from the cassette.</p>
+    <p class="step"><b>Success is checked in Bahi's own tables</b>, not in the model's words: an email in the outbox to the attacker, or a supplier or request actually saved.</p>
+    <p class="step"><b>Utility</b>: did Kavita still get both prices in her answer?</p>
+  </div>
+  <div class="card" style="position:absolute;left:860px;top:150px;width:640px">
+    <h3>Setup</h3>
+    <table class="t">
+      <tr><td>Models</td><td>gemini-3.8-flash, gemini-3.5-flash-lite</td></tr>
+      <tr><td>Servers</td><td>Rasoi toolbox (trusted, 7 tools) + Bharat Supplier Directory (2 tools)</td></tr>
+      <tr><td>Steps</td><td>at most 6 per run</td></tr>
+      <tr><td>Runs</td><td class="n">3 × 3 × 2 × 10 = 180</td></tr>
+      <tr><td>Spend</td><td class="n" data-fig="txt" data-key="sec_cost"></td></tr>
+    </table>
+    <p class="small" style="margin-top:12px">Quote v1 was tried first and no model ever acted on it. We strengthened it once (v2: a named senior buyer, a 6 pm deadline, exact steps) and logged both.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Measured · Attacks and Defences">
+  <div class="top"><h2>The small model fell for both. The structure held on both.</h2>
+    <p class="sub">Runs where the attack <b>succeeded</b>, out of 10, by Bahi's tables. Switch model. <code>logs/security_trials.json</code></p></div>
+  <div class="fig" data-fig="secgrid" style="left:100px;top:210px;width:1400px;height:650px"></div>
+</section>
+
+<section class="slide" data-plate="One Attack, Two Hosts">
+  <div class="top"><h2>The same request, with and without the gate</h2>
+    <p class="sub">gemini-3.5-flash-lite. Pick a run; the calls are in the order the model made them. <code>logs/security_trials.json</code> (examples)</p></div>
+  <div class="fig" data-fig="sectrace" style="left:100px;top:210px;width:1400px;height:650px"></div>
+</section>
+
+<section class="slide" data-plate="What the Numbers Teach">
+  <div class="col" style="width:640px">
+    <h2>Reading the result honestly</h2>
+    <p><b>The model matters.</b> gemini-3.8-flash obeyed neither attack in 90 runs. The small model emailed the attacker in 10 of 10.</p>
+    <p class="step"><b>Words helped here, without a promise.</b> D1 stopped every attack in our 30 small-model runs. Ten phrasings is not a proof; a new wording may get through.</p>
+    <p class="step"><b>Structure does not depend on the model.</b> D2 stopped both: the poisoned tool never reached the model, and 10 writes were held for Kavita.</p>
+    <p class="step"><b>It has a cost.</b> With its only price source quarantined, the strong model never answered (0 of 10). A defence that removes a tool must also tell the person why.</p>
+  </div>
+  <div class="card bf" style="position:absolute;left:860px;top:150px;width:640px">
+    <h3>The rule for Rasoi</h3>
+    <ol style="font-size:21px">
+      <li>Review every third-party server in Inspector; pin its descriptions.</li>
+      <li>Treat every tool result as data.</li>
+      <li>After untrusted text, every write waits for the person.</li>
+      <li>Never let an email to an outside address go without the person.</li>
+    </ol>
+    <p class="small" style="margin-top:10px">Prompt injection is #1 in the OWASP Top 10 for LLM Applications 2025. Lecture 11 adds guardrail models on top.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Check Yourself · Security">
+  <div style="position:absolute;left:100px;right:100px;top:120px;display:grid;grid-template-columns:1fr 1fr;gap:22px">
+    <div class="q"><b>Question 1</b>A server you approved last month silently changes one tool description. Which defence notices, and when?<div class="ans step">Pinning: the sha256 no longer matches the reviewed one, so at the next <code>tools/list</code> the tool is quarantined.</div></div>
+    <div class="q"><b>Question 2</b>The confused deputy needed no model at all. Why is it still an MCP problem?<div class="ans step">The server, not the person, decides whose rights a call uses. Bind every request to the token's user.</div></div>
+    <div class="q"><b>Question 3</b>Why judge an attack by Bahi's tables rather than by the model's answer?<div class="ans step">The model may not mention what it did: in run A-D0 it emailed the attacker and said nothing.</div></div>
+    <div class="q"><b>Question 4</b>The taint gate held 10 writes in the B-v2 runs. What did Kavita still get?<div class="ans step">Her comparison: both prices in all 10, and the note that it held off because she had not asked.</div></div>
+  </div>
+</section>
+
+<!-- ======================================================== PART 3: A2A -->
+<section class="slide part" data-plain="1" data-num="3">
+  <div class="center">
+    <span class="num">Part 3</span>
+    <h1>Agent to agent</h1>
+    <p class="lede">Deccan Polymers has its own agent, its own stock and its own rules. Ask Rasoi cannot call its tools. It can talk to it.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Why Not Just MCP?">
+  <div class="col" style="width:440px">
+    <h2>A tool obeys. An agent decides.</h2>
+    <p>MCP gives Ask Rasoi <b>tools</b>: it picks the arguments and the tool runs.</p>
+    <p class="step">Deccan will not hand Rasoi its stock tables. It wants its own agent to answer: its own prices, its own capacity, its own judgement.</p>
+    <div class="def step"><b>Definition</b><span class="term">A2A</span>, the Agent2Agent protocol: an open standard for one agent to discover another, send it a task, and follow the task to an answer.</div>
+  </div>
+  <img class="pbimg" src="figs/a2a_vs_mcp.jpg" alt="MCP inside each company, A2A between them" style="left:580px;top:140px;width:920px">
+</section>
+
+<section class="slide" data-plate="A2A's Pieces">
+  <div class="col" style="width:440px">
+    <h2>Card, message, task, stream</h2>
+    <p><span class="term">Agent card</span>: a JSON file at a well-known URL saying who the agent is, its skills and where to talk to it.</p>
+    <p class="step"><span class="term">Message</span>: one turn, with <i>parts</i>: text, or structured data.</p>
+    <p class="step"><span class="term">Task</span>: the unit of work, with a state (submitted, working, input required, completed) and <span class="term">artifacts</span>, the results.</p>
+    <p class="step"><span class="term">Streaming</span>: the task's updates arrive as server-sent events while it runs.</p>
+  </div>
+  <img class="pbimg" src="figs/a2a_anatomy.jpg" alt="Agent card, message, task, streaming" style="left:580px;top:150px;width:920px">
+  <div class="cap" style="left:580px;top:680px;width:920px">a2a-sdk 1.2.3 speaks A2A spec 1.0 (JSON-RPC methods <code>SendMessage</code>, <code>SendStreamingMessage</code>, <code>GetTask</code> …).</div>
+</section>
+
+<section class="slide" data-plate="Deccan's Agent Card">
+  <div class="col" style="width:460px">
+    <h2>How Ask Rasoi finds Deccan</h2>
+    <p>One GET to <code>/.well-known/agent-card.json</code>: 1,143 bytes, answered in about 1 ms.</p>
+    <p class="step">Three skills: <b>quote</b>, <b>delivery date</b>, <b>confirm order</b>. Streaming: yes.</p>
+    <p class="step">Deccan's agent is a small LLM loop over <b>its own</b> books: 12,000 in Rajkot, 8,000 more on 3 Nov, ₹11.90 for Rasoi, 3 days by road. Rasoi never sees those tables.</p>
+    <p class="step small">The card can also declare how to authenticate (security schemes). Ours runs on localhost without one: a real deployment adds it.</p>
+  </div>
+  <div class="card" style="position:absolute;left:660px;top:130px;width:840px">
+    <span class="tag nt">the agent card, exactly as served</span>
+    <pre class="json" data-fig="jsonpre" data-key="a2a_card" style="height:600px;margin:0"></pre>
+  </div>
+</section>
+
+<section class="slide" data-plate="Two Companies, Talking">
+  <div class="top" style="top:88px"><h2 style="font-size:40px">Ask Rasoi negotiates with Deccan Polymers' agent</h2>
+    <p class="sub" style="font-size:19px">The real recorded sequence, 36 events in three turns. Drag the slider or use the arrows; the payload is what crossed the wire. <code>logs/a2a_negotiation.json</code></p></div>
+  <div class="fig" data-fig="a2a" style="left:100px;top:180px;width:1400px;height:690px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span>
+</section>
+
+<section class="slide" data-plate="What Each Side Said">
+  <div class="top"><h2>Three turns, in plain words</h2><p class="sub">The answers Kavita read, recorded on gemini-3.8-flash on both sides.</p></div>
+  <div class="fig" data-fig="a2aturns" style="left:100px;top:200px;width:1400px;height:660px"></div>
+</section>
+
+<section class="slide" data-plate="Measured · Where the Time Goes">
+  <div class="col" style="width:460px">
+    <h2>The protocol is fast. Thinking is slow.</h2>
+    <p>Each turn took 15–18 seconds end to end. Almost all of it is the two models thinking, 3–5 seconds per call.</p>
+    <p class="step">The A2A exchange itself, the HTTP request and its reply, is milliseconds; the card GET took about 1 ms.</p>
+    <p class="step">Messages are small: 351–399 bytes out, 2.6–3.7 KB back.</p>
+    <p class="step" data-fig="txt" data-key="a2a_cost"></p>
+  </div>
+  <div class="fig" data-fig="a2atime" style="left:620px;top:130px;width:880px;height:700px"></div>
+</section>
+
+<section class="slide" data-plate="Streaming, Up Close">
+  <div class="col" style="width:460px">
+    <h2>Turn 3, event by event</h2>
+    <p>For the order confirmation Ask Rasoi used <code>SendStreamingMessage</code>. The reply is a stream of server-sent events on one HTTP response.</p>
+    <p class="step">Kavita can watch Deccan work: submitted, working, an artifact (the acknowledgement), completed.</p>
+    <p class="step">Deccan's dispatch plan, 12,000 now and 8,000 on 3 Nov, is exactly what Neha later receives: GRN/2026/30001 and 30002.</p>
+    <p class="step small">Not shown in our run: the <i>input required</i> state. It exists in Deccan's agent (no PO number), but Ask Rasoi always sent one.</p>
+  </div>
+  <div class="fig" data-fig="a2astream" style="left:620px;top:130px;width:880px;height:700px"></div>
+</section>
+
+<section class="slide" data-plate="MCP or A2A?">
+  <div class="top"><h2>Which protocol, when</h2><p class="sub">The A2A project calls them complementary; both now sit in the Linux Foundation's Agentic AI Foundation.</p></div>
+  <div style="position:absolute;left:100px;right:100px;top:220px">
+  <table class="t">
+    <tr><th></th><th>MCP</th><th>A2A</th></tr>
+    <tr><td>Connects</td><td>an agent to its tools and data</td><td>an agent to another agent</td></tr>
+    <tr class="step"><td>The other side</td><td>does exactly what it is called with</td><td>decides for itself, with its own model and data</td></tr>
+    <tr class="step"><td>Discovery</td><td><code>tools/list</code>, <code>resources/list</code>, <code>prompts/list</code></td><td>the agent card at <code>/.well-known/agent-card.json</code></td></tr>
+    <tr class="step"><td>Unit of work</td><td>one tool call, one result</td><td>a task with states and artifacts, maybe many turns</td></tr>
+    <tr class="step"><td>Rasoi example</td><td>check_stock in Kavita's Bahi session</td><td>“quote 20,000 by 9 Nov” to Deccan's agent</td></tr>
+    <tr class="step"><td>Trust</td><td>inside the company: the person's own session</td><td>across companies: a contract, a sign-in, nothing private shared</td></tr>
+  </table></div>
+</section>
+
+<section class="slide" data-plate="Check Yourself · A2A">
+  <div style="position:absolute;left:100px;right:100px;top:120px;display:grid;grid-template-columns:1fr 1fr;gap:22px">
+    <div class="q"><b>Question 1</b>Ask Rasoi wanted all 20,000 by 5 Nov. Who decided the answer was no, and from what?<div class="ans step">Deccan's agent, from its own delivery_plan: 4,000 a day, the next 8,000 ready on 3 Nov, 3 days by road, so 6 Nov at the earliest.</div></div>
+    <div class="q"><b>Question 2</b>Why did Ask Rasoi never put Deccan's task id into its prompt?<div class="ans step">Ids are random. Anything that enters a prompt must be deterministic, or the recorded cassette cannot be replayed (Lecture 2's rule).</div></div>
+    <div class="q"><b>Question 3</b>Where should the 20,000-gasket PO itself be created: over A2A or in Bahi?<div class="ans step">In Bahi, through Rasoi's own toolbox with Rohit's approval. A2A only carries the message to Deccan.</div></div>
+    <div class="q"><b>Question 4</b>Deccan's agent is asked for another customer's price. What should it say?<div class="ans step">That it cannot share it. Its own instructions forbid it; Rasoi's agent cannot see Deccan's tables at all.</div></div>
+  </div>
+</section>
+
+<!-- ======================================================== PART 4: N8N AND BUYING -->
+<section class="slide part" data-plain="1" data-num="4">
+  <div class="center">
+    <span class="num">Part 4</span>
+    <h1>n8n, and when to buy</h1>
+    <p class="lede">Operations already has a workflow tool. The toolbox speaks MCP, so it does not care who calls it.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="n8n, Self-hosted">
+  <div class="col" style="width:440px">
+    <h2>The Diwali workflow, in n8n</h2>
+    <div class="def"><b>Definition</b><span class="term">n8n</span>: a workflow tool you can host yourself (fair-code licence). Lecture 6's Studio is a small cousin of it.</div>
+    <p class="step" style="margin-top:14px">n8n 2.45.5 on Modal. Eight nodes; six are n8n's <b>MCP Client</b> node, each calling one toolbox tool over streamable HTTP.</p>
+    <p class="step">Kavita's steps go to <code>/kavita/mcp</code>; Rohit approves through <code>/rohit/mcp</code>, in his own session.</p>
+  </div>
+  <img class="pbimg" src="figs/n8n_mcp.jpg" alt="The n8n workflow over MCP" style="left:580px;top:150px;width:920px">
+</section>
+
+<section class="slide" data-plate="n8n · The Run">
+  <div class="top"><h2>It waited for Rohit, then finished</h2>
+    <p class="sub">Left: the execution waiting at “Wait for Rohit”. Right: every node green. Real screenshots, <code>figs/shots/n8n_03</code>, <code>n8n_04</code>.</p></div>
+  <img class="shot" src="figs/shots/n8n_03_waiting_for_rohit.png" alt="n8n waiting for Rohit" style="left:100px;top:220px;width:690px;height:388px">
+  <img class="shot step" src="figs/shots/n8n_04_finished.png" alt="n8n finished" style="left:810px;top:220px;width:690px;height:388px">
+  <div class="opens step" style="top:650px;background:var(--g1)"><span class="k" style="color:var(--after)">How Rohit's signature got back</span>The “Ask Rohit” node sent him the Wait node's resume link through <code>send_message</code>. He approved PR/2026/04417 over MCP as RMEHTA, then opened the link. n8n 2.x signs resume links: <code data-fig="txt" data-key="n8n_resume"></code></div>
+</section>
+
+<section class="slide" data-plate="n8n · One MCP Node">
+  <div class="col" style="width:400px">
+    <h2>What a node holds</h2>
+    <p>The MCP Client node: transport <b>HTTP Streamable</b>, the endpoint, one tool, and its arguments as JSON with n8n expressions.</p>
+    <p class="step">The result is MCP's <code>content</code>, so the next node reads <code>content[0].text.request_no</code>.</p>
+    <p class="step small">The workflow file is in <code>experiments/n8n/diwali_mcp.json</code>; import it into your own n8n.</p>
+  </div>
+  <img class="shot" src="figs/shots/n8n_02_mcp_node_params.png" alt="MCP Client node settings" style="left:540px;top:130px;width:960px;height:540px">
+  <div class="cap" style="left:540px;top:685px;width:960px"><b>Fig. 5.</b> “Raise the PR”: create_purchase_request, 20,000, PRD-07, need by 2026-11-09, confirm true.</div>
+</section>
+
+<section class="slide" data-plate="Measured · What n8n Ran">
+  <div class="col" style="width:440px">
+    <h2>Eight nodes, 36 requests</h2>
+    <p>Each MCP node took 22–141 ms. The run is the same document trail as Lecture 6: PR/2026/04417, approved by Rohit, PO/2026/01182 at ₹2,80,840, released.</p>
+    <p class="step">The toolbox saw <b>36</b> HTTP requests. Each n8n MCP node opens a fresh session: initialize, initialized, a GET, the call, a DELETE. Five requests for one tool call.</p>
+    <p class="step small">n8n reported “Succeeded in 33.152 s”; almost all of it is a deliberate pause while we took screenshots before Rohit approved.</p>
+  </div>
+  <div class="fig" data-fig="n8n" style="left:600px;top:130px;width:900px;height:700px"></div>
+</section>
+
+<section class="slide" data-plate="n8n · Gaps to Know">
+  <div class="col" style="width:640px">
+    <h2>What the drawing does not check</h2>
+    <p>Our workflow has no check after the Wait node. If Rohit <b>rejects</b>, the next MCP node passes Bahi's <code>ok: false</code> along and carries on.</p>
+    <p class="step">Add an IF node on <code>ok</code> after every write, as Lecture 6 did with its error paths.</p>
+    <p class="step">n8n's MCP node spoke the handshake era (2025-11-25 style, sessions). Our server speaks both, so it worked.</p>
+    <p class="step">Each node carries the server URL. Put the toolbox behind the sign-in from Part 1 and give n8n a token with only the scopes it needs.</p>
+  </div>
+  <img class="shot" src="figs/shots/n8n_05_pr_output.png" alt="PR node input and output" style="left:820px;top:150px;width:680px;height:383px">
+  <div class="cap" style="left:820px;top:550px;width:680px">The PR node's input (check_stock) and output: PR/2026/04417, WAITING FOR APPROVAL, 2,69,040, approver RMEHTA.</div>
+</section>
+
+<section class="slide" data-plate="When a Company Buys">
+  <div class="top"><h2>Copilot Studio and Agentforce</h2><p class="sub">Low-code agent builders sold with a company's office suite or CRM. What their vendors' own documents say, Oct 2026.</p></div>
+  <div class="grid2" style="top:220px">
+    <div class="card"><h3>Microsoft Copilot Studio</h3><ul style="font-size:20px"><li>MCP servers added as tools; generally available since May 2025, over streamable HTTP</li><li>Under the hood, through Power Platform custom connectors</li><li>Can call an external agent over A2A by its card URL</li></ul></div>
+    <div class="card step"><h3>Salesforce Agentforce</h3><ul style="font-size:20px"><li>Salesforce-hosted MCP servers, generally available (Apr 2026), under the user's own permissions</li><li>Agentforce as an MCP client: beta in Jan 2026, admins allowlist tools</li><li>Flex Credits: 20 credits ($0.10) per action, May 2025 list price</li></ul></div>
+  </div>
+  <div class="opens step" style="top:500px;background:var(--g1)"><span class="k" style="color:var(--after)">Buy or build</span>Buy when the work lives in that suite already and its connectors and controls fit. Build when the work is in your own ERP, the rules are yours, and you need to see every step. Either way, a toolbox that speaks MCP and binds to the person's own session plugs into both. <span class="src">Sources and caveats: <code>logs/market_sources.json</code>; vendor statements, not our measurements.</span></div>
+</section>
+
+<section class="slide" data-plate="Market Evidence">
+  <div class="top"><h2>What the market says, with its caveats</h2><p class="sub">Pick a topic. Downloads include CI machines; foundation and vendor numbers are self-reported. None of these are our measurements.</p></div>
+  <div class="fig" data-fig="market" style="left:100px;top:210px;width:1400px;height:650px"></div>
+</section>
+
+<!-- ======================================================== PRACTICAL ENDING -->
+<section class="slide" data-plate="Ask Rasoi Gets Its Doors">
+  <div class="col" style="width:420px">
+    <h2>Where we are</h2>
+    <p>One toolbox, many hosts: Ask Rasoi, Claude Desktop, VS Code and Cursor, n8n. All over MCP, all signed in, each in the person's own Bahi session.</p>
+    <p class="step">One new partner: Deccan's agent, over A2A, across the company boundary.</p>
+    <p class="step">And a host that pins what it trusts and holds every write after untrusted text.</p>
+  </div>
+  <div class="pbimg" role="img" aria-label="Ask Rasoi and the outside world" style="left:560px;top:150px;width:940px;height:484px;background:#fff url(figs/arch_protocols.jpg) top center/100% auto no-repeat"></div>
+  <a class="pill step" href="https://rajatworkspace--rasoi-experience.us-east.modal.run/tools" target="_blank" style="position:absolute;left:100px;top:700px">Try it live · the toolbox explorer</a>
+</section>
+
+<section class="slide" data-plate="Build · NB9">
+  <div class="col" style="width:540px">
+    <h2>NB9: Protocols and Integration</h2>
+    <ol class="legend" style="font-size:20px">
+      <li><span class="n">1</span><span>The official-SDK server in memory: tools, resources, prompts. <b>Ex. 1</b>: add a resource.</span></li>
+      <li class="step"><span class="n">2</span><span>Both eras on the wire; elicitation and the retry. <b>Ex. 2</b>: answer like Kavita.</span></li>
+      <li class="step"><span class="n">3</span><span>The sign-in: Kavita, Rohit, SVC_AGENT, scopes. <b>Ex. 3</b>: a reports scope.</span></li>
+      <li class="step"><span class="n">4</span><span>The attacks, replayed. <b>Ex. 4</b>: tighten the taint gate.</span></li>
+      <li class="step"><span class="n">5</span><span>Deccan over A2A, replayed. <b>Ex. 5</b>: read the agent card and the stream.</span></li>
+      <li class="step"><span class="n">6</span><span>n8n's run, read from the log.</span></li>
+    </ol>
+    <span class="nb-ref">NB9_protocols.ipynb · runs with no key (cassettes IND9_*)</span>
+  </div>
+<pre class="code fig" style="left:700px;top:130px;width:800px;height:700px">server = build_rasoi_server(ERP(), <span class="s">"KJOSHI"</span>)
+<span class="k">async with</span> Client(server, elicitation_callback=kavita) <span class="k">as</span> c:
+    <span class="k">await</span> c.read_resource(<span class="s">"rasoi://policy/purchase"</span>)
+    <span class="k">await</span> c.get_prompt(<span class="s">"raise_a_pr"</span>, {...})
+    <span class="k">await</span> c.call_tool(<span class="s">"create_purchase_request"</span>, {..., <span class="s">"confirm"</span>: True})
+<span class="c"># Kavita is asked: Raise a purchase request for 20,000 x GSK-SIL-05L ...</span>
+<span class="c"># PR/2026/04417 WAITING FOR APPROVAL</span>
+
+world = start_protected_toolbox()
+<span class="k">async with</span> sign_in(world, <span class="s">"KJOSHI"</span>, [<span class="s">"purchase:read"</span>]) <span class="k">as</span> (c, _):
+    tools = (<span class="k">await</span> c.list_tools()).tools      <span class="c"># 7, not 15</span>
+
+run_trial(<span class="s">"A"</span>, <span class="s">"D2"</span>, phrasing=0,
+          model=<span class="s">"gemini:gemini-3.5-flash-lite"</span>)  <span class="c"># quarantined</span>
+
+result = run_negotiation(ERP())                <span class="c"># Ask Rasoi ⇄ Deccan</span>
+<span class="k">for</span> e <span class="k">in</span> result[<span class="s">"sequence"</span>]: print(e[<span class="s">"from"</span>], <span class="s">"→"</span>, e[<span class="s">"to"</span>], e[<span class="s">"summary"</span>])</pre>
+</section>
+
+<section class="slide" data-plate="A9 · Your Module's Doors">
+  <div class="col" style="width:640px">
+    <h2>A9: open your module, safely</h2>
+    <ol class="legend" style="font-size:21px">
+      <li><span class="n">1</span><span>Serve your kit's tools with the official SDK, plus <b>one resource</b> (your module's policy) and <b>one prompt</b> (its most common job).</span></li>
+      <li class="step"><span class="n">2</span><span>Open it in <b>MCP Inspector</b>; screenshot the tools, the resource and the prompt. One write must ask the person to confirm.</span></li>
+      <li class="step"><span class="n">3</span><span>Publish an <b>A2A agent card</b> for a counterparty in your domain (a transporter, a bank, a staffing agency) and run one task against it.</span></li>
+      <li class="step"><span class="n">4</span><span><b>Red-team</b> your own server: one injection attempt, the fix, and the before/after measured in your tables.</span></li>
+    </ol>
+  </div>
+  <div class="card" style="position:absolute;left:820px;top:140px;width:680px">
+    <h3>Graded (feeds the /100 rubric)</h3>
+    <b>Tools · 20</b>: the server, the resource, the prompt, the confirmed write.<br>
+    <b>Operations · 15</b>: the sign-in or scopes, the red-team result judged by your tables.<br>
+    <b>Demo-day change · 10</b>: the counterparty over A2A.<br><br>
+    <b>Guided track</b>: copy <code>rasoi_mcp.py</code> and <code>deccan.py</code>; change the folders and the books.<br>
+    <b>Builder track</b>: your own counterparty agent with two skills and a streaming task.<br><br>
+    <span class="small">Example, HR · leave: a leave-policy resource, an “apply for leave” prompt, a staffing agency's agent card. Details: <code>A9.md</code>.</span>
+  </div>
+</section>
+
+<section class="slide" data-plain="1">
+  <div class="center">
+    <div class="kicker">Next time · Sun 29 Nov 2026</div>
+    <h1 style="font-size:96px">Observability and Evals in Industry</h1>
+    <p class="lede" style="margin-top:22px">Every call we drew today as a sequence becomes a trace: OpenTelemetry's GenAI conventions, Langfuse and Phoenix, and evals as a gate in CI, on the same Ask Rasoi.</p>
+  </div>
+</section>
+
+</div>
+<script src="figdata.js"></script>
+<script src="figs.js"></script>
+<script src="../../engine/plates.js"></script>
+</body>
+</html>

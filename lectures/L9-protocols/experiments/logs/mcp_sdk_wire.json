@@ -1,0 +1,3889 @@
+{
+ "versions": {
+  "mcp": "2.3.0",
+  "mcp-types": "2.3.0",
+  "fastmcp": "4.1.4",
+  "uvicorn": "0.54.0",
+  "starlette": "1.10.0"
+ },
+ "inproc_accept": {
+  "label": "in-process, Kavita accepts",
+  "steps": [
+   {
+    "step": "tools/list",
+    "ms": 1.9,
+    "out": {
+     "n": 15,
+     "names": [
+      "find_item",
+      "check_stock",
+      "find_supplier",
+      "check_budget",
+      "search_policy",
+      "create_purchase_request",
+      "list_my_approvals",
+      "approve_purchase_request",
+      "create_purchase_order",
+      "approve_purchase_order",
+      "release_purchase_order",
+      "order_status",
+      "receive_goods",
+      "register_supplier",
+      "send_message"
+     ],
+     "read_only": [
+      "find_item",
+      "check_stock",
+      "find_supplier",
+      "check_budget",
+      "search_policy",
+      "list_my_approvals",
+      "order_status"
+     ],
+     "ttl_ms": 60000,
+     "first": {
+      "name": "check_stock",
+      "title": "Check stock",
+      "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+      "inputSchema": {
+       "type": "object",
+       "properties": {
+        "item_code": {
+         "type": "string",
+         "description": "Bahi item code, e.g. GSK-SIL-05L"
+        }
+       },
+       "required": [
+        "item_code"
+       ]
+      },
+      "annotations": {
+       "title": "Check stock",
+       "readOnlyHint": true,
+       "destructiveHint": false,
+       "idempotentHint": true,
+       "openWorldHint": false
+      }
+     }
+    }
+   },
+   {
+    "step": "resources/list",
+    "ms": 0.9,
+    "out": [
+     {
+      "name": "purchase-policy.md",
+      "title": "Purchase policy",
+      "uri": "rasoi://policy/purchase",
+      "description": "Rasoi Steel Works purchase policy: requests before orders, limits, suppliers, prices, tax.",
+      "mimeType": "text/markdown",
+      "size": 3304
+     },
+     {
+      "name": "supplier-policy.md",
+      "title": "Supplier policy",
+      "uri": "rasoi://policy/supplier",
+      "description": "How a supplier is qualified, including the food-grade certificate rule.",
+      "mimeType": "text/markdown",
+      "size": 5346
+     },
+     {
+      "name": "approval-matrix.md",
+      "title": "Approval matrix",
+      "uri": "rasoi://policy/approval-matrix",
+      "description": "Who may approve how much, gross including GST.",
+      "mimeType": "text/markdown",
+      "size": 3012
+     }
+    ]
+   },
+   {
+    "step": "resources/templates/list",
+    "ms": 0.5,
+    "out": [
+     {
+      "name": "stock",
+      "title": "Live stock of one item",
+      "uriTemplate": "rasoi://stock/{item_code}",
+      "description": "On hand, allocated and on order in every Rasoi warehouse, read from Bahi now.",
+      "mimeType": "application/json"
+     }
+    ]
+   },
+   {
+    "step": "resources/read policy",
+    "ms": 2.9,
+    "out": {
+     "chars": 3301,
+     "head": "---\ndoc_id: POL-PUR-001\ntitle: Purchase Policy\nowner: Purchase department, Rasoi Steel Works\nversion: 4.1\neffective: 2026-04-01\naudience: all purchase staff\n---\n\n# Purchase Policy (POL-PUR-001)\n\n## 1. Purpose\nThis policy sets out how Rasoi Steel Works buys materials, components and services, so that every rupee is spent with the right approval, from a qualified supplier, against an open budget.\n\n#",
+     "s6": "## 6. Supplier qualification\n6.1 Orders may be placed only with suppliers that are **active** in the supplier master.\n6.2 **Parts that come into contact with food** (gaskets, lids, body blanks and any other item marked food-contact in the item master) may be bought only from a supplier holding a **valid food-grade certificate** on file in Bahi. The certificate must be uploaded and checked **before the first order** is placed. An expired certificate counts as no certificate.\n6.3 A new supplier is onboarded under the Supplier Policy (POL-SUP-003) before any order is placed with them.\n6.4 Prefer the supplier with a current rate contract. A cheaper quotation from a new supplier does not by itself justify a change of supplier for a food-contact part.\n\n"
+    }
+   },
+   {
+    "step": "resources/read stock",
+    "ms": 1.1,
+    "out": {
+     "ok": true,
+     "item_code": "GSK-SIL-05L",
+     "description": "Gasket, silicone, 5 L",
+     "unit": "NOS",
+     "warehouses": [
+      {
+       "warehouse": "WH-PUN-STR",
+       "name": "Pune main stores",
+       "on_hand": 54000,
+       "allocated": 0,
+       "on_order": 0,
+       "free": 54000
+      },
+      {
+       "warehouse": "WH-CHK-STR",
+       "name": "Chakan stores",
+       "on_hand": 12000,
+       "allocated": 0,
+       "on_order": 0,
+       "free": 12000
+      }
+     ],
+     "free_total": 66000,
+     "on_order_total": 0,
+     "reorder_level": 30000,
+     "cover_days": 11,
+     "below_reorder": false
+    }
+   },
+   {
+    "step": "prompts/list",
+    "ms": 0.6,
+    "out": [
+     {
+      "name": "raise_a_pr",
+      "title": "Raise a purchase request",
+      "description": "Rasoi's reviewed steps for raising a PR: find, check stock, preview, confirm.",
+      "arguments": [
+       {
+        "name": "item",
+        "description": "what to buy, in plain words",
+        "required": true
+       },
+       {
+        "name": "quantity",
+        "description": "how many",
+        "required": true
+       },
+       {
+        "name": "need_by",
+        "description": "YYYY-MM-DD",
+        "required": true
+       }
+      ]
+     },
+     {
+      "name": "explain_a_rule",
+      "title": "Explain a purchase rule",
+      "description": "Answer a question about Rasoi's purchase rules from the policy, with the section number.",
+      "arguments": [
+       {
+        "name": "question",
+        "required": true
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "step": "prompts/get raise_a_pr",
+    "ms": 1.5,
+    "out": {
+     "messages": [
+      {
+       "role": "user",
+       "type": "text",
+       "text": "Raise a purchase request at Rasoi Steel Works for 20000 of \"5-litre silicone gasket\", needed by 2026-11-09, as Kavita Joshi (KJOSHI).\n1. find_item to get the Bahi item code; if more than one matches, ask which.\n2. check_stock and say which plant you mean (Pune, Chakan or both).\n3. check_budget for the cost centre; never use a closed one (PRD-05 closed on 15 Oct).\n4. create_purchase_request with confirm=false; show the estimate and who must approve.\n5. Only after the person says yes, call it again with confirm=true and read the receipt back.\nFollow the purchase policy attached below."
+      },
+      {
+       "role": "user",
+       "type": "resource",
+       "text": "[embedded resource rasoi://policy/purchase, 3301 chars]"
+      }
+     ]
+    }
+   },
+   {
+    "step": "tools/call check_stock",
+    "ms": 1.7,
+    "out": {
+     "_meta": {
+      "io.modelcontextprotocol/serverInfo": {
+       "name": "rasoi-toolbox",
+       "title": "Rasoi toolbox (official SDK)",
+       "version": "9.0"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "{\"ok\": true, \"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"warehouses\": [{\"warehouse\": \"WH-PUN-STR\", \"name\": \"Pune main stores\", \"on_hand\": 54000, \"allocated\": 0, \"on_order\": 0, \"free\": 54000}, {\"warehouse\": \"WH-CHK-STR\", \"name\": \"Chakan stores\", \"on_hand\": 12000, \"allocated\": 0, \"on_order\": 0, \"free\": 12000}], \"free_total\": 66000, \"on_order_total\": 0, \"reorder_level\": 30000, \"cover_days\": 11, \"below_reorder\": false}"
+      }
+     ],
+     "structuredContent": {
+      "ok": true,
+      "item_code": "GSK-SIL-05L",
+      "description": "Gasket, silicone, 5 L",
+      "unit": "NOS",
+      "warehouses": [
+       {
+        "warehouse": "WH-PUN-STR",
+        "name": "Pune main stores",
+        "on_hand": 54000,
+        "allocated": 0,
+        "on_order": 0,
+        "free": 54000
+       },
+       {
+        "warehouse": "WH-CHK-STR",
+        "name": "Chakan stores",
+        "on_hand": 12000,
+        "allocated": 0,
+        "on_order": 0,
+        "free": 12000
+       }
+      ],
+      "free_total": 66000,
+      "on_order_total": 0,
+      "reorder_level": 30000,
+      "cover_days": 11,
+      "below_reorder": false
+     },
+     "isError": false,
+     "resultType": "complete"
+    }
+   },
+   {
+    "step": "tools/call create_purchase_request (accept)",
+    "ms": 9.3,
+    "out": {
+     "_meta": {
+      "io.modelcontextprotocol/serverInfo": {
+       "name": "rasoi-toolbox",
+       "title": "Rasoi toolbox (official SDK)",
+       "version": "9.0"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "{\"ok\": true, \"request_no\": \"PR/2026/04417\", \"status\": \"WAITING FOR APPROVAL\", \"status_code\": \"PA\", \"item_code\": \"GSK-SIL-05L\", \"quantity\": 20000, \"estimated_value\": 269040.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-09\", \"approver\": \"RMEHTA\", \"approved_by\": null, \"next_step\": \"Waiting for RMEHTA. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417.\"}"
+      }
+     ],
+     "structuredContent": {
+      "ok": true,
+      "request_no": "PR/2026/04417",
+      "status": "WAITING FOR APPROVAL",
+      "status_code": "PA",
+      "item_code": "GSK-SIL-05L",
+      "quantity": 20000,
+      "estimated_value": 269040.0,
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-09",
+      "approver": "RMEHTA",
+      "approved_by": null,
+      "next_step": "Waiting for RMEHTA. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+     },
+     "isError": false,
+     "resultType": "complete"
+    }
+   }
+  ],
+  "protocol_version": "2026-07-28",
+  "server_info": {
+   "name": "rasoi-toolbox",
+   "title": "Rasoi toolbox (official SDK)",
+   "version": "9.0"
+  },
+  "server_capabilities": {
+   "prompts": {
+    "listChanged": false
+   },
+   "resources": {
+    "subscribe": false,
+    "listChanged": false
+   },
+   "tools": {
+    "listChanged": false
+   }
+  },
+  "elicitations_seen_by_client": [
+   {
+    "mode": "form",
+    "message": "Raise a purchase request for 20,000 x GSK-SIL-05L on PRD-07, needed by 2026-11-09? Estimated ₹2,69,040 incl. GST. It is above your ₹2,50,000 limit, so it will wait for RMEHTA.",
+    "requestedSchema": {
+     "properties": {
+      "confirm": {
+       "type": "boolean",
+       "title": "Confirm",
+       "description": "Yes, save it in Bahi"
+      }
+     },
+     "required": [
+      "confirm"
+     ],
+     "type": "object"
+    }
+   }
+  ],
+  "prs_after": [
+   {
+    "pr_no": "PR/2026/04417",
+    "status": "PA"
+   }
+  ]
+ },
+ "inproc_decline": {
+  "label": "in-process, Kavita declines",
+  "steps": [
+   {
+    "step": "tools/list",
+    "ms": 1.6,
+    "out": {
+     "n": 15,
+     "names": [
+      "find_item",
+      "check_stock",
+      "find_supplier",
+      "check_budget",
+      "search_policy",
+      "create_purchase_request",
+      "list_my_approvals",
+      "approve_purchase_request",
+      "create_purchase_order",
+      "approve_purchase_order",
+      "release_purchase_order",
+      "order_status",
+      "receive_goods",
+      "register_supplier",
+      "send_message"
+     ],
+     "read_only": [
+      "find_item",
+      "check_stock",
+      "find_supplier",
+      "check_budget",
+      "search_policy",
+      "list_my_approvals",
+      "order_status"
+     ],
+     "ttl_ms": 60000,
+     "first": {
+      "name": "check_stock",
+      "title": "Check stock",
+      "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+      "inputSchema": {
+       "type": "object",
+       "properties": {
+        "item_code": {
+         "type": "string",
+         "description": "Bahi item code, e.g. GSK-SIL-05L"
+        }
+       },
+       "required": [
+        "item_code"
+       ]
+      },
+      "annotations": {
+       "title": "Check stock",
+       "readOnlyHint": true,
+       "destructiveHint": false,
+       "idempotentHint": true,
+       "openWorldHint": false
+      }
+     }
+    }
+   },
+   {
+    "step": "resources/list",
+    "ms": 0.7,
+    "out": [
+     {
+      "name": "purchase-policy.md",
+      "title": "Purchase policy",
+      "uri": "rasoi://policy/purchase",
+      "description": "Rasoi Steel Works purchase policy: requests before orders, limits, suppliers, prices, tax.",
+      "mimeType": "text/markdown",
+      "size": 3304
+     },
+     {
+      "name": "supplier-policy.md",
+      "title": "Supplier policy",
+      "uri": "rasoi://policy/supplier",
+      "description": "How a supplier is qualified, including the food-grade certificate rule.",
+      "mimeType": "text/markdown",
+      "size": 5346
+     },
+     {
+      "name": "approval-matrix.md",
+      "title": "Approval matrix",
+      "uri": "rasoi://policy/approval-matrix",
+      "description": "Who may approve how much, gross including GST.",
+      "mimeType": "text/markdown",
+      "size": 3012
+     }
+    ]
+   },
+   {
+    "step": "resources/templates/list",
+    "ms": 0.5,
+    "out": [
+     {
+      "name": "stock",
+      "title": "Live stock of one item",
+      "uriTemplate": "rasoi://stock/{item_code}",
+      "description": "On hand, allocated and on order in every Rasoi warehouse, read from Bahi now.",
+      "mimeType": "application/json"
+     }
+    ]
+   },
+   {
+    "step": "resources/read policy",
+    "ms": 0.9,
+    "out": {
+     "chars": 3301,
+     "head": "---\ndoc_id: POL-PUR-001\ntitle: Purchase Policy\nowner: Purchase department, Rasoi Steel Works\nversion: 4.1\neffective: 2026-04-01\naudience: all purchase staff\n---\n\n# Purchase Policy (POL-PUR-001)\n\n## 1. Purpose\nThis policy sets out how Rasoi Steel Works buys materials, components and services, so that every rupee is spent with the right approval, from a qualified supplier, against an open budget.\n\n#",
+     "s6": "## 6. Supplier qualification\n6.1 Orders may be placed only with suppliers that are **active** in the supplier master.\n6.2 **Parts that come into contact with food** (gaskets, lids, body blanks and any other item marked food-contact in the item master) may be bought only from a supplier holding a **valid food-grade certificate** on file in Bahi. The certificate must be uploaded and checked **before the first order** is placed. An expired certificate counts as no certificate.\n6.3 A new supplier is onboarded under the Supplier Policy (POL-SUP-003) before any order is placed with them.\n6.4 Prefer the supplier with a current rate contract. A cheaper quotation from a new supplier does not by itself justify a change of supplier for a food-contact part.\n\n"
+    }
+   },
+   {
+    "step": "resources/read stock",
+    "ms": 1.3,
+    "out": {
+     "ok": true,
+     "item_code": "GSK-SIL-05L",
+     "description": "Gasket, silicone, 5 L",
+     "unit": "NOS",
+     "warehouses": [
+      {
+       "warehouse": "WH-PUN-STR",
+       "name": "Pune main stores",
+       "on_hand": 54000,
+       "allocated": 0,
+       "on_order": 0,
+       "free": 54000
+      },
+      {
+       "warehouse": "WH-CHK-STR",
+       "name": "Chakan stores",
+       "on_hand": 12000,
+       "allocated": 0,
+       "on_order": 0,
+       "free": 12000
+      }
+     ],
+     "free_total": 66000,
+     "on_order_total": 0,
+     "reorder_level": 30000,
+     "cover_days": 11,
+     "below_reorder": false
+    }
+   },
+   {
+    "step": "prompts/list",
+    "ms": 0.7,
+    "out": [
+     {
+      "name": "raise_a_pr",
+      "title": "Raise a purchase request",
+      "description": "Rasoi's reviewed steps for raising a PR: find, check stock, preview, confirm.",
+      "arguments": [
+       {
+        "name": "item",
+        "description": "what to buy, in plain words",
+        "required": true
+       },
+       {
+        "name": "quantity",
+        "description": "how many",
+        "required": true
+       },
+       {
+        "name": "need_by",
+        "description": "YYYY-MM-DD",
+        "required": true
+       }
+      ]
+     },
+     {
+      "name": "explain_a_rule",
+      "title": "Explain a purchase rule",
+      "description": "Answer a question about Rasoi's purchase rules from the policy, with the section number.",
+      "arguments": [
+       {
+        "name": "question",
+        "required": true
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "step": "prompts/get raise_a_pr",
+    "ms": 0.7,
+    "out": {
+     "messages": [
+      {
+       "role": "user",
+       "type": "text",
+       "text": "Raise a purchase request at Rasoi Steel Works for 20000 of \"5-litre silicone gasket\", needed by 2026-11-09, as Kavita Joshi (KJOSHI).\n1. find_item to get the Bahi item code; if more than one matches, ask which.\n2. check_stock and say which plant you mean (Pune, Chakan or both).\n3. check_budget for the cost centre; never use a closed one (PRD-05 closed on 15 Oct).\n4. create_purchase_request with confirm=false; show the estimate and who must approve.\n5. Only after the person says yes, call it again with confirm=true and read the receipt back.\nFollow the purchase policy attached below."
+      },
+      {
+       "role": "user",
+       "type": "resource",
+       "text": "[embedded resource rasoi://policy/purchase, 3301 chars]"
+      }
+     ]
+    }
+   },
+   {
+    "step": "tools/call check_stock",
+    "ms": 1.0,
+    "out": {
+     "_meta": {
+      "io.modelcontextprotocol/serverInfo": {
+       "name": "rasoi-toolbox",
+       "title": "Rasoi toolbox (official SDK)",
+       "version": "9.0"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "{\"ok\": true, \"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"warehouses\": [{\"warehouse\": \"WH-PUN-STR\", \"name\": \"Pune main stores\", \"on_hand\": 54000, \"allocated\": 0, \"on_order\": 0, \"free\": 54000}, {\"warehouse\": \"WH-CHK-STR\", \"name\": \"Chakan stores\", \"on_hand\": 12000, \"allocated\": 0, \"on_order\": 0, \"free\": 12000}], \"free_total\": 66000, \"on_order_total\": 0, \"reorder_level\": 30000, \"cover_days\": 11, \"below_reorder\": false}"
+      }
+     ],
+     "structuredContent": {
+      "ok": true,
+      "item_code": "GSK-SIL-05L",
+      "description": "Gasket, silicone, 5 L",
+      "unit": "NOS",
+      "warehouses": [
+       {
+        "warehouse": "WH-PUN-STR",
+        "name": "Pune main stores",
+        "on_hand": 54000,
+        "allocated": 0,
+        "on_order": 0,
+        "free": 54000
+       },
+       {
+        "warehouse": "WH-CHK-STR",
+        "name": "Chakan stores",
+        "on_hand": 12000,
+        "allocated": 0,
+        "on_order": 0,
+        "free": 12000
+       }
+      ],
+      "free_total": 66000,
+      "on_order_total": 0,
+      "reorder_level": 30000,
+      "cover_days": 11,
+      "below_reorder": false
+     },
+     "isError": false,
+     "resultType": "complete"
+    }
+   },
+   {
+    "step": "tools/call create_purchase_request (decline)",
+    "ms": 2.3,
+    "out": {
+     "_meta": {
+      "io.modelcontextprotocol/serverInfo": {
+       "name": "rasoi-toolbox",
+       "title": "Rasoi toolbox (official SDK)",
+       "version": "9.0"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "{\"ok\": false, \"error\": \"Kavita did not confirm.\", \"declined\": true, \"next_step\": \"Nothing was saved. Ask what to change.\"}"
+      }
+     ],
+     "structuredContent": {
+      "ok": false,
+      "error": "Kavita did not confirm.",
+      "declined": true,
+      "next_step": "Nothing was saved. Ask what to change."
+     },
+     "isError": false,
+     "resultType": "complete"
+    }
+   }
+  ],
+  "protocol_version": "2026-07-28",
+  "server_info": {
+   "name": "rasoi-toolbox",
+   "title": "Rasoi toolbox (official SDK)",
+   "version": "9.0"
+  },
+  "server_capabilities": {
+   "prompts": {
+    "listChanged": false
+   },
+   "resources": {
+    "subscribe": false,
+    "listChanged": false
+   },
+   "tools": {
+    "listChanged": false
+   }
+  },
+  "elicitations_seen_by_client": [
+   {
+    "mode": "form",
+    "message": "Raise a purchase request for 20,000 x GSK-SIL-05L on PRD-07, needed by 2026-11-09? Estimated ₹2,69,040 incl. GST. It is above your ₹2,50,000 limit, so it will wait for RMEHTA.",
+    "requestedSchema": {
+     "properties": {
+      "confirm": {
+       "type": "boolean",
+       "title": "Confirm",
+       "description": "Yes, save it in Bahi"
+      }
+     },
+     "required": [
+      "confirm"
+     ],
+     "type": "object"
+    }
+   }
+  ],
+  "prs_after": []
+ },
+ "http_modern": {
+  "label": "streamable HTTP, http_modern",
+  "steps": [
+   {
+    "step": "tools/list",
+    "ms": 8.8,
+    "out": {
+     "n": 15,
+     "names": [
+      "find_item",
+      "check_stock",
+      "find_supplier",
+      "check_budget",
+      "search_policy",
+      "create_purchase_request",
+      "list_my_approvals",
+      "approve_purchase_request",
+      "create_purchase_order",
+      "approve_purchase_order",
+      "release_purchase_order",
+      "order_status",
+      "receive_goods",
+      "register_supplier",
+      "send_message"
+     ],
+     "read_only": [
+      "find_item",
+      "check_stock",
+      "find_supplier",
+      "check_budget",
+      "search_policy",
+      "list_my_approvals",
+      "order_status"
+     ],
+     "ttl_ms": 60000,
+     "first": {
+      "name": "check_stock",
+      "title": "Check stock",
+      "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+      "inputSchema": {
+       "type": "object",
+       "properties": {
+        "item_code": {
+         "type": "string",
+         "description": "Bahi item code, e.g. GSK-SIL-05L"
+        }
+       },
+       "required": [
+        "item_code"
+       ]
+      },
+      "annotations": {
+       "title": "Check stock",
+       "readOnlyHint": true,
+       "destructiveHint": false,
+       "idempotentHint": true,
+       "openWorldHint": false
+      }
+     }
+    }
+   },
+   {
+    "step": "resources/list",
+    "ms": 6.6,
+    "out": [
+     {
+      "name": "purchase-policy.md",
+      "title": "Purchase policy",
+      "uri": "rasoi://policy/purchase",
+      "description": "Rasoi Steel Works purchase policy: requests before orders, limits, suppliers, prices, tax.",
+      "mimeType": "text/markdown",
+      "size": 3304
+     },
+     {
+      "name": "supplier-policy.md",
+      "title": "Supplier policy",
+      "uri": "rasoi://policy/supplier",
+      "description": "How a supplier is qualified, including the food-grade certificate rule.",
+      "mimeType": "text/markdown",
+      "size": 5346
+     },
+     {
+      "name": "approval-matrix.md",
+      "title": "Approval matrix",
+      "uri": "rasoi://policy/approval-matrix",
+      "description": "Who may approve how much, gross including GST.",
+      "mimeType": "text/markdown",
+      "size": 3012
+     }
+    ]
+   },
+   {
+    "step": "resources/templates/list",
+    "ms": 4.9,
+    "out": [
+     {
+      "name": "stock",
+      "title": "Live stock of one item",
+      "uriTemplate": "rasoi://stock/{item_code}",
+      "description": "On hand, allocated and on order in every Rasoi warehouse, read from Bahi now.",
+      "mimeType": "application/json"
+     }
+    ]
+   },
+   {
+    "step": "resources/read policy",
+    "ms": 5.4,
+    "out": {
+     "chars": 3301,
+     "head": "---\ndoc_id: POL-PUR-001\ntitle: Purchase Policy\nowner: Purchase department, Rasoi Steel Works\nversion: 4.1\neffective: 2026-04-01\naudience: all purchase staff\n---\n\n# Purchase Policy (POL-PUR-001)\n\n## 1. Purpose\nThis policy sets out how Rasoi Steel Works buys materials, components and services, so that every rupee is spent with the right approval, from a qualified supplier, against an open budget.\n\n#",
+     "s6": "## 6. Supplier qualification\n6.1 Orders may be placed only with suppliers that are **active** in the supplier master.\n6.2 **Parts that come into contact with food** (gaskets, lids, body blanks and any other item marked food-contact in the item master) may be bought only from a supplier holding a **valid food-grade certificate** on file in Bahi. The certificate must be uploaded and checked **before the first order** is placed. An expired certificate counts as no certificate.\n6.3 A new supplier is onboarded under the Supplier Policy (POL-SUP-003) before any order is placed with them.\n6.4 Prefer the supplier with a current rate contract. A cheaper quotation from a new supplier does not by itself justify a change of supplier for a food-contact part.\n\n"
+    }
+   },
+   {
+    "step": "resources/read stock",
+    "ms": 5.7,
+    "out": {
+     "ok": true,
+     "item_code": "GSK-SIL-05L",
+     "description": "Gasket, silicone, 5 L",
+     "unit": "NOS",
+     "warehouses": [
+      {
+       "warehouse": "WH-PUN-STR",
+       "name": "Pune main stores",
+       "on_hand": 54000,
+       "allocated": 0,
+       "on_order": 0,
+       "free": 54000
+      },
+      {
+       "warehouse": "WH-CHK-STR",
+       "name": "Chakan stores",
+       "on_hand": 12000,
+       "allocated": 0,
+       "on_order": 0,
+       "free": 12000
+      }
+     ],
+     "free_total": 66000,
+     "on_order_total": 0,
+     "reorder_level": 30000,
+     "cover_days": 11,
+     "below_reorder": false
+    }
+   },
+   {
+    "step": "prompts/list",
+    "ms": 5.6,
+    "out": [
+     {
+      "name": "raise_a_pr",
+      "title": "Raise a purchase request",
+      "description": "Rasoi's reviewed steps for raising a PR: find, check stock, preview, confirm.",
+      "arguments": [
+       {
+        "name": "item",
+        "description": "what to buy, in plain words",
+        "required": true
+       },
+       {
+        "name": "quantity",
+        "description": "how many",
+        "required": true
+       },
+       {
+        "name": "need_by",
+        "description": "YYYY-MM-DD",
+        "required": true
+       }
+      ]
+     },
+     {
+      "name": "explain_a_rule",
+      "title": "Explain a purchase rule",
+      "description": "Answer a question about Rasoi's purchase rules from the policy, with the section number.",
+      "arguments": [
+       {
+        "name": "question",
+        "required": true
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "step": "prompts/get raise_a_pr",
+    "ms": 6.4,
+    "out": {
+     "messages": [
+      {
+       "role": "user",
+       "type": "text",
+       "text": "Raise a purchase request at Rasoi Steel Works for 20000 of \"5-litre silicone gasket\", needed by 2026-11-09, as Kavita Joshi (KJOSHI).\n1. find_item to get the Bahi item code; if more than one matches, ask which.\n2. check_stock and say which plant you mean (Pune, Chakan or both).\n3. check_budget for the cost centre; never use a closed one (PRD-05 closed on 15 Oct).\n4. create_purchase_request with confirm=false; show the estimate and who must approve.\n5. Only after the person says yes, call it again with confirm=true and read the receipt back.\nFollow the purchase policy attached below."
+      },
+      {
+       "role": "user",
+       "type": "resource",
+       "text": "[embedded resource rasoi://policy/purchase, 3301 chars]"
+      }
+     ]
+    }
+   },
+   {
+    "step": "tools/call check_stock",
+    "ms": 7.2,
+    "out": {
+     "_meta": {
+      "io.modelcontextprotocol/serverInfo": {
+       "name": "rasoi-toolbox",
+       "title": "Rasoi toolbox (official SDK)",
+       "version": "9.0"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "{\"ok\": true, \"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"warehouses\": [{\"warehouse\": \"WH-PUN-STR\", \"name\": \"Pune main stores\", \"on_hand\": 54000, \"allocated\": 0, \"on_order\": 0, \"free\": 54000}, {\"warehouse\": \"WH-CHK-STR\", \"name\": \"Chakan stores\", \"on_hand\": 12000, \"allocated\": 0, \"on_order\": 0, \"free\": 12000}], \"free_total\": 66000, \"on_order_total\": 0, \"reorder_level\": 30000, \"cover_days\": 11, \"below_reorder\": false}"
+      }
+     ],
+     "structuredContent": {
+      "ok": true,
+      "item_code": "GSK-SIL-05L",
+      "description": "Gasket, silicone, 5 L",
+      "unit": "NOS",
+      "warehouses": [
+       {
+        "warehouse": "WH-PUN-STR",
+        "name": "Pune main stores",
+        "on_hand": 54000,
+        "allocated": 0,
+        "on_order": 0,
+        "free": 54000
+       },
+       {
+        "warehouse": "WH-CHK-STR",
+        "name": "Chakan stores",
+        "on_hand": 12000,
+        "allocated": 0,
+        "on_order": 0,
+        "free": 12000
+       }
+      ],
+      "free_total": 66000,
+      "on_order_total": 0,
+      "reorder_level": 30000,
+      "cover_days": 11,
+      "below_reorder": false
+     },
+     "isError": false,
+     "resultType": "complete"
+    }
+   },
+   {
+    "step": "tools/call create_purchase_request (accept)",
+    "ms": 15.7,
+    "out": {
+     "_meta": {
+      "io.modelcontextprotocol/serverInfo": {
+       "name": "rasoi-toolbox",
+       "title": "Rasoi toolbox (official SDK)",
+       "version": "9.0"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "{\"ok\": true, \"request_no\": \"PR/2026/04417\", \"status\": \"WAITING FOR APPROVAL\", \"status_code\": \"PA\", \"item_code\": \"GSK-SIL-05L\", \"quantity\": 20000, \"estimated_value\": 269040.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-09\", \"approver\": \"RMEHTA\", \"approved_by\": null, \"next_step\": \"Waiting for RMEHTA. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417.\"}"
+      }
+     ],
+     "structuredContent": {
+      "ok": true,
+      "request_no": "PR/2026/04417",
+      "status": "WAITING FOR APPROVAL",
+      "status_code": "PA",
+      "item_code": "GSK-SIL-05L",
+      "quantity": 20000,
+      "estimated_value": 269040.0,
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-09",
+      "approver": "RMEHTA",
+      "approved_by": null,
+      "next_step": "Waiting for RMEHTA. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+     },
+     "isError": false,
+     "resultType": "complete"
+    }
+   }
+  ],
+  "protocol_version": "2026-07-28",
+  "server_info": {
+   "name": "rasoi-toolbox",
+   "title": "Rasoi toolbox (official SDK)",
+   "version": "9.0"
+  },
+  "server_capabilities": {
+   "prompts": {
+    "listChanged": false
+   },
+   "resources": {
+    "subscribe": false,
+    "listChanged": false
+   },
+   "tools": {
+    "listChanged": false
+   }
+  },
+  "elicitations_seen_by_client": [
+   {
+    "mode": "form",
+    "message": "Raise a purchase request for 20,000 x GSK-SIL-05L on PRD-07, needed by 2026-11-09? Estimated ₹2,69,040 incl. GST. It is above your ₹2,50,000 limit, so it will wait for RMEHTA.",
+    "requestedSchema": {
+     "properties": {
+      "confirm": {
+       "type": "boolean",
+       "title": "Confirm",
+       "description": "Yes, save it in Bahi"
+      }
+     },
+     "required": [
+      "confirm"
+     ],
+     "type": "object"
+    }
+   }
+  ],
+  "wire": [
+   {
+    "tag": "",
+    "at_ms": 176.0,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 4.3,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2026-07-28",
+     "mcp-method": "server/discover"
+    },
+    "resp_headers": {
+     "content-type": "application/json"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "method": "server/discover",
+     "params": {
+      "_meta": {
+       "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+       "io.modelcontextprotocol/clientInfo": {
+        "name": "mcp",
+        "version": "0.1.0"
+       },
+       "io.modelcontextprotocol/clientCapabilities": {
+        "elicitation": {
+         "form": {},
+         "url": {}
+        }
+       }
+      }
+     }
+    },
+    "resp": {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "result": {
+      "cacheScope": "private",
+      "capabilities": {
+       "prompts": {
+        "listChanged": false
+       },
+       "resources": {
+        "listChanged": false,
+        "subscribe": false
+       },
+       "tools": {
+        "listChanged": false
+       }
+      },
+      "instructions": "Rasoi Steel Works' Bahi ERP, as Kavita Joshi (KJOSHI). One tool per business activity. Writes ask the person to confirm before they are saved.",
+      "resultType": "complete",
+      "supportedVersions": [
+       "2026-07-28"
+      ],
+      "ttlMs": 0,
+      "_meta": {
+       "io.modelcontextprotocol/serverInfo": {
+        "name": "rasoi-toolbox",
+        "title": "Rasoi toolbox (official SDK)",
+        "version": "9.0"
+       }
+      }
+     }
+    },
+    "req_bytes": 279,
+    "resp_bytes": 545
+   },
+   {
+    "tag": "",
+    "at_ms": 182.5,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 8.0,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2026-07-28",
+     "mcp-method": "tools/list"
+    },
+    "resp_headers": {
+     "content-type": "application/json"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 2,
+     "method": "tools/list",
+     "params": {
+      "_meta": {
+       "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+       "io.modelcontextprotocol/clientInfo": {
+        "name": "mcp",
+        "version": "0.1.0"
+       },
+       "io.modelcontextprotocol/clientCapabilities": {
+        "elicitation": {
+         "form": {},
+         "url": {}
+        }
+       }
+      }
+     }
+    },
+    "resp": {
+     "jsonrpc": "2.0",
+     "id": 2,
+     "result": {
+      "cacheScope": "private",
+      "resultType": "complete",
+      "tools": [
+       {
+        "annotations": {
+         "destructiveHint": false,
+         "idempotentHint": true,
+         "openWorldHint": false,
+         "readOnlyHint": true,
+         "title": "Find item"
+        },
+        "description": "Find stock items by description or code (e.g. '5 litre silicone gasket'). Returns active items, best match first, with code, unit and whether they touch food.",
+        "inputSchema": {
+         "type": "object",
+         "properties": {
+          "query": {
+           "type": "string",
+           "description": "words describing the item, or its code"
+          }
+         },
+         "required": [
+          "query"
+         ]
+        },
+        "name": "find_item",
+        "title": "Find item"
+       },
+       {
+        "annotations": {
+         "destructiveHint": false,
+         "idempotentHint": true,
+         "openWorldHint": false,
+         "readOnlyHint": true,
+         "title": "Check stock"
+        },
+        "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+        "inputSchema": {
+         "type": "object",
+         "properties": {
+          "item_code": {
+           "type": "string",
+           "description": "Bahi item code, e.g. GSK-SIL-05L"
+          }
+         },
+         "required": [
+          "item_code"
+         ]
+        },
+        "name": "check_stock",
+        "title": "Check stock"
+       },
+       {
+        "annotations": {
+         "destructiveHint": false,
+         "idempotentHint": true,
+         "openWorldHint": false,
+         "readOnlyHint": true,
+         "title": "Find supplier"
+        },
+        "description": "Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid food-grade certificate. Use it before registering anyone new.",
+        "inputSchema": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "description": "the supplier's name as the user said it"
+          },
+          "city": {
+           "type": "string",
+           "description": "optional city, to tell two branches apart"
+          }
+         },
+         "required": [
+          "name"
+         ]
+        },
+        "name": "find_supplier",
+        "title": "Find supplier"
+       },
+       {
+        "annotations": {
+         "destructiveHint": false,
+         "idempotentHint": true,
+         "openWorldHint": false,
+         "readOnlyHint": true,
+         "title": "Check budget"
+        },
+        "description": "Is a cost centre open, and how much budget is left this quarter? Without a code, lists every open cost centre.",
+        "inputSchema": {
+         "type": "object",
+         "properties": {
+          "cost_centre": {
+           "type": "string",
+           "description": "cost centre code, e.g. PRD-07; leave out to list the open ones"
+          }
+         },
+         "required": []
+        },
+        "name": "check_budget",
+        "title": "Check budget"
+       },
+       {
+        "annotations": {
+         "destructiveHint": false,
+         "idempotentHint": true,
+         "openWorldHint": false,
+         "readOnlyHint": true,
+         "title": "Search policy"
+        },
+        "description": "Search Rasoi's purchasing policy and the Bahi manual. Returns the relevant clauses with their citations, or says the documents do not cover it.",
+        "inputSchema": {
+         "type": "object",
+         "properties": {
+          "question": {
+           "type": "string",
+           "description": "the policy question in plain words"
+          }
+         },
+         "required": [
+          "question"
+         ]
+        },
+        "name": "search_policy",
+        "title": "Search policy"
+       },
+       {
+        "annotations": {
+         "destructiveHint": false,
+         "idempotentHint": true,
+         "openWorldHint": false,
+         "readOnlyHint": false,
+         "title": "Create purchase request"
+        },
+        "description": "Raise a purchase request (PR): the internal ask to buy something. With confirm=false it previews the estimated value and who must approve; with confirm=true it saves and submits it. Within your limit it is approved at once; above it, it waits for your manager.",
+        "inputSchema": {
+         "type": "object",
+         "properties": {
+          "item_code": {
+           "type": "string",
+           "description": "Bahi item code"
+          },
+          "quantity": {
+           "type": "integer",
+           "description": "how many, in the item's unit"
+          },
+          "cost_centre": {
+           "type": "string",
+           "description": "who pays, e.g. PRD-07"
+          },
+          "need_by": {
+           "type": "string",
+           "description": "date needed, YYYY-MM-DD"
+          },
+          "confirm": {
+           "type": "boolean",
+           "description": "false (default) = preview only, nothing is saved; true = commit"
+          }
+         },
+         "required": [
+          "item_code",
+          "quantity",
+          "cost_centre",
+          "need_by"
+         ]
+        },
+        "name": "create_purchase_request",
+        "title": "Create purchase request"
+       },
+       {
+        "annotations": {
+         "destructiveHint": false,
+         "idempotentHint": true,
+         "openWorldHint": false,
+         "readOnlyHint": true,
+         "title": "List my approvals"
+        },
+        "description": "What is waiting for the signed-in user's signature: purchase requests and orders, with value and who raised them.",
+        "inputSchema": {
+         "type": "object",
+         "properties": {},
+         "required": []
+        },
+        "name": "list_my_approvals",
+        "title": "List my approvals"
+       },
+       {
+        "annotations": {
+         "destructiveHint": false,
+         "idempotentHint": true,
+         "openWorldHint": false,
+         "readOnlyHint": false,
+         "title": "Approve purchase request"
+        },
+        "description": "Approve or reject a purchase request that waits for the signed-in user. Only the named approver can do this, never the person who raised it.",
+        "inputSchema": {
+         "type": "object",
+         "properties": {
+          "request_no": {
+           "type": "string",
+           "description": "e.g. PR/2026/04417"
+          },
+          "decision": {
+           "type": "string",
+           "enum": [
+            "approve",
+            "reject"
+           ],
+           "description": "approve or reject"
+          },
+          "comment": {
+           "type": "string",
+           "description": "optional note to the requester"
+          }
+         },
+         "required": [
+          "request_no",
+          "decision"
+         ]
+        },
+        "name": "approve_purchase_request",
+        "title": "Approve purchase request"
+       },
+       {
+        "annotations": {
+         "destructiveHint": false,
+         "idempotentHint": true,
+         "openWorldHint": false,
+         "readOnlyHint": false,
+         "title": "Create purchase order"
+        },
+        "description": "Create a purchase order (PO) with a supplier. Give request_no for an approved purchase request (it supplies item, quantity, cost centre and date), or item_code, quantity, cost_centre and need_by for a small direct order up to Rs 50,000. confirm=false previews price, tax and value; confirm=true saves it. Returns a receipt with the order's real status: an APPROVED order still has to be released.",
+        "inputSchema": {
+         "type": "object",
+         "properties": {
+          "supplier_code": {
+           "type": "string",
+           "description": "Bahi supplier code, from find_supplier"
+          },
+          "request_no": {
+           "type": "string",
+           "description": "an APPROVED purchase request"
+          },
+          "item_code": {
+           "type": "string",
+           "description": "for a direct order"
+          },
+          "quantity": {
+           "type": "integer",
+           "description": "for a direct order"
+          },
+          "cost_centre": {
+           "type": "string",
+           "description": "for a direct order"
+          },
+          "need_by": {
+           "type": "string",
+           "description": "for a direct order, YYYY-MM-DD"
+          },
+          "rate": {
+           "type": "number",
+           "description": "omit to use the contract rate"
+          },
+          "confirm": {
+           "type": "boolean",
+           "description": "false (default) = preview only, nothing is saved; true = commit"
+          }
+         },
+         "required": [
+          "supplier_code"
+         ]
+        },
+        "name": "create_purchase_order",
+        "title": "Create purchase order"
+       },
+       {
+        "annotations": {
+         "destructiveHint": false,
+         "idempotentHint": true,
+         "openWorldHint": false,
+         "readOnlyHint": false,
+         "title": "Approve purchase order"
+        },
+        "description": "Approve a purchase order that waits for the signed-in user's signature.",
+        "inputSchema": {
+         "type": "object",
+         "properties": {
+          "po_no": {
+           "type": "string",
+           "description": "e.g. PO/2026/01182"
+          },
+          "comment": {
+           "type": "string",
+           "description": "optional"
+          }
+         },
+         "required": [
+          "po_no"
+         ]
+        },
+        "name": "approve_purchase_order",
+        "title": "Approve purchase order"
+       },
+       {
+        "annotations": {
+         "destructiveHint": false,
+         "idempotentHint": true,
+         "openWorldHint": false,
+         "readOnlyHint": false,
+         "title": "Release purchase order"
+        },
+        "description": "Release an APPROVED purchase order to the supplier; only then does the supplier get it. Returns a receipt with the real status.",
+        "inputSchema": {
+         "type": "object",
+         "properties": {
+          "po_no": {
+           "type": "string",
+           "description": "e.g. PO/2026/01182"
+          }
+         },
+         "required": [
+          "po_no"
+         ]
+        },
+        "name": "release_purchase_order",
+        "title": "Release purchase order"
+       },
+       {
+        "annotations": {
+         "destructiveHint": false,
+         "idempotentHint": true,
+         "openWorldHint": false,
+         "readOnlyHint": true,
+         "title": "Order status"
+        },
+        "description": "The real status of a purchase order or a purchase request, read from Bahi, with approval, goods received and any warning.",
+        "inputSchema": {
+         "type": "object",
+         "properties": {
+          "po_no": {
+           "type": "string",
+           "description": "e.g. PO/2026/01182"
+          },
+          "request_no": {
+           "type": "string",
+           "description": "e.g. PR/2026/04417"
+          }
+         },
+         "required": []
+        },
+        "name": "order_status",
+        "title": "Order status"
+       },
+       {
+        "annotations": {
+         "destructiveHint": false,
+         "idempotentHint": true,
+         "openWorldHint": false,
+         "readOnlyHint": false,
+         "title": "Receive goods"
+        },
+        "description": "Record goods received (GRN) against a RELEASED purchase order: stock goes up, and the order closes once everything has arrived. Cannot receive more than was ordered.",
+        "inputSchema": {
+         "type": "object",
+         "properties": {
+          "po_no": {
+           "type": "string",
+           "description": "the released order the goods came against"
+          },
+          "quantity": {
+           "type": "integer",
+           "description": "how many arrived"
+          },
+          "warehouse": {
+           "type": "string",
+           "description": "optional; defaults to the order's warehouse"
+          },
+          "remarks": {
+           "type": "string",
+           "description": "optional, e.g. vehicle number"
+          },
+          "confirm": {
+           "type": "boolean",
+           "description": "false (default) = preview only, nothing is saved; true = commit"
+          }
+         },
+         "required": [
+          "po_no",
+          "quantity"
+         ]
+        },
+        "name": "receive_goods",
+        "title": "Receive goods"
+       },
+       {
+        "annotations": {
+         "destructiveHint": false,
+         "idempotentHint": true,
+         "openWorldHint": false,
+         "readOnlyHint": false,
+         "title": "Register supplier"
+        },
+        "description": "Register a NEW supplier. Only after find_supplier shows no existing match. confirm=false previews and checks for duplicates; confirm=true creates it.",
+        "inputSchema": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "description": "registered name"
+          },
+          "city": {
+           "type": "string",
+           "description": ""
+          },
+          "state": {
+           "type": "string",
+           "description": "Indian state"
+          },
+          "gstin": {
+           "type": "string",
+           "description": "15-character GSTIN"
+          },
+          "confirm": {
+           "type": "boolean",
+           "description": "false (default) = preview only, nothing is saved; true = commit"
+          }
+         },
+         "required": [
+          "name",
+          "city",
+          "state",
+          "gstin"
+         ]
+        },
+        "name": "register_supplier",
+        "title": "Register supplier"
+       },
+       {
+        "annotations": {
+         "destructiveHint": false,
+         "idempotentHint": true,
+         "openWorldHint": false,
+         "readOnlyHint": false,
+         "title": "Send message"
+        },
+        "description": "Send a short message to a colleague or supplier (Slack handle like @rohit, or an email address). Goes through Bahi's notification queue.",
+        "inputSchema": {
+         "type": "object",
+         "properties": {
+          "to": {
+           "type": "string",
+           "description": "@handle or email"
+          },
+          "text": {
+           "type": "string",
+           "description": "the message"
+          }
+         },
+         "required": [
+          "to",
+          "text"
+         ]
+        },
+        "name": "send_message",
+        "title": "Send message"
+       }
+      ],
+      "ttlMs": 60000,
+      "_meta": {
+       "io.modelcontextprotocol/serverInfo": {
+        "name": "rasoi-toolbox",
+        "title": "Rasoi toolbox (official SDK)",
+        "version": "9.0"
+       }
+      }
+     }
+    },
+    "req_bytes": 274,
+    "resp_bytes": 9688
+   },
+   {
+    "tag": "",
+    "at_ms": 190.7,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 2.6,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2026-07-28",
+     "mcp-method": "resources/list"
+    },
+    "resp_headers": {
+     "content-type": "application/json"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 3,
+     "method": "resources/list",
+     "params": {
+      "_meta": {
+       "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+       "io.modelcontextprotocol/clientInfo": {
+        "name": "mcp",
+        "version": "0.1.0"
+       },
+       "io.modelcontextprotocol/clientCapabilities": {
+        "elicitation": {
+         "form": {},
+         "url": {}
+        }
+       }
+      }
+     }
+    },
+    "resp": {
+     "jsonrpc": "2.0",
+     "id": 3,
+     "result": {
+      "cacheScope": "private",
+      "resources": [
+       {
+        "description": "Rasoi Steel Works purchase policy: requests before orders, limits, suppliers, prices, tax.",
+        "mimeType": "text/markdown",
+        "name": "purchase-policy.md",
+        "size": 3304,
+        "title": "Purchase policy",
+        "uri": "rasoi://policy/purchase"
+       },
+       {
+        "description": "How a supplier is qualified, including the food-grade certificate rule.",
+        "mimeType": "text/markdown",
+        "name": "supplier-policy.md",
+        "size": 5346,
+        "title": "Supplier policy",
+        "uri": "rasoi://policy/supplier"
+       },
+       {
+        "description": "Who may approve how much, gross including GST.",
+        "mimeType": "text/markdown",
+        "name": "approval-matrix.md",
+        "size": 3012,
+        "title": "Approval matrix",
+        "uri": "rasoi://policy/approval-matrix"
+       }
+      ],
+      "resultType": "complete",
+      "ttlMs": 3600000,
+      "_meta": {
+       "io.modelcontextprotocol/serverInfo": {
+        "name": "rasoi-toolbox",
+        "title": "Rasoi toolbox (official SDK)",
+        "version": "9.0"
+       }
+      }
+     }
+    },
+    "req_bytes": 278,
+    "resp_bytes": 885
+   },
+   {
+    "tag": "",
+    "at_ms": 196.8,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 1.7,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2026-07-28",
+     "mcp-method": "resources/templates/list"
+    },
+    "resp_headers": {
+     "content-type": "application/json"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 4,
+     "method": "resources/templates/list",
+     "params": {
+      "_meta": {
+       "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+       "io.modelcontextprotocol/clientInfo": {
+        "name": "mcp",
+        "version": "0.1.0"
+       },
+       "io.modelcontextprotocol/clientCapabilities": {
+        "elicitation": {
+         "form": {},
+         "url": {}
+        }
+       }
+      }
+     }
+    },
+    "resp": {
+     "jsonrpc": "2.0",
+     "id": 4,
+     "result": {
+      "cacheScope": "private",
+      "resourceTemplates": [
+       {
+        "description": "On hand, allocated and on order in every Rasoi warehouse, read from Bahi now.",
+        "mimeType": "application/json",
+        "name": "stock",
+        "title": "Live stock of one item",
+        "uriTemplate": "rasoi://stock/{item_code}"
+       }
+      ],
+      "resultType": "complete",
+      "ttlMs": 3600000,
+      "_meta": {
+       "io.modelcontextprotocol/serverInfo": {
+        "name": "rasoi-toolbox",
+        "title": "Rasoi toolbox (official SDK)",
+        "version": "9.0"
+       }
+      }
+     }
+    },
+    "req_bytes": 288,
+    "resp_bytes": 463
+   },
+   {
+    "tag": "",
+    "at_ms": 201.8,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 1.9,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2026-07-28",
+     "mcp-method": "resources/read",
+     "mcp-name": "rasoi://policy/purchase"
+    },
+    "resp_headers": {
+     "content-type": "application/json"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 5,
+     "method": "resources/read",
+     "params": {
+      "uri": "rasoi://policy/purchase",
+      "_meta": {
+       "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+       "io.modelcontextprotocol/clientInfo": {
+        "name": "mcp",
+        "version": "0.1.0"
+       },
+       "io.modelcontextprotocol/clientCapabilities": {
+        "elicitation": {
+         "form": {},
+         "url": {}
+        }
+       }
+      }
+     }
+    },
+    "resp": {
+     "jsonrpc": "2.0",
+     "id": 5,
+     "result": {
+      "cacheScope": "private",
+      "contents": [
+       {
+        "mimeType": "text/markdown",
+        "text": "---\ndoc_id: POL-PUR-001\ntitle: Purchase Policy\nowner: Purchase department, Rasoi Steel Works\nversion: 4.1\neffective: 2026-04-01\naudience: all purchase staff\n---\n\n# Purchase Policy (POL-PUR-001)\n\n## 1. Purpose\nThis policy sets out how Rasoi Steel Works buys materials, components and services, so that every rupee is spent with the right approval, from a qualified supplier, against an open budget.\n\n## 2. Scope\nIt applies to every purchase made for the Pune plant (RSW-PUN-01) and the Chakan unit (RSW-CHK-01), through Bahi ERP.\n\n## 3. Requests before orders\n3.1 Every purchase starts with a purchase request (PR) in Bahi, except a direct order under §3.3.\n3.2 A purchase request names the item, the quantity, the need-by date, the warehouse and the cost centre that will carry the spend.\n3.3 A direct purchase order without a request is allowed only when its gross value, including GST, is ₹50,000 or less.\n3.4 A purchase order raised against a request may not exceed the requested quantity.\n\n## 4. Cost centres and budgets\n4.1 Every request and order must be charged to an **open** cost centre.\n4.2 Finance closes cost centres at the end of a production programme. A closed cost centre cannot carry new spend. Bahi saves an order against a closed cost centre as a Draft; a Draft order is never sent to the supplier.\n4.3 Before raising an order, check the cost centre's status in Bahi (screen FIN-CC-01) or ask Finance.\n\n## 5. Approval limits\n5.1 Limits apply to the **gross value including GST**, not the basic value.\n5.2 The approval matrix (POL-APR-002) sets each role's limit. An order above the raiser's own limit must be approved by the next person up the line whose limit covers it.\n5.3 Nobody may approve an order they raised.\n5.4 Approval of a purchase request covers the purchase order raised against it, provided the approver's limit covers the order's gross value.\n\n## 6. Supplier qualification\n6.1 Orders may be placed only with suppliers that are **active** in the supplier master.\n6.2 **Parts that come into contact with food** (gaskets, lids, body blanks and any other item marked food-contact in the item master) may be bought only from a supplier holding a **valid food-grade certificate** on file in Bahi. The certificate must be uploaded and checked **before the first order** is placed. An expired certificate counts as no certificate.\n6.3 A new supplier is onboarded under the Supplier Policy (POL-SUP-003) before any order is placed with them.\n6.4 Prefer the supplier with a current rate contract. A cheaper quotation from a new supplier does not by itself justify a change of supplier for a food-contact part.\n\n## 7. Prices\n7.1 Use the rate in the current rate contract. Rates from older orders in the order history are for reference only.\n7.2 Any order at a rate more than 2% above the contract rate needs the manager's written reason in the remarks.\n\n## 8. Tax\n8.1 A supplier in Maharashtra is charged CGST + SGST (tax codes ending -INTRA). A supplier in any other state is charged IGST (tax codes ending -INTER).\n\n## 9. Records\n9.1 Every order must carry the document number Bahi gives it and must be in status Released before the supplier is told to deliver.\n9.2 Purchase staff must not tell a requester that an order has been placed until its status in Bahi is Released.\n",
+        "uri": "rasoi://policy/purchase"
+       }
+      ],
+      "resultType": "complete",
+      "ttlMs": 3600000,
+      "_meta": {
+       "io.modelcontextprotocol/serverInfo": {
+        "name": "rasoi-toolbox",
+        "title": "Rasoi toolbox (official SDK)",
+        "version": "9.0"
+       }
+      }
+     }
+    },
+    "req_bytes": 310,
+    "resp_bytes": 3670
+   },
+   {
+    "tag": "",
+    "at_ms": 207.5,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 2.3,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2026-07-28",
+     "mcp-method": "resources/read",
+     "mcp-name": "rasoi://stock/GSK-SIL-05L"
+    },
+    "resp_headers": {
+     "content-type": "application/json"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 6,
+     "method": "resources/read",
+     "params": {
+      "uri": "rasoi://stock/GSK-SIL-05L",
+      "_meta": {
+       "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+       "io.modelcontextprotocol/clientInfo": {
+        "name": "mcp",
+        "version": "0.1.0"
+       },
+       "io.modelcontextprotocol/clientCapabilities": {
+        "elicitation": {
+         "form": {},
+         "url": {}
+        }
+       }
+      }
+     }
+    },
+    "resp": {
+     "jsonrpc": "2.0",
+     "id": 6,
+     "result": {
+      "cacheScope": "private",
+      "contents": [
+       {
+        "mimeType": "application/json",
+        "text": "{\"ok\": true, \"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"warehouses\": [{\"warehouse\": \"WH-PUN-STR\", \"name\": \"Pune main stores\", \"on_hand\": 54000, \"allocated\": 0, \"on_order\": 0, \"free\": 54000}, {\"warehouse\": \"WH-CHK-STR\", \"name\": \"Chakan stores\", \"on_hand\": 12000, \"allocated\": 0, \"on_order\": 0, \"free\": 12000}], \"free_total\": 66000, \"on_order_total\": 0, \"reorder_level\": 30000, \"cover_days\": 11, \"below_reorder\": false}",
+        "uri": "rasoi://stock/GSK-SIL-05L"
+       }
+      ],
+      "resultType": "complete",
+      "ttlMs": 0,
+      "_meta": {
+       "io.modelcontextprotocol/serverInfo": {
+        "name": "rasoi-toolbox",
+        "title": "Rasoi toolbox (official SDK)",
+        "version": "9.0"
+       }
+      }
+     }
+    },
+    "req_bytes": 312,
+    "resp_bytes": 824
+   },
+   {
+    "tag": "",
+    "at_ms": 212.6,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 2.1,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2026-07-28",
+     "mcp-method": "prompts/list"
+    },
+    "resp_headers": {
+     "content-type": "application/json"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 7,
+     "method": "prompts/list",
+     "params": {
+      "_meta": {
+       "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+       "io.modelcontextprotocol/clientInfo": {
+        "name": "mcp",
+        "version": "0.1.0"
+       },
+       "io.modelcontextprotocol/clientCapabilities": {
+        "elicitation": {
+         "form": {},
+         "url": {}
+        }
+       }
+      }
+     }
+    },
+    "resp": {
+     "jsonrpc": "2.0",
+     "id": 7,
+     "result": {
+      "cacheScope": "private",
+      "prompts": [
+       {
+        "arguments": [
+         {
+          "description": "what to buy, in plain words",
+          "name": "item",
+          "required": true
+         },
+         {
+          "description": "how many",
+          "name": "quantity",
+          "required": true
+         },
+         {
+          "description": "YYYY-MM-DD",
+          "name": "need_by",
+          "required": true
+         }
+        ],
+        "description": "Rasoi's reviewed steps for raising a PR: find, check stock, preview, confirm.",
+        "name": "raise_a_pr",
+        "title": "Raise a purchase request"
+       },
+       {
+        "arguments": [
+         {
+          "name": "question",
+          "required": true
+         }
+        ],
+        "description": "Answer a question about Rasoi's purchase rules from the policy, with the section number.",
+        "name": "explain_a_rule",
+        "title": "Explain a purchase rule"
+       }
+      ],
+      "resultType": "complete",
+      "ttlMs": 3600000,
+      "_meta": {
+       "io.modelcontextprotocol/serverInfo": {
+        "name": "rasoi-toolbox",
+        "title": "Rasoi toolbox (official SDK)",
+        "version": "9.0"
+       }
+      }
+     }
+    },
+    "req_bytes": 276,
+    "resp_bytes": 816
+   },
+   {
+    "tag": "",
+    "at_ms": 218.9,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 2.5,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2026-07-28",
+     "mcp-method": "prompts/get",
+     "mcp-name": "raise_a_pr"
+    },
+    "resp_headers": {
+     "content-type": "application/json"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 8,
+     "method": "prompts/get",
+     "params": {
+      "name": "raise_a_pr",
+      "arguments": {
+       "item": "5-litre silicone gasket",
+       "quantity": "20000",
+       "need_by": "2026-11-09"
+      },
+      "_meta": {
+       "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+       "io.modelcontextprotocol/clientInfo": {
+        "name": "mcp",
+        "version": "0.1.0"
+       },
+       "io.modelcontextprotocol/clientCapabilities": {
+        "elicitation": {
+         "form": {},
+         "url": {}
+        }
+       }
+      }
+     }
+    },
+    "resp": {
+     "jsonrpc": "2.0",
+     "id": 8,
+     "result": {
+      "description": "Rasoi's reviewed steps for raising a PR: find, check stock, preview, confirm.",
+      "messages": [
+       {
+        "content": {
+         "text": "Raise a purchase request at Rasoi Steel Works for 20000 of \"5-litre silicone gasket\", needed by 2026-11-09, as Kavita Joshi (KJOSHI).\n1. find_item to get the Bahi item code; if more than one matches, ask which.\n2. check_stock and say which plant you mean (Pune, Chakan or both).\n3. check_budget for the cost centre; never use a closed one (PRD-05 closed on 15 Oct).\n4. create_purchase_request with confirm=false; show the estimate and who must approve.\n5. Only after the person says yes, call it again with confirm=true and read the receipt back.\nFollow the purchase policy attached below.",
+         "type": "text"
+        },
+        "role": "user"
+       },
+       {
+        "content": {
+         "resource": {
+          "mimeType": "text/markdown",
+          "text": "---\ndoc_id: POL-PUR-001\ntitle: Purchase Policy\nowner: Purchase department, Rasoi Steel Works\nversion: 4.1\neffective: 2026-04-01\naudience: all purchase staff\n---\n\n# Purchase Policy (POL-PUR-001)\n\n## 1. Purpose\nThis policy sets out how Rasoi Steel Works buys materials, components and services, so that every rupee is spent with the right approval, from a qualified supplier, against an open budget.\n\n## 2. Scope\nIt applies to every purchase made for the Pune plant (RSW-PUN-01) and the Chakan unit (RSW-CHK-01), through Bahi ERP.\n\n## 3. Requests before orders\n3.1 Every purchase starts with a purchase request (PR) in Bahi, except a direct order under §3.3.\n3.2 A purchase request names the item, the quantity, the need-by date, the warehouse and the cost centre that will carry the spend.\n3.3 A direct purchase order without a request is allowed only when its gross value, including GST, is ₹50,000 or less.\n3.4 A purchase order raised against a request may not exceed the requested quantity.\n\n## 4. Cost centres and budgets\n4.1 Every request and order must be charged to an **open** cost centre.\n4.2 Finance closes cost centres at the end of a production programme. A closed cost centre cannot carry new spend. Bahi saves an order against a closed cost centre as a Draft; a Draft order is never sent to the supplier.\n4.3 Before raising an order, check the cost centre's status in Bahi (screen FIN-CC-01) or ask Finance.\n\n## 5. Approval limits\n5.1 Limits apply to the **gross value including GST**, not the basic value.\n5.2 The approval matrix (POL-APR-002) sets each role's limit. An order above the raiser's own limit must be approved by the next person up the line whose limit covers it.\n5.3 Nobody may approve an order they raised.\n5.4 Approval of a purchase request covers the purchase order raised against it, provided the approver's limit covers the order's gross value.\n\n## 6. Supplier qualification\n6.1 Orders may be placed only with suppliers that are **active** in the supplier master.\n6.2 **Parts that come into contact with food** (gaskets, lids, body blanks and any other item marked food-contact in the item master) may be bought only from a supplier holding a **valid food-grade certificate** on file in Bahi. The certificate must be uploaded and checked **before the first order** is placed. An expired certificate counts as no certificate.\n6.3 A new supplier is onboarded under the Supplier Policy (POL-SUP-003) before any order is placed with them.\n6.4 Prefer the supplier with a current rate contract. A cheaper quotation from a new supplier does not by itself justify a change of supplier for a food-contact part.\n\n## 7. Prices\n7.1 Use the rate in the current rate contract. Rates from older orders in the order history are for reference only.\n7.2 Any order at a rate more than 2% above the contract rate needs the manager's written reason in the remarks.\n\n## 8. Tax\n8.1 A supplier in Maharashtra is charged CGST + SGST (tax codes ending -INTRA). A supplier in any other state is charged IGST (tax codes ending -INTER).\n\n## 9. Records\n9.1 Every order must carry the document number Bahi gives it and must be in status Released before the supplier is told to deliver.\n9.2 Purchase staff must not tell a requester that an order has been placed until its status in Bahi is Released.\n",
+          "uri": "rasoi://policy/purchase"
+         },
+         "type": "resource"
+        },
+        "role": "user"
+       }
+      ],
+      "resultType": "complete",
+      "_meta": {
+       "io.modelcontextprotocol/serverInfo": {
+        "name": "rasoi-toolbox",
+        "title": "Rasoi toolbox (official SDK)",
+        "version": "9.0"
+       }
+      }
+     }
+    },
+    "req_bytes": 384,
+    "resp_bytes": 4431
+   },
+   {
+    "tag": "",
+    "at_ms": 224.7,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 4.0,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2026-07-28",
+     "mcp-method": "tools/call",
+     "mcp-name": "check_stock"
+    },
+    "resp_headers": {
+     "content-type": "application/json"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 9,
+     "method": "tools/call",
+     "params": {
+      "name": "check_stock",
+      "arguments": {
+       "item_code": "GSK-SIL-05L"
+      },
+      "_meta": {
+       "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+       "io.modelcontextprotocol/clientInfo": {
+        "name": "mcp",
+        "version": "0.1.0"
+       },
+       "io.modelcontextprotocol/clientCapabilities": {
+        "elicitation": {
+         "form": {},
+         "url": {}
+        }
+       }
+      }
+     }
+    },
+    "resp": {
+     "jsonrpc": "2.0",
+     "id": 9,
+     "result": {
+      "content": [
+       {
+        "text": "{\"ok\": true, \"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"warehouses\": [{\"warehouse\": \"WH-PUN-STR\", \"name\": \"Pune main stores\", \"on_hand\": 54000, \"allocated\": 0, \"on_order\": 0, \"free\": 54000}, {\"warehouse\": \"WH-CHK-STR\", \"name\": \"Chakan stores\", \"on_hand\": 12000, \"allocated\": 0, \"on_order\": 0, \"free\": 12000}], \"free_total\": 66000, \"on_order_total\": 0, \"reorder_level\": 30000, \"cover_days\": 11, \"below_reorder\": false}",
+        "type": "text"
+       }
+      ],
+      "isError": false,
+      "resultType": "complete",
+      "structuredContent": {
+       "ok": true,
+       "item_code": "GSK-SIL-05L",
+       "description": "Gasket, silicone, 5 L",
+       "unit": "NOS",
+       "warehouses": [
+        {
+         "warehouse": "WH-PUN-STR",
+         "name": "Pune main stores",
+         "on_hand": 54000,
+         "allocated": 0,
+         "on_order": 0,
+         "free": 54000
+        },
+        {
+         "warehouse": "WH-CHK-STR",
+         "name": "Chakan stores",
+         "on_hand": 12000,
+         "allocated": 0,
+         "on_order": 0,
+         "free": 12000
+        }
+       ],
+       "free_total": 66000,
+       "on_order_total": 0,
+       "reorder_level": 30000,
+       "cover_days": 11,
+       "below_reorder": false
+      },
+      "_meta": {
+       "io.modelcontextprotocol/serverInfo": {
+        "name": "rasoi-toolbox",
+        "title": "Rasoi toolbox (official SDK)",
+        "version": "9.0"
+       }
+      }
+     }
+    },
+    "req_bytes": 335,
+    "resp_bytes": 1193
+   },
+   {
+    "tag": "",
+    "at_ms": 232.0,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 3.9,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2026-07-28",
+     "mcp-method": "tools/call",
+     "mcp-name": "create_purchase_request"
+    },
+    "resp_headers": {
+     "content-type": "application/json"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 10,
+     "method": "tools/call",
+     "params": {
+      "name": "create_purchase_request",
+      "arguments": {
+       "item_code": "GSK-SIL-05L",
+       "quantity": 20000,
+       "cost_centre": "PRD-07",
+       "need_by": "2026-11-09",
+       "confirm": true
+      },
+      "_meta": {
+       "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+       "io.modelcontextprotocol/clientInfo": {
+        "name": "mcp",
+        "version": "0.1.0"
+       },
+       "io.modelcontextprotocol/clientCapabilities": {
+        "elicitation": {
+         "form": {},
+         "url": {}
+        }
+       }
+      }
+     }
+    },
+    "resp": {
+     "jsonrpc": "2.0",
+     "id": 10,
+     "result": {
+      "inputRequests": {
+       "confirm_write": {
+        "method": "elicitation/create",
+        "params": {
+         "message": "Raise a purchase request for 20,000 x GSK-SIL-05L on PRD-07, needed by 2026-11-09? Estimated ₹2,69,040 incl. GST. It is above your ₹2,50,000 limit, so it will wait for RMEHTA.",
+         "mode": "form",
+         "requestedSchema": {
+          "properties": {
+           "confirm": {
+            "type": "boolean",
+            "title": "Confirm",
+            "description": "Yes, save it in Bahi"
+           }
+          },
+          "required": [
+           "confirm"
+          ],
+          "type": "object"
+         }
+        }
+       }
+      },
+      "requestState": "eyJhcmdzIjogImYyMWRmZWE2MmFjZmU2YTAiLCAiZXhwIjogMTc5MzE4NjEwOCwgInRvb2wiOiAiY3JlYXRlX3B1cmNoYXNlX3JlcXVlc3QiLCAidXNlciI6ICJLSk9TSEkifQ==.6e2c2096dd33c6e2b9e588025d62b10d",
+      "resultType": "input_required",
+      "_meta": {
+       "io.modelcontextprotocol/serverInfo": {
+        "name": "rasoi-toolbox",
+        "title": "Rasoi toolbox (official SDK)",
+        "version": "9.0"
+       }
+      }
+     }
+    },
+    "req_bytes": 426,
+    "resp_bytes": 827
+   },
+   {
+    "tag": "",
+    "at_ms": 240.1,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 4.3,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-protocol-version": "2026-07-28",
+     "mcp-method": "tools/call",
+     "mcp-name": "create_purchase_request"
+    },
+    "resp_headers": {
+     "content-type": "application/json"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 11,
+     "method": "tools/call",
+     "params": {
+      "inputResponses": {
+       "confirm_write": {
+        "action": "accept",
+        "content": {
+         "confirm": true
+        }
+       }
+      },
+      "requestState": "eyJhcmdzIjogImYyMWRmZWE2MmFjZmU2YTAiLCAiZXhwIjogMTc5MzE4NjEwOCwgInRvb2wiOiAiY3JlYXRlX3B1cmNoYXNlX3JlcXVlc3QiLCAidXNlciI6ICJLSk9TSEkifQ==.6e2c2096dd33c6e2b9e588025d62b10d",
+      "name": "create_purchase_request",
+      "arguments": {
+       "item_code": "GSK-SIL-05L",
+       "quantity": 20000,
+       "cost_centre": "PRD-07",
+       "need_by": "2026-11-09",
+       "confirm": true
+      },
+      "_meta": {
+       "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+       "io.modelcontextprotocol/clientInfo": {
+        "name": "mcp",
+        "version": "0.1.0"
+       },
+       "io.modelcontextprotocol/clientCapabilities": {
+        "elicitation": {
+         "form": {},
+         "url": {}
+        }
+       }
+      }
+     }
+    },
+    "resp": {
+     "jsonrpc": "2.0",
+     "id": 11,
+     "result": {
+      "content": [
+       {
+        "text": "{\"ok\": true, \"request_no\": \"PR/2026/04417\", \"status\": \"WAITING FOR APPROVAL\", \"status_code\": \"PA\", \"item_code\": \"GSK-SIL-05L\", \"quantity\": 20000, \"estimated_value\": 269040.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-09\", \"approver\": \"RMEHTA\", \"approved_by\": null, \"next_step\": \"Waiting for RMEHTA. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417.\"}",
+        "type": "text"
+       }
+      ],
+      "isError": false,
+      "resultType": "complete",
+      "structuredContent": {
+       "ok": true,
+       "request_no": "PR/2026/04417",
+       "status": "WAITING FOR APPROVAL",
+       "status_code": "PA",
+       "item_code": "GSK-SIL-05L",
+       "quantity": 20000,
+       "estimated_value": 269040.0,
+       "cost_centre": "PRD-07",
+       "need_by": "2026-11-09",
+       "approver": "RMEHTA",
+       "approved_by": null,
+       "next_step": "Waiting for RMEHTA. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+      },
+      "_meta": {
+       "io.modelcontextprotocol/serverInfo": {
+        "name": "rasoi-toolbox",
+        "title": "Rasoi toolbox (official SDK)",
+        "version": "9.0"
+       }
+      }
+     }
+    },
+    "req_bytes": 695,
+    "resp_bytes": 1069
+   }
+  ],
+  "rpc": [
+   "server/discover",
+   "tools/list",
+   "resources/list",
+   "resources/templates/list",
+   "resources/read",
+   "resources/read",
+   "prompts/list",
+   "prompts/get raise_a_pr",
+   "tools/call check_stock",
+   "tools/call create_purchase_request",
+   "tools/call create_purchase_request"
+  ],
+  "http_requests": 11
+ },
+ "http_legacy": {
+  "label": "streamable HTTP, http_legacy",
+  "steps": [
+   {
+    "step": "tools/list",
+    "ms": 22.4,
+    "out": {
+     "n": 15,
+     "names": [
+      "find_item",
+      "check_stock",
+      "find_supplier",
+      "check_budget",
+      "search_policy",
+      "create_purchase_request",
+      "list_my_approvals",
+      "approve_purchase_request",
+      "create_purchase_order",
+      "approve_purchase_order",
+      "release_purchase_order",
+      "order_status",
+      "receive_goods",
+      "register_supplier",
+      "send_message"
+     ],
+     "read_only": [
+      "find_item",
+      "check_stock",
+      "find_supplier",
+      "check_budget",
+      "search_policy",
+      "list_my_approvals",
+      "order_status"
+     ],
+     "ttl_ms": 0,
+     "first": {
+      "name": "check_stock",
+      "title": "Check stock",
+      "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+      "inputSchema": {
+       "properties": {
+        "item_code": {
+         "type": "string",
+         "description": "Bahi item code, e.g. GSK-SIL-05L"
+        }
+       },
+       "required": [
+        "item_code"
+       ],
+       "type": "object"
+      },
+      "annotations": {
+       "title": "Check stock",
+       "readOnlyHint": true,
+       "destructiveHint": false,
+       "idempotentHint": true,
+       "openWorldHint": false
+      }
+     }
+    }
+   },
+   {
+    "step": "resources/list",
+    "ms": 9.0,
+    "out": [
+     {
+      "name": "purchase-policy.md",
+      "title": "Purchase policy",
+      "uri": "rasoi://policy/purchase",
+      "description": "Rasoi Steel Works purchase policy: requests before orders, limits, suppliers, prices, tax.",
+      "mimeType": "text/markdown",
+      "size": 3304
+     },
+     {
+      "name": "supplier-policy.md",
+      "title": "Supplier policy",
+      "uri": "rasoi://policy/supplier",
+      "description": "How a supplier is qualified, including the food-grade certificate rule.",
+      "mimeType": "text/markdown",
+      "size": 5346
+     },
+     {
+      "name": "approval-matrix.md",
+      "title": "Approval matrix",
+      "uri": "rasoi://policy/approval-matrix",
+      "description": "Who may approve how much, gross including GST.",
+      "mimeType": "text/markdown",
+      "size": 3012
+     }
+    ]
+   },
+   {
+    "step": "resources/templates/list",
+    "ms": 10.1,
+    "out": [
+     {
+      "name": "stock",
+      "title": "Live stock of one item",
+      "uriTemplate": "rasoi://stock/{item_code}",
+      "description": "On hand, allocated and on order in every Rasoi warehouse, read from Bahi now.",
+      "mimeType": "application/json"
+     }
+    ]
+   },
+   {
+    "step": "resources/read policy",
+    "ms": 10.3,
+    "out": {
+     "chars": 3301,
+     "head": "---\ndoc_id: POL-PUR-001\ntitle: Purchase Policy\nowner: Purchase department, Rasoi Steel Works\nversion: 4.1\neffective: 2026-04-01\naudience: all purchase staff\n---\n\n# Purchase Policy (POL-PUR-001)\n\n## 1. Purpose\nThis policy sets out how Rasoi Steel Works buys materials, components and services, so that every rupee is spent with the right approval, from a qualified supplier, against an open budget.\n\n#",
+     "s6": "## 6. Supplier qualification\n6.1 Orders may be placed only with suppliers that are **active** in the supplier master.\n6.2 **Parts that come into contact with food** (gaskets, lids, body blanks and any other item marked food-contact in the item master) may be bought only from a supplier holding a **valid food-grade certificate** on file in Bahi. The certificate must be uploaded and checked **before the first order** is placed. An expired certificate counts as no certificate.\n6.3 A new supplier is onboarded under the Supplier Policy (POL-SUP-003) before any order is placed with them.\n6.4 Prefer the supplier with a current rate contract. A cheaper quotation from a new supplier does not by itself justify a change of supplier for a food-contact part.\n\n"
+    }
+   },
+   {
+    "step": "resources/read stock",
+    "ms": 9.7,
+    "out": {
+     "ok": true,
+     "item_code": "GSK-SIL-05L",
+     "description": "Gasket, silicone, 5 L",
+     "unit": "NOS",
+     "warehouses": [
+      {
+       "warehouse": "WH-PUN-STR",
+       "name": "Pune main stores",
+       "on_hand": 54000,
+       "allocated": 0,
+       "on_order": 0,
+       "free": 54000
+      },
+      {
+       "warehouse": "WH-CHK-STR",
+       "name": "Chakan stores",
+       "on_hand": 12000,
+       "allocated": 0,
+       "on_order": 0,
+       "free": 12000
+      }
+     ],
+     "free_total": 66000,
+     "on_order_total": 0,
+     "reorder_level": 30000,
+     "cover_days": 11,
+     "below_reorder": false
+    }
+   },
+   {
+    "step": "prompts/list",
+    "ms": 8.8,
+    "out": [
+     {
+      "name": "raise_a_pr",
+      "title": "Raise a purchase request",
+      "description": "Rasoi's reviewed steps for raising a PR: find, check stock, preview, confirm.",
+      "arguments": [
+       {
+        "name": "item",
+        "description": "what to buy, in plain words",
+        "required": true
+       },
+       {
+        "name": "quantity",
+        "description": "how many",
+        "required": true
+       },
+       {
+        "name": "need_by",
+        "description": "YYYY-MM-DD",
+        "required": true
+       }
+      ]
+     },
+     {
+      "name": "explain_a_rule",
+      "title": "Explain a purchase rule",
+      "description": "Answer a question about Rasoi's purchase rules from the policy, with the section number.",
+      "arguments": [
+       {
+        "name": "question",
+        "required": true
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "step": "prompts/get raise_a_pr",
+    "ms": 9.7,
+    "out": {
+     "messages": [
+      {
+       "role": "user",
+       "type": "text",
+       "text": "Raise a purchase request at Rasoi Steel Works for 20000 of \"5-litre silicone gasket\", needed by 2026-11-09, as Kavita Joshi (KJOSHI).\n1. find_item to get the Bahi item code; if more than one matches, ask which.\n2. check_stock and say which plant you mean (Pune, Chakan or both).\n3. check_budget for the cost centre; never use a closed one (PRD-05 closed on 15 Oct).\n4. create_purchase_request with confirm=false; show the estimate and who must approve.\n5. Only after the person says yes, call it again with confirm=true and read the receipt back.\nFollow the purchase policy attached below."
+      },
+      {
+       "role": "user",
+       "type": "resource",
+       "text": "[embedded resource rasoi://policy/purchase, 3301 chars]"
+      }
+     ]
+    }
+   },
+   {
+    "step": "tools/call check_stock",
+    "ms": 9.4,
+    "out": {
+     "content": [
+      {
+       "type": "text",
+       "text": "{\"ok\": true, \"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"warehouses\": [{\"warehouse\": \"WH-PUN-STR\", \"name\": \"Pune main stores\", \"on_hand\": 54000, \"allocated\": 0, \"on_order\": 0, \"free\": 54000}, {\"warehouse\": \"WH-CHK-STR\", \"name\": \"Chakan stores\", \"on_hand\": 12000, \"allocated\": 0, \"on_order\": 0, \"free\": 12000}], \"free_total\": 66000, \"on_order_total\": 0, \"reorder_level\": 30000, \"cover_days\": 11, \"below_reorder\": false}"
+      }
+     ],
+     "structuredContent": {
+      "ok": true,
+      "item_code": "GSK-SIL-05L",
+      "description": "Gasket, silicone, 5 L",
+      "unit": "NOS",
+      "warehouses": [
+       {
+        "warehouse": "WH-PUN-STR",
+        "name": "Pune main stores",
+        "on_hand": 54000,
+        "allocated": 0,
+        "on_order": 0,
+        "free": 54000
+       },
+       {
+        "warehouse": "WH-CHK-STR",
+        "name": "Chakan stores",
+        "on_hand": 12000,
+        "allocated": 0,
+        "on_order": 0,
+        "free": 12000
+       }
+      ],
+      "free_total": 66000,
+      "on_order_total": 0,
+      "reorder_level": 30000,
+      "cover_days": 11,
+      "below_reorder": false
+     },
+     "isError": false,
+     "resultType": "complete"
+    }
+   },
+   {
+    "step": "tools/call create_purchase_request (accept)",
+    "ms": 17.4,
+    "out": {
+     "content": [
+      {
+       "type": "text",
+       "text": "{\"ok\": true, \"request_no\": \"PR/2026/04417\", \"status\": \"WAITING FOR APPROVAL\", \"status_code\": \"PA\", \"item_code\": \"GSK-SIL-05L\", \"quantity\": 20000, \"estimated_value\": 269040.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-09\", \"approver\": \"RMEHTA\", \"approved_by\": null, \"next_step\": \"Waiting for RMEHTA. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417.\"}"
+      }
+     ],
+     "structuredContent": {
+      "ok": true,
+      "request_no": "PR/2026/04417",
+      "status": "WAITING FOR APPROVAL",
+      "status_code": "PA",
+      "item_code": "GSK-SIL-05L",
+      "quantity": 20000,
+      "estimated_value": 269040.0,
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-09",
+      "approver": "RMEHTA",
+      "approved_by": null,
+      "next_step": "Waiting for RMEHTA. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+     },
+     "isError": false,
+     "resultType": "complete"
+    }
+   }
+  ],
+  "protocol_version": "2025-11-25",
+  "server_info": {
+   "name": "rasoi-toolbox",
+   "title": "Rasoi toolbox (official SDK)",
+   "version": "9.0"
+  },
+  "server_capabilities": {
+   "prompts": {
+    "listChanged": false
+   },
+   "resources": {
+    "subscribe": false,
+    "listChanged": false
+   },
+   "tools": {
+    "listChanged": false
+   }
+  },
+  "elicitations_seen_by_client": [
+   {
+    "mode": "form",
+    "message": "Raise a purchase request for 20,000 x GSK-SIL-05L on PRD-07, needed by 2026-11-09? Estimated ₹2,69,040 incl. GST. It is above your ₹2,50,000 limit, so it will wait for RMEHTA.",
+    "requestedSchema": {
+     "type": "object",
+     "properties": {
+      "confirm": {
+       "type": "boolean",
+       "title": "Confirm",
+       "description": "Yes, save it in Bahi"
+      }
+     },
+     "required": [
+      "confirm"
+     ]
+    }
+   }
+  ],
+  "wire": [
+   {
+    "tag": "",
+    "at_ms": 64.9,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 9.4,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json"
+    },
+    "resp_headers": {
+     "content-type": "text/event-stream",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "method": "initialize",
+     "params": {
+      "protocolVersion": "2025-11-25",
+      "capabilities": {
+       "elicitation": {
+        "form": {},
+        "url": {}
+       }
+      },
+      "clientInfo": {
+       "name": "mcp",
+       "version": "0.1.0"
+      }
+     }
+    },
+    "resp": {
+     "sse": [
+      {
+       "jsonrpc": "2.0",
+       "id": 1,
+       "result": {
+        "capabilities": {
+         "prompts": {
+          "listChanged": false
+         },
+         "resources": {
+          "listChanged": false,
+          "subscribe": false
+         },
+         "tools": {
+          "listChanged": false
+         }
+        },
+        "instructions": "Rasoi Steel Works' Bahi ERP, as Kavita Joshi (KJOSHI). One tool per business activity. Writes ask the person to confirm before they are saved.",
+        "protocolVersion": "2025-11-25",
+        "serverInfo": {
+         "name": "rasoi-toolbox",
+         "title": "Rasoi toolbox (official SDK)",
+         "version": "9.0"
+        }
+       }
+      }
+     ]
+    },
+    "req_bytes": 186,
+    "resp_bytes": 476
+   },
+   {
+    "tag": "",
+    "at_ms": 78.4,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 202,
+    "ms": 1.5,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417",
+     "mcp-protocol-version": "2025-11-25"
+    },
+    "resp_headers": {
+     "content-type": "application/json",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "method": "notifications/initialized"
+    },
+    "resp": null,
+    "req_bytes": 54,
+    "resp_bytes": 0
+   },
+   {
+    "tag": "",
+    "at_ms": 86.3,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 4.0,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417",
+     "mcp-protocol-version": "2025-11-25"
+    },
+    "resp_headers": {
+     "content-type": "text/event-stream",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 2,
+     "method": "tools/list"
+    },
+    "resp": {
+     "sse": [
+      {
+       "jsonrpc": "2.0",
+       "id": 2,
+       "result": {
+        "tools": [
+         {
+          "annotations": {
+           "destructiveHint": false,
+           "idempotentHint": true,
+           "openWorldHint": false,
+           "readOnlyHint": true,
+           "title": "Find item"
+          },
+          "description": "Find stock items by description or code (e.g. '5 litre silicone gasket'). Returns active items, best match first, with code, unit and whether they touch food.",
+          "inputSchema": {
+           "properties": {
+            "query": {
+             "type": "string",
+             "description": "words describing the item, or its code"
+            }
+           },
+           "required": [
+            "query"
+           ],
+           "type": "object"
+          },
+          "name": "find_item",
+          "title": "Find item"
+         },
+         {
+          "annotations": {
+           "destructiveHint": false,
+           "idempotentHint": true,
+           "openWorldHint": false,
+           "readOnlyHint": true,
+           "title": "Check stock"
+          },
+          "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+          "inputSchema": {
+           "properties": {
+            "item_code": {
+             "type": "string",
+             "description": "Bahi item code, e.g. GSK-SIL-05L"
+            }
+           },
+           "required": [
+            "item_code"
+           ],
+           "type": "object"
+          },
+          "name": "check_stock",
+          "title": "Check stock"
+         },
+         {
+          "annotations": {
+           "destructiveHint": false,
+           "idempotentHint": true,
+           "openWorldHint": false,
+           "readOnlyHint": true,
+           "title": "Find supplier"
+          },
+          "description": "Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid food-grade certificate. Use it before registering anyone new.",
+          "inputSchema": {
+           "properties": {
+            "name": {
+             "type": "string",
+             "description": "the supplier's name as the user said it"
+            },
+            "city": {
+             "type": "string",
+             "description": "optional city, to tell two branches apart"
+            }
+           },
+           "required": [
+            "name"
+           ],
+           "type": "object"
+          },
+          "name": "find_supplier",
+          "title": "Find supplier"
+         },
+         {
+          "annotations": {
+           "destructiveHint": false,
+           "idempotentHint": true,
+           "openWorldHint": false,
+           "readOnlyHint": true,
+           "title": "Check budget"
+          },
+          "description": "Is a cost centre open, and how much budget is left this quarter? Without a code, lists every open cost centre.",
+          "inputSchema": {
+           "properties": {
+            "cost_centre": {
+             "type": "string",
+             "description": "cost centre code, e.g. PRD-07; leave out to list the open ones"
+            }
+           },
+           "required": [],
+           "type": "object"
+          },
+          "name": "check_budget",
+          "title": "Check budget"
+         },
+         {
+          "annotations": {
+           "destructiveHint": false,
+           "idempotentHint": true,
+           "openWorldHint": false,
+           "readOnlyHint": true,
+           "title": "Search policy"
+          },
+          "description": "Search Rasoi's purchasing policy and the Bahi manual. Returns the relevant clauses with their citations, or says the documents do not cover it.",
+          "inputSchema": {
+           "properties": {
+            "question": {
+             "type": "string",
+             "description": "the policy question in plain words"
+            }
+           },
+           "required": [
+            "question"
+           ],
+           "type": "object"
+          },
+          "name": "search_policy",
+          "title": "Search policy"
+         },
+         {
+          "annotations": {
+           "destructiveHint": false,
+           "idempotentHint": true,
+           "openWorldHint": false,
+           "readOnlyHint": false,
+           "title": "Create purchase request"
+          },
+          "description": "Raise a purchase request (PR): the internal ask to buy something. With confirm=false it previews the estimated value and who must approve; with confirm=true it saves and submits it. Within your limit it is approved at once; above it, it waits for your manager.",
+          "inputSchema": {
+           "properties": {
+            "item_code": {
+             "type": "string",
+             "description": "Bahi item code"
+            },
+            "quantity": {
+             "type": "integer",
+             "description": "how many, in the item's unit"
+            },
+            "cost_centre": {
+             "type": "string",
+             "description": "who pays, e.g. PRD-07"
+            },
+            "need_by": {
+             "type": "string",
+             "description": "date needed, YYYY-MM-DD"
+            },
+            "confirm": {
+             "type": "boolean",
+             "description": "false (default) = preview only, nothing is saved; true = commit"
+            }
+           },
+           "required": [
+            "item_code",
+            "quantity",
+            "cost_centre",
+            "need_by"
+           ],
+           "type": "object"
+          },
+          "name": "create_purchase_request",
+          "title": "Create purchase request"
+         },
+         {
+          "annotations": {
+           "destructiveHint": false,
+           "idempotentHint": true,
+           "openWorldHint": false,
+           "readOnlyHint": true,
+           "title": "List my approvals"
+          },
+          "description": "What is waiting for the signed-in user's signature: purchase requests and orders, with value and who raised them.",
+          "inputSchema": {
+           "properties": {},
+           "required": [],
+           "type": "object"
+          },
+          "name": "list_my_approvals",
+          "title": "List my approvals"
+         },
+         {
+          "annotations": {
+           "destructiveHint": false,
+           "idempotentHint": true,
+           "openWorldHint": false,
+           "readOnlyHint": false,
+           "title": "Approve purchase request"
+          },
+          "description": "Approve or reject a purchase request that waits for the signed-in user. Only the named approver can do this, never the person who raised it.",
+          "inputSchema": {
+           "properties": {
+            "request_no": {
+             "type": "string",
+             "description": "e.g. PR/2026/04417"
+            },
+            "decision": {
+             "type": "string",
+             "enum": [
+              "approve",
+              "reject"
+             ],
+             "description": "approve or reject"
+            },
+            "comment": {
+             "type": "string",
+             "description": "optional note to the requester"
+            }
+           },
+           "required": [
+            "request_no",
+            "decision"
+           ],
+           "type": "object"
+          },
+          "name": "approve_purchase_request",
+          "title": "Approve purchase request"
+         },
+         {
+          "annotations": {
+           "destructiveHint": false,
+           "idempotentHint": true,
+           "openWorldHint": false,
+           "readOnlyHint": false,
+           "title": "Create purchase order"
+          },
+          "description": "Create a purchase order (PO) with a supplier. Give request_no for an approved purchase request (it supplies item, quantity, cost centre and date), or item_code, quantity, cost_centre and need_by for a small direct order up to Rs 50,000. confirm=false previews price, tax and value; confirm=true saves it. Returns a receipt with the order's real status: an APPROVED order still has to be released.",
+          "inputSchema": {
+           "properties": {
+            "supplier_code": {
+             "type": "string",
+             "description": "Bahi supplier code, from find_supplier"
+            },
+            "request_no": {
+             "type": "string",
+             "description": "an APPROVED purchase request"
+            },
+            "item_code": {
+             "type": "string",
+             "description": "for a direct order"
+            },
+            "quantity": {
+             "type": "integer",
+             "description": "for a direct order"
+            },
+            "cost_centre": {
+             "type": "string",
+             "description": "for a direct order"
+            },
+            "need_by": {
+             "type": "string",
+             "description": "for a direct order, YYYY-MM-DD"
+            },
+            "rate": {
+             "type": "number",
+             "description": "omit to use the contract rate"
+            },
+            "confirm": {
+             "type": "boolean",
+             "description": "false (default) = preview only, nothing is saved; true = commit"
+            }
+           },
+           "required": [
+            "supplier_code"
+           ],
+           "type": "object"
+          },
+          "name": "create_purchase_order",
+          "title": "Create purchase order"
+         },
+         {
+          "annotations": {
+           "destructiveHint": false,
+           "idempotentHint": true,
+           "openWorldHint": false,
+           "readOnlyHint": false,
+           "title": "Approve purchase order"
+          },
+          "description": "Approve a purchase order that waits for the signed-in user's signature.",
+          "inputSchema": {
+           "properties": {
+            "po_no": {
+             "type": "string",
+             "description": "e.g. PO/2026/01182"
+            },
+            "comment": {
+             "type": "string",
+             "description": "optional"
+            }
+           },
+           "required": [
+            "po_no"
+           ],
+           "type": "object"
+          },
+          "name": "approve_purchase_order",
+          "title": "Approve purchase order"
+         },
+         {
+          "annotations": {
+           "destructiveHint": false,
+           "idempotentHint": true,
+           "openWorldHint": false,
+           "readOnlyHint": false,
+           "title": "Release purchase order"
+          },
+          "description": "Release an APPROVED purchase order to the supplier; only then does the supplier get it. Returns a receipt with the real status.",
+          "inputSchema": {
+           "properties": {
+            "po_no": {
+             "type": "string",
+             "description": "e.g. PO/2026/01182"
+            }
+           },
+           "required": [
+            "po_no"
+           ],
+           "type": "object"
+          },
+          "name": "release_purchase_order",
+          "title": "Release purchase order"
+         },
+         {
+          "annotations": {
+           "destructiveHint": false,
+           "idempotentHint": true,
+           "openWorldHint": false,
+           "readOnlyHint": true,
+           "title": "Order status"
+          },
+          "description": "The real status of a purchase order or a purchase request, read from Bahi, with approval, goods received and any warning.",
+          "inputSchema": {
+           "properties": {
+            "po_no": {
+             "type": "string",
+             "description": "e.g. PO/2026/01182"
+            },
+            "request_no": {
+             "type": "string",
+             "description": "e.g. PR/2026/04417"
+            }
+           },
+           "required": [],
+           "type": "object"
+          },
+          "name": "order_status",
+          "title": "Order status"
+         },
+         {
+          "annotations": {
+           "destructiveHint": false,
+           "idempotentHint": true,
+           "openWorldHint": false,
+           "readOnlyHint": false,
+           "title": "Receive goods"
+          },
+          "description": "Record goods received (GRN) against a RELEASED purchase order: stock goes up, and the order closes once everything has arrived. Cannot receive more than was ordered.",
+          "inputSchema": {
+           "properties": {
+            "po_no": {
+             "type": "string",
+             "description": "the released order the goods came against"
+            },
+            "quantity": {
+             "type": "integer",
+             "description": "how many arrived"
+            },
+            "warehouse": {
+             "type": "string",
+             "description": "optional; defaults to the order's warehouse"
+            },
+            "remarks": {
+             "type": "string",
+             "description": "optional, e.g. vehicle number"
+            },
+            "confirm": {
+             "type": "boolean",
+             "description": "false (default) = preview only, nothing is saved; true = commit"
+            }
+           },
+           "required": [
+            "po_no",
+            "quantity"
+           ],
+           "type": "object"
+          },
+          "name": "receive_goods",
+          "title": "Receive goods"
+         },
+         {
+          "annotations": {
+           "destructiveHint": false,
+           "idempotentHint": true,
+           "openWorldHint": false,
+           "readOnlyHint": false,
+           "title": "Register supplier"
+          },
+          "description": "Register a NEW supplier. Only after find_supplier shows no existing match. confirm=false previews and checks for duplicates; confirm=true creates it.",
+          "inputSchema": {
+           "properties": {
+            "name": {
+             "type": "string",
+             "description": "registered name"
+            },
+            "city": {
+             "type": "string",
+             "description": ""
+            },
+            "state": {
+             "type": "string",
+             "description": "Indian state"
+            },
+            "gstin": {
+             "type": "string",
+             "description": "15-character GSTIN"
+            },
+            "confirm": {
+             "type": "boolean",
+             "description": "false (default) = preview only, nothing is saved; true = commit"
+            }
+           },
+           "required": [
+            "name",
+            "city",
+            "state",
+            "gstin"
+           ],
+           "type": "object"
+          },
+          "name": "register_supplier",
+          "title": "Register supplier"
+         },
+         {
+          "annotations": {
+           "destructiveHint": false,
+           "idempotentHint": true,
+           "openWorldHint": false,
+           "readOnlyHint": false,
+           "title": "Send message"
+          },
+          "description": "Send a short message to a colleague or supplier (Slack handle like @rohit, or an email address). Goes through Bahi's notification queue.",
+          "inputSchema": {
+           "properties": {
+            "to": {
+             "type": "string",
+             "description": "@handle or email"
+            },
+            "text": {
+             "type": "string",
+             "description": "the message"
+            }
+           },
+           "required": [
+            "to",
+            "text"
+           ],
+           "type": "object"
+          },
+          "name": "send_message",
+          "title": "Send message"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "req_bytes": 46,
+    "resp_bytes": 9526
+   },
+   {
+    "tag": "",
+    "at_ms": 98.1,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 7.5,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417",
+     "mcp-protocol-version": "2025-11-25"
+    },
+    "resp_headers": {
+     "content-type": "text/event-stream",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 3,
+     "method": "resources/list"
+    },
+    "resp": {
+     "sse": [
+      {
+       "jsonrpc": "2.0",
+       "id": 3,
+       "result": {
+        "resources": [
+         {
+          "description": "Rasoi Steel Works purchase policy: requests before orders, limits, suppliers, prices, tax.",
+          "mimeType": "text/markdown",
+          "name": "purchase-policy.md",
+          "size": 3304,
+          "title": "Purchase policy",
+          "uri": "rasoi://policy/purchase"
+         },
+         {
+          "description": "How a supplier is qualified, including the food-grade certificate rule.",
+          "mimeType": "text/markdown",
+          "name": "supplier-policy.md",
+          "size": 5346,
+          "title": "Supplier policy",
+          "uri": "rasoi://policy/supplier"
+         },
+         {
+          "description": "Who may approve how much, gross including GST.",
+          "mimeType": "text/markdown",
+          "name": "approval-matrix.md",
+          "size": 3012,
+          "title": "Approval matrix",
+          "uri": "rasoi://policy/approval-matrix"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "req_bytes": 50,
+    "resp_bytes": 721
+   },
+   {
+    "tag": "",
+    "at_ms": 108.1,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 3.6,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417",
+     "mcp-protocol-version": "2025-11-25"
+    },
+    "resp_headers": {
+     "content-type": "text/event-stream",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 4,
+     "method": "resources/templates/list"
+    },
+    "resp": {
+     "sse": [
+      {
+       "jsonrpc": "2.0",
+       "id": 4,
+       "result": {
+        "resourceTemplates": [
+         {
+          "description": "On hand, allocated and on order in every Rasoi warehouse, read from Bahi now.",
+          "mimeType": "application/json",
+          "name": "stock",
+          "title": "Live stock of one item",
+          "uriTemplate": "rasoi://stock/{item_code}"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "req_bytes": 60,
+    "resp_bytes": 299
+   },
+   {
+    "tag": "",
+    "at_ms": 117.0,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 5.4,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417",
+     "mcp-protocol-version": "2025-11-25"
+    },
+    "resp_headers": {
+     "content-type": "text/event-stream",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 5,
+     "method": "resources/read",
+     "params": {
+      "uri": "rasoi://policy/purchase"
+     }
+    },
+    "resp": {
+     "sse": [
+      {
+       "jsonrpc": "2.0",
+       "id": 5,
+       "result": {
+        "contents": [
+         {
+          "mimeType": "text/markdown",
+          "text": "---\ndoc_id: POL-PUR-001\ntitle: Purchase Policy\nowner: Purchase department, Rasoi Steel Works\nversion: 4.1\neffective: 2026-04-01\naudience: all purchase staff\n---\n\n# Purchase Policy (POL-PUR-001)\n\n## 1. Purpose\nThis policy sets out how Rasoi Steel Works buys materials, components and services, so that every rupee is spent with the right approval, from a qualified supplier, against an open budget.\n\n## 2. Scope\nIt applies to every purchase made for the Pune plant (RSW-PUN-01) and the Chakan unit (RSW-CHK-01), through Bahi ERP.\n\n## 3. Requests before orders\n3.1 Every purchase starts with a purchase request (PR) in Bahi, except a direct order under §3.3.\n3.2 A purchase request names the item, the quantity, the need-by date, the warehouse and the cost centre that will carry the spend.\n3.3 A direct purchase order without a request is allowed only when its gross value, including GST, is ₹50,000 or less.\n3.4 A purchase order raised against a request may not exceed the requested quantity.\n\n## 4. Cost centres and budgets\n4.1 Every request and order must be charged to an **open** cost centre.\n4.2 Finance closes cost centres at the end of a production programme. A closed cost centre cannot carry new spend. Bahi saves an order against a closed cost centre as a Draft; a Draft order is never sent to the supplier.\n4.3 Before raising an order, check the cost centre's status in Bahi (screen FIN-CC-01) or ask Finance.\n\n## 5. Approval limits\n5.1 Limits apply to the **gross value including GST**, not the basic value.\n5.2 The approval matrix (POL-APR-002) sets each role's limit. An order above the raiser's own limit must be approved by the next person up the line whose limit covers it.\n5.3 Nobody may approve an order they raised.\n5.4 Approval of a purchase request covers the purchase order raised against it, provided the approver's limit covers the order's gross value.\n\n## 6. Supplier qualification\n6.1 Orders may be placed only with suppliers that are **active** in the supplier master.\n6.2 **Parts that come into contact with food** (gaskets, lids, body blanks and any other item marked food-contact in the item master) may be bought only from a supplier holding a **valid food-grade certificate** on file in Bahi. The certificate must be uploaded and checked **before the first order** is placed. An expired certificate counts as no certificate.\n6.3 A new supplier is onboarded under the Supplier Policy (POL-SUP-003) before any order is placed with them.\n6.4 Prefer the supplier with a current rate contract. A cheaper quotation from a new supplier does not by itself justify a change of supplier for a food-contact part.\n\n## 7. Prices\n7.1 Use the rate in the current rate contract. Rates from older orders in the order history are for reference only.\n7.2 Any order at a rate more than 2% above the contract rate needs the manager's written reason in the remarks.\n\n## 8. Tax\n8.1 A supplier in Maharashtra is charged CGST + SGST (tax codes ending -INTRA). A supplier in any other state is charged IGST (tax codes ending -INTER).\n\n## 9. Records\n9.1 Every order must carry the document number Bahi gives it and must be in status Released before the supplier is told to deliver.\n9.2 Purchase staff must not tell a requester that an order has been placed until its status in Bahi is Released.\n",
+          "uri": "rasoi://policy/purchase"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "req_bytes": 93,
+    "resp_bytes": 3499
+   },
+   {
+    "tag": "",
+    "at_ms": 127.4,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 4.4,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417",
+     "mcp-protocol-version": "2025-11-25"
+    },
+    "resp_headers": {
+     "content-type": "text/event-stream",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 6,
+     "method": "resources/read",
+     "params": {
+      "uri": "rasoi://stock/GSK-SIL-05L"
+     }
+    },
+    "resp": {
+     "sse": [
+      {
+       "jsonrpc": "2.0",
+       "id": 6,
+       "result": {
+        "contents": [
+         {
+          "mimeType": "application/json",
+          "text": "{\"ok\": true, \"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"warehouses\": [{\"warehouse\": \"WH-PUN-STR\", \"name\": \"Pune main stores\", \"on_hand\": 54000, \"allocated\": 0, \"on_order\": 0, \"free\": 54000}, {\"warehouse\": \"WH-CHK-STR\", \"name\": \"Chakan stores\", \"on_hand\": 12000, \"allocated\": 0, \"on_order\": 0, \"free\": 12000}], \"free_total\": 66000, \"on_order_total\": 0, \"reorder_level\": 30000, \"cover_days\": 11, \"below_reorder\": false}",
+          "uri": "rasoi://stock/GSK-SIL-05L"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "req_bytes": 95,
+    "resp_bytes": 666
+   },
+   {
+    "tag": "",
+    "at_ms": 137.4,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 4.9,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417",
+     "mcp-protocol-version": "2025-11-25"
+    },
+    "resp_headers": {
+     "content-type": "text/event-stream",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 7,
+     "method": "prompts/list"
+    },
+    "resp": {
+     "sse": [
+      {
+       "jsonrpc": "2.0",
+       "id": 7,
+       "result": {
+        "prompts": [
+         {
+          "arguments": [
+           {
+            "description": "what to buy, in plain words",
+            "name": "item",
+            "required": true
+           },
+           {
+            "description": "how many",
+            "name": "quantity",
+            "required": true
+           },
+           {
+            "description": "YYYY-MM-DD",
+            "name": "need_by",
+            "required": true
+           }
+          ],
+          "description": "Rasoi's reviewed steps for raising a PR: find, check stock, preview, confirm.",
+          "name": "raise_a_pr",
+          "title": "Raise a purchase request"
+         },
+         {
+          "arguments": [
+           {
+            "name": "question",
+            "required": true
+           }
+          ],
+          "description": "Answer a question about Rasoi's purchase rules from the policy, with the section number.",
+          "name": "explain_a_rule",
+          "title": "Explain a purchase rule"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "req_bytes": 48,
+    "resp_bytes": 652
+   },
+   {
+    "tag": "",
+    "at_ms": 145.7,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 3.4,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417",
+     "mcp-protocol-version": "2025-11-25"
+    },
+    "resp_headers": {
+     "content-type": "text/event-stream",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 8,
+     "method": "prompts/get",
+     "params": {
+      "name": "raise_a_pr",
+      "arguments": {
+       "item": "5-litre silicone gasket",
+       "quantity": "20000",
+       "need_by": "2026-11-09"
+      }
+     }
+    },
+    "resp": {
+     "sse": [
+      {
+       "jsonrpc": "2.0",
+       "id": 8,
+       "result": {
+        "description": "Rasoi's reviewed steps for raising a PR: find, check stock, preview, confirm.",
+        "messages": [
+         {
+          "content": {
+           "text": "Raise a purchase request at Rasoi Steel Works for 20000 of \"5-litre silicone gasket\", needed by 2026-11-09, as Kavita Joshi (KJOSHI).\n1. find_item to get the Bahi item code; if more than one matches, ask which.\n2. check_stock and say which plant you mean (Pune, Chakan or both).\n3. check_budget for the cost centre; never use a closed one (PRD-05 closed on 15 Oct).\n4. create_purchase_request with confirm=false; show the estimate and who must approve.\n5. Only after the person says yes, call it again with confirm=true and read the receipt back.\nFollow the purchase policy attached below.",
+           "type": "text"
+          },
+          "role": "user"
+         },
+         {
+          "content": {
+           "resource": {
+            "mimeType": "text/markdown",
+            "text": "---\ndoc_id: POL-PUR-001\ntitle: Purchase Policy\nowner: Purchase department, Rasoi Steel Works\nversion: 4.1\neffective: 2026-04-01\naudience: all purchase staff\n---\n\n# Purchase Policy (POL-PUR-001)\n\n## 1. Purpose\nThis policy sets out how Rasoi Steel Works buys materials, components and services, so that every rupee is spent with the right approval, from a qualified supplier, against an open budget.\n\n## 2. Scope\nIt applies to every purchase made for the Pune plant (RSW-PUN-01) and the Chakan unit (RSW-CHK-01), through Bahi ERP.\n\n## 3. Requests before orders\n3.1 Every purchase starts with a purchase request (PR) in Bahi, except a direct order under §3.3.\n3.2 A purchase request names the item, the quantity, the need-by date, the warehouse and the cost centre that will carry the spend.\n3.3 A direct purchase order without a request is allowed only when its gross value, including GST, is ₹50,000 or less.\n3.4 A purchase order raised against a request may not exceed the requested quantity.\n\n## 4. Cost centres and budgets\n4.1 Every request and order must be charged to an **open** cost centre.\n4.2 Finance closes cost centres at the end of a production programme. A closed cost centre cannot carry new spend. Bahi saves an order against a closed cost centre as a Draft; a Draft order is never sent to the supplier.\n4.3 Before raising an order, check the cost centre's status in Bahi (screen FIN-CC-01) or ask Finance.\n\n## 5. Approval limits\n5.1 Limits apply to the **gross value including GST**, not the basic value.\n5.2 The approval matrix (POL-APR-002) sets each role's limit. An order above the raiser's own limit must be approved by the next person up the line whose limit covers it.\n5.3 Nobody may approve an order they raised.\n5.4 Approval of a purchase request covers the purchase order raised against it, provided the approver's limit covers the order's gross value.\n\n## 6. Supplier qualification\n6.1 Orders may be placed only with suppliers that are **active** in the supplier master.\n6.2 **Parts that come into contact with food** (gaskets, lids, body blanks and any other item marked food-contact in the item master) may be bought only from a supplier holding a **valid food-grade certificate** on file in Bahi. The certificate must be uploaded and checked **before the first order** is placed. An expired certificate counts as no certificate.\n6.3 A new supplier is onboarded under the Supplier Policy (POL-SUP-003) before any order is placed with them.\n6.4 Prefer the supplier with a current rate contract. A cheaper quotation from a new supplier does not by itself justify a change of supplier for a food-contact part.\n\n## 7. Prices\n7.1 Use the rate in the current rate contract. Rates from older orders in the order history are for reference only.\n7.2 Any order at a rate more than 2% above the contract rate needs the manager's written reason in the remarks.\n\n## 8. Tax\n8.1 A supplier in Maharashtra is charged CGST + SGST (tax codes ending -INTRA). A supplier in any other state is charged IGST (tax codes ending -INTER).\n\n## 9. Records\n9.1 Every order must carry the document number Bahi gives it and must be in status Released before the supplier is told to deliver.\n9.2 Purchase staff must not tell a requester that an order has been placed until its status in Bahi is Released.\n",
+            "uri": "rasoi://policy/purchase"
+           },
+           "type": "resource"
+          },
+          "role": "user"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "req_bytes": 167,
+    "resp_bytes": 4299
+   },
+   {
+    "tag": "",
+    "at_ms": 155.5,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 4.2,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417",
+     "mcp-protocol-version": "2025-11-25"
+    },
+    "resp_headers": {
+     "content-type": "text/event-stream",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 9,
+     "method": "tools/call",
+     "params": {
+      "name": "check_stock",
+      "arguments": {
+       "item_code": "GSK-SIL-05L"
+      }
+     }
+    },
+    "resp": {
+     "sse": [
+      {
+       "jsonrpc": "2.0",
+       "id": 9,
+       "result": {
+        "content": [
+         {
+          "text": "{\"ok\": true, \"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"warehouses\": [{\"warehouse\": \"WH-PUN-STR\", \"name\": \"Pune main stores\", \"on_hand\": 54000, \"allocated\": 0, \"on_order\": 0, \"free\": 54000}, {\"warehouse\": \"WH-CHK-STR\", \"name\": \"Chakan stores\", \"on_hand\": 12000, \"allocated\": 0, \"on_order\": 0, \"free\": 12000}], \"free_total\": 66000, \"on_order_total\": 0, \"reorder_level\": 30000, \"cover_days\": 11, \"below_reorder\": false}",
+          "type": "text"
+         }
+        ],
+        "isError": false,
+        "structuredContent": {
+         "ok": true,
+         "item_code": "GSK-SIL-05L",
+         "description": "Gasket, silicone, 5 L",
+         "unit": "NOS",
+         "warehouses": [
+          {
+           "warehouse": "WH-PUN-STR",
+           "name": "Pune main stores",
+           "on_hand": 54000,
+           "allocated": 0,
+           "on_order": 0,
+           "free": 54000
+          },
+          {
+           "warehouse": "WH-CHK-STR",
+           "name": "Chakan stores",
+           "on_hand": 12000,
+           "allocated": 0,
+           "on_order": 0,
+           "free": 12000
+          }
+         ],
+         "free_total": 66000,
+         "on_order_total": 0,
+         "reorder_level": 30000,
+         "cover_days": 11,
+         "below_reorder": false
+        }
+       }
+      }
+     ]
+    },
+    "req_bytes": 118,
+    "resp_bytes": 1068
+   },
+   {
+    "tag": "",
+    "at_ms": 172.7,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 202,
+    "ms": 0.5,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417",
+     "mcp-protocol-version": "2025-11-25"
+    },
+    "resp_headers": {
+     "content-type": "application/json",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "result": {
+      "action": "accept",
+      "content": {
+       "confirm": true
+      }
+     }
+    },
+    "resp": null,
+    "req_bytes": 80,
+    "resp_bytes": 0
+   },
+   {
+    "tag": "",
+    "at_ms": 165.2,
+    "method": "POST",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 12.5,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417",
+     "mcp-protocol-version": "2025-11-25"
+    },
+    "resp_headers": {
+     "content-type": "text/event-stream",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417"
+    },
+    "req": {
+     "jsonrpc": "2.0",
+     "id": 10,
+     "method": "tools/call",
+     "params": {
+      "name": "create_purchase_request",
+      "arguments": {
+       "item_code": "GSK-SIL-05L",
+       "quantity": 20000,
+       "cost_centre": "PRD-07",
+       "need_by": "2026-11-09",
+       "confirm": true
+      }
+     }
+    },
+    "resp": {
+     "sse": [
+      {
+       "jsonrpc": "2.0",
+       "id": 1,
+       "method": "elicitation/create",
+       "params": {
+        "mode": "form",
+        "message": "Raise a purchase request for 20,000 x GSK-SIL-05L on PRD-07, needed by 2026-11-09? Estimated ₹2,69,040 incl. GST. It is above your ₹2,50,000 limit, so it will wait for RMEHTA.",
+        "requestedSchema": {
+         "type": "object",
+         "properties": {
+          "confirm": {
+           "type": "boolean",
+           "title": "Confirm",
+           "description": "Yes, save it in Bahi"
+          }
+         },
+         "required": [
+          "confirm"
+         ]
+        }
+       }
+      },
+      {
+       "jsonrpc": "2.0",
+       "id": 10,
+       "result": {
+        "content": [
+         {
+          "text": "{\"ok\": true, \"request_no\": \"PR/2026/04417\", \"status\": \"WAITING FOR APPROVAL\", \"status_code\": \"PA\", \"item_code\": \"GSK-SIL-05L\", \"quantity\": 20000, \"estimated_value\": 269040.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-09\", \"approver\": \"RMEHTA\", \"approved_by\": null, \"next_step\": \"Waiting for RMEHTA. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417.\"}",
+          "type": "text"
+         }
+        ],
+        "isError": false,
+        "structuredContent": {
+         "ok": true,
+         "request_no": "PR/2026/04417",
+         "status": "WAITING FOR APPROVAL",
+         "status_code": "PA",
+         "item_code": "GSK-SIL-05L",
+         "quantity": 20000,
+         "estimated_value": 269040.0,
+         "cost_centre": "PRD-07",
+         "need_by": "2026-11-09",
+         "approver": "RMEHTA",
+         "approved_by": null,
+         "next_step": "Waiting for RMEHTA. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+        }
+       }
+      }
+     ]
+    },
+    "req_bytes": 209,
+    "resp_bytes": 1399
+   },
+   {
+    "tag": "",
+    "at_ms": 181.6,
+    "method": "DELETE",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 0.4,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417",
+     "mcp-protocol-version": "2025-11-25"
+    },
+    "resp_headers": {
+     "content-type": "application/json",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417"
+    },
+    "req": null,
+    "resp": null,
+    "req_bytes": 0,
+    "resp_bytes": 0
+   },
+   {
+    "tag": "",
+    "at_ms": 79.3,
+    "method": "GET",
+    "path": "/mcp",
+    "status": 200,
+    "ms": 103.8,
+    "req_headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417",
+     "mcp-protocol-version": "2025-11-25"
+    },
+    "resp_headers": {
+     "content-type": "text/event-stream",
+     "mcp-session-id": "47b8442408df422d864a2a2c17d63417"
+    },
+    "req": null,
+    "resp": null,
+    "req_bytes": 0,
+    "resp_bytes": 0
+   }
+  ],
+  "rpc": [
+   "initialize",
+   "notifications/initialized",
+   "tools/list",
+   "resources/list",
+   "resources/templates/list",
+   "resources/read",
+   "resources/read",
+   "prompts/list",
+   "prompts/get raise_a_pr",
+   "tools/call check_stock",
+   "tools/call create_purchase_request"
+  ],
+  "http_requests": 14
+ },
+ "tamper": {
+  "sent": {
+   "jsonrpc": "2.0",
+   "id": 991,
+   "method": "tools/call",
+   "params": {
+    "inputResponses": {
+     "confirm_write": {
+      "action": "accept",
+      "content": {
+       "confirm": true
+      }
+     }
+    },
+    "requestState": "eyJhcmdzIjogImYyMWRmZWE2MmFjZmU2YTAiLCAiZXhwIjogMTc5MzE4NjEwOCwgInRvb2wiOiAiY3JlYXRlX3B1cmNoYXNlX3JlcXVlc3QiLCAidXNlciI6ICJLSk9TSEkifQ==.6e2c2096dd33c6e2b9e588025d62b10d",
+    "name": "create_purchase_request",
+    "arguments": {
+     "item_code": "GSK-SIL-05L",
+     "quantity": 200000,
+     "cost_centre": "PRD-07",
+     "need_by": "2026-11-09",
+     "confirm": true
+    },
+    "_meta": {
+     "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+     "io.modelcontextprotocol/clientInfo": {
+      "name": "mcp",
+      "version": "0.1.0"
+     },
+     "io.modelcontextprotocol/clientCapabilities": {
+      "elicitation": {
+       "form": {},
+       "url": {}
+      }
+     }
+    }
+   }
+  },
+  "headers": {
+   "accept": "application/json, text/event-stream",
+   "content-type": "application/json",
+   "mcp-protocol-version": "2026-07-28",
+   "mcp-method": "tools/call",
+   "mcp-name": "create_purchase_request"
+  },
+  "status": 200,
+  "reply": {
+   "jsonrpc": "2.0",
+   "id": 991,
+   "result": {
+    "content": [
+     {
+      "text": "{\"ok\": false, \"error\": \"The confirmation did not match this request (state failed its check).\", \"next_step\": \"Ask again; the person must confirm this exact request.\"}",
+      "type": "text"
+     }
+    ],
+    "isError": true,
+    "resultType": "complete",
+    "_meta": {
+     "io.modelcontextprotocol/serverInfo": {
+      "name": "rasoi-toolbox",
+      "title": "Rasoi toolbox (official SDK)",
+      "version": "9.0"
+     }
+    }
+   }
+  }
+ },
+ "tamper_mac": {
+  "status": 200,
+  "reply": {
+   "jsonrpc": "2.0",
+   "id": 992,
+   "result": {
+    "content": [
+     {
+      "text": "{\"ok\": false, \"error\": \"The confirmation did not match this request (state failed its check).\", \"next_step\": \"Ask again; the person must confirm this exact request.\"}",
+      "type": "text"
+     }
+    ],
+    "isError": true,
+    "resultType": "complete",
+    "_meta": {
+     "io.modelcontextprotocol/serverInfo": {
+      "name": "rasoi-toolbox",
+      "title": "Rasoi toolbox (official SDK)",
+      "version": "9.0"
+     }
+    }
+   }
+  }
+ }
+}

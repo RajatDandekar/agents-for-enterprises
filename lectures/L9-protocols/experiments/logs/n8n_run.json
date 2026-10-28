@@ -1,0 +1,819 @@
+{
+ "versions": {
+  "node": "v24.22.1",
+  "n8n": "2.45.5",
+  "fastmcp": "4.1.4"
+ },
+ "toolbox_check": {
+  "ok": true,
+  "item_code": "GSK-SIL-05L",
+  "description": "Gasket, silicone, 5 L",
+  "unit": "NOS",
+  "warehouses": [
+   {
+    "warehouse": "WH-PUN-STR",
+    "name": "Pune main stores",
+    "on_hand": 54000,
+    "allocated": 0,
+    "on_order": 0,
+    "free": 54000
+   },
+   {
+    "warehouse": "WH-CHK-STR",
+    "name": "Chakan stores",
+    "on_hand": 12000,
+    "allocated": 0,
+    "on_order": 0,
+    "free": 12000
+   }
+  ],
+  "free_total": 66000,
+  "on_order_total": 0,
+  "reorder_level": 30000,
+  "cover_days": 11,
+  "below_reorder": false
+ },
+ "n8n_boot_seconds": 22.6,
+ "owner_setup_status": 200,
+ "login_status": 200,
+ "survey": 200,
+ "workflow_nodes": [
+  {
+   "name": "Diwali order",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2,
+   "tool": null
+  },
+  {
+   "name": "Check stock",
+   "type": "@n8n/n8n-nodes-langchain.mcpClient",
+   "typeVersion": 1.1,
+   "tool": "check_stock"
+  },
+  {
+   "name": "Raise the PR",
+   "type": "@n8n/n8n-nodes-langchain.mcpClient",
+   "typeVersion": 1.1,
+   "tool": "create_purchase_request"
+  },
+  {
+   "name": "Ask Rohit",
+   "type": "@n8n/n8n-nodes-langchain.mcpClient",
+   "typeVersion": 1.1,
+   "tool": "send_message"
+  },
+  {
+   "name": "Wait for Rohit",
+   "type": "n8n-nodes-base.wait",
+   "typeVersion": 1.1,
+   "tool": null
+  },
+  {
+   "name": "Order from Deccan",
+   "type": "@n8n/n8n-nodes-langchain.mcpClient",
+   "typeVersion": 1.1,
+   "tool": "create_purchase_order"
+  },
+  {
+   "name": "Release to supplier",
+   "type": "@n8n/n8n-nodes-langchain.mcpClient",
+   "typeVersion": 1.1,
+   "tool": "release_purchase_order"
+  },
+  {
+   "name": "Tell Rohit",
+   "type": "@n8n/n8n-nodes-langchain.mcpClient",
+   "typeVersion": 1.1,
+   "tool": "send_message"
+  }
+ ],
+ "import_status": 200,
+ "import_body": "{\"data\":{\"updatedAt\":\"2026-10-28T11:03:25.572Z\",\"createdAt\":\"2026-10-28T11:03:25.572Z\",\"id\":\"slY2WEH1MxX9h4kq\",\"name\":\"Diwali gasket order (MCP)\",\"description\":null,\"active\":false,\"isArchived\":false,\"nodes\":[{\"id\":\"5ffc9b16-7c15-5ad1-a838-db024ab49445\",\"name\":\"Diwali order\",\"type\":\"n8n-nodes-base.webhook\",\"typeVersion\":2,\"position\":[0,300],\"webhookId\":\"11862106-0425-585f-98ac-6df993f7ee81\",\"parameters\":{\"httpMethod\":\"POST\",\"path\":\"diwali-gasket-order\",\"responseMode\":\"onReceived\",\"options\":{}}},{\"id\":\"ff6fefd6-1adb-5922-9844-5855fee73807\",\"name\":\"Check stock\",\"type\":\"@n8n/n8n-nodes-langchain.mcpClient\",\"typeVersion\":1.1,\"position\":[240,300],\"parameters\":{\"serverTransport\":\"httpStreamable\",\"endpointUrl\":\"http://127.0.0.1:8765/kavita/mcp\",\"authentication\":\"none\",\"tool\":{\"__rl\":true,\"mode\":\"li",
+ "import_ctype": "application/json; charset=utf-8",
+ "workflow_id": "slY2WEH1MxX9h4kq",
+ "activate": [
+  200
+ ],
+ "trigger": {
+  "status": 200,
+  "body": "{\"message\":\"Workflow was started\"}"
+ },
+ "waiting_execution": {
+  "id": "1",
+  "status": "waiting",
+  "startedAt": "2026-10-28T11:03:27.741Z",
+  "waitTill": "3000-01-01T00:00:00.000Z",
+  "mode": "webhook"
+ },
+ "screenshots": {
+  "n8n_01_canvas": "n8n_01_canvas",
+  "n8n_02_mcp_node_params": "n8n_02_mcp_node_params",
+  "n8n_03_waiting_for_rohit": "n8n_03_waiting_for_rohit",
+  "n8n_04_finished": "n8n_04_finished",
+  "n8n_05_pr_output": "n8n_05_pr_output",
+  "n8n_06_release_output": "n8n_06_release_output"
+ },
+ "waiting_data_type": "str",
+ "rohit_inbox": {
+  "ok": true,
+  "waiting": [
+   {
+    "doc_type": "PO",
+    "doc_no": "PO/2026/01179",
+    "requested_by": "KJOSHI",
+    "requested_on": "2026-10-23",
+    "value": 453120.0,
+    "item_code": "LID-SS-05L",
+    "quantity": 4000
+   },
+   {
+    "doc_type": "PR",
+    "doc_no": "PR/2026/04417",
+    "requested_by": "KJOSHI",
+    "requested_on": "2026-10-26T09:01:52+05:30",
+    "value": 269040.0,
+    "item_code": "GSK-SIL-05L",
+    "quantity": 20000
+   }
+  ],
+  "count": 2
+ },
+ "pr_no_from_inbox": "PR/2026/04417",
+ "rohit_approval": {
+  "ok": true,
+  "request_no": "PR/2026/04417",
+  "status": "APPROVED",
+  "status_code": "AP",
+  "decided_by": "RMEHTA",
+  "next_step": "The requester can now create_purchase_order with request_no=PR/2026/04417."
+ },
+ "rohit_approval_seconds": 0.022,
+ "resume_url_source": "send_message args",
+ "resume": {
+  "url": "/webhook-waiting/1?signature=cdf5b037330bd021fc885aeec4929cffd27be09c0c455060945853d4ee6ac2bb",
+  "status": 200,
+  "body": "{\"message\":\"Workflow was started\"}"
+ },
+ "final_status": "success",
+ "execution_id": "1",
+ "startedAt": "2026-10-28T11:03:27.741Z",
+ "stoppedAt": "2026-10-28T11:04:00.893Z",
+ "trigger_to_finish_seconds": 34.1,
+ "nodes_run": [
+  {
+   "node": "Diwali order",
+   "status": "success",
+   "startTime": 1793185407762,
+   "executionTime_ms": 2,
+   "output": [
+    {
+     "headers": {
+      "host": "localhost:5678",
+      "accept": "*/*",
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "user-agent": "python-httpx/0.28.1",
+      "content-length": "44",
+      "content-type": "application/json"
+     },
+     "params": {},
+     "query": {},
+     "body": {
+      "item_code": "GSK-SIL-05L",
+      "quantity": 20000
+     },
+     "webhookUrl": "http://localhost:5678/webhook/diwali-gasket-order",
+     "executionMode": "production"
+    }
+   ]
+  },
+  {
+   "node": "Check stock",
+   "status": "success",
+   "startTime": 1793185407764,
+   "executionTime_ms": 141,
+   "output": [
+    {
+     "content": [
+      {
+       "type": "text",
+       "text": {
+        "ok": true,
+        "item_code": "GSK-SIL-05L",
+        "description": "Gasket, silicone, 5 L",
+        "unit": "NOS",
+        "warehouses": [
+         {
+          "warehouse": "WH-PUN-STR",
+          "name": "Pune main stores",
+          "on_hand": 54000,
+          "allocated": 0,
+          "on_order": 0,
+          "free": 54000
+         },
+         {
+          "warehouse": "WH-CHK-STR",
+          "name": "Chakan stores",
+          "on_hand": 12000,
+          "allocated": 0,
+          "on_order": 0,
+          "free": 12000
+         }
+        ],
+        "free_total": 66000,
+        "on_order_total": 0,
+        "reorder_level": 30000,
+        "cover_days": 11,
+        "below_reorder": false
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "node": "Raise the PR",
+   "status": "success",
+   "startTime": 1793185407905,
+   "executionTime_ms": 52,
+   "output": [
+    {
+     "content": [
+      {
+       "type": "text",
+       "text": {
+        "ok": true,
+        "request_no": "PR/2026/04417",
+        "status": "WAITING FOR APPROVAL",
+        "status_code": "PA",
+        "item_code": "GSK-SIL-05L",
+        "quantity": 20000,
+        "estimated_value": 269040,
+        "cost_centre": "PRD-07",
+        "need_by": "2026-11-09",
+        "approver": "RMEHTA",
+        "approved_by": null,
+        "next_step": "Waiting for RMEHTA. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "node": "Ask Rohit",
+   "status": "success",
+   "startTime": 1793185407957,
+   "executionTime_ms": 29,
+   "output": [
+    {
+     "content": [
+      {
+       "type": "text",
+       "text": {
+        "ok": true,
+        "queued": true,
+        "channel": "SLACK",
+        "to": "@rohit"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "node": "Wait for Rohit",
+   "status": "success",
+   "startTime": 1793185440814,
+   "executionTime_ms": 0,
+   "output": [
+    {
+     "headers": {
+      "host": "localhost:5678",
+      "accept": "*/*",
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "user-agent": "python-httpx/0.28.1",
+      "content-length": "53",
+      "content-type": "application/json"
+     },
+     "params": {},
+     "query": {},
+     "body": {
+      "approved_by": "RMEHTA",
+      "request_no": "PR/2026/04417"
+     },
+     "webhookUrl": "http://localhost:5678/webhook/8bb8db62-13e6-57da-82a3-6578cff30229",
+     "executionMode": "production"
+    }
+   ]
+  },
+  {
+   "node": "Order from Deccan",
+   "status": "success",
+   "startTime": 1793185440815,
+   "executionTime_ms": 32,
+   "output": [
+    {
+     "content": [
+      {
+       "type": "text",
+       "text": {
+        "ok": true,
+        "po_no": "PO/2026/01182",
+        "status": "APPROVED, NOT YET RELEASED",
+        "status_code": "AP",
+        "supplier_code": "DP-RJK-0042",
+        "item_code": "GSK-SIL-05L",
+        "quantity": 20000,
+        "rate": 11.9,
+        "gross_value": 280840,
+        "cost_centre": "PRD-07",
+        "need_by": "2026-11-09",
+        "request_no": "PR/2026/04417",
+        "created_by": "KJOSHI",
+        "approved_by": "RMEHTA",
+        "approval": {
+         "doc_no": "PR/2026/04417",
+         "approver": "RMEHTA",
+         "status": "APPROVED"
+        },
+        "warning": null,
+        "idempotency_key": "K8A0FEC59B989",
+        "sent_to_supplier": false,
+        "tool": "create_purchase_order",
+        "tool_version": "1.0",
+        "next_step": "Approved but NOT sent to the supplier yet. Next: release_purchase_order PO/2026/01182."
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "node": "Release to supplier",
+   "status": "success",
+   "startTime": 1793185440847,
+   "executionTime_ms": 22,
+   "output": [
+    {
+     "content": [
+      {
+       "type": "text",
+       "text": {
+        "ok": true,
+        "po_no": "PO/2026/01182",
+        "status": "RELEASED to the supplier",
+        "status_code": "RL",
+        "supplier_code": "DP-RJK-0042",
+        "item_code": "GSK-SIL-05L",
+        "quantity": 20000,
+        "rate": 11.9,
+        "gross_value": 280840,
+        "cost_centre": "PRD-07",
+        "need_by": "2026-11-09",
+        "request_no": "PR/2026/04417",
+        "created_by": "KJOSHI",
+        "approved_by": "RMEHTA",
+        "approval": {
+         "doc_no": "PR/2026/04417",
+         "approver": "RMEHTA",
+         "status": "APPROVED"
+        },
+        "warning": null,
+        "idempotency_key": "K8A0FEC59B989",
+        "sent_to_supplier": true,
+        "tool": "release_purchase_order",
+        "tool_version": "1.0"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "node": "Tell Rohit",
+   "status": "success",
+   "startTime": 1793185440869,
+   "executionTime_ms": 24,
+   "output": [
+    {
+     "content": [
+      {
+       "type": "text",
+       "text": {
+        "ok": true,
+        "queued": true,
+        "channel": "SLACK",
+        "to": "@rohit"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "bahi_final": {
+  "pr": {
+   "ok": true,
+   "request_no": "PR/2026/04417",
+   "status": "CLOSED (an order was made from it)",
+   "status_code": "CL",
+   "item_code": "GSK-SIL-05L",
+   "quantity": 20000,
+   "estimated_value": 269040.0,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-09",
+   "approver": null,
+   "approved_by": "RMEHTA"
+  },
+  "po": {
+   "ok": true,
+   "po_no": "PO/2026/01182",
+   "status": "RELEASED to the supplier",
+   "status_code": "RL",
+   "supplier_code": "DP-RJK-0042",
+   "item_code": "GSK-SIL-05L",
+   "quantity": 20000,
+   "rate": 11.9,
+   "gross_value": 280840.0,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-09",
+   "request_no": "PR/2026/04417",
+   "created_by": "KJOSHI",
+   "approved_by": "RMEHTA",
+   "approval": {
+    "doc_no": "PR/2026/04417",
+    "approver": "RMEHTA",
+    "status": "APPROVED"
+   },
+   "warning": null,
+   "idempotency_key": "K8A0FEC59B989",
+   "sent_to_supplier": true,
+   "tool": "order_status",
+   "tool_version": "1.0",
+   "received": 0,
+   "goods_receipts": []
+  },
+  "stock": {
+   "ok": true,
+   "item_code": "GSK-SIL-05L",
+   "description": "Gasket, silicone, 5 L",
+   "unit": "NOS",
+   "warehouses": [
+    {
+     "warehouse": "WH-PUN-STR",
+     "name": "Pune main stores",
+     "on_hand": 54000,
+     "allocated": 0,
+     "on_order": 20000,
+     "free": 54000
+    },
+    {
+     "warehouse": "WH-CHK-STR",
+     "name": "Chakan stores",
+     "on_hand": 12000,
+     "allocated": 0,
+     "on_order": 0,
+     "free": 12000
+    }
+   ],
+   "free_total": 66000,
+   "on_order_total": 20000,
+   "reorder_level": 30000,
+   "cover_days": 11,
+   "below_reorder": false
+  }
+ },
+ "toolbox_requests": [
+  {
+   "t": 1793185407.795,
+   "method": "POST",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200,
+   "rpc": "initialize"
+  },
+  {
+   "t": 1793185407.832,
+   "method": "POST",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 202,
+   "rpc": "notifications/initialized"
+  },
+  {
+   "t": 1793185407.862,
+   "method": "POST",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200,
+   "rpc": "tools/call",
+   "tool": "check_stock",
+   "args": {
+    "item_code": "GSK-SIL-05L"
+   }
+  },
+  {
+   "t": 1793185407.877,
+   "method": "DELETE",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200
+  },
+  {
+   "t": 1793185407.861,
+   "method": "GET",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200
+  },
+  {
+   "t": 1793185407.909,
+   "method": "POST",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200,
+   "rpc": "initialize"
+  },
+  {
+   "t": 1793185407.921,
+   "method": "POST",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 202,
+   "rpc": "notifications/initialized"
+  },
+  {
+   "t": 1793185407.939,
+   "method": "POST",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200,
+   "rpc": "tools/call",
+   "tool": "create_purchase_request",
+   "args": {
+    "item_code": "GSK-SIL-05L",
+    "quantity": 20000,
+    "cost_centre": "PRD-07",
+    "need_by": "2026-11-09",
+    "confirm": true
+   }
+  },
+  {
+   "t": 1793185407.955,
+   "method": "DELETE",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200
+  },
+  {
+   "t": 1793185407.938,
+   "method": "GET",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200
+  },
+  {
+   "t": 1793185407.96,
+   "method": "POST",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200,
+   "rpc": "initialize"
+  },
+  {
+   "t": 1793185407.964,
+   "method": "POST",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 202,
+   "rpc": "notifications/initialized"
+  },
+  {
+   "t": 1793185407.981,
+   "method": "POST",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200,
+   "rpc": "tools/call",
+   "tool": "send_message",
+   "args": {
+    "to": "@rohit",
+    "text": "Please approve PR/2026/04417 (est. Rs 2,69,040, 20,000 gaskets for the Diwali run). Once approved, this link carries the order on: http://localhost:5678/webhook-waiting/1?signature=cdf5b037330bd021fc885aeec4929cffd27be09c0c455060945853d4ee6ac2bb"
+   }
+  },
+  {
+   "t": 1793185407.985,
+   "method": "DELETE",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200
+  },
+  {
+   "t": 1793185407.98,
+   "method": "GET",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200
+  },
+  {
+   "t": 1793185440.647,
+   "method": "POST",
+   "path": "/rohit/mcp",
+   "ua": "python-httpx2/2.16.0",
+   "status": 200,
+   "rpc": "server/discover"
+  },
+  {
+   "t": 1793185440.653,
+   "method": "POST",
+   "path": "/rohit/mcp",
+   "ua": "python-httpx2/2.16.0",
+   "status": 200,
+   "rpc": "tools/call",
+   "tool": "list_my_approvals",
+   "args": {}
+  },
+  {
+   "t": 1793185440.66,
+   "method": "POST",
+   "path": "/rohit/mcp",
+   "ua": "python-httpx2/2.16.0",
+   "status": 200,
+   "rpc": "tools/list"
+  },
+  {
+   "t": 1793185440.672,
+   "method": "POST",
+   "path": "/rohit/mcp",
+   "ua": "python-httpx2/2.16.0",
+   "status": 200,
+   "rpc": "server/discover"
+  },
+  {
+   "t": 1793185440.677,
+   "method": "POST",
+   "path": "/rohit/mcp",
+   "ua": "python-httpx2/2.16.0",
+   "status": 200,
+   "rpc": "tools/call",
+   "tool": "approve_purchase_request",
+   "args": {
+    "request_no": "PR/2026/04417",
+    "decision": "approve",
+    "comment": "Approved for the Diwali run."
+   }
+  },
+  {
+   "t": 1793185440.683,
+   "method": "POST",
+   "path": "/rohit/mcp",
+   "ua": "python-httpx2/2.16.0",
+   "status": 200,
+   "rpc": "tools/list"
+  },
+  {
+   "t": 1793185440.82,
+   "method": "POST",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200,
+   "rpc": "initialize"
+  },
+  {
+   "t": 1793185440.825,
+   "method": "POST",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 202,
+   "rpc": "notifications/initialized"
+  },
+  {
+   "t": 1793185440.838,
+   "method": "POST",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200,
+   "rpc": "tools/call",
+   "tool": "create_purchase_order",
+   "args": {
+    "supplier_code": "DP-RJK-0042",
+    "request_no": "PR/2026/04417",
+    "confirm": true
+   }
+  },
+  {
+   "t": 1793185440.845,
+   "method": "DELETE",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200
+  },
+  {
+   "t": 1793185440.837,
+   "method": "GET",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200
+  },
+  {
+   "t": 1793185440.85,
+   "method": "POST",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200,
+   "rpc": "initialize"
+  },
+  {
+   "t": 1793185440.854,
+   "method": "POST",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 202,
+   "rpc": "notifications/initialized"
+  },
+  {
+   "t": 1793185440.863,
+   "method": "POST",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200,
+   "rpc": "tools/call",
+   "tool": "release_purchase_order",
+   "args": {
+    "po_no": "PO/2026/01182"
+   }
+  },
+  {
+   "t": 1793185440.867,
+   "method": "DELETE",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200
+  },
+  {
+   "t": 1793185440.862,
+   "method": "GET",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200
+  },
+  {
+   "t": 1793185440.872,
+   "method": "POST",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200,
+   "rpc": "initialize"
+  },
+  {
+   "t": 1793185440.875,
+   "method": "POST",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 202,
+   "rpc": "notifications/initialized"
+  },
+  {
+   "t": 1793185440.888,
+   "method": "POST",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200,
+   "rpc": "tools/call",
+   "tool": "send_message",
+   "args": {
+    "to": "@rohit",
+    "text": "PO/2026/01182 is RELEASED to the supplier: 20,000 gaskets from Deccan Polymers, Rs 2,80,840 incl. GST. Thanks for approving PR/2026/04417."
+   }
+  },
+  {
+   "t": 1793185440.891,
+   "method": "DELETE",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200
+  },
+  {
+   "t": 1793185440.887,
+   "method": "GET",
+   "path": "/kavita/mcp",
+   "ua": "undici",
+   "status": 200
+  }
+ ],
+ "toolbox_request_count": 36,
+ "tools_called": [
+  "check_stock",
+  "create_purchase_request",
+  "send_message",
+  "list_my_approvals",
+  "approve_purchase_request",
+  "create_purchase_order",
+  "release_purchase_order",
+  "send_message"
+ ],
+ "total_wall_seconds": 80.6,
+ "n8n_log_tail": "91818723687\nFinished migration CreateSkillsHubTables1791818723687\nStarting migration AddInstanceScopeToAgents1792051765225\nFinished migration AddInstanceScopeToAgents1792051765225\nStarting migration DeleteInstanceAgentsOnRevert1792139680416\nFinished migration DeleteInstanceAgentsOnRevert1792139680416\nStarting migration CreatePromotionRunAndReviewTables1792139680417\nFinished migration CreatePromotionRunAndReviewTables1792139680417\nn8n Task Broker ready on 127.0.0.1, port 5679\nFailed to start Python task runner in internal mode. because its virtual environment is missing from this system. Launching a Python runner in internal mode is intended only for debugging and is not recommended for production. Users are encouraged to deploy in external mode. See: https://docs.n8n.io/hosting/configuration/task-runners/#setting-up-external-mode\n\nThere are deprecations related to your n8n setup. Please take the recommended actions to update your configuration:\n - WEBHOOK_URL -> Use N8N_WEBHOOK_URL instead, which sets the base URL for both test and production webhooks.\n - N8N_UNVERIFIED_PACKAGES_ENABLED -> The default for this variable will change to `false` in a future version. Set it to `true` explicitly to keep installing unverified community packages.\n - N8N_RUNNERS_MODE -> Internal task runner mode is deprecated and will be removed in a future version. For isolation and scaling, run the task runner launcher as a separate process, set this variable to `external` and share `N8N_RUNNERS_AUTH_TOKEN` with the launcher. See https://docs.n8n.io/deploy/host-n8n/configure-n8n/set-up-task-runners\n - N8N_RUNNERS_TASK_TIMEOUT -> The default for this variable will be reduced from 300 (5 minutes) to 60 (1 minute) in a future version. Set it explicitly to keep your current task timeout.\n - N8N_COMPRESSION_NODE_MAX_DECOMPRESSED_SIZE_BYTES -> The default for this variable will be reduced from 2 GiB to 256 MiB in a future version. Set it explicitly to keep your current limit.\n - N8N_COMPRESSION_NODE_MAX_ZIP_ENTRIES -> The default for this variable will be reduced from 5000 to 1000 in a future version. Set it explicitly to keep your current limit.\n - Running n8n outside a container is deprecated. Future versions will require running n8n via the official Docker image. See https://docs.n8n.io/deploy/host-n8n\n\n[license SDK] Skipping renewal on init: license cert is not initialized\nRegistered runner \"JS Task Runner\" (rFuHE66MLXDUl-x7kDDHf) \nSeeded the system trusted source\nGenerated new OAuth access-token signing key\nInstance registered\nDiscovered 4 cluster checks\nRecorded version change: (none) -> 2.45.5\nGenerated new instance OAuth JWE key pair\nSandbox: enabled=false provider=n8n-sandbox (from env)\nVersion: 2.45.5\nBuilding workflow dependency index...\nScheduler started\nFinished building workflow dependency index. Processed 0 draft workflows, 0 published workflows.\n\nEditor is now accessible via:\nhttp://localhost:5678\nOwner was set up successfully\nUser survey updated successfully\n"
+}

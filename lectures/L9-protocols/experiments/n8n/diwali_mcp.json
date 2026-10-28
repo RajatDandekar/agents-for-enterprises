@@ -1,0 +1,270 @@
+{
+ "name": "Diwali gasket order (MCP)",
+ "nodes": [
+  {
+   "id": "5ffc9b16-7c15-5ad1-a838-db024ab49445",
+   "name": "Diwali order",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2,
+   "position": [
+    0,
+    300
+   ],
+   "webhookId": "11862106-0425-585f-98ac-6df993f7ee81",
+   "parameters": {
+    "httpMethod": "POST",
+    "path": "diwali-gasket-order",
+    "responseMode": "onReceived",
+    "options": {}
+   }
+  },
+  {
+   "id": "ff6fefd6-1adb-5922-9844-5855fee73807",
+   "name": "Check stock",
+   "type": "@n8n/n8n-nodes-langchain.mcpClient",
+   "typeVersion": 1.1,
+   "position": [
+    240,
+    300
+   ],
+   "parameters": {
+    "serverTransport": "httpStreamable",
+    "endpointUrl": "http://127.0.0.1:8765/mcp",
+    "authentication": "none",
+    "tool": {
+     "__rl": true,
+     "mode": "list",
+     "value": "check_stock",
+     "cachedResultName": "check_stock"
+    },
+    "inputMode": "json",
+    "jsonInput": "={{ { \"item_code\": \"GSK-SIL-05L\" } }}",
+    "options": {}
+   }
+  },
+  {
+   "id": "b73f3ebb-ceb1-5c46-bc3d-0f09d5b6dcbb",
+   "name": "Raise the PR",
+   "type": "@n8n/n8n-nodes-langchain.mcpClient",
+   "typeVersion": 1.1,
+   "position": [
+    480,
+    300
+   ],
+   "parameters": {
+    "serverTransport": "httpStreamable",
+    "endpointUrl": "http://127.0.0.1:8765/mcp",
+    "authentication": "none",
+    "tool": {
+     "__rl": true,
+     "mode": "list",
+     "value": "create_purchase_request",
+     "cachedResultName": "create_purchase_request"
+    },
+    "inputMode": "json",
+    "jsonInput": "={{ { \"item_code\": $('Check stock').item.json.content[0].text.item_code, \"quantity\": 20000, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-09\", \"confirm\": true } }}",
+    "options": {}
+   }
+  },
+  {
+   "id": "02ae5cb0-2b6b-5426-beac-afec4690be5c",
+   "name": "Ask Rohit",
+   "type": "@n8n/n8n-nodes-langchain.mcpClient",
+   "typeVersion": 1.1,
+   "position": [
+    720,
+    300
+   ],
+   "parameters": {
+    "serverTransport": "httpStreamable",
+    "endpointUrl": "http://127.0.0.1:8765/mcp",
+    "authentication": "none",
+    "tool": {
+     "__rl": true,
+     "mode": "list",
+     "value": "send_message",
+     "cachedResultName": "send_message"
+    },
+    "inputMode": "json",
+    "jsonInput": "={{ { \"to\": \"@rohit\", \"text\": \"Please approve \" + $('Raise the PR').item.json.content[0].text.request_no + \" (est. Rs \" + $('Raise the PR').item.json.content[0].text.estimated_value.toLocaleString(\"en-IN\") + \", 20,000 gaskets for the Diwali run). Once approved, this link carries the order on: \" + $execution.resumeUrl } }}",
+    "options": {}
+   }
+  },
+  {
+   "id": "8207c817-8bcd-5c7b-8412-c9dbbe5e649d",
+   "name": "Wait for Rohit",
+   "type": "n8n-nodes-base.wait",
+   "typeVersion": 1.1,
+   "position": [
+    960,
+    300
+   ],
+   "webhookId": "8bb8db62-13e6-57da-82a3-6578cff30229",
+   "parameters": {
+    "resume": "webhook",
+    "httpMethod": "POST",
+    "options": {}
+   }
+  },
+  {
+   "id": "92b15cdf-162d-5073-9428-be884c3fdb38",
+   "name": "Order from Deccan",
+   "type": "@n8n/n8n-nodes-langchain.mcpClient",
+   "typeVersion": 1.1,
+   "position": [
+    1200,
+    300
+   ],
+   "parameters": {
+    "serverTransport": "httpStreamable",
+    "endpointUrl": "http://127.0.0.1:8765/mcp",
+    "authentication": "none",
+    "tool": {
+     "__rl": true,
+     "mode": "list",
+     "value": "create_purchase_order",
+     "cachedResultName": "create_purchase_order"
+    },
+    "inputMode": "json",
+    "jsonInput": "={{ { \"supplier_code\": \"DP-RJK-0042\", \"request_no\": $('Raise the PR').item.json.content[0].text.request_no, \"confirm\": true } }}",
+    "options": {}
+   }
+  },
+  {
+   "id": "34106277-b4bd-5840-872a-363f278ac4e7",
+   "name": "Release to supplier",
+   "type": "@n8n/n8n-nodes-langchain.mcpClient",
+   "typeVersion": 1.1,
+   "position": [
+    1440,
+    300
+   ],
+   "parameters": {
+    "serverTransport": "httpStreamable",
+    "endpointUrl": "http://127.0.0.1:8765/mcp",
+    "authentication": "none",
+    "tool": {
+     "__rl": true,
+     "mode": "list",
+     "value": "release_purchase_order",
+     "cachedResultName": "release_purchase_order"
+    },
+    "inputMode": "json",
+    "jsonInput": "={{ { \"po_no\": $('Order from Deccan').item.json.content[0].text.po_no } }}",
+    "options": {}
+   }
+  },
+  {
+   "id": "b7a0f702-26b6-5e65-b156-0ccc9ad049ed",
+   "name": "Tell Rohit",
+   "type": "@n8n/n8n-nodes-langchain.mcpClient",
+   "typeVersion": 1.1,
+   "position": [
+    1680,
+    300
+   ],
+   "parameters": {
+    "serverTransport": "httpStreamable",
+    "endpointUrl": "http://127.0.0.1:8765/mcp",
+    "authentication": "none",
+    "tool": {
+     "__rl": true,
+     "mode": "list",
+     "value": "send_message",
+     "cachedResultName": "send_message"
+    },
+    "inputMode": "json",
+    "jsonInput": "={{ { \"to\": \"@rohit\", \"text\": $('Release to supplier').item.json.content[0].text.po_no + \" is \" + $('Release to supplier').item.json.content[0].text.status + \": 20,000 gaskets from Deccan Polymers, Rs \" + $('Order from Deccan').item.json.content[0].text.gross_value.toLocaleString(\"en-IN\") + \" incl. GST. Thanks for approving \" + $('Raise the PR').item.json.content[0].text.request_no + \".\" } }}",
+    "options": {}
+   }
+  }
+ ],
+ "connections": {
+  "Diwali order": {
+   "main": [
+    [
+     {
+      "node": "Check stock",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Check stock": {
+   "main": [
+    [
+     {
+      "node": "Raise the PR",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Raise the PR": {
+   "main": [
+    [
+     {
+      "node": "Ask Rohit",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Ask Rohit": {
+   "main": [
+    [
+     {
+      "node": "Wait for Rohit",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Wait for Rohit": {
+   "main": [
+    [
+     {
+      "node": "Order from Deccan",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Order from Deccan": {
+   "main": [
+    [
+     {
+      "node": "Release to supplier",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Release to supplier": {
+   "main": [
+    [
+     {
+      "node": "Tell Rohit",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  }
+ },
+ "settings": {
+  "executionOrder": "v1",
+  "saveDataSuccessExecution": "all",
+  "saveManualExecutions": true
+ },
+ "pinData": {},
+ "meta": {
+  "note": "Lecture 9 · every Bahi step is an MCP tools/call to the Rasoi toolbox"
+ }
+}

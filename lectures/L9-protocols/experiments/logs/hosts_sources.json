@@ -1,0 +1,50 @@
+{
+ "fetched": "2026-10-28",
+ "status": "config checked against the docs, not run in our build (these hosts cannot run on Modal)",
+ "files": {
+  "hosts/claude_desktop_config.json": "Claude Desktop: local stdio servers only. macOS ~/Library/Application Support/Claude/claude_desktop_config.json, Windows %APPDATA%\\Claude\\claude_desktop_config.json; top-level mcpServers {name: {command, args, env}}. Remote servers (our HTTP variant, the GitHub remote server) are added in Settings > Connectors > Add custom connector (a URL), not in this file.",
+  "hosts/vscode_mcp.json": "VS Code: .vscode/mcp.json (workspace) or the user profile; top-level 'servers' (required), 'inputs' (optional), 'sandbox' (optional). stdio: type, command, args, cwd, env, envFile. http/sse: type, url, headers, oauth. Secrets via inputs[] {type: promptString, id, description, password: true} referenced as ${input:id}; VS Code prompts once and stores it securely. The portable .mcp.json uses 'mcpServers' and does not support ${input:...}.",
+  "hosts/cursor_mcp.json": "Cursor: .cursor/mcp.json (project) or ~/.cursor/mcp.json (global); top-level mcpServers. stdio: type 'stdio', command, args, env, envFile. Remote: url, headers, auth (no type in the docs' remote examples). Secrets via ${env:NAME} interpolation (also ${userHome}, ${workspaceFolder})."
+ },
+ "sources": [
+  {
+   "host": "Claude Desktop (local)",
+   "url": "https://modelcontextprotocol.io/docs/develop/connect-local-servers",
+   "title": "Connect to local MCP servers"
+  },
+  {
+   "host": "Claude (remote, custom connectors)",
+   "url": "https://modelcontextprotocol.io/docs/2026-07-28/develop/connect-remote-servers.md",
+   "title": "Connect to remote MCP Servers"
+  },
+  {
+   "host": "VS Code",
+   "url": "https://code.visualstudio.com/docs/copilot/customization/mcp-servers",
+   "title": "Add MCP servers in VS Code",
+   "page_date": "10/21/2026"
+  },
+  {
+   "host": "VS Code",
+   "url": "https://code.visualstudio.com/docs/agents/reference/mcp-configuration",
+   "title": "MCP configuration reference",
+   "page_date": "10/21/2026"
+  },
+  {
+   "host": "Cursor",
+   "url": "https://cursor.com/docs/context/mcp",
+   "title": "Model Context Protocol (MCP)",
+   "page_date": null
+  },
+  {
+   "host": "GitHub remote server",
+   "url": "https://github.com/github/github-mcp-server/blob/v2.0.3/README.md",
+   "title": "GitHub MCP Server README (remote URL https://api.githubcopilot.com/mcp/, VS Code 1.101+ for remote MCP and OAuth)"
+  }
+ ],
+ "notes": [
+  "Every snippet parses as JSON (checked with python json.load).",
+  "No literal token anywhere: VS Code uses ${input:github_pat} (or OAuth with the url-only 'github' entry), Cursor uses ${env:GITHUB_PAT}.",
+  "Our server must be importable by the host's python: pip install the course package first (bahi-erp from the course repo).",
+  "The stdio command and the HTTP variant were run for real on Modal by MCP Inspector (logs/inspector_run.json); the host apps themselves were not."
+ ]
+}
