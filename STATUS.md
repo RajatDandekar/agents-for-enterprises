@@ -14,7 +14,8 @@ v2 is archived in `archive/v2/`; the sections below "v2 record" describe that ve
 | L4 The Hands | 55 slides | QA 0; NB4 replay 0 errors |
 | L5 The Loop | 59 slides | QA 0; NB5 replay 0 errors |
 | L6 The Studio | 58 slides | QA 0; NB6 replay 0 errors |
-| L7 Trust, L8 Your Module | being built | |
+| L7 Trust | 57 slides | QA 0; NB7 replay 0 errors |
+| L8 Your Module | 45 slides; kits on the v3 toolbox | QA 0; NB8 replay 0 errors; modules/test_kits.py PASS |
 
 - **Slides:** https://forms-to-agents.vercel.app (`tools/build_site.sh --deploy`).
 - **Hub artifact:** https://claude.ai/artifact/BxkGjPwuBwLEhoaVyuroii.
