@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operator · The Rasoi Experience</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&display=swap">
+<link rel="stylesheet" href="/static/sky.css">
+<style>
+.box{max-width:1000px;margin:0 auto;padding:110px 20px 60px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+table.t td,table.t th{padding:8px 6px;border-bottom:1px solid var(--rule);text-align:left}
+</style>
+</head>
+<body>
+<div class="box">
+  <span class="kicker">Operator</span><h2 style="margin:14px 0 6px">Ask Rasoi controls</h2>
+  <p class="muted">Needs the admin token (Modal secret <code>rasoi-experience</code>, key <code>RASOI_ADMIN_TOKEN</code>). It stays in this tab only.</p>
+  <div class="row"><input class="big" id="tok" type="password" placeholder="Admin token" style="max-width:420px"><button class="btn" id="go">Load</button></div>
+  <div id="ui" class="hide">
+    <div class="grid g4" id="stats"></div>
+    <div class="card" style="margin-top:16px"><h3>Switches</h3>
+      <div class="row"><button class="btn ember sm" id="off">Pause Ask Rasoi</button><button class="btn sky sm" id="on">Resume Ask Rasoi</button>
+        <input class="big" id="reason" placeholder="Reason shown to students" style="max-width:320px;padding:10px 14px;font-size:15px"></div>
+      <div class="row"><span>Daily cap ₹</span><input class="big" id="cap" type="number" style="max-width:160px;padding:10px 14px;font-size:15px"><button class="btn sm" id="setcap">Set cap</button></div>
+    </div>
+    <div class="card white" style="margin-top:16px;overflow-x:auto"><h3>Players (newest 60)</h3><table class="t" id="players"></table></div>
+    <pre class="json card" id="raw" style="margin-top:16px;max-height:360px;overflow:auto"></pre>
+  </div>
+</div>
+<script src="/static/rx.js"></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  let tok = sessionStorage.getItem('rx_admin') || '';
+  $('tok').value = tok;
+  async function A(path, body) {
+    const r = await fetch(path, { method: body ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': tok }, body: body ? JSON.stringify(body) : undefined });
+    const d = await r.json(); if (!r.ok) throw new Error(d.detail || r.status); return d;
+  }
+  async function load() {
+    tok = $('tok').value.trim(); sessionStorage.setItem('rx_admin', tok);
+    try {
+      const s = await A('/api/admin/status');
+      $('ui').classList.remove('hide');
+      const st = (v, l) => `<div class="card stat"><span class="v" style="font-size:34px">${v}</span><span class="l">${l}</span></div>`;
+      $('stats').innerHTML = st('₹' + s.spend_today.inr.toFixed(2), `spent today of ₹${RX.inr(s.flags.cap_inr)}`) + st(s.players, 'players') +
+        st(s.before_finished, 'finished the Before') + st(s.after_ordered, 'released an order in the After') +
+        st(s.spend_today.messages || 0, 'chat messages today') + st(s.spend_today.calls, 'model calls today') +
+        st(s.flags.model_enabled ? 'on' : 'paused', 'Ask Rasoi') + st(s.studio.ok ? 'mounted' : 'missing', 'Workflow Studio');
+      $('cap').value = s.flags.cap_inr;
+      $('players').innerHTML = '<tr><th>Name</th><th>Missions</th><th>After</th><th>Player id</th><th></th></tr>' + s.recent.map((p) => `<tr><td>${RX.esc(p.name)}</td><td>${p.missions}/5</td><td>${p.after ? 'released' : ''}</td><td><code>${p.pid}</code></td><td><button class="pill" data-r="${p.pid}">Fresh Rasoi</button></td></tr>`).join('');
+      $('players').querySelectorAll('[data-r]').forEach((b) => b.onclick = async () => { await A('/api/admin/reset_player', { pid: b.dataset.r }); RX.toast('Reset.'); });
+      $('raw').innerHTML = RX.json(s);
+    } catch (e) { RX.toast(e.message); }
+  }
+  $('go').onclick = load;
+  $('off').onclick = async () => { await A('/api/admin/flags', { model_enabled: false, reason: $('reason').value }); load(); };
+  $('on').onclick = async () => { await A('/api/admin/flags', { model_enabled: true, reason: '' }); load(); };
+  $('setcap').onclick = async () => { await A('/api/admin/flags', { cap_inr: parseFloat($('cap').value) }); load(); };
+  if (tok) load();
+})();
+</script>
+</body>
+</html>

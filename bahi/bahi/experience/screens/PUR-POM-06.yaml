@@ -1,0 +1,24 @@
+# Order amendment. Service po_amend already names this screen (erp/services.py); the Experience serves the screen so
+# a player can fix a Draft order in the legacy client. (Suggested to the lead: move this file to erp/screens/.)
+code: PUR-POM-06
+title: PURCHASE ORDER AMENDMENT
+menu: Purchase > Order amendment
+roles: [PUR-EXEC, PUR-SR, SYS-ADMIN]
+help: >-
+  Fetch the order, change the quantity, need-by date or cost centre, and press Amend. The order is re-checked:
+  a change that stays within the approval it already has keeps it approved; a bigger one goes back for approval.
+fields:
+  - {name: po_no, label: PO NO, type: str, req: true, lookup: po_search}
+  - {name: sup_cd, label: SUP CD, type: str, readonly: true}
+  - {name: gross_value, label: GROSS VALUE, type: float, readonly: true}
+  - {name: qty, label: NEW QTY, type: int, req: false, help: leave blank to keep}
+  - {name: need_dt, label: NEED DT, type: date, req: false}
+  - {name: cc_cd, label: CC CD, type: str, req: false, lookup: cc_list}
+  - {name: status, label: STATUS, type: str, readonly: true}
+tasks:
+  - {button: Fetch, service: po_get, sends: [po_no], fills: [sup_cd, gross_value, need_dt, cc_cd, status]}
+  - {button: Amend, service: po_amend, sends: [po_no, qty, need_dt, cc_cd], fills: [status], needs: [Fetch]}
+  - {button: Close, service: null}
+state:
+  - {rule: "Closed cost centre: the order stays a Draft (W-CC-114)", error: null}
+  - {rule: "Closed or cancelled orders cannot be amended", error: ERR-PO-0801}

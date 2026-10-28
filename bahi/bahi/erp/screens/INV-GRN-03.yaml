@@ -1,0 +1,33 @@
+# Goods receipt: the last step of procure-to-pay. Stores counts what the supplier's truck brought, against a
+# RELEASED order. Service grn_save (erp/receipts.py, installed by Toolbox() or install_receipts(erp)).
+code: INV-GRN-03
+title: GOODS RECEIPT NOTE (GRN)
+menu: Inventory > Goods receipt
+roles: [STORES, PUR-EXEC, SYS-ADMIN]
+help: >-
+  Type the PO number from the supplier's delivery challan and press Fetch. Count the goods, type the quantity
+  received and the challan number, then Save: stock goes up and the order's balance comes down. A part delivery
+  gets its own GRN. Only RELEASED orders can be received; you cannot receive more than the order's balance.
+fields:
+  - {name: po_no, label: PO NO, type: str, req: true, lookup: po_search}
+  - {name: sup_cd, label: SUP CD, type: str, readonly: true}
+  - {name: status, label: PO STATUS, type: str, readonly: true}
+  - {name: whs_cd, label: WHS CD, type: str, req: false, lookup: whs_list}
+  - {name: qty, label: QTY RECD, type: int, req: true}
+  - {name: remarks, label: CHALLAN NO / REMARKS, type: str, req: false}
+  - {name: grn_no, label: GRN NO, type: str, readonly: true}
+  - {name: balance, label: PO BALANCE, type: int, readonly: true}
+  - {name: rows, label: RECEIPTS AGAINST THIS PO, type: grid, readonly: true, columns: [grn_no, qty, whs_cd, received_by, received_on]}
+tasks:
+  - {button: Fetch, service: po_get, sends: [po_no], fills: [sup_cd, status, whs_cd]}
+  - button: Save
+    service: grn_save
+    sends: [po_no, qty, whs_cd, remarks]
+    fills: {grn_no: grn_no, balance: balance, po_status: status}
+    needs: [Fetch]
+  - {button: History, service: grn_search, sends: [po_no], fills: [rows]}
+  - {button: Close, service: null}
+state:
+  - {rule: "Only a released order (RL) can be received", error: ERR-GRN-0102}
+  - {rule: "More than the order's balance", error: ERR-GRN-0204}
+  - {rule: "The order closes (CL) when everything has arrived", error: null}

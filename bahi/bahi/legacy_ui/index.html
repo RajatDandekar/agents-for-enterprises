@@ -70,6 +70,10 @@ button.w:disabled{color:var(--shadow);text-shadow:1px 1px 0 var(--hi)}
 #log td{font-size:11px}
 .about{line-height:1.6}
 @media (max-width:760px){.fm{grid-template-columns:110px 1fr}.tree{width:150px}}
+@media (max-width:560px){#main{margin:8px auto;width:calc(100vw - 16px);min-height:0}.bd{flex-direction:column;min-height:0}
+  .tree{width:auto;margin:6px 6px 0;max-height:150px;columns:2;column-gap:8px}.tree .grp{break-after:avoid}
+  .fm{grid-template-columns:96px 1fr;gap:5px 6px}.fm label{font-size:11px}.btns{flex-wrap:wrap;justify-content:flex-start}
+  .mn{flex-wrap:wrap}.sb span:not(#msg){display:none}.dlg{min-width:0;width:calc(100vw - 16px)}#login .fm{grid-template-columns:96px 1fr}}
 </style>
 </head>
 <body>
@@ -138,6 +142,9 @@ const TENANT = new URLSearchParams(location.search).get('tenant');
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const S = { screens: {}, token: null, user: null, role: null, cur: null, form: {}, grids: {}, sel: {}, done: new Set() };
+// Embedded in the Rasoi Experience (an iframe): tell the mission panel about screens, sign-ins and replies.
+const EMBED = window.parent !== window;
+const tell = (ev) => { if (EMBED) try { window.parent.postMessage({ bahi: ev }, location.origin); } catch (e) { /* not ours */ } };
 
 async function http(method, path, body, screen, task) {
   const h = { 'Content-Type': 'application/json' };
@@ -152,6 +159,7 @@ async function http(method, path, body, screen, task) {
     try { d = await r.json(); } catch (e) { d = { rc: 'E', err_cd: 'HTTP-' + r.status, msg: 'NO REPLY FROM SERVER' }; }
     if (r.status === 504) d = { rc: 'E', err_cd: 'HTTP-504', msg: 'NO REPLY FROM SERVER' };
     if (r.status === 401 && d && d.detail) d = { rc: 'E', err_cd: 'ERR-SEC-0010', msg: 'SESSION EXPIRED, SIGN IN AGAIN' };
+    if (method === 'POST') tell({ kind: 'reply', path, screen: screen || null, task: task || null, rc: d && d.rc, err_cd: d && d.err_cd, msg: d && d.msg });
     return d;
   } catch (e) {
     return { rc: 'E', err_cd: 'ERR-NET-0001', msg: 'SERVER NOT REACHABLE' };
@@ -250,6 +258,7 @@ function openScreen(code) {
   });
   document.querySelectorAll('.tree .it').forEach((x) => x.classList.toggle('on', x.dataset.code === code));
   status({ rc: 'S', msg: 'Ready' });
+  tell({ kind: 'screen', code });
   const first = $('form').querySelector('input:not([readonly])'); if (first) first.focus();
 }
 
@@ -322,6 +331,7 @@ async function signIn(t) {
   $('login').classList.add('hidden'); $('main').classList.remove('hidden');
   $('suser').textContent = S.user; $('sou').textContent = env.ou_cd;
   buildMenu(); closeScreen(); status({ rc: 'S', msg: env.msg });
+  tell({ kind: 'signin', user: S.user });
 }
 
 /* ---------------- F2 lookup ---------------- */
@@ -376,7 +386,7 @@ document.addEventListener('click', (e) => { if (!e.target.closest('.mn')) docume
 document.querySelectorAll('[data-act]').forEach((x) => x.addEventListener('click', async (e) => {
   e.stopPropagation(); document.querySelectorAll('.mn>div').forEach((m) => m.classList.remove('open'));
   const a = x.dataset.act;
-  if (a === 'signout') { await http('POST', '/logout'); showLogin(); }
+  if (a === 'signout') { await http('POST', '/logout'); showLogin(); tell({ kind: 'signout' }); }
   else if (a === 'clear' && S.cur) openScreen(S.cur.code);
   else if (a === 'log') { $('log').classList.toggle('hidden'); refreshLog(); }
   else if (a === 'refresh') buildMenu();
