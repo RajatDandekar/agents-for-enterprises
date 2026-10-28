@@ -143,3 +143,24 @@ Lecture folder slugs: `L1-before-and-after`, `L2-the-brain`, `L3-the-memory`, `L
 - The experience builder deploys and writes the URL into `bahi/bahi/experience/DEPLOYED.md`.
 - Until it exists, decks link to `https://rajatworkspace--rasoi-experience.us-east.modal.run` (the expected URL).
 - Screenshots of the app are taken headless on Modal once it is live.
+
+
+## v3.1 (2026-10-28): twelve lectures, with four on the industry stack
+Rajat asked for the production tools companies use, each with a proper introduction, comprehensive content, interesting assignments and good visuals. They get four lectures of their own. The research behind the choice of tools is in `INDUSTRY_TOOLS_PLAN.md`.
+
+| # | Date (proposed) | Folder | Title | Flagship tools (taught in depth) | Also covered |
+|---|---|---|---|---|---|
+| 1–7 | as before | as before | unchanged, except L1 gains a "2026 agent stack" map plate and a 12-lecture series map | | |
+| 8 | Sun 22 Nov | `L8-frameworks` | **Agent Frameworks in Industry** | OpenAI Agents SDK; Google ADK; LangGraph (recap); model gateways (OpenRouter, LiteLLM); local models (Ollama) | Claude Agent SDK, CrewAI, Microsoft Agent Framework, LlamaIndex on a "which one when" plate |
+| 9 | Sat 28 Nov | `L9-protocols` | **Protocols and Integration** | MCP in depth (official SDK, resources and prompts, MCP Inspector, remote servers and auth, MCP security); A2A (agent cards, tasks); n8n self-hosted | Claude Desktop, VS Code and Cursor as hosts; the GitHub MCP server; Copilot Studio and Agentforce as enterprise low-code |
+| 10 | Sun 29 Nov | `L10-observability-evals` | **Observability and Evals in Industry** | OpenTelemetry GenAI conventions; Langfuse; Arize Phoenix; DeepEval as a CI gate; Ragas; promptfoo red-teaming | LangSmith, Braintrust, Datadog LLM Observability; LLM-judge calibration |
+| 11 | Sat 5 Dec | `L11-production` | **Running Agents in Production** | Guardrails (NeMo Guardrails, Llama Guard, prompt-injection defence, OWASP LLM Top 10); Temporal durable execution with the OpenAI Agents SDK; pgvector and Redis; LiteLLM budgets and fallbacks | AWS Bedrock AgentCore, Microsoft Foundry, Google's agent platform; cost model; deployment |
+| 12 | Sun 6 Dec | `L12-your-module` (was L8) | **Your Module: Demo Day** | The student's chosen production stack | The rubric requires at least two industry tools, chosen with a reason |
+
+**Rules for L8–L11:**
+- **Story:** the same Rasoi company, the same Ask Rasoi agent and the same tasks. Each tool is introduced from first principles: what problem it solves, how it works inside, and how it maps to what the students built by hand in L1–L7. Then it is used on Ask Rasoi.
+- **Honest measurement:** every comparison is measured on our own runs (for example, the same 12 tasks with each framework). Never use vendor claims as results; cite market evidence with its source and caveats.
+- **Free to run:** every lab runs on free Colab in replay with no key, from recorded traces and outputs. Live runs use the student's own key; OpenRouter is the default route for every SDK that supports it.
+- **Pinned versions:** pin every SDK version in the notebook's install cell.
+- **Budget:** about $5 of OpenRouter spend per lecture for experiments. The key's remaining limit is about $44 in total.
+- **Keys:** Gemini works again (direct). Langfuse keys are in the course `.env`. There are no keys for LangSmith, Braintrust, Anthropic (Claude Agent SDK), Hugging Face (gated Llama Guard weights) or AWS. Design around them: use the OpenRouter route where one exists; otherwise show the code, mark it "not run in our build", and never fake an output.
