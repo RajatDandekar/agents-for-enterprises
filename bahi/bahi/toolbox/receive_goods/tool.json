@@ -1,0 +1,68 @@
+{
+  "name": "receive_goods",
+  "title": "Receive goods",
+  "category": "Stores",
+  "description": "Record goods received (GRN) against a RELEASED purchase order: stock goes up, and the order closes once everything has arrived. Cannot receive more than was ordered.",
+  "writes": true,
+  "version": "1.0",
+  "services": [
+    "po_get",
+    "grn_search",
+    "grn_save",
+    "stk_query"
+  ],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "po_no": {
+        "type": "string",
+        "description": "the released order the goods came against"
+      },
+      "quantity": {
+        "type": "integer",
+        "description": "how many arrived"
+      },
+      "warehouse": {
+        "type": "string",
+        "description": "optional; defaults to the order's warehouse"
+      },
+      "remarks": {
+        "type": "string",
+        "description": "optional, e.g. vehicle number"
+      },
+      "confirm": {
+        "type": "boolean",
+        "description": "false (default) = preview only, nothing is saved; true = commit"
+      }
+    },
+    "required": [
+      "po_no",
+      "quantity"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean",
+        "description": "true when it worked; false comes with error and next_step"
+      },
+      "grn_no": {
+        "type": "string",
+        "description": "e.g. GRN/2026/30001"
+      },
+      "balance": {
+        "type": "integer",
+        "description": "still to come"
+      },
+      "stock_after": {
+        "type": "integer",
+        "description": "on hand now"
+      }
+    }
+  },
+  "example": {
+    "po_no": "PO/2026/01182",
+    "quantity": 20000
+  }
+}
