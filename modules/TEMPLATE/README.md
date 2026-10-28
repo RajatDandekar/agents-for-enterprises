@@ -1,4 +1,4 @@
-# TEMPLATE: invent your own module
+# TEMPLATE: invent your own module (v3)
 
 Use this if none of the eight modules fits your work. Your module must live inside the same Rasoi Steel Works and the same Bahi sandbox, so it can reuse purchasing's people, cost centres, suppliers, items and shared procedures. Keep to the same complexity budget as everyone else, so that the grading is fair.
 
@@ -12,7 +12,15 @@ Use this if none of the eight modules fits your work. Your module must live insi
 6. **Write 4–6 policy documents.** Include at least one rule that Bahi does not enforce (it lives only in the document) and one stale, superseded document.
 7. **Write `legacy.py`.** `happy_path(erp)` is your before, done screen by screen. `TRAPS` triggers each item of the budget.
 8. **Write four scenarios and the never-events** in `scenarios.py`. Add a careful `REFERENCE` run and a careless `NAIVE` run for each one, to prove your `check()` is right.
-9. **Test on Modal.** Run `/Users/raj/.venv/bin/modal run tools/modal_run.py --script modules/test_kits.py --args "--only <your_module>"` until it says RESULT: PASS. Fill in the brief below with the measured numbers.
+9. **Build the After in the course's format (v3).** The package ships a `toolbox/` with two example tools:
+   `list_documents` (a read) and `create_document` (a write with every promise: preview with `confirm=false`, a key
+   made from the content, a look-up before the write and after a timeout, and a receipt read back from Bahi that names
+   the silent outcome). Rename and grow them into one folder per business activity (4–6 tools), then:
+   - serve them over MCP: `build_module_server(erp, "<speaker>", "<your_module>")` (`bahi.modules._toolbox`);
+   - index your documents for retrieval (A3) and put Ask Rasoi or the Lecture 5 harness on the tools (A5);
+   - draw one workflow in the Studio (A6);
+   - add the trust layer and turn your four scenarios into a suite with a gate (A7).
+10. **Test on Modal.** Run `/Users/raj/.venv/bin/modal run tools/modal_run.py --script modules/test_kits.py --args "--only <your_module>"` until it says RESULT: PASS. It also lints every tool folder, calls each tool's `example` as your speaker, and lists the folders over MCP. Fill in the brief below with the measured numbers.
 
 ## The budget you must meet
 
@@ -29,6 +37,7 @@ Use this if none of the eight modules fits your work. Your module must live insi
 | Policy documents | 4–6 | |
 | Seed records | ≈50 | |
 | Scenarios | 4, with code checks and never-events | |
+| Tools (v3) | 4–6 folders, `tool.json` + `tool.py`, at least one read and one write | |
 
 ## Rules
 
@@ -49,8 +58,11 @@ Use this if none of the eight modules fits your work. Your module must live insi
 | # | Screen | Button | Service | What they type or read |
 Measured on our run: N service calls, N screens, N fields typed.
 
-## The nine jobs, in this module
-| Job | What the form did | What the harness must do |   (all nine rows)
+## The After: what you build (v3)
+### Tools: one folder per business activity
+| Tool | Business activity | Bahi services behind it | Writes | Notes |
+### MCP server · Knowledge (the stale document, the rule only the documents know) · Harness and a workflow
+### Trust: identity, a guard per never-event, read-back of the silent outcome, the four scenarios as a suite, recovery
 
 ## Complexity budget
 | Item | Budget | In this module |

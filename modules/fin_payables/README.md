@@ -33,19 +33,70 @@ Sandbox date: Monday 26 Oct 2026. Friday is 30 Oct.
 
 Measured on our run (`modules/test_kits.log`): **9 service calls, 4 screens (3 of this module plus purchasing's PO and rate screens), 18 fields typed**, four people. Leave out EARLY PAY REASON at step 7 and Bahi still says "SCHEDULED", but the payment is parked and Friday's run pays nothing.
 
-## The nine jobs, in this module
+## The After: what you build (v3)
 
-| Job | What the form did | What the harness must do |
-|---|---|---|
-| 1 Ask for the right fields | INV TYPE decides which fields matter (PO, QTY, RATE vs AMOUNT, CC CD) | Ask only for what the invoice type needs; know that "Friday" means run date 2026-10-30 |
-| 2 Know the order of screens | Match → Save; Refer → Release; Propose → Approve → Run | Never propose payment for an invoice on hold; Match before Save |
-| 3 Look up codes and do the work | Hold queue, order, rate contract, receipts | Find Deccan Polymers' 4471, not Deccan Paints & Inks'; read the rate history |
-| 4 Explain the rules | Priya's memory | AP Policy §4 (tolerance, who releases), Early Payment Rule, MSME rule, Duplicate SOP, GST note |
-| 5 Hold the half-filled document | The open window | Carry the AP number from the explanation to the referral and the proposal |
-| 6 Respect roles | Release rights per hold code; owner approves non-PO; only the controller approves early payment | Refer, never release; never act as the service account |
-| 7 Give proof | AP and PAY numbers | Read back invoice status, hold code and payment status (PK is not scheduled) |
-| 8 Recover when it hangs | Search the queue before re-entering | Search by supplier and order before entering; ERR-AP-0118 / H-DUP mean "already there" |
-| 9 Be tested | Audit | The four scenarios below |
+The Before above is three legacy screens. The After is one sentence to Ask Rasoi, signed in as Kavita, then Priya. You build it
+the way the course built purchasing, one lecture at a time, in the same folder format.
+
+### 1 · Tools: one folder per business activity (Lectures 4, A4)
+
+One folder per tool, `tool.json` + `tool.py`, exactly like `bahi/bahi/toolbox/`, in your own folder (A4 uses
+`my_module_tools/<tool>/`). The first one, `invoice_status`, ships in the kit at `bahi/bahi/modules/fin_payables/toolbox/`:
+copy it into your folder and copy its shape. Every loader in the course reads the same folders: `add_tool_dir`
+(`bahi.course.l4`, A4), `FolderToolbox` (`bahi.course.l5.kit`, A5) and `ModuleToolbox` (`bahi.modules._toolbox`).
+
+| Tool | Business activity | Bahi services behind it | Writes | Notes |
+|---|---|---|---|---|
+| `invoice_status` | Find an invoice by the number printed on it | ap_inv_list | no | starter, in the kit |
+| `explain_hold` | Why an invoice is on hold: match result, rates, GRNs, age | ap_inv_get, ap_match | no |  |
+| `enter_invoice` | Enter a supplier invoice; preview the match and GST | ap_save | yes: preview, then confirm | key from (supplier, invoice no, gross); duplicate check first |
+| `refer_hold` | Send a hold to the person who can clear it | ap_hold_refer | yes: preview, then confirm |  |
+| `release_hold` | Clear a hold, in the authority's own session | ap_hold_release | yes, no preview: the instruction is the go-ahead | authority only |
+| `schedule_payment` | Propose a payment date; early needs the controller | ap_pay_sched, ap_approve | yes: preview, then confirm | never past the controller rule |
+
+Every write tool previews with `confirm=false`, carries an idempotency key made from its content (`content_key`), looks
+that key up before it writes and again after a timeout, and returns a receipt read back from Bahi, with the status
+in words. Every tool returns `ok=false` with `error` and `next_step` when it cannot do the job.
+
+### 2 · MCP server (Lecture 4)
+
+```python
+from bahi.modules._toolbox import build_module_server
+server = build_module_server(erp, "KJOSHI", folder="my_module_tools",
+                             with_purchasing=["search_policy", "send_message"])
+```
+
+The same folders become MCP tools; Ask Rasoi discovers them with `tools/list`, Claude Desktop can too.
+
+### 3 · Knowledge (Lecture 3)
+
+The kit's own documents in `docs/`: index them for retrieval and cite clauses in answers. One is stale
+(`the superseded document named in Traps`): your retrieval must prefer the current one. The rule only the documents know:
+early payment needs the finance controller (early-payment-rule.md).
+
+### 4 · Harness and a workflow (Lectures 5 and 6)
+
+- The Lecture 5 harness with your toolbox (A5): `Harness(FolderToolbox("my_module_tools", erp, "KJOSHI"), llm)`
+  from `bahi.course.l5`, or Ask Rasoi itself over MCP: `AskRasoi(erp, "KJOSHI", tools=MCPClientTools(MCPClient(server)),
+  prompt=YOUR_PROMPT)` from `bahi.course.l7`. Either way the loop, the preview rule and the receipts work as they do
+  for Kavita's order.
+- One workflow in the Studio: Every Friday 10 AM (schedule trigger) → list invoices due → approval node (Vikram) for anything early → payment run → send_message to Priya.
+
+### 5 · Trust (Lecture 7, A7)
+
+- **Identity:** the server is built for Kavita's own session, never `SVC_AGENT`.
+- **Guards:** one `TrustLayer` check per never-event below, each with a rule and a next step.
+- **Read-back:** the silent outcome (PK: a payment "SCHEDULED" but parked, skipped by Friday's run) is caught from the receipt and never reported as done.
+- **Evals:** the four scenarios below are your suite (`run_module_scenario`), three runs each, code checks on Bahi,
+  an LLM judge beside them, and the regression gate before every change.
+- **Recovery:** `erp.inject("<save service>", "timeout_after_commit", 1)`; the retry finds the document by its key.
+- **The demo-day change** (`CHANGE.md`): announced at the end of Lecture 7, absorbed by demo day.
+
+### What is checked automatically
+
+`modules/test_kits.py` lints every folder in `toolbox/` (tool.json complete, schema well formed, services exist,
+`run()` takes the schema's arguments, write tools have `confirm` or say in `no_preview_because` why not), calls every tool's `example` as
+`KJOSHI` and requires `ok=true`, and serves the folders over MCP.
 
 ## Complexity budget
 

@@ -29,19 +29,70 @@ Sandbox date: Monday 26 Oct 2026. Shakti Seals: GSTIN 24AAFCS8812N1Z4, PAN AAFCS
 
 Measured on our run (`modules/test_kits.log`): **7 service calls, 3 screens, 20 fields typed** for the careful path. Kavita must know a template code, a signatory Bahi will not pick for her, and that the KYC papers matter even though Bahi does not refuse without them.
 
-## The nine jobs, in this module
+## The After: what you build (v3)
 
-| Job | What the form did | What the harness must do |
-|---|---|---|
-| 1 Ask for the right fields | PARTY, PAN, GSTIN, TYPE, PAPER, TEMPLATE, TERM, JURIS | Turn "on our paper, valid two years" into OURS, NDA-MUT-v4, 24 months; ask for PAN and GSTIN |
-| 2 Know the order of screens | Find Party → Party Save → Fetch → Save → Sign → Register | Register the party before the request; Fetch before Save |
-| 3 Look up codes and do the work | Find Party, Fetch | Tell Shakti Seals from Shakti Packaging, Shakthi Seals and the blocked Shakti Seal Works; search by GSTIN |
-| 4 Explain the rules | Legal, and the DoA in a binder | Contract Policy, NDA Playbook, Delegation of Authority, KYC SOP; ignore the 2023 template note |
-| 5 Hold the half-filled document | The open window | Keep the party and terms while asking for PAN and GSTIN |
-| 6 Respect roles | Only the named reviewer and signatory decide | Send NDAs to Anand; never sign or clear as the service account; never create a supplier |
-| 7 Give proof | CT number, register entry | Read back status, end date, signatory, register row |
-| 8 Recover when it hangs | Look in the request list | Use client_ref; find before raising again (two live NDAs is NE2) |
-| 9 Be tested | Legal's checks | The four scenarios below |
+The Before above is three legacy screens. The After is one sentence to Ask Rasoi, signed in as Kavita. You build it
+the way the course built purchasing, one lecture at a time, in the same folder format.
+
+### 1 · Tools: one folder per business activity (Lectures 4, A4)
+
+One folder per tool, `tool.json` + `tool.py`, exactly like `bahi/bahi/toolbox/`, in your own folder (A4 uses
+`my_module_tools/<tool>/`). The first one, `find_party`, ships in the kit at `bahi/bahi/modules/legal_contracts/toolbox/`:
+copy it into your folder and copy its shape. Every loader in the course reads the same folders: `add_tool_dir`
+(`bahi.course.l4`, A4), `FolderToolbox` (`bahi.course.l5.kit`, A5) and `ModuleToolbox` (`bahi.modules._toolbox`).
+
+| Tool | Business activity | Bahi services behind it | Writes | Notes |
+|---|---|---|---|---|
+| `find_party` | Find a counterparty on the register (not a supplier) | ct_party_find | no | starter, in the kit |
+| `register_party` | Add a party with PAN and GSTIN (KYC) | ct_party_save | yes: preview, then confirm | never a supplier; duplicate check first |
+| `raise_contract` | Raise an NDA or contract; preview template, term, courts, signatory | ct_fetch, ct_save | yes: preview, then confirm | key from (party, type, term) |
+| `resubmit_contract` | Resubmit a parked request after KYC | ct_submit | yes: preview, then confirm |  |
+| `contract_status` | The real status, incl. PK and with Legal | ct_list, ct_reg_list | no |  |
+| `sign_contract` | The authorised signatory signs, in their own session | ct_sign | yes, no preview: the instruction is the go-ahead | signatory only |
+
+Every write tool previews with `confirm=false`, carries an idempotency key made from its content (`content_key`), looks
+that key up before it writes and again after a timeout, and returns a receipt read back from Bahi, with the status
+in words. Every tool returns `ok=false` with `error` and `next_step` when it cannot do the job.
+
+### 2 · MCP server (Lecture 4)
+
+```python
+from bahi.modules._toolbox import build_module_server
+server = build_module_server(erp, "KJOSHI", folder="my_module_tools",
+                             with_purchasing=["search_policy", "send_message"])
+```
+
+The same folders become MCP tools; Ask Rasoi discovers them with `tools/list`, Claude Desktop can too.
+
+### 3 · Knowledge (Lecture 3)
+
+The kit's own documents in `docs/`: index them for retrieval and cite clauses in answers. One is stale
+(`template-note-2023.md`): your retrieval must prefer the current one. The rule only the documents know:
+NDAs are signed by the plant head (delegation-of-authority.md).
+
+### 4 · Harness and a workflow (Lectures 5 and 6)
+
+- The Lecture 5 harness with your toolbox (A5): `Harness(FolderToolbox("my_module_tools", erp, "KJOSHI"), llm)`
+  from `bahi.course.l5`, or Ask Rasoi itself over MCP: `AskRasoi(erp, "KJOSHI", tools=MCPClientTools(MCPClient(server)),
+  prompt=YOUR_PROMPT)` from `bahi.course.l7`. Either way the loop, the preview rule and the receipts work as they do
+  for Kavita's order.
+- One workflow in the Studio: Request cleared by Legal (event trigger) → approval node (Anand signs) → send_message to Kavita with the register entry.
+
+### 5 · Trust (Lecture 7, A7)
+
+- **Identity:** the server is built for Kavita's own session, never `SVC_AGENT`.
+- **Guards:** one `TrustLayer` check per never-event below, each with a rule and a next step.
+- **Read-back:** the silent outcome (PK: a party without PAN/GSTIN "SAVED", parked for KYC, never reaches Legal) is caught from the receipt and never reported as done.
+- **Evals:** the four scenarios below are your suite (`run_module_scenario`), three runs each, code checks on Bahi,
+  an LLM judge beside them, and the regression gate before every change.
+- **Recovery:** `erp.inject("<save service>", "timeout_after_commit", 1)`; the retry finds the document by its key.
+- **The demo-day change** (`CHANGE.md`): announced at the end of Lecture 7, absorbed by demo day.
+
+### What is checked automatically
+
+`modules/test_kits.py` lints every folder in `toolbox/` (tool.json complete, schema well formed, services exist,
+`run()` takes the schema's arguments, write tools have `confirm` or say in `no_preview_because` why not), calls every tool's `example` as
+`KJOSHI` and requires `ok=true`, and serves the folders over MCP.
 
 ## Complexity budget
 

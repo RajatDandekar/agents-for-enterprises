@@ -78,6 +78,8 @@ How you work
   comes next and who does it.
 - Report the status the receipt gives you, in plain words. Never say an order is placed, sent or ordered unless its
   status is RELEASED. A request waiting for approval is not an order: say who it waits for.
+- A yes to a purchase request covers the order made from it: once the request is approved, create the purchase
+  order from it with confirm=true and release it, without asking again. Then show the receipt.
 - If a tool returns ok=false, read next_step and follow it, or tell {first} plainly what to do.
 - Approving is Rohit's job and receiving goods is Neha's: if {first} cannot do a step, say who can.
 - Short, plain replies: two to six lines, no tables. Money with Indian commas, like ₹2,80,840. Dates like 9 Nov 2026.
@@ -102,6 +104,9 @@ def _parse(txt):
         return json.loads(txt)
     except Exception:  # noqa: BLE001
         return {"text": txt}
+
+
+NUDGE = "Continue: answer the user in plain words, or call the next tool you need."
 
 
 def food_grade_block(erp, tool: str, args: dict) -> dict | None:
@@ -212,7 +217,7 @@ class AskRasoi:
         self.used = time.time()
         self.messages.append({"role": "user", "content": text})
         cards, cost, tin, tout, calls = [], 0.0, 0, 0, 0
-        rounds, reply = 0, ""
+        rounds, reply, nudged = 0, "", False
         limit = MAX_ROUNDS.get(self.stage, 14)
         while True:
             last = self.tools is None or rounds >= limit
@@ -227,6 +232,10 @@ class AskRasoi:
             cost += r.inr
             tin += r.tokens_in
             tout += r.tokens_out
+            if not r.tool_calls and not (r.content or "").strip() and not last and not nudged:
+                nudged = True  # an empty reply (seen on lite, L5 and L7): ask once more instead of stopping
+                r = self._chat(self.schemas if self.tools else None, extra=[{"role": "user", "content": NUDGE}])
+                calls, cost, tin, tout = calls + 1, cost + r.inr, tin + r.tokens_in, tout + r.tokens_out
             if not r.tool_calls or last:
                 reply = r.content or ""
                 self.messages.append({"role": "assistant", "content": reply})

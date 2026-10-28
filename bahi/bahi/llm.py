@@ -171,9 +171,11 @@ class LLM:
         except Exception as e:  # show the provider's reason, not just the status code
             body = getattr(getattr(e, "response", None), "text", "")
             if (self.provider == "gemini" and getattr(e, "status_code", None) == 402
-                    and os.environ.get("OPENROUTER_API_KEY") and not _GEMINI_VIA_OPENROUTER):
-                # The Gemini key is out of credits: send the same model through OpenRouter from now on.
-                _GEMINI_VIA_OPENROUTER.append(True)
+                    and os.environ.get("OPENROUTER_API_KEY") and not getattr(self, "_via_or", False)):
+                # The Gemini key is out of credits: send the same model through OpenRouter from now on
+                # (every instance and thread that hits the 402 reroutes; later instances start rerouted).
+                if not _GEMINI_VIA_OPENROUTER:
+                    _GEMINI_VIA_OPENROUTER.append(True)
                 self._route_via_openrouter(OpenAI, args)
                 try:
                     resp = self._client.chat.completions.create(**args)

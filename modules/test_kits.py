@@ -9,6 +9,9 @@ For each module it checks the complexity budget and the behaviour the brief prom
   the legacy happy path; every trap (silent outcome, variants, screen state, cascades, shared engine);
   4 scenarios whose check() passes the careful reference run and catches the naive run with a never-event;
 then installs all eight together and re-runs the reference scenarios on the combined sandbox.
+v3 (Lecture 8): each kit's toolbox/ folders (tool.json + tool.py) are linted, every tool's example is called as the
+kit's speaker and must return ok=true, and the folders are served over MCP and listed by a client. The TEMPLATE's two
+example tools are exercised end to end: preview, commit, the same commit again (found by its key), read-back.
 A full run writes modules/test_kits.log.
 """
 from __future__ import annotations
@@ -16,6 +19,7 @@ from __future__ import annotations
 import argparse
 import glob
 import io
+import json
 import os
 import re
 import sys
@@ -29,6 +33,7 @@ import yaml  # noqa: E402
 from bahi.erp import procs as _p, services as _s  # noqa: E402,F401
 from bahi.erp.engine import ERP, PROCS, SERVICES  # noqa: E402
 from bahi.modules._kit import KITS, load, run_module_scenario, scripted  # noqa: E402
+from bahi.modules._toolbox import ModuleToolbox, build_module_server, lint_folder, module_folder  # noqa: E402
 
 PUR_SERVICES = {n: s.fn.__module__ for n, s in SERVICES.items()}
 PUR_PROCS = {n: f.__module__ for n, f in PROCS.items()}
@@ -156,6 +161,35 @@ def test_module(name: str, row: dict, notes: list):
             say(f"    scenario {sc.id} naive:     {'caught' if caught else 'MISSED'} {r2.never_events}")
     row["ref"] = f"{ref_ok}/{len(S.SCENARIOS)}"
     row["naive"] = f"{nai_ok}/{len(S.NAIVE)}"
+    # ---- v3: the kit's toolbox folders
+    row["tools"] = test_toolbox(name, pkg.KIT["speaker"], notes)
+
+
+def test_toolbox(name: str, user: str, notes: list, folder=None) -> str:
+    folder = folder or module_folder(name)
+    errs = lint_folder(folder)
+    notes += [f"{name} toolbox: {e}" for e in errs]
+    tb = ModuleToolbox(ERP(modules=[name]), user, name, folder=folder)
+    bad = 0
+    for n in tb.names:
+        out = tb.call(n, tb.specs[n].spec.get("example") or {})
+        ok = bool(out.get("ok"))
+        bad += not ok
+        say(f"    tool {n}({json.dumps(tb.specs[n].spec.get('example'))}) as {user}: ok={ok} "
+            + json.dumps({k: v for k, v in out.items() if k != "ok"}, default=str)[:160])
+        if not ok:
+            notes.append(f"{name} toolbox: {n} example returned {out}")
+    try:
+        from bahi.mcp_server import MCPClient, MCPClientTools
+        c = MCPClient(build_module_server(ERP(modules=[name]), user, name, folder=folder))
+        listed = MCPClientTools(c).names
+        c.close()
+        mcp_ok = sorted(listed) == sorted(tb.names)
+    except Exception as e:  # noqa: BLE001
+        mcp_ok = False
+        notes.append(f"{name} toolbox over MCP: {type(e).__name__}: {e}")
+    good = not errs and not bad and mcp_ok and tb.names
+    return f"{len(tb.names)} " + ("ok" if good else "FAIL") + (" mcp" if mcp_ok else "")
 
 
 def main():
@@ -209,16 +243,32 @@ def main():
             serr = [e for p in screens for e in check_screen(p, SERVICES)]
             ref = run_module_scenario(scripted(TS.REFERENCE[1]), "_template_check", TS.SCENARIOS[0])
             nai = run_module_scenario(scripted(TS.NAIVE[1], "SVC_AGENT"), "_template_check", TS.SCENARIOS[0])
-            good = hp["ok"] and all(traps) and not serr and ref.passed and not nai.passed and T.KIT["prefix"] == "xx_"
+            tools = test_toolbox("_template_check", "KJOSHI", notes, folder=os.path.join(dst, "toolbox"))
+            erp = ERP(modules=["_template_check"])
+            tb = ModuleToolbox(erp, "KJOSHI", "_template_check", folder=os.path.join(dst, "toolbox"))
+            args = {"party": "Sahyadri Valves", "quantity": 40, "amount": 4000}
+            pv = tb.call("create_document", args)
+            c1 = tb.call("create_document", {**args, "confirm": True})
+            erp.inject("xx_save", "timeout_after_commit", 1)
+            c3 = tb.call("create_document", {**args, "quantity": 41, "confirm": True})  # reply lost, found by its key
+            c2 = tb.call("create_document", {**args, "confirm": True})
+            flow = bool(pv.get("preview") and c1.get("doc_no") and c2.get("already_done") and c2["doc_no"] == c1["doc_no"]
+                        and c3.get("doc_no") and c3["doc_no"] != c1["doc_no"])
+            say(f"    template create_document: preview={bool(pv.get('preview'))} commit={c1.get('doc_no')} {c1.get('status')} "
+                f"again={c2.get('doc_no')} already_done={c2.get('already_done')} after-timeout={c3.get('doc_no')}")
+            good = hp["ok"] and all(traps) and not serr and ref.passed and not nai.passed and T.KIT["prefix"] == "xx_" \
+                and "FAIL" not in tools and flow
             template = ("ok" if good else "FAIL") + f" (happy {hp['status']}, traps {sum(traps)}/{len(traps)}, " \
-                f"{len(screens)} screens, reference {'pass' if ref.passed else 'FAIL'}, naive {'caught' if not nai.passed else 'MISSED'})"
+                f"{len(screens)} screens, reference {'pass' if ref.passed else 'FAIL'}, naive {'caught' if not nai.passed else 'MISSED'}, " \
+                f"toolbox {tools}, preview-commit-key {'ok' if flow else 'FAIL'})"
             notes += [f"template: {e}" for e in serr]
         except Exception:  # noqa: BLE001
             template = "FAIL"
             notes.append("template: " + traceback.format_exc(limit=4))
         finally:
             shutil.rmtree(dst, ignore_errors=True)
-    cols = ["module", "svcs", "procs", "tables", "screens", "docs", "seed", "names", "happy", "before", "traps", "ref", "naive"]
+    cols = ["module", "svcs", "procs", "tables", "screens", "docs", "seed", "names", "happy", "before", "traps", "ref", "naive",
+            "tools"]
     say("\n" + " | ".join(cols))
     say(" | ".join("---" for _ in cols))
     for r in rows:

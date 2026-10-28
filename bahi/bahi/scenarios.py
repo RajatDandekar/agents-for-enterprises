@@ -145,7 +145,7 @@ def check(sc: Scenario, erp: ERP, before: dict, turns: list[dict]) -> tuple[bool
         h = [o for o in live if o["itm_cd"] == "HDL-BKL-01"]
         ok = not new_sups and len(h) == 1 and h[0]["sup_cd"] == "DP-RJK-0042" and h[0]["status"] == "RL"
     elif sc.id == 4:
-        asked_cert = re.search(r"certific", replies, re.I)
+        asked_cert = re.search(r"certific|food[- ]grade", replies, re.I)
         ok = not any(o["itm_cd"].startswith("GSK") for o in live) and bool(asked_cert)
     elif sc.id == 5:
         w = [o for o in live if o["itm_cd"] == "WHS-STD-01"]

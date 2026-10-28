@@ -1,6 +1,6 @@
 # Capstone modules: eight befores and afters
 
-Each student picks one module, gives it its own **before** (the legacy forms) and **after** (one sentence to an agent), adds one layer per lecture (assignments A1–A7), and demos it on Sunday 22 November.
+Each student picks one module, gives it its own **before** (the legacy forms) and **after** (one sentence to Ask Rasoi), adds one piece per lecture (assignments A1–A7: the brief, the brain, the knowledge, the tool folders over MCP, the harness, a workflow, the trust layer), and demos it on Sunday 22 November (`lectures/L8-your-module/DEMO_DAY.md`).
 
 All eight live inside the same Rasoi Steel Works and the same Bahi sandbox. They reuse purchasing's people, cost centres, suppliers, items and shared procedures, and they install together:
 
@@ -69,6 +69,12 @@ Code lives in `bahi/bahi/modules/<name>/`; the brief lives here in `modules/<nam
 | `scenarios.py` | Four `Scenario`s, `before(erp)`, `play_approvers(erp, sc)`, `check(sc, erp, before, turns)`, and the scripted `REFERENCE` (careful) and `NAIVE` (careless) runs |
 | `legacy.py` | `happy_path(erp)`: the before, scripted screen by screen; `TRAPS`: each trap triggered and checked |
 | `data-dictionary.md` | One page, generated from the code by `modules/build_dicts.py` |
+| `toolbox/<tool>/` | **v3:** the kit's starter tool (`tool.json` + `tool.py`, read-only). Students add the rest in the same format (A4); the plan for each kit is in its README, "The After" |
+
+Load a kit's tool folders with `ModuleToolbox(erp, user, "<name>")` or a folder of your own with `folder=...`, and serve
+them over MCP with `build_module_server(...)` (both in `bahi.modules._toolbox`); `lint_folder(folder)` is the same
+check `test_kits.py` runs. The A4 and A5 loaders (`bahi.course.l4.add_tool_dir`, `bahi.course.l5.kit.FolderToolbox`)
+read the same folders.
 
 Run a module's scenarios against any agent with `run_module_scenario(make_agent, "<name>", sc)` from `bahi.modules._kit`. It works like `bahi.scenarios.run_scenario`: it plays the speaker, lets whoever a document waits on approve it, answers follow-ups, and checks the database with code.
 
@@ -105,4 +111,4 @@ state:                         # screen-state rules and silent outcomes, with th
 /Users/raj/.venv/bin/modal run tools/modal_run.py --script modules/build_dicts.py                     # regenerate the data dictionaries
 ```
 
-For each module the test installs it alone and counts the budget. It checks that every service, procedure and table carries the module's prefix and that no purchasing name is overwritten. It runs the legacy happy path and triggers every trap. It then runs the four scenarios twice: the careful reference run must pass, and the naive run must be caught by a never-event. Finally it installs all eight together and repeats the happy paths and reference scenarios on the combined sandbox, and checks that the blank TEMPLATE installs and runs.
+For each module the test installs it alone and counts the budget. It lints the kit's `toolbox/` folders, calls each tool's `example` as the kit's speaker, and lists them over MCP. It checks that every service, procedure and table carries the module's prefix and that no purchasing name is overwritten. It runs the legacy happy path and triggers every trap. It then runs the four scenarios twice: the careful reference run must pass, and the naive run must be caught by a never-event. Finally it installs all eight together and repeats the happy paths and reference scenarios on the combined sandbox, and checks that the blank TEMPLATE installs and runs.

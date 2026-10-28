@@ -27,19 +27,70 @@ Sandbox date: Monday 26 Oct 2026. The dealer, Annapurna Stores, gives serial **R
 
 Measured on our run (`modules/test_kits.log`): **6 service calls, 3 screens, 13 fields typed** for the careful path. Farhan must know four codes the screen never explains: the part code (WHS-STD-01), the complaint code (NWS), the cause code (MFD), and what basis MFG means.
 
-## The nine jobs, in this module
+## The After: what you build (v3)
 
-| Job | What the form did | What the harness must do |
-|---|---|---|
-| 1 Ask for the right fields | SERIAL NO, PART CD, COMPLAINT, CAUSE | Notice the sentence has no serial and ask for it; turn "whistle" into WHS-STD-01 |
-| 2 Know the order of screens | Find → (Register Sale) → Verify → Save → Issue → Close | Register an unregistered sale before Verify; Verify before Save |
-| 3 Look up codes and do the work | Find, Serial Like, stock enquiry | Find the exact serial; read near-matches back instead of picking one |
-| 4 Explain the rules | The warranty card, and Nitin | Warranty Policy, Exclusions, Goodwill Authority, Desk Procedure; ignore the 2022 card |
-| 5 Hold the half-filled document | The open ticket | Remember serial, part and cause across the dealer's answers |
-| 6 Respect roles | Desk waives up to ₹5,000; Nitin above, and for excluded causes | Send excluded-cause waivers to Nitin (FWD TO); never as the service account |
-| 7 Give proof | Ticket number | Read back ticket, status, amount, waiver approver |
-| 8 Recover when it hangs | Ticket list by serial | One open ticket per serial and part (ERR-WR-0301); look before re-raising |
-| 9 Be tested | Service manager's audit | The four scenarios below |
+The Before above is three legacy screens. The After is one sentence to Ask Rasoi, signed in as Farhan. You build it
+the way the course built purchasing, one lecture at a time, in the same folder format.
+
+### 1 · Tools: one folder per business activity (Lectures 4, A4)
+
+One folder per tool, `tool.json` + `tool.py`, exactly like `bahi/bahi/toolbox/`, in your own folder (A4 uses
+`my_module_tools/<tool>/`). The first one, `check_serial`, ships in the kit at `bahi/bahi/modules/svc_warranty/toolbox/`:
+copy it into your folder and copy its shape. Every loader in the course reads the same folders: `add_tool_dir`
+(`bahi.course.l4`, A4), `FolderToolbox` (`bahi.course.l5.kit`, A5) and `ModuleToolbox` (`bahi.modules._toolbox`).
+
+| Tool | Business activity | Bahi services behind it | Writes | Notes |
+|---|---|---|---|---|
+| `check_serial` | Model, made and sold dates, dealer | wr_ser_get | no | starter, in the kit |
+| `check_warranty` | In or out of warranty, and why | wr_verify | no |  |
+| `register_sale` | Register a sale the dealer never registered | wr_sale_reg | yes: preview, then confirm | needs the dealer's invoice |
+| `open_ticket` | Open a service ticket; preview free or chargeable | wr_tkt_save, wr_tkt_list | yes: preview, then confirm | key from (serial, part) |
+| `request_waiver` | Ask the service manager for a goodwill waiver | wr_waive | yes: preview, then confirm |  |
+| `issue_part` | Issue the part and close the ticket | wr_issue, wr_close | yes: preview, then confirm | only when free or waived |
+
+Every write tool previews with `confirm=false`, carries an idempotency key made from its content (`content_key`), looks
+that key up before it writes and again after a timeout, and returns a receipt read back from Bahi, with the status
+in words. Every tool returns `ok=false` with `error` and `next_step` when it cannot do the job.
+
+### 2 · MCP server (Lecture 4)
+
+```python
+from bahi.modules._toolbox import build_module_server
+server = build_module_server(erp, "FSHAIKH", folder="my_module_tools",
+                             with_purchasing=["search_policy", "send_message"])
+```
+
+The same folders become MCP tools; Ask Rasoi discovers them with `tools/list`, Claude Desktop can too.
+
+### 3 · Knowledge (Lecture 3)
+
+The kit's own documents in `docs/`: index them for retrieval and cite clauses in answers. One is stale
+(`warranty-card-2022.md`): your retrieval must prefer the current one. The rule only the documents know:
+the exclusions (warranty-exclusions.md): physical damage is never free without the manager.
+
+### 4 · Harness and a workflow (Lectures 5 and 6)
+
+- The Lecture 5 harness with your toolbox (A5): `Harness(FolderToolbox("my_module_tools", erp, "FSHAIKH"), llm)`
+  from `bahi.course.l5`, or Ask Rasoi itself over MCP: `AskRasoi(erp, "FSHAIKH", tools=MCPClientTools(MCPClient(server)),
+  prompt=YOUR_PROMPT)` from `bahi.course.l7`. Either way the loop, the preview rule and the receipts work as they do
+  for Kavita's order.
+- One workflow in the Studio: Ticket waiting for a waiver (event trigger) → approval node (Nitin) → issue_part → send_message to the dealer.
+
+### 5 · Trust (Lecture 7, A7)
+
+- **Identity:** the server is built for Farhan's own session, never `SVC_AGENT`.
+- **Guards:** one `TrustLayer` check per never-event below, each with a rule and a next step.
+- **Read-back:** the silent outcome (CQ: the sale was never registered, so warranty counts from manufacture: chargeable, part never issued) is caught from the receipt and never reported as done.
+- **Evals:** the four scenarios below are your suite (`run_module_scenario`), three runs each, code checks on Bahi,
+  an LLM judge beside them, and the regression gate before every change.
+- **Recovery:** `erp.inject("<save service>", "timeout_after_commit", 1)`; the retry finds the document by its key.
+- **The demo-day change** (`CHANGE.md`): announced at the end of Lecture 7, absorbed by demo day.
+
+### What is checked automatically
+
+`modules/test_kits.py` lints every folder in `toolbox/` (tool.json complete, schema well formed, services exist,
+`run()` takes the schema's arguments, write tools have `confirm` or say in `no_preview_because` why not), calls every tool's `example` as
+`FSHAIKH` and requires `ok=true`, and serves the folders over MCP.
 
 ## Complexity budget
 

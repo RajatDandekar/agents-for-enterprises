@@ -28,19 +28,70 @@ Sandbox date: Monday 26 Oct 2026. "Tonight" is the NIGHT slot (after 20:00). "Th
 
 Measured on our run (`modules/test_kits.log`): **8 service calls, 3 screens, 19 fields typed**, by four people. Neha must know three codes the screen never explains (GSK-SIL-05L, WH-PUN-LN5, APATIL in FWD TO).
 
-## The nine jobs, in this module
+## The After: what you build (v3)
 
-| Job | What the form did | What the harness must do |
-|---|---|---|
-| 1 Ask for the right fields | ITEM, FROM, TO, QTY, SLOT, VEH NO, EWB NO, FWD TO | Turn "the Pune line" into WH-PUN-LN5 and "tonight" into NIGHT |
-| 2 Know the order of screens | Enquiry → Fetch → Save → Approve → Gate pass → Check out → Receive | Check free stock first; Fetch before Save; receive only after arrival |
-| 3 Look up codes and do the work | Show, F4 lists | Pick GSK-SIL-05L, not the rework lot GSK-SIL-05L-R; value the consignment |
-| 4 Explain the rules | Paper SOPs and the security guard | Transfer SOP, Gate Pass Policy §4.2, QC Hold Rules, E-way Bill Note; ignore the 2019 SOP |
-| 5 Hold the half-filled document | The open window | Remember quantity, slot and approver across "yes, go ahead" |
-| 6 Respect roles | Issuing unit makes the gate pass, its gate checks out, the receiving unit receives | Never approve; never receive as the service account |
-| 7 Give proof | TN, GP and RC numbers | Read back status (SH, PA, AP, IT, RC), value, approver |
-| 8 Recover when it hangs | Look in the note list | Use client_ref; find the note before raising another |
-| 9 Be tested | Stores audit | The four scenarios below |
+The Before above is three legacy screens. The After is one sentence to Ask Rasoi, signed in as Neha. You build it
+the way the course built purchasing, one lecture at a time, in the same folder format.
+
+### 1 · Tools: one folder per business activity (Lectures 4, A4)
+
+One folder per tool, `tool.json` + `tool.py`, exactly like `bahi/bahi/toolbox/`, in your own folder (A4 uses
+`my_module_tools/<tool>/`). The first one, `stock_by_location`, ships in the kit at `bahi/bahi/modules/inv_transfers/toolbox/`:
+copy it into your folder and copy its shape. Every loader in the course reads the same folders: `add_tool_dir`
+(`bahi.course.l4`, A4), `FolderToolbox` (`bahi.course.l5.kit`, A5) and `ModuleToolbox` (`bahi.modules._toolbox`).
+
+| Tool | Business activity | Bahi services behind it | Writes | Notes |
+|---|---|---|---|---|
+| `stock_by_location` | Free, on hold and in transit, per warehouse | tr_stk_enq | no | starter, in the kit |
+| `create_transfer` | Raise a transfer note; preview free stock, value, e-way bill, approver | tr_fetch, tr_save | yes: preview, then confirm | key from (item, from, to, qty, date) |
+| `transfer_status` | The real status of a note, incl. SH and IT | tr_list | no |  |
+| `approve_night_move` | The plant head approves a night move | tr_approve | yes, no preview: the instruction is the go-ahead | approver only |
+| `gate_pass` | Create the gate pass (needs the e-way bill above ₹50,000) | tr_gp_create | yes: preview, then confirm |  |
+| `receive_transfer` | Post the receipt at the line, only when it has arrived | tr_receive | yes: preview, then confirm | never before arrival |
+
+Every write tool previews with `confirm=false`, carries an idempotency key made from its content (`content_key`), looks
+that key up before it writes and again after a timeout, and returns a receipt read back from Bahi, with the status
+in words. Every tool returns `ok=false` with `error` and `next_step` when it cannot do the job.
+
+### 2 · MCP server (Lecture 4)
+
+```python
+from bahi.modules._toolbox import build_module_server
+server = build_module_server(erp, "NDESAI", folder="my_module_tools",
+                             with_purchasing=["search_policy", "send_message"])
+```
+
+The same folders become MCP tools; Ask Rasoi discovers them with `tools/list`, Claude Desktop can too.
+
+### 3 · Knowledge (Lecture 3)
+
+The kit's own documents in `docs/`: index them for retrieval and cite clauses in answers. One is stale
+(`transfer-sop-2019.md`): your retrieval must prefer the current one. The rule only the documents know:
+QC-held stock never moves; e-way bill above ₹50,000 (qc-hold-rules.md, e-way-bill-note.md).
+
+### 4 · Harness and a workflow (Lectures 5 and 6)
+
+- The Lecture 5 harness with your toolbox (A5): `Harness(FolderToolbox("my_module_tools", erp, "NDESAI"), llm)`
+  from `bahi.course.l5`, or Ask Rasoi itself over MCP: `AskRasoi(erp, "NDESAI", tools=MCPClientTools(MCPClient(server)),
+  prompt=YOUR_PROMPT)` from `bahi.course.l7`. Either way the loop, the preview rule and the receipts work as they do
+  for Kavita's order.
+- One workflow in the Studio: Line stock below one shift (schedule trigger, 6 PM) → stock_by_location → create_transfer (preview) → approval node (Anand, night) → gate_pass → send_message to Neha.
+
+### 5 · Trust (Lecture 7, A7)
+
+- **Identity:** the server is built for Neha's own session, never `SVC_AGENT`.
+- **Guards:** one `TrustLayer` check per never-event below, each with a rule and a next step.
+- **Read-back:** the silent outcome (SH: more than the free stock "SAVED", never gets a gate pass) is caught from the receipt and never reported as done.
+- **Evals:** the four scenarios below are your suite (`run_module_scenario`), three runs each, code checks on Bahi,
+  an LLM judge beside them, and the regression gate before every change.
+- **Recovery:** `erp.inject("<save service>", "timeout_after_commit", 1)`; the retry finds the document by its key.
+- **The demo-day change** (`CHANGE.md`): announced at the end of Lecture 7, absorbed by demo day.
+
+### What is checked automatically
+
+`modules/test_kits.py` lints every folder in `toolbox/` (tool.json complete, schema well formed, services exist,
+`run()` takes the schema's arguments, write tools have `confirm` or say in `no_preview_because` why not), calls every tool's `example` as
+`NDESAI` and requires `ok=true`, and serves the folders over MCP.
 
 ## Complexity budget
 

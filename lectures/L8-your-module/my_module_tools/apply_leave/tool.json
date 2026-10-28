@@ -1,0 +1,79 @@
+{
+  "name": "apply_leave",
+  "title": "Apply for leave",
+  "category": "HR",
+  "writes": true,
+  "version": "1.0",
+  "description": "Apply for leave for the signed-in employee. leave_type: CL casual, EL earned, SL sick. confirm=false previews the days, the balance, any unpaid days and who approves, and saves nothing; confirm=true applies. If the balance of the chosen type does not cover every day, Bahi holds the application unpaid and it never reaches the approver: pick a type that covers it (the preview says which).",
+  "services": [
+    "lv_emp_get",
+    "lv_bal_get",
+    "lv_hol_list",
+    "lv_fetch",
+    "lv_save",
+    "lv_list"
+  ],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "leave_type": {
+        "type": "string",
+        "enum": [
+          "CL",
+          "EL",
+          "SL"
+        ],
+        "description": "CL, EL or SL"
+      },
+      "from_date": {
+        "type": "string",
+        "description": "YYYY-MM-DD"
+      },
+      "to_date": {
+        "type": "string",
+        "description": "YYYY-MM-DD"
+      },
+      "reason": {
+        "type": "string",
+        "description": "in the employee's words"
+      },
+      "confirm": {
+        "type": "boolean",
+        "description": "false (default) = preview only; true = apply"
+      }
+    },
+    "required": [
+      "leave_type",
+      "from_date",
+      "to_date",
+      "reason"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean"
+      },
+      "leave_no": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string",
+        "description": "WAITING FOR APPROVAL, APPROVED, HELD (unpaid) ..."
+      },
+      "unpaid_days": {
+        "type": "number"
+      },
+      "warning": {
+        "type": "string"
+      }
+    }
+  },
+  "example": {
+    "leave_type": "EL",
+    "from_date": "2026-10-29",
+    "to_date": "2026-10-30",
+    "reason": "sister's wedding"
+  }
+}

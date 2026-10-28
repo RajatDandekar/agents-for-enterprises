@@ -28,19 +28,70 @@ Sandbox date: Monday 26 Oct 2026. Tuesday is **tomorrow** (27 Oct); back Wednesd
 
 Measured on our run (`modules/test_kits.log`): **9 service calls, 2 screens, 24 fields typed, 3 people** for the careful path. The third screen, TRV-CLM-03 Expense Claim, comes after the trip (scenario 4).
 
-## The nine jobs, in this module
+## The After: what you build (v3)
 
-| Job | What the form did | What the harness must do |
-|---|---|---|
-| 1 Ask for the right fields | TO CITY, dates, MODE, CC CD, URGENT, ADVANCE | Turn "Tuesday … back Wednesday" into 27–28 Oct; know that tomorrow means URGENT |
-| 2 Know the order of screens | Fetch → Save → approval → desk booking → claim | Fetch before Save; read back until BK, not just "saved" |
-| 3 Look up codes and do the work | Find City, Fetch entitlement, fare enquiry | RJK not RJY; grade and caps from Fetch; never trust the default PRD-05 |
-| 4 Explain the rules | The desk and the circulars | Travel Policy §3 (grade), §4 (48 hours), §5.1 (PRD-07); hotel caps; claim SOP; ignore the 2023 circular |
-| 5 Hold the half-filled document | The open request | Keep dates, mode and cost centre across "yes, go ahead" |
-| 6 Respect roles | Only your own trip; manager approves; desk books; finance settles | Never approve, book or settle as the service account |
-| 7 Give proof | Trip number and PNRs | Read back status BK, both legs, the fares; for claims the admissible amount |
-| 8 Recover when it hangs | Look in the trip list | client_ref; find before re-raising (overlap is ERR-TV-0301) |
-| 9 Be tested | The desk's checks | The four scenarios below |
+The Before above is three legacy screens. The After is one sentence to Ask Rasoi, signed in as Kavita. You build it
+the way the course built purchasing, one lecture at a time, in the same folder format.
+
+### 1 · Tools: one folder per business activity (Lectures 4, A4)
+
+One folder per tool, `tool.json` + `tool.py`, exactly like `bahi/bahi/toolbox/`, in your own folder (A4 uses
+`my_module_tools/<tool>/`). The first one, `travel_entitlement`, ships in the kit at `bahi/bahi/modules/travel_claims/toolbox/`:
+copy it into your folder and copy its shape. Every loader in the course reads the same folders: `add_tool_dir`
+(`bahi.course.l4`, A4), `FolderToolbox` (`bahi.course.l5.kit`, A5) and `ModuleToolbox` (`bahi.modules._toolbox`).
+
+| Tool | Business activity | Bahi services behind it | Writes | Notes |
+|---|---|---|---|---|
+| `travel_entitlement` | Modes, hotel cap and allowance for a destination | tv_ent_get | no | starter, in the kit |
+| `request_trip` | Raise a trip; preview dates, mode, cost centre, URGENT, approver | tv_trip_save | yes: preview, then confirm | key from (traveller, from, to, dates) |
+| `trip_status` | The real status of a trip, incl. WL | tv_trip_list | no |  |
+| `approve_trip` | The manager approves, in their own session | tv_approve | yes, no preview: the instruction is the go-ahead | approver only |
+| `book_fares` | The travel desk books the cheapest open fares | tv_fare_list, tv_bkg_save | yes: preview, then confirm | travel desk only |
+| `file_claim` | File an expense claim; preview what is admissible | tv_claim_save | yes: preview, then confirm | key from (trip, lines) |
+
+Every write tool previews with `confirm=false`, carries an idempotency key made from its content (`content_key`), looks
+that key up before it writes and again after a timeout, and returns a receipt read back from Bahi, with the status
+in words. Every tool returns `ok=false` with `error` and `next_step` when it cannot do the job.
+
+### 2 · MCP server (Lecture 4)
+
+```python
+from bahi.modules._toolbox import build_module_server
+server = build_module_server(erp, "KJOSHI", folder="my_module_tools",
+                             with_purchasing=["search_policy", "send_message"])
+```
+
+The same folders become MCP tools; Ask Rasoi discovers them with `tools/list`, Claude Desktop can too.
+
+### 3 · Knowledge (Lecture 3)
+
+The kit's own documents in `docs/`: index them for retrieval and cite clauses in answers. One is stale
+(`travel-rules-2023.md`): your retrieval must prefer the current one. The rule only the documents know:
+supplier visits charge PRD-07; grade decides the class (travel-policy.md).
+
+### 4 · Harness and a workflow (Lectures 5 and 6)
+
+- The Lecture 5 harness with your toolbox (A5): `Harness(FolderToolbox("my_module_tools", erp, "KJOSHI"), llm)`
+  from `bahi.course.l5`, or Ask Rasoi itself over MCP: `AskRasoi(erp, "KJOSHI", tools=MCPClientTools(MCPClient(server)),
+  prompt=YOUR_PROMPT)` from `bahi.course.l7`. Either way the loop, the preview rule and the receipts work as they do
+  for Kavita's order.
+- One workflow in the Studio: Trip approved (event trigger) → book_fares → send_message to Kavita with the tickets.
+
+### 5 · Trust (Lecture 7, A7)
+
+- **Identity:** the server is built for Kavita's own session, never `SVC_AGENT`.
+- **Guards:** one `TrustLayer` check per never-event below, each with a rule and a next step.
+- **Read-back:** the silent outcome (WL: a trip for tomorrow without URGENT "SAVED", wait-listed, never booked) is caught from the receipt and never reported as done.
+- **Evals:** the four scenarios below are your suite (`run_module_scenario`), three runs each, code checks on Bahi,
+  an LLM judge beside them, and the regression gate before every change.
+- **Recovery:** `erp.inject("<save service>", "timeout_after_commit", 1)`; the retry finds the document by its key.
+- **The demo-day change** (`CHANGE.md`): announced at the end of Lecture 7, absorbed by demo day.
+
+### What is checked automatically
+
+`modules/test_kits.py` lints every folder in `toolbox/` (tool.json complete, schema well formed, services exist,
+`run()` takes the schema's arguments, write tools have `confirm` or say in `no_preview_because` why not), calls every tool's `example` as
+`KJOSHI` and requires `ok=true`, and serves the folders over MCP.
 
 ## Complexity budget
 
