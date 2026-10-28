@@ -17,7 +17,8 @@ import sys
 
 import modal
 
-ROOT = pathlib.Path(__file__).resolve().parents[3]
+_here = pathlib.Path(__file__).resolve()
+ROOT = _here.parents[3] if len(_here.parents) > 3 else pathlib.Path("/course")  # in the container the file sits at /root
 SKIP_DIRS = {".git", "qa", "archive", "node_modules", "__pycache__", ".ipynb_checkpoints", "site-dist", ".venv"}
 IMAGE = os.environ.get("L11_IMAGE", "guard")   # set by the caller locally; baked into the image for the container
 KEYS = ("OPENROUTER_API_KEY", "GEMINI_API_KEY")
@@ -65,9 +66,11 @@ def img_data():
     return _mount(modal.Image.debian_slim(python_version="3.11")
                   .apt_install("postgresql", "postgresql-server-dev-all", "build-essential", "git", "redis-server", "procps", "curl")
                   .run_commands(f"git clone --branch v{PINS['pgvector_ext']} --depth 1 https://github.com/pgvector/pgvector.git /tmp/pgv"
-                                " && cd /tmp/pgv && make && make install")
+                                " && cd /tmp/pgv && make OPTFLAGS=\"\" && make install")  # no -march=native: build and run CPUs differ
                   .pip_install(*BASE, f"psycopg[binary]=={PINS['psycopg']}", f"pgvector=={PINS['pgvector']}",
-                               f"redis=={PINS['redis']}", f"litellm[proxy]=={PINS['litellm']}", "prisma"))
+                               f"redis=={PINS['redis']}", f"litellm[proxy]=={PINS['litellm']}", "prisma")
+                  .run_commands("cd $(python -c 'import litellm, os; print(os.path.dirname(litellm.__file__))')/proxy"
+                                " && prisma generate --schema schema.prisma"))
 
 app = modal.App(f"l11-production-{IMAGE}")
 secret = modal.Secret.from_dict(_secret_env())

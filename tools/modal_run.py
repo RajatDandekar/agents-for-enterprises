@@ -113,7 +113,14 @@ def main(script: str = "", nb: str = "", args: str = "", mode: str = "auto"):
     for rel, data in res["files"].items():
         dst = ROOT / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
-        dst.write_bytes(data)
+        if rel.endswith(".jsonl") and dst.exists():
+            # caches and cassettes are append-only: merge, so a parallel run's new lines are never overwritten
+            have = dst.read_bytes().splitlines()
+            seen = set(have)
+            extra = [l for l in data.splitlines() if l and l not in seen]
+            dst.write_bytes(b"\n".join(have + extra) + b"\n")
+        else:
+            dst.write_bytes(data)
     print(res["log"])
     print(f"\n{'OK' if res['ok'] else 'FAILED'} · {len(res['files'])} files written back:")
     for rel in sorted(res["files"])[:60]:

@@ -106,7 +106,7 @@ Rules for this line:
 | Workflow, low-code | L9 | n8n (self-hosted) running your A6 workflow over MCP | The L6 Studio workflow | Self-hosted n8n is free; Copilot Studio and Agentforce count only with recorded output |
 | Observability | L10 | Langfuse or Arize Phoenix, over OpenTelemetry GenAI traces | The L7 trace you read by hand | Both open source; LangSmith counts only with an exported trace |
 | Evals | L10 | DeepEval as a CI gate on your suite; Ragas on your A3 retrieval; promptfoo red-teaming your module for prompt injection | The L7 suite and gate; the A3 grader | Open source |
-| Guardrails | L11 | NeMo Guardrails, Llama Guard, a prompt-injection filter | The L7 guards (keep yours: the rail is a second layer) | NeMo is open source; Llama Guard weights are gated |
+| Guardrails | L11 | NeMo Guardrails, Llama Guard, a prompt-injection filter | The L7 guards (keep yours: the rail is a second layer) | NeMo is open source; Llama Guard 4 runs through OpenRouter (`meta-llama/llama-guard-4-12b`) |
 | Durable execution | L11 | Temporal holding your approval wait | The L5 pause and the L7 recovery keys | Temporal's local dev server is free |
 | Data stores | L11 | pgvector or Redis for your module's index or memory | The L3 in-memory index | Open source |
 | Managed platform | L11 | Bedrock AgentCore, Microsoft Foundry | The whole runtime | Paid: counts only with recorded output; a written deployment plan is welcome but scores 0 on its own |
