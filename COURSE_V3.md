@@ -41,7 +41,7 @@ Rajat's review on 2026-10-28 rejected v2 because it was hard to follow and the s
 ```
 
 **The running example** is procure-to-pay (P2P) for Kavita's 20,000 gaskets:
-1. **Check stock:** GSK-SIL-05L has 54,000 on hand, using 6,000 a day, which is 9 days of cover.
+1. **Check stock:** GSK-SIL-05L has 54,000 on hand in Pune stores, using 6,000 a day, which is 9 days of cover. The `check_stock` tool adds Chakan's 12,000 and reports 11 days across both plants; say which one you mean.
 2. **Purchase request (PR):** est ₹2,69,040 at the old rate plus Bahi's 18% → above Kavita's ₹2,50,000 limit → waits for Rohit.
 3. **Approval:** Rohit approves PR/2026/04417.
 4. **Purchase order (PO):** Deccan Polymers, contract ₹11.90 → ₹2,38,000 + 18% = **₹2,80,840**, so PO/2026/01182 is APPROVED.

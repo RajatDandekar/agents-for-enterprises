@@ -71,3 +71,18 @@ assert r["request_no"] == "PR/2026/04417", r
 print("wire:", [w["method"] for w in c.wire])
 c.close()
 print("MCP OK")
+
+# ---- retries after a lost reply (fixes from the L4 builder's report)
+erp3 = ERP(); k3 = Toolbox(erp3, "KJOSHI"); r3 = Toolbox(erp3, "RMEHTA")
+args = {"item_code": "GSK-SIL-05L", "quantity": 20000, "cost_centre": "PRD-07", "need_by": "2026-11-09", "confirm": True}
+erp3.inject("pr_save", "timeout_after_commit")
+a = k3.call("create_purchase_request", args)
+assert a["ok"] and a["status"] == "WAITING FOR APPROVAL", a            # the lost reply is found by key, then submitted
+assert len(erp3.q("SELECT * FROM pr_hdr WHERE remarks LIKE '%key:%'")) == 1
+r3.call("approve_purchase_request", {"request_no": a["request_no"], "decision": "approve"})
+po_args = {"supplier_code": "DP-RJK-0042", "request_no": a["request_no"], "confirm": True}
+erp3.inject("po_save", "timeout_after_commit")
+b = k3.call("create_purchase_order", po_args)
+c = k3.call("create_purchase_order", po_args)                          # retry: the PR is now CL, the order is found
+assert b["ok"] and c.get("already_done") and b["po_no"] == c["po_no"], (b, c)
+print("RETRY OK")

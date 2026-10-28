@@ -26,6 +26,8 @@ from dataclasses import dataclass, field
 
 USD_INR = 88.0  # fixed for the course so costs are comparable across runs
 
+_CLIENT_LOCK = threading.Lock()
+
 PROVIDERS = {
     "gemini": ("https://generativelanguage.googleapis.com/v1beta/openai/", ["GEMINI_API_KEY", "GOOGLE_API_KEY"]),
     "openrouter": ("https://openrouter.ai/api/v1", ["OPENROUTER_API_KEY"]),
@@ -147,7 +149,8 @@ class LLM:
         return any(os.environ.get(k) for k in PROVIDERS[self.provider][1])
 
     def _live(self, messages, tools, response_format, **kw) -> Reply:
-        from openai import OpenAI
+        with _CLIENT_LOCK:  # importing openai lazily from several threads at once raced (L4 experiment, 2026-10-28)
+            from openai import OpenAI
 
         if self._client is None:
             base, keys = PROVIDERS[self.provider]

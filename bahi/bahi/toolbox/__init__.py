@@ -10,7 +10,7 @@ the MCP server (bahi.toolbox.mcp), the workflow studio (each tool is a node) and
     from bahi.erp.engine import ERP
     from bahi.toolbox import Toolbox
     tb = Toolbox(ERP(), "KJOSHI")                   # Kavita's permissions, nobody else's
-    tb.call("check_stock", {"item_code": "GSK-SIL-5L"})
+    tb.call("check_stock", {"item_code": "GSK-SIL-05L"})
 
 Every tool returns a dict with ok=True, or ok=False with `error` and `next_step` (what to do about it).
 Writes preview first (confirm=false) and commit only on confirm=true, carry an idempotency key, and return a

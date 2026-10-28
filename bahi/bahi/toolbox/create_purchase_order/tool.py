@@ -8,9 +8,6 @@ def run(s, supplier_code, request_no=None, item_code=None, quantity=None, cost_c
         rate=None, confirm=False):
     if request_no:  # the request carries what to buy, how many, who pays and by when
         pr = _bahi(s, "pr_get", pr_no=request_no)
-        if pr["status"] != "AP":
-            raise ToolError(f"Request {request_no} is not approved (status {pr['status']}).",
-                            "Wait for the approver, or check order_status.")
         item_code, quantity = pr["lines"][0]["itm_cd"], pr["lines"][0]["qty"]
         cost_centre, need_by = pr["cc_cd"], pr["need_dt"]
     elif not all([item_code, quantity, cost_centre, need_by]):
@@ -18,6 +15,9 @@ def run(s, supplier_code, request_no=None, item_code=None, quantity=None, cost_c
                         "Ask the user, or raise a purchase request first.")
     key = content_key("PO", s.user_id, supplier_code, item_code, quantity, cost_centre, need_by)
     found = _bahi(s, "po_search", client_ref=key)["rows"]
+    if not found and request_no and pr["status"] != "AP":  # checked after the key: a retry finds its order first
+        raise ToolError(f"Request {request_no} is not approved (status {pr['status']}).",
+                        "Wait for the approver, or check order_status.")
     if found:
         out = {"ok": True, "already_done": True, "note": "This order already exists.", **_receipt(s, found[0]["po_no"])}
         if out["status_code"] == "CL":

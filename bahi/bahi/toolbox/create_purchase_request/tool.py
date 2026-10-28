@@ -1,7 +1,7 @@
 """Create purchase request: Raise a purchase request (PR): the internal ask to buy something.
 
 Input and output are described in tool.json next to this file."""
-from bahi.agent.tools import ToolError, _bahi, _peek, content_key
+from bahi.agent.tools import ServiceTimeout, ToolError, _bahi, _peek, content_key
 
 # A request's own statuses (an order has more: released, received).
 PR_STATUS = {"DR": "DRAFT (not submitted)", "PA": "WAITING FOR APPROVAL", "AP": "APPROVED", "RJ": "REJECTED",
@@ -13,6 +13,8 @@ def run(s, item_code, quantity, cost_centre, need_by, confirm=False):
     # Idempotency: the same request, asked twice, is found instead of raised twice.
     for p in _bahi(s, "pr_search", raised_by=s.user_id)["rows"]:
         if f"key:{key}" in (p["remarks"] or "") and p["status"] != "RJ":
+            if p["status"] == "DR":  # saved but never submitted (a lost reply): finish the job
+                _bahi(s, "pr_submit", pr_no=p["pr_no"])
             return {"ok": True, "already_done": True, **_receipt(s, p["pr_no"])}
     rate = _bahi(s, "pr_fetch", itm_cd=item_code)["est_rate"]
     value = round(quantity * rate * 1.18, 2)  # Bahi estimates every request with 18% GST, so we do too
@@ -30,8 +32,14 @@ def run(s, item_code, quantity, cost_centre, need_by, confirm=False):
                 "note": "Nothing has been saved. Show this to the user and ask to confirm."}
     if budget["cc_state"] == "CLOSED":
         raise ToolError(f"Cost centre {cost_centre} is closed.", "Ask the user for an open cost centre.")
-    pr_no = _bahi(s, "pr_save", cc_cd=cost_centre, need_dt=need_by, itm_cd=item_code, qty=quantity,
-                  est_rate=rate, remarks=f"key:{key}")["pr_no"]
+    try:
+        pr_no = _bahi(s, "pr_save", cc_cd=cost_centre, need_dt=need_by, itm_cd=item_code, qty=quantity,
+                      est_rate=rate, remarks=f"key:{key}")["pr_no"]
+    except ServiceTimeout:  # the reply was lost: look the request up by its key before anything else
+        rows = [p for p in _bahi(s, "pr_search", raised_by=s.user_id)["rows"] if f"key:{key}" in (p["remarks"] or "")]
+        if not rows:
+            raise ToolError("Bahi timed out and the request was not saved.", "Call again with the same arguments.")
+        pr_no = rows[0]["pr_no"]
     _bahi(s, "pr_submit", pr_no=pr_no)
     return {"ok": True, **_receipt(s, pr_no)}
 
