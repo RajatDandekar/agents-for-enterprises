@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 6 · The Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../../engine/plates.css">
+<style>
+.two{position:absolute;left:100px;right:100px;display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.three{position:absolute;left:100px;right:100px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+.pb{position:absolute;border-radius:20px;object-fit:contain;background:#fff}
+.live{display:inline-flex;align-items:center;gap:8px;font:500 16px/1 var(--font);color:var(--ink);padding:11px 18px;border-radius:999px;background:var(--glass);border:1px solid var(--pill-line);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);text-decoration:none}
+.live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--after)}
+.q{font-size:23px;margin-bottom:10px}
+.ans{font-size:20px;color:var(--ink-2);background:var(--card);border-radius:16px;padding:10px 14px;margin:0 0 16px}
+.kv{display:grid;grid-template-columns:170px 1fr;gap:6px 14px;font-size:21px}
+.kv b{font-weight:550}
+.shot{position:absolute;border-radius:16px;box-shadow:0 1px 2px rgba(18,19,23,.06),0 18px 44px rgba(18,19,23,.14);background:#fff}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- 1 -->
+<section class="slide" data-plain="1">
+  <div class="center">
+    <div class="kicker">From Forms to Agents · Lecture 6 · Sun 15 Nov 2026 · 7–9 AM IST</div>
+    <h1>The Studio</h1>
+    <p class="lede" style="margin-top:22px">Workflows and your own agents. The jobs Rasoi does every week, drawn once and run by themselves, and a playground where Rasoi's own people build them.</p>
+    <p class="small" style="margin-top:18px">Dr. Rajat Dandekar · Vizuara</p>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="slide" data-plate="Last Time, This Time">
+  <div class="lec-top"><h2>Last time, this time</h2><p class="sub">Lecture 5 gave Ask Rasoi a loop. Lecture 6 asks when we do not want the loop.</p></div>
+  <div class="ba">
+    <div class="card bf step"><span class="tag nt">Lecture 5 · The Loop</span><h3>An agent</h3>Model + tools + loop + state. Ask Rasoi reads Kavita's message, picks a tool, reads the result, picks the next one, until the job is done or it needs her. It ran PR → Rohit → PO → release → GRN.</div>
+    <div class="card af step"><span class="tag af">Lecture 6 · The Studio</span><h3>Workflows, and agents you build</h3>A path you draw once: trigger, nodes, edges. The same 15 tools become the nodes. A model goes in only where it is needed: to read an email, or as an agent node you configure yourself.</div>
+  </div>
+  <div class="opens step"><span class="k">Today's piece of Ask Rasoi</span>The Workflow Studio on Rasoi's new home page: <code>/studio</code>.</div>
+</section>
+
+<!-- 3 -->
+<section class="slide" data-plate="Monday at Rasoi">
+  <div class="col" style="width:480px">
+    <h2>Monday, 9 AM</h2>
+    <p style="font-size:24px">You have been at Rasoi six weeks. Ask Rasoi works. Kavita uses it every day.</p>
+    <p class="step" style="font-size:24px">But look at the week. Every Monday Kavita checks which items are below reorder level and raises requests.</p>
+    <p class="step" style="font-size:24px">Every delivery, Neha counts the goods at the gate and records them.</p>
+    <p class="step" style="font-size:24px">Every day, dealers email orders that someone reads and types in.</p>
+  </div>
+  <div class="fig" data-fig="monday" style="left:640px;top:150px;width:860px;height:600px"></div>
+  <div class="cap" style="left:640px;top:780px;width:860px"><b>Fig. 1.</b> The jobs that repeat at Rasoi. The steps never change; only the numbers do.</div>
+</section>
+
+<!-- 4 -->
+<section class="slide" data-plate="Not a Chat for Everything">
+  <div class="lec-top"><h2>“We do not want to chat for everything”</h2><p class="sub">Anand Patil, plant head, after the Ask Rasoi demo.</p></div>
+  <div class="three" style="top:270px">
+    <div class="card step"><h3>It should just happen</h3>Nobody should have to type “check the whistles” every Monday. The clock knows it is Monday. Bahi knows the stock is low.</div>
+    <div class="card step"><h3>It should be the same every time</h3>Rohit signs off on a process, not a mood. The steps he approved are the steps that run, in that order, every week.</div>
+    <div class="card step"><h3>We want to build our own</h3>Suresh knows ten such jobs. He does not want to wait three months for IT. He wants to draw them himself.</div>
+  </div>
+  <div class="opens step" style="top:600px"><span class="k">Your brief this week</span>Give Rasoi's people a place to draw their repeated jobs, run them on Bahi with their own permissions, and build small agents of their own: <b>the Workflow Studio</b>.</div>
+</section>
+
+<!-- 5 -->
+<section class="slide" data-plate="The Question for Today">
+  <div class="center">
+    <p class="kicker">The question for today</p>
+    <p class="bigq">When the steps are known, should a model choose them again every time?</p>
+    <p class="lede step" style="margin-top:30px">And when they are not known, how does someone at Rasoi build an agent of their own, without writing a harness?</p>
+  </div>
+</section>
+
+<!-- 6 Part -->
+<section class="slide part" data-plain="1">
+  <div class="center">
+    <div class="num">Part One</div>
+    <h1>Workflow or agent</h1>
+    <p class="lede">Two ways to do the same job. What each costs, and when to use which.</p>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="slide" data-plate="Two Ways to Do One Job">
+  <div class="col" style="width:440px">
+    <h2>Who decides the next step?</h2>
+    <div class="def step"><b>Workflow</b>A fixed path you draw in advance: which steps, in which order, and which branch to take on which value. The engine follows the drawing.</div>
+    <div class="def step" style="margin-top:14px"><b>Agent</b>A model with tools in a loop (Lecture 5). At run time the model reads what came back and chooses the next tool.</div>
+    <p class="step small" style="margin-top:14px">Both call the same 15 tools from Lecture 4. Only the chooser differs: your drawing, or the model.</p>
+  </div>
+  <img class="pb step" src="figs/wf_vs_agent.png" style="left:590px;top:150px;width:910px;height:510px" alt="Workflow versus agent">
+  <div class="cap" style="left:590px;top:680px;width:910px"><b>Fig. 2.</b> Left, the path is the drawing. Right, the path is decided by the model, one tool at a time.</div>
+</section>
+
+<!-- 8 -->
+<section class="slide" data-plate="Same Task, Two Ways">
+  <div class="col" style="width:440px">
+    <h2>Monday's reorder check, two ways</h2>
+    <p style="font-size:22px">The task: check GSK-SIL-05L and WHS-STD-01; for anything below reorder level with nothing on order, raise a PR for three times the reorder level on PRD-07, need-by 9 Nov, and tell Rohit.</p>
+    <p class="step" style="font-size:22px">The workflow: the Studio's “Reorder when low”, cut at the PR. Scrub its ten runs: one path.</p>
+    <p class="step" style="font-size:22px">Ask Rasoi, stage <code>agent</code>, the same words. Scrub its runs. <code>+</code> means it committed (confirm=true).</p>
+  </div>
+  <div class="fig" data-fig="twoways" style="left:600px;top:140px;width:900px;height:600px"></div>
+  <div class="cap" style="left:600px;top:770px;width:900px"><b>Fig. 3.</b> Ten runs each on a fresh Rasoi, gemini-3.8-flash, live. From <code>experiments/logs/wf_vs_agent.json</code>.</div>
+</section>
+
+<!-- 9 -->
+<section class="slide" data-plate="Predictable">
+  <div class="col" style="width:440px">
+    <h2>Predictable</h2>
+    <p style="font-size:23px">Same task, ten runs each. Right outcome = exactly one PR, 36,000 × WHS-STD-01 on PRD-07 for 9 Nov, and @rohit told its number.</p>
+    <p class="step" style="font-size:23px">Ask Rasoi at temperature 0: also right every time, but by two different paths.</p>
+    <p class="step" style="font-size:23px">At temperature 1: the same.</p>
+    <div class="measured step" style="margin-top:12px">The agent did not fail this easy task. The difference is not the answer: it is that the workflow's path is fixed before the run, and the agent's is chosen during it.</div>
+  </div>
+  <div class="fig" data-fig="determinism" style="left:610px;top:170px;width:890px;height:460px"></div>
+  <div class="cap" style="left:610px;top:660px;width:890px"><b>Fig. 4.</b> One square per run. From <code>logs/wf_vs_agent.json</code> (stats).</div>
+</section>
+
+<!-- 10 -->
+<section class="slide" data-plate="Cost and Time">
+  <div class="col" style="width:440px">
+    <h2>Cost and time</h2>
+    <p style="font-size:23px">The workflow makes no model call: the engine fills templates and calls tools.</p>
+    <p class="step" style="font-size:23px">Ask Rasoi reads the system prompt, all 15 tool schemas and the history on every turn, about six model calls per run, and needed Kavita's “yes” before it committed.</p>
+    <p class="step small">Both did the same tool work in Bahi. Engine time is milliseconds; the agent's time is the model thinking.</p>
+  </div>
+  <div class="fig" data-fig="cost" style="left:620px;top:190px;width:880px;height:520px"></div>
+  <div class="cap" style="left:620px;top:730px;width:880px"><b>Fig. 5.</b> Average per run, ten runs each. ₹ at the course's fixed prices (bahi/llm.py). From <code>logs/wf_vs_agent.json</code>.</div>
+</section>
+
+<!-- 11 -->
+<section class="slide" data-plate="Auditable">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:52px">Auditable: the drawing is the explanation</h2><p class="sub">Rohit asks: “why did it order 36,000 whistles?”</p></div>
+  <div class="two" style="top:240px">
+    <div class="step"><span class="tag af">Workflow · the answer is on the canvas</span>
+      <div class="card" style="font-size:20px">Node <b>Plan the order</b>: <code>quantity = {{ trigger.reorder_level * 3 }}</code><br>12,000 × 3 = 36,000. Supplier: <code>SV-PUN-0017 if item is WHS-STD-01</code>.<br><br>Rohit can read the rule before it ever runs, approve it once, and every run log shows the same node doing the same sum.</div></div>
+    <div class="step"><span class="tag bf">Agent · the answer is in a transcript</span>
+      <div class="card" style="font-size:20px">The quantity came from the model reading Kavita's words “three times its reorder level” and the tool result <code>reorder_level: 12000</code>.<br><br>It got 36,000 every time in our runs. But the rule lives in a prompt and a model's reading of it; to check it you read each run's transcript.</div></div>
+  </div>
+  <div class="opens step" style="top:640px"><span class="k">The rule of thumb</span>If someone must sign off the process itself, draw it. If they sign off each outcome, an agent with previews and approvals can do it.</div>
+</section>
+
+<!-- 12 -->
+<section class="slide" data-plate="When to Use Which">
+  <div class="col" style="width:440px">
+    <h2>When to use which</h2>
+    <p style="font-size:22px">Two questions about the job.</p>
+    <p class="step" style="font-size:22px"><b>Are the steps known?</b> If the next step depends on what you find, a drawing needs a branch for every case. That is an agent's job.</p>
+    <p class="step" style="font-size:22px"><b>Is the input a record or free text?</b> A form gives fields; an email needs a model to read it.</p>
+    <p class="step small">Click each job at Rasoi.</p>
+  </div>
+  <div class="fig" data-fig="whentouse" style="left:600px;top:120px;width:900px;height:700px"></div>
+</section>
+
+<!-- 13 -->
+<section class="slide" data-plate="Check Yourself">
+  <div class="lec-top" style="top:100px"><h2>Check yourself</h2></div>
+  <div class="two" style="top:220px">
+    <div>
+      <p class="q">1. Neha's goods receipt: workflow or agent?</p>
+      <p class="ans step">Workflow. A form gives the PO and the count; the steps are always receive → read status → tell Kavita.</p>
+      <p class="q">2. Both got the reorder right 10 of 10. Why prefer the workflow for it?</p>
+      <p class="ans step">₹0 and milliseconds per run instead of about ₹1.18 and 26 s, one fixed path Rohit can sign off, and no “yes” needed from Kavita.</p>
+    </div>
+    <div>
+      <p class="q">3. “Can we buy from Shakti Seals?” Why not a workflow?</p>
+      <p class="ans step">Which lookups matter depends on each answer: not in the master, no certificate, §6.2. A drawing would need every branch in advance.</p>
+      <p class="q">4. Where does a model belong inside a workflow?</p>
+      <p class="ans step">Only where the input is free text or the steps open up: an LLM node to read an email, an agent node for a question.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 14 Part -->
+<section class="slide part" data-plain="1">
+  <div class="center">
+    <div class="num">Part Two</div>
+    <h1>The anatomy of a workflow</h1>
+    <p class="lede">Trigger, nodes, edges, data, branches, the approval wait, errors and re-runs. One part at a time, on Rasoi's jobs.</p>
+  </div>
+</section>
+
+<!-- 15 -->
+<section class="slide" data-plate="The Parts, at a Glance">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:50px">Seven parts</h2><p class="sub">We take each one in turn. This is the map.</p></div>
+  <img class="pb" src="figs/anatomy.png" style="left:150px;top:230px;width:1300px;height:620px" alt="Anatomy of a workflow">
+</section>
+
+<!-- 16 -->
+<section class="slide" data-plate="Triggers">
+  <div class="col" style="width:470px">
+    <h2>A trigger starts a run</h2>
+    <div class="def"><b>Trigger</b>The first node. It decides when a run starts and hands the run its starting data.</div>
+    <p class="step small" style="margin-top:14px"><b>Manual:</b> the Run button. <b>Schedule:</b> every Monday 09:00. <b>Event:</b> stock falls below its reorder level. <b>Form:</b> Neha's goods-arrived form. <b>Chat or email:</b> a message comes in.</p>
+    <p class="step small">In the Studio the event trigger calls <code>check_stock</code> on its items. On a fresh Rasoi it fires for WHS-STD-01, 8,000 free against 12,000, and passes <code>{item_code, free, on_order, reorder_level, cover_days}</code> on.</p>
+  </div>
+  <img class="pb" src="figs/triggers.png" style="left:620px;top:150px;width:880px;height:500px" alt="Five kinds of trigger">
+  <div class="cap" style="left:620px;top:670px;width:880px"><b>Fig. 6.</b> Five ways to start the same workflow. Event values from <code>logs/templates_fresh.json</code>.</div>
+</section>
+
+<!-- 17 -->
+<section class="slide" data-plate="Nodes">
+  <div class="col" style="width:470px">
+    <h2>A node is one step</h2>
+    <div class="def"><b>Node</b>One step with inputs and one output. A tool node calls one toolbox tool, as one named person.</div>
+    <p class="step" style="font-size:22px;margin-top:14px">“As one person” matters. <code>"as": "NDESAI"</code> acts with Neha's Bahi permissions, nobody else's: she can receive goods, she cannot approve a PR. Only <code>"as": "RMEHTA"</code> can sign Rohit's approvals.</p>
+    <p class="step small">The Commit switch is <code>confirm</code>: off, a writing tool only previews. A template never sets it.</p>
+  </div>
+  <div class="step" style="position:absolute;left:640px;top:150px;width:860px">
+    <table class="t">
+      <tr><th>Node</th><th>Type</th><th>Tool</th><th>As</th><th>Commit</th></tr>
+      <tr><td>Start</td><td>trigger</td><td>manual</td><td></td><td></td></tr>
+      <tr><td>Check stock</td><td>tool</td><td class="n">check_stock</td><td class="n">KJOSHI</td><td>read only</td></tr>
+      <tr><td>Raise the PR</td><td>tool</td><td class="n">create_purchase_request</td><td class="n">KJOSHI</td><td>on</td></tr>
+      <tr><td>Rohit approves</td><td>approval</td><td class="n">order_status</td><td class="n">RMEHTA signs</td><td></td></tr>
+      <tr><td>Order from Deccan</td><td>tool</td><td class="n">create_purchase_order</td><td class="n">KJOSHI</td><td>on</td></tr>
+      <tr><td>Release to supplier</td><td>tool</td><td class="n">release_purchase_order</td><td class="n">KJOSHI</td><td>no preview</td></tr>
+      <tr><td>Tell Rohit</td><td>message</td><td class="n">send_message</td><td class="n">KJOSHI</td><td></td></tr>
+    </table>
+    <p class="tiny" style="margin-top:10px">The Studio's “Diwali gasket order” template, node by node (<code>studio/templates.py</code>).</p>
+  </div>
+</section>
+
+<!-- 18 -->
+<section class="slide" data-plate="Tools Become Nodes">
+  <div class="col" style="width:440px">
+    <h2>One tool per activity is why this works</h2>
+    <p style="font-size:22px">In Lecture 4 we wrapped Bahi's terse services into tools, one per business activity, with previews, keys and receipts.</p>
+    <p class="step" style="font-size:22px">Now each tool is one card on the canvas. A person can draw “raise the PR” without knowing the seven services behind it.</p>
+    <p class="step small">Drawn on raw services instead, the same job is dozens of nodes and every screen trap (PRD-05, GST18-INTRA) is the drawer's problem.</p>
+  </div>
+  <div class="fig" data-fig="onetool" style="left:600px;top:140px;width:900px;height:640px"></div>
+</section>
+
+<!-- 19 -->
+<section class="slide" data-plate="Edges and Ports">
+  <div class="col" style="width:520px">
+    <h2>An edge says what comes next</h2>
+    <div class="def"><b>Edge</b>A line from one node's exit (its <i>port</i>) to the next node. A node runs when an edge into it was taken.</div>
+    <ul class="legend step" style="margin-top:16px">
+      <li><span class="n">1</span><span><code>out</code>: the node finished.</span></li>
+      <li><span class="n">2</span><span><code>true</code> / <code>false</code>: a condition chose a side.</span></li>
+      <li><span class="n">3</span><span><code>rejected</code>: the approver said no.</span></li>
+      <li><span class="n">4</span><span><code>error</code>: the node failed; follow this edge instead of stopping.</span></li>
+    </ul>
+  </div>
+  <div class="step" style="position:absolute;left:700px;top:150px;width:800px">
+<div class="json" style="font-size:16px;height:auto">"edges": [
+  {"from": "low",  "to": "plan"},
+  {"from": "plan", "to": "nothing_on_order"},
+  {"from": "nothing_on_order", "port": "true",  "to": "pr"},
+  {"from": "nothing_on_order", "port": "false", "to": "note"},
+  {"from": "pr",    "to": "rohit"},
+  {"from": "rohit", "to": "po"},
+  ...
+]</div>
+    <p class="small" style="margin-top:14px">“Reorder when low”, from the Studio. A node is <b>skipped</b> when every edge into it has settled and none was taken; skipping flows downstream.</p>
+  </div>
+</section>
+
+<!-- 20 -->
+<section class="slide" data-plate="Data Between Nodes">
+  <div class="col" style="width:400px">
+    <h2>Templates carry data</h2>
+    <div class="def"><b>Template</b><code>{{nodes.pr.request_no}}</code> in a field means: the <code>request_no</code> of node <code>pr</code>'s output, filled in when this node runs.</div>
+    <p class="step small" style="margin-top:12px"><b>Whole-field rule.</b> A field that is exactly one <code>{{ }}</code> keeps the value's type: 269040.0 stays a number.</p>
+    <p class="step small">Text around it: each <code>{{ }}</code> becomes text in the string.</p>
+    <p class="step small">A small expression is allowed: <code>{{ trigger.reorder_level * 3 }}</code>.</p>
+    <p class="step small">A missing field is an error that names it.</p>
+  </div>
+  <div class="fig" data-fig="tpl" style="left:560px;top:130px;width:940px;height:640px"></div>
+  <div class="cap" style="left:560px;top:790px;width:940px"><b>Fig. 7.</b> Real output of the PR node in our Diwali run. From <code>logs/templates_fresh.json</code>.</div>
+</section>
+
+<!-- 21 -->
+<section class="slide" data-plate="Branches">
+  <div class="col" style="width:440px">
+    <h2>A condition picks a side</h2>
+    <div class="def"><b>Condition node</b>Tests an expression on the outputs so far and leaves by <code>true</code> or <code>false</code>. Only that side runs.</div>
+    <p class="step small" style="margin-top:14px">Whistles: below reorder. The PR side runs.</p>
+    <p class="step small">Gaskets: 66,000 free against 30,000. The PR side is skipped; Kavita gets “fine”.</p>
+    <p class="step small">Every branch you draw is a case you thought of in advance. The case you did not think of has no edge.</p>
+  </div>
+  <div class="fig" data-fig="branch" style="left:590px;top:140px;width:910px;height:600px"></div>
+  <div class="cap" style="left:590px;top:770px;width:910px"><b>Fig. 8.</b> Stock values from <code>check_stock</code> on a fresh Rasoi, <code>logs/probe.json</code>.</div>
+</section>
+
+<!-- 22 -->
+<section class="slide" data-plate="The Approval Node">
+  <div class="col" style="width:440px">
+    <h2>The approval node is a saved wait</h2>
+    <div class="def"><b>Durable wait</b>The run stops, is saved as a document, and holds nothing in memory. Hours or days later it is loaded and resumed from the same node.</div>
+    <p class="step small" style="margin-top:12px">It reads the document's real status from Bahi with <code>order_status</code>. APPROVED: carry on. WAITING: save and stop. REJECTED: the <code>rejected</code> port.</p>
+    <p class="step small">Rohit signs in his own inbox, as himself. The workflow never signs for him.</p>
+  </div>
+  <img class="pb" src="figs/approval_wait.png" style="left:580px;top:150px;width:920px;height:520px" alt="Approval as a saved wait">
+  <div class="cap" style="left:580px;top:690px;width:920px"><b>Fig. 9.</b> The PR waits for Rohit; the run waits with it, as one JSON document in the run store.</div>
+</section>
+
+<!-- 23 -->
+<section class="slide" data-plate="A Waiting Run Is a Document">
+  <div class="col" style="width:460px">
+    <h2>What “waiting” looks like</h2>
+    <p style="font-size:22px">This is the run of the Diwali gasket order, saved while it waits. Every node's output so far, the edges taken, and what it waits for.</p>
+    <p class="step" style="font-size:22px">The web server can restart. Rohit can take two days. <code>resume</code> re-reads Bahi; if he has not signed, it simply waits again.</p>
+    <p class="step small">In the notebook you save it to a file, delete the Python object, approve as Rohit, and resume with a brand-new engine.</p>
+  </div>
+<div class="json step" style="position:absolute;left:620px;top:140px;width:880px;height:640px;font-size:15px">{"id": "r-…", "workflow_id": "diwali-gasket-order",
+ "status": "waiting",
+ "nodes": {
+   "stock": {"status": "done",  "summary": "GSK-SIL-05L: 66,000 free, 11 days of cover"},
+   "pr":    {"status": "done",  "output": {"request_no": "PR/2026/04417",
+              "status": "WAITING FOR APPROVAL", "estimated_value": 269040.0,
+              "approver": "RMEHTA", ...}},
+   "rohit": {"status": "waiting"},
+   "po": {"status": "pending"}, "release": {"status": "pending"}, "tell": {"status": "pending"}},
+ "edges_taken": [["start","stock","out"], ["stock","pr","out"], ["pr","rohit","out"]],
+ "waiting_for": {"node": "rohit", "doc_no": "PR/2026/04417",
+                 "approver": "RMEHTA", "approver_name": "Rohit Mehta"},
+ "log": [ ... "Waiting for Rohit Mehta to approve PR/2026/04417" ]}</div>
+</section>
+
+<!-- 24 -->
+<section class="slide" data-plate="Error Paths">
+  <div class="col" style="width:460px">
+    <h2>When a node fails</h2>
+    <p style="font-size:22px">A tool that returns <code>ok: false</code> makes its node an <b>error</b>, with the tool's own message and next step.</p>
+    <p class="step" style="font-size:22px">With an <code>error</code> edge drawn, the run follows it: tell Kavita, or try another way. Without one, the run stops, <b>failed</b>, and names the node.</p>
+    <p class="step small">A warning stops the run too, by default: PRD-05 is closed, so a PO there saves as Draft. A person should look.</p>
+  </div>
+  <div class="step" style="position:absolute;left:640px;top:150px;width:860px">
+    <p class="tiny">Real messages from our runs</p>
+    <div class="card bf" style="font-size:19px;margin-bottom:14px"><b>Goods arrived · Record the receipt</b><br><code style="font-size:15px">PO/2026/01167 is not open for receipt (status CL). Only a RELEASED order can be received. Check order_status.</code></div>
+    <div class="card bf" style="font-size:19px;margin-bottom:14px"><b>Diwali gasket order · Raise the PR</b>, with Bahi timing out after it saved<br><code style="font-size:15px">Bahi did not reply in time (pr_submit: no reply within 30 s (the server may or may not have saved)). Check with order_status before trying again.</code></div>
+    <div class="card" style="font-size:19px;background:var(--gold-soft)"><b>A warning, not an error · whistles on PRD-05</b> (our probe of the toolbox)<br><code style="font-size:15px">Cost centre PRD-05 is CLOSED. Ask the user for an open one (check_budget lists them).</code></div>
+  </div>
+</section>
+
+<!-- 25 -->
+<section class="slide" data-plate="Retries">
+  <div class="col" style="width:470px">
+    <h2>Retry only what is safe to retry</h2>
+    <p style="font-size:22px">The worst error: Bahi <b>saved</b> the PR, then timed out before it answered. The node sees a failure. The PR exists.</p>
+    <p class="step" style="font-size:22px">A retry asks again with the same arguments. Because the tool's key comes from the content, it finds the PR instead of raising a second one.</p>
+    <div class="measured step" style="margin-top:10px">A time-out between <code>pr_save</code> and <code>pr_submit</code> is now handled inside the tool: it reads the PR back and submits it, so the first call already returns WAITING FOR APPROVAL. The retry finds the same PR.</div>
+  </div>
+  <div class="step" style="position:absolute;left:640px;top:150px;width:860px">
+    <table class="t" style="font-size:18px;table-layout:fixed">
+      <tr><th style="width:200px">Bahi times out after…</th><th>First call</th><th>Retry</th><th>PRs in Bahi</th></tr>
+      <tr><td><code>pr_submit</code> commits</td><td class="n">ok=false<br>TIMEOUT</td><td class="n">already_done<br>WAITING FOR APPROVAL</td><td class="n">1<br>PR/2026/04417 PA</td></tr>
+      <tr><td><code>pr_save</code> commits</td><td class="n">ok=true<br>WAITING FOR APPROVAL</td><td class="n">already_done<br>WAITING FOR APPROVAL</td><td class="n">1<br>PR/2026/04417 PA</td></tr>
+      <tr><td>no fault, need-by changed</td><td class="n">PR/2026/04417</td><td class="n">PR/2026/04418</td><td class="n">2<br>a different request</td></tr>
+    </table>
+    <p class="tiny" style="margin-top:10px">From <code>logs/retry_idem.json</code>. The Studio engine has no retry setting; NB6's engine adds <code>retries</code> on tool nodes, and only for time-outs.</p>
+  </div>
+</section>
+
+<!-- 26 -->
+<section class="slide" data-plate="Idempotency">
+  <div class="col" style="width:420px">
+    <h2>Re-running must not double-order</h2>
+    <div class="def"><b>Idempotent</b>Doing it twice has the same effect as doing it once.</div>
+    <p class="step small" style="margin-top:12px">The key is a hash of what the document <i>is</i>: user, item, quantity, cost centre, date. Never a random <code>uuid4()</code>, or every retry looks new.</p>
+    <p class="step small">The workflow engine adds nothing here: it gets this for free because every write goes through the toolbox.</p>
+  </div>
+  <img class="pb" src="figs/idempotency.png" style="left:560px;top:140px;width:940px;height:530px" alt="Idempotency keys">
+  <div class="cap" style="left:560px;top:690px;width:940px"><b>Fig. 10.</b> Two runs, one key, one PR.</div>
+</section>
+
+<!-- 27 -->
+<section class="slide" data-plate="Run It Twice">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:52px">We ran every template twice on the same Rasoi</h2><p class="sub">The second run found what the first made, or stopped. Nothing was ordered or received twice.</p></div>
+  <div class="fig" data-fig="rerun" style="left:100px;top:270px;width:1400px;height:420px"></div>
+  <div class="opens step" style="top:690px"><span class="k">Read the Diwali row closely</span>The PR, the PO and the release were all found (<code>already_done</code>). But the <b>Tell Rohit</b> node ran again (Diwali and Dealer rows): Rohit got the same message twice. A message has no idempotency key. Put a condition before it, or accept the repeat.</div>
+</section>
+
+<!-- 28 -->
+<section class="slide" data-plate="Check Yourself">
+  <div class="lec-top" style="top:100px"><h2>Check yourself</h2></div>
+  <div class="two" style="top:220px">
+    <div>
+      <p class="q">1. Node <code>pr</code> output has no <code>po_no</code>. What happens to <code>{{nodes.pr.po_no}}</code>?</p>
+      <p class="ans step">The node errors with “nodes.pr has no field 'po_no'” and the run stops (or follows the error edge). Nothing empty reaches Bahi.</p>
+      <p class="q">2. Why does an approval not just loop until Rohit signs?</p>
+      <p class="ans step">He may take days; a loop dies with the process. A saved run survives restarts and costs nothing while it waits.</p>
+    </div>
+    <div>
+      <p class="q">3. A condition's false side has no edge. What runs?</p>
+      <p class="ans step">Nothing more: the true side is skipped, and the run ends <code>done</code>.</p>
+      <p class="q">4. Who signs Rohit's approval in a workflow?</p>
+      <p class="ans step">Rohit, in his inbox, with his own permissions. The workflow only reads the status.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 29 Part -->
+<section class="slide part" data-plain="1">
+  <div class="center">
+    <div class="num">Part Three</div>
+    <h1>Models inside workflows</h1>
+    <p class="lede">An LLM node to read what no tool can, and an agent node: your own agent, as one card.</p>
+  </div>
+</section>
+
+<!-- 30 -->
+<section class="slide" data-plate="The LLM Node">
+  <div class="col" style="width:420px">
+    <h2>The LLM node reads free text</h2>
+    <div class="def"><b>LLM node</b>One model call: a prompt template in, text or a JSON object with the fields you named out.</div>
+    <p class="step small" style="margin-top:12px">Sharma Home Appliances emails for 4,000 spare gaskets by 12 November. No tool can read an email.</p>
+    <p class="step small">The model returns four fields. Everything after it is fixed: find the item, raise the PR, tell Rohit.</p>
+    <p class="step small">One model call, about 250 tokens. The model reads; tools do.</p>
+  </div>
+  <div class="fig" data-fig="llmnode" style="left:580px;top:140px;width:920px;height:620px"></div>
+  <div class="cap" style="left:580px;top:780px;width:920px"><b>Fig. 11.</b> The Studio's “Dealer email to order”, our run. From <code>logs/templates_fresh.json</code>.</div>
+</section>
+
+<!-- 31 -->
+<section class="slide" data-plate="Keep the Model's Job Small">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:52px">Keep the model's job small</h2><p class="sub">Three habits for an LLM node.</p></div>
+  <div class="three" style="top:250px">
+    <div class="card step"><h3>Name the fields</h3><code>fields: ["item", "quantity", "need_by", "dealer"]</code>. The engine checks every field came back, or the node errors.</div>
+    <div class="card step"><h3>Look it up after</h3>The model says “5 litre silicone gasket”; <code>find_item</code> turns words into GSK-SIL-05L. Never let a model invent a code.</div>
+    <div class="card step"><h3>Decide the commit</h3>The template commits (₹53,808, within Kavita's limit). In the notebook's version the PR node only previews, and a person commits what a model read.</div>
+  </div>
+  <div class="opens step" style="top:610px"><span class="k">Why it matters</span>A wrong extraction in a workflow repeats every time the email shape repeats. Small, checked outputs are what make it safe to run unattended.</div>
+</section>
+
+<!-- 32 -->
+<section class="slide" data-plate="The Agent Node">
+  <div class="col" style="width:420px">
+    <h2>The agent node: your own agent</h2>
+    <div class="def"><b>Agent node</b>Instructions in plain words + a chosen subset of tools + a model, running the Lecture 5 loop inside one node.</div>
+    <p class="step small" style="margin-top:12px">You choose the person it acts as, so it has their permissions.</p>
+    <p class="step small"><code>may_commit</code> off: every write it tries is forced to a preview, whatever the model asks.</p>
+    <p class="step small"><code>max_steps</code> stops a loop that runs away.</p>
+  </div>
+  <img class="pb" src="figs/agent_node.png" style="left:560px;top:140px;width:940px;height:530px" alt="The agent node">
+  <div class="cap" style="left:560px;top:690px;width:940px"><b>Fig. 12.</b> A chat trigger, one agent node, and anything after it.</div>
+</section>
+
+<!-- 33 -->
+<section class="slide" data-plate="Build Your Own Agent">
+  <div class="col" style="width:470px">
+    <h2>Suresh builds a stock desk</h2>
+    <div class="kv" style="font-size:18px">
+      <b>Instructions</b><span>“You are the stock desk at Rasoi Steel Works. Answer questions about stock, budgets, policy and orders with the numbers from the tools … preview the purchase request before raising it.”</span>
+      <b>Tools</b><span class="mono">find_item, check_stock, check_budget, search_policy, create_purchase_request, order_status</span>
+      <b>As</b><span>KJOSHI · may commit · max 10 steps</span>
+    </div>
+    <p class="step small" style="margin-top:14px">Six tools of fifteen: it cannot make a PO, release or approve anything, whatever it is asked.</p>
+  </div>
+  <div class="fig" data-fig="agentchat" style="left:620px;top:130px;width:880px;height:640px"></div>
+  <div class="cap" style="left:620px;top:790px;width:880px"><b>Fig. 13.</b> The Studio's “Build your own agent”, two chat turns, our run. From <code>logs/templates_fresh.json</code>.</div>
+</section>
+
+<!-- 34 -->
+<section class="slide" data-plate="Check Yourself">
+  <div class="lec-top" style="top:100px"><h2>Check yourself</h2></div>
+  <div class="two" style="top:220px">
+    <div>
+      <p class="q">1. The LLM node returns <code>quantity: "4,000"</code> as text. What would you do?</p>
+      <p class="ans step">Ask for a whole number in the prompt, and let the tool's schema check reject a string it cannot turn into an integer.</p>
+      <p class="q">2. Agent node or LLM node for “read the dealer's email”?</p>
+      <p class="ans step">LLM node: one call, fixed fields. Nothing to decide, so no loop.</p>
+    </div>
+    <div>
+      <p class="q">3. Your agent node has <code>may_commit: false</code> and the model calls <code>create_purchase_request(confirm=true)</code>. What happens?</p>
+      <p class="ans step">The engine changes it to confirm=false: a preview. The switch wins over the model.</p>
+      <p class="q">4. How is the agent node different from Ask Rasoi?</p>
+      <p class="ans step">Same loop. You wrote its instructions, picked its tools and its person, and placed it in a workflow.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 35 Part -->
+<section class="slide part" data-plain="1">
+  <div class="center">
+    <div class="num">Part Four</div>
+    <h1>Inside the engine</h1>
+    <p class="lede">A workflow engine is a short loop. You write one in the notebook in about 80 lines.</p>
+  </div>
+</section>
+
+<!-- 36 -->
+<section class="slide" data-plate="How an Engine Runs">
+  <div class="col" style="width:400px">
+    <h2>Four steps, in a loop</h2>
+    <ul class="legend">
+      <li class="step"><span class="n">1</span><span>Find a ready node: all inputs settled, one taken.</span></li>
+      <li class="step"><span class="n">2</span><span>Fill its templates from the outputs so far.</span></li>
+      <li class="step"><span class="n">3</span><span>Run it, through the toolbox, as its person.</span></li>
+      <li class="step"><span class="n">4</span><span>Write the log; mark the edges its port leaves by.</span></li>
+    </ul>
+    <p class="step small">Stop when nothing is ready (done), a node failed with no error edge (failed), or an approval waits (waiting).</p>
+  </div>
+  <img class="pb" src="figs/engine_inside.png" style="left:540px;top:140px;width:960px;height:540px" alt="Inside the engine">
+  <div class="cap" style="left:540px;top:700px;width:960px"><b>Fig. 14.</b> The engine, the toolbox below it, and the run store beside it.</div>
+</section>
+
+<!-- 37 -->
+<section class="slide" data-plate="The Loop in Code">
+  <div class="col" style="width:380px">
+    <h2>The loop in code</h2>
+    <p style="font-size:22px">From NB6's <code>MiniEngine</code>. The Studio's engine is the same shape, with more node types and a run store.</p>
+    <p class="step small">A run is a plain dict, so it saves as JSON.</p>
+    <p class="step small">The port decides which edges are taken; the next <code>ready()</code> skips the rest.</p>
+  </div>
+<div class="code step" style="position:absolute;left:520px;top:130px;width:980px;font-size:15px">def run_until_pause(self, run):
+    while run["status"] == "running":
+        nid = self.ready(run)                     <span class="c"># 1. a node whose inputs settled, one taken</span>
+        if nid is None:
+            run["status"] = "done"; break
+        self.step(run, nid)
+    return run
+
+def step(self, run, nid):
+    node = self.node(run, nid)
+    status, output, port, text = getattr(self, "run_" + node["type"])(   <span class="c"># 2 + 3. fill, then run</span>
+        node, self.context(run), run["nodes"][nid])
+    run["nodes"][nid].update(status=status, output=output)
+    self.log(run, nid, status, text)              <span class="c"># 4. the run log</span>
+    if status == "waiting":                       <span class="c"># an approval: save and stop</span>
+        run["status"] = "waiting"; run["waiting_for"] = output; return
+    if status == "error" and not self.has_edge(run, nid, port):
+        run["status"] = "failed"; return          <span class="c"># no error path drawn</span>
+    for e in run["workflow"]["edges"]:
+        if e["from"] == nid and e.get("port", "out") == port:
+            run["taken"].append([e["from"], e["to"], port])
+
+def run_tool(self, node, ctx, rec):
+    cfg  = node["config"]
+    args = fill(cfg["args"], ctx)                 <span class="c"># {{nodes.pr.request_no}} -> "PR/2026/04417"</span>
+    args["confirm"] = bool(cfg.get("confirm"))    <span class="c"># the Commit switch, never a template</span>
+    out  = self.toolbox(cfg["as"]).call(cfg["tool"], args)   <span class="c"># as Kavita, Rohit or Neha</span>
+    return ("done", out, "out", short(out)) if out["ok"] else ("error", out, "error", out["error"])</div>
+</section>
+
+<!-- 38 -->
+<section class="slide" data-plate="Scrub a Real Run">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">Kavita's Diwali gasket order, event by event</h2><p class="sub" style="font-size:22px">The Studio's engine on a fresh Rasoi. Drag the slider: each event lights a node; the right panel is that node's real output.</p></div>
+  <div class="fig" data-fig="run_diwali" style="left:100px;top:230px;width:1400px;height:620px"></div>
+</section>
+
+<!-- 39 Part -->
+<section class="slide part" data-plain="1">
+  <div class="center">
+    <div class="num">Part Five</div>
+    <h1>The Workflow Studio</h1>
+    <p class="lede">A canvas on Rasoi's home page. Five ready workflows. Every one run on a fresh Rasoi, with the numbers on the next plates.</p>
+  </div>
+</section>
+
+<!-- 40 -->
+<section class="slide" data-plate="The Studio, as a System">
+  <div class="col" style="width:420px">
+    <h2>What the Studio is</h2>
+    <p style="font-size:22px">A page with a palette of nodes, a canvas, and a run panel.</p>
+    <p class="step" style="font-size:22px">What you draw is saved as workflow JSON, the format you just learned.</p>
+    <p class="step" style="font-size:22px">The engine runs it on <b>your own Rasoi</b>, through the same toolbox Ask Rasoi uses, so every write previews, carries a key and acts with the person's permissions.</p>
+    <p class="step" style="margin-top:16px"><a class="live" href="https://rajatworkspace--rasoi-experience.us-east.modal.run/studio" target="_blank" rel="noopener">Try it live · /studio</a></p>
+  </div>
+  <img class="pb" src="figs/studio_arch.png" style="left:560px;top:150px;width:940px;height:525px" alt="The Studio as a system">
+  <div class="cap" style="left:560px;top:695px;width:940px"><b>Fig. 15.</b> The Studio on the Rasoi Experience, <code>bahi/experience/studio/</code>.</div>
+</section>
+
+<!-- 40b -->
+<section class="slide" data-plate="The Studio, First Look">
+  <div class="col" style="width:330px">
+    <h2>First look</h2>
+    <p style="font-size:22px">Open <code>/studio</code>: you get your own Rasoi and five ready workflows, plus a blank canvas.</p>
+    <p class="step small">Each card says its trigger and lists its nodes. “Use” copies it into your own workflows, to change as you like.</p>
+    <p class="step small">The palette on the left groups the node types: triggers, logic, AI, messaging, and the 15 tools.</p>
+  </div>
+  <img class="shot step" src="figs/shots/00_welcome_templates.png" style="left:470px;top:130px;width:1030px;height:579px" alt="Studio welcome with templates">
+  <div class="cap" style="left:470px;top:730px;width:1030px"><b>Fig. 16.</b> The Studio's welcome sheet (<code>studio/shots/00_welcome_templates.png</code>).</div>
+</section>
+
+<!-- 41a -->
+<section class="slide" data-plate="Diwali · It Waits for Rohit">
+  <div class="col" style="width:330px">
+    <h2>It waits for Rohit</h2>
+    <p style="font-size:21px">Press Run. Three nodes go green; “Rohit approves” turns purple: <b>waiting</b>.</p>
+    <p class="step small">Why it waits: PR/2026/04417 is estimated at ₹2,69,040 (20,000 × ₹11.40 + 18%), above Kavita's ₹2,50,000.</p>
+    <p class="step small">The run is saved; it carries on from “Rohit approves” once he signs. “Check again” is <code>resume</code>: it re-reads Bahi and waits again if nobody signed.</p>
+  </div>
+  <img class="shot" src="figs/shots/03_waiting_for_rohit.png" style="left:470px;top:130px;width:1030px;height:579px" alt="Run waiting for Rohit">
+  <div class="cap" style="left:470px;top:730px;width:1030px"><b>Fig. 17.</b> The Diwali gasket order, paused at the approval node (<code>studio/shots/03_waiting_for_rohit.png</code>).</div>
+</section>
+
+<!-- 41b -->
+<section class="slide" data-plate="Diwali · Rohit Signs, It Finishes">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:44px">Rohit signs as himself; the run finishes</h2><p class="sub" style="font-size:21px">Left: Rohit's approvals inbox inside the Studio. Right: every node done, the PO node's filled inputs and real output.</p></div>
+  <img class="shot" src="figs/shots/04_approval_sheet.png" style="left:100px;top:240px;width:690px;height:388px" alt="Approval sheet">
+  <img class="shot step" src="figs/shots/05_finished_with_outputs.png" style="left:810px;top:240px;width:690px;height:388px" alt="Finished run with outputs">
+  <div class="opens step" style="top:670px;background:var(--g1)"><span class="k" style="color:var(--after)">The message Rohit got</span>“PO/2026/01182 is RELEASED to the supplier: 20,000 gaskets from Deccan Polymers, ₹2,80,840 incl. GST. Thanks for approving PR/2026/04417.” PO/2026/01182: 20,000 × ₹11.90 = ₹2,38,000 + 18%.</div>
+</section>
+
+<!-- 42 -->
+<section class="slide" data-plate="Template 2 · Reorder When Low">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">Reorder when low</h2><p class="sub" style="font-size:22px">Event trigger on GSK-SIL-05L and WHS-STD-01. A set node plans the order; a condition checks nothing is already on order.</p></div>
+  <div class="fig" data-fig="run_reorder" style="left:100px;top:230px;width:1400px;height:640px"></div>
+</section>
+
+<!-- 42a -->
+<section class="slide" data-plate="Reorder When Low · in the Studio">
+  <div class="col" style="width:330px">
+    <h2>The branch, on the canvas</h2>
+    <p style="font-size:21px">“Check now” fires the event trigger: whistles are below reorder.</p>
+    <p class="step small">The condition went <b>yes</b>; “Tell Kavita” on the <b>no</b> side is faded: skipped.</p>
+    <p class="step small">The run log on the right reads top to bottom like the story: plan, PR, wait, sign, PO, release, tell Rohit.</p>
+  </div>
+  <img class="shot" src="figs/shots/07_reorder_branch_done.png" style="left:470px;top:130px;width:1030px;height:579px" alt="Reorder when low, finished">
+  <div class="cap" style="left:470px;top:730px;width:1030px"><b>Fig. 18.</b> <code>studio/shots/07_reorder_branch_done.png</code>.</div>
+</section>
+
+<!-- 43 -->
+<section class="slide" data-plate="Template 3 · Goods Arrived">
+  <div class="col" style="width:400px">
+    <h2>Goods arrived</h2>
+    <p style="font-size:22px">Neha fills a three-field form at the gate: PO, count, vehicle.</p>
+    <p class="step" style="font-size:22px">The receipt is recorded <b>as Neha</b>: GRN/2026/30001 for 40,000 cartons on PO/2026/01167, and the order closes.</p>
+    <p class="step small">Run it twice: the second run stops at the receipt. The order is CLOSED, so nothing is received twice.</p>
+  </div>
+  <div class="fig" data-fig="run_goods" style="left:540px;top:130px;width:960px;height:680px"></div>
+</section>
+
+<!-- 44 -->
+<section class="slide" data-plate="Template 4 · Dealer Email to Order">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">Dealer email to order</h2><p class="sub" style="font-size:22px">The LLM node reads; four fixed nodes act. Scrub to “extract” to see the four fields it returned.</p></div>
+  <div class="fig" data-fig="run_dealer" style="left:100px;top:230px;width:1400px;height:640px"></div>
+</section>
+
+<!-- 44a -->
+<section class="slide" data-plate="Dealer Email · in the Studio">
+  <div class="col" style="width:330px">
+    <h2>The LLM node, opened</h2>
+    <p style="font-size:21px">Click “Read the email”. The panel shows the prompt with the email filled in, the model, its tokens, and the JSON it returned.</p>
+    <p class="step small">A replayed call is marked “replayed from the cassette”: the class can run it with no key.</p>
+  </div>
+  <img class="shot" src="figs/shots/09_dealer_email_llm.png" style="left:470px;top:130px;width:1030px;height:579px" alt="Dealer email LLM node">
+  <div class="cap" style="left:470px;top:730px;width:1030px"><b>Fig. 19.</b> <code>studio/shots/09_dealer_email_llm.png</code>.</div>
+</section>
+
+<!-- 45 -->
+<section class="slide" data-plate="Template 5 · Build Your Own Agent">
+  <div class="col" style="width:470px">
+    <h2>Build your own agent</h2>
+    <p style="font-size:22px">A chat trigger and one agent node. In the Studio you edit three things in its panel:</p>
+    <ul class="legend step">
+      <li><span class="n">1</span><span><b>Instructions</b>: what it is for, in plain words.</span></li>
+      <li><span class="n">2</span><span><b>Tools</b>: tick the ones it may use.</span></li>
+      <li><span class="n">3</span><span><b>Person and switches</b>: who it acts as, may it commit, max steps.</span></li>
+    </ul>
+    <p class="step small">Then chat to it in the run panel. Our run: two turns, one preview, one PR waiting for Rohit.</p>
+  </div>
+  <div class="step" style="position:absolute;left:640px;top:150px;width:860px">
+<div class="json" style="font-size:15px;height:auto">{"id": "desk", "type": "agent", "title": "Stock desk agent",
+ "config": {"as": "KJOSHI", "model": "gemini:gemini-3.8-flash",
+   "may_commit": true, "max_steps": 10,
+   "input": "{{ trigger.message }}",
+   "tools": ["find_item", "check_stock", "check_budget",
+             "search_policy", "create_purchase_request", "order_status"],
+   "instructions": "You are the stock desk at Rasoi Steel Works. Answer
+     questions about stock, budgets, policy and orders with the numbers
+     from the tools, in two or three short sentences. When asked to buy
+     something, find the item, check the stock and preview the purchase
+     request before raising it."}}</div>
+    <p class="small" style="margin-top:14px">Every agent anyone at Rasoi builds is this much JSON: no harness code.</p>
+  </div>
+</section>
+
+<!-- 45a -->
+<section class="slide" data-plate="Your Own Agent · in the Studio">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:44px">Tick the tools, set the switch, chat</h2><p class="sub" style="font-size:21px">Left: the agent node's Configure panel: six tools ticked, “May commit writes” on, the model, max tool calls. Right: its Chat tab.</p></div>
+  <img class="shot" src="figs/shots/08a_agent_builder_config.png" style="left:100px;top:240px;width:690px;height:388px" alt="Agent builder configuration">
+  <img class="shot step" src="figs/shots/08_agent_builder_chat.png" style="left:810px;top:240px;width:690px;height:388px" alt="Agent builder chat">
+  <div class="opens step" style="top:670px;background:var(--card)"><span class="k" style="color:var(--ink-2)">Try it in the session</span>Untick <code>create_purchase_request</code> and ask it to buy whistles. It cannot: the tool is not in its list, so the model never sees it.</div>
+</section>
+
+<!-- 46 -->
+<section class="slide" data-plate="What We Measured">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:50px">Five templates, a fresh Rasoi each</h2><p class="sub">The Studio's own engine, on Modal. Rohit's approval signed as Rohit where a run waited.</p></div>
+  <div class="fig" data-fig="measured" style="left:100px;top:250px;width:1400px;height:560px"></div>
+</section>
+
+<!-- 47 -->
+<section class="slide" data-plate="Workflow or Ask Rasoi, Measured">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:50px">The same Monday job, ten times each</h2></div>
+  <div class="three" style="top:240px">
+    <div class="card af step"><span class="tag af">Studio workflow</span><h3>10 of 10 right</h3>One path every run. No model call: ₹0. Engine time about 5 ms per run. No message from Kavita needed.</div>
+    <div class="card step"><span class="tag nt">Ask Rasoi · temperature 0</span><h3>10 of 10 right</h3>Two paths (one run added a <code>find_item</code>). About 24,000 tokens, ₹1.18 and 26 s per run, 6 model calls, and a “yes” from Kavita.</div>
+    <div class="card step"><span class="tag nt">Ask Rasoi · temperature 1</span><h3>10 of 10 right</h3>Same two paths, same cost: about 24,000 tokens, ₹1.17 and 28 s per run.</div>
+  </div>
+  <div class="opens step" style="top:590px;background:var(--g1)"><span class="k" style="color:var(--after)">What we take from it</span>For a known job the agent was not wrong; it was slower, dearer and chose its path each time. Draw the known jobs. Keep the agent for the questions nobody drew.</div>
+</section>
+
+<!-- 48 Part -->
+<section class="slide part" data-plain="1">
+  <div class="center">
+    <div class="num">Part Six</div>
+    <h1>Your turn</h1>
+    <p class="lede">Open the Studio, build one, then do it again for your own module.</p>
+  </div>
+</section>
+
+<!-- 49 -->
+<section class="slide" data-plate="Open the Studio">
+  <div class="col" style="width:640px">
+    <h2>In the session, ten minutes</h2>
+    <ol class="legend">
+      <li class="step"><span class="n">1</span><span>Open <code>/studio</code>. You get your own Rasoi.</span></li>
+      <li class="step"><span class="n">2</span><span>Use “Diwali gasket order”. Run it. It stops at Rohit.</span></li>
+      <li class="step"><span class="n">3</span><span>Open the approval sheet, sign as Rohit, and watch it resume to RELEASED.</span></li>
+      <li class="step"><span class="n">4</span><span>Run it again. Find where it stops, and why nothing was ordered twice.</span></li>
+      <li class="step"><span class="n">5</span><span>Use “Build your own agent”. Untick <code>create_purchase_request</code>, ask it to buy whistles, and read what it says.</span></li>
+    </ol>
+    <p class="step" style="margin-top:18px"><a class="live" href="https://rajatworkspace--rasoi-experience.us-east.modal.run/studio" target="_blank" rel="noopener">Try it live · /studio</a></p>
+  </div>
+  <div class="card af step" style="position:absolute;left:820px;top:170px;width:680px;font-size:21px">
+    <h3>Then draw one from nothing</h3>
+    “Whistles running low”: event trigger on WHS-STD-01 → a set node, quantity <code>{{ trigger.reorder_level * 3 }}</code> → raise the PR with Commit <b>off</b> → message Kavita with the preview's estimated value.<br><br>
+    Run it. You should see a preview of 36,000 whistles from Sahyadri Valves and nothing saved in Bahi.
+  </div>
+</section>
+
+<!-- 50 -->
+<section class="slide" data-plate="The Notebook">
+  <div class="col" style="width:520px">
+    <h2>NB6 · write the engine yourself</h2>
+    <p style="font-size:22px">Colab, replay mode, no key needed.</p>
+    <span class="nb-ref">NB6_the_studio.ipynb</span>
+  </div>
+  <div class="step" style="position:absolute;left:700px;top:130px;width:800px">
+    <table class="t">
+      <tr><th>§</th><th>You build</th><th>Exercise</th></tr>
+      <tr><td>1–2</td><td>The workflow as JSON; <code>fill()</code> and the whole-field rule</td><td>1 · list indexes</td></tr>
+      <tr><td>3</td><td><code>MiniEngine</code>: ready, step, run log; the gasket order on the toolbox</td><td></td></tr>
+      <tr><td>4</td><td>A condition node: whistles vs gaskets</td><td>2 · the false branch</td></tr>
+      <tr><td>5</td><td>The approval node: save to a file, approve as Rohit, resume with a new engine</td><td>3 · the rejected port</td></tr>
+      <tr><td>6</td><td>A time-out after commit, a retry, a second run: still one PR</td><td>4 · content key vs uuid4</td></tr>
+      <tr><td>7</td><td>An LLM node (the dealer's email) and an agent node (a stock desk)</td><td>5 · a new field</td></tr>
+      <tr><td>8</td><td>The Studio's own engine on the same JSON</td><td></td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 51 -->
+<section class="slide" data-plate="Assignment A6">
+  <div class="lec-top" style="top:100px"><h2>Assignment A6</h2><p class="sub">Two workflows and one agent for your own module kit.</p></div>
+  <div class="three" style="top:250px">
+    <div class="card step"><h3>Workflow 1</h3>A repeated job with known steps in your module, with a trigger that is not “manual”, one condition, and an error edge.</div>
+    <div class="card step"><h3>Workflow 2</h3>One with a wait for a person (an approval) or an LLM node reading free text, run end to end and run twice.</div>
+    <div class="card step"><h3>Your own agent</h3>An agent node: instructions, at most six tools, a person, may_commit chosen and justified. Three chat turns logged.</div>
+  </div>
+  <div class="opens step" style="top:590px;background:var(--card)"><span class="k" style="color:var(--ink-2)">Submit</span>The exported workflow JSON, the run logs (first and second run), and a one-page report: why each job is a workflow or an agent, and what the second run did. Details in <code>A6.md</code>.</div>
+</section>
+
+<!-- 52 -->
+<section class="slide" data-plate="Where We Are">
+  <div class="col" style="width:620px">
+    <h2>Ask Rasoi, with the Studio lit</h2>
+    <p style="font-size:23px">The Studio sits beside the chat on Rasoi's home page, for the people who work there.</p>
+    <p class="step" style="font-size:23px">Its workflows call the toolbox directly, through the engine; only LLM and agent nodes use a model, and an agent node is the harness of Lecture 5 in one card.</p>
+    <p class="step small">Lectures 1–6: the After, the brain, the memory, the hands, the loop, and now the Studio.</p>
+  </div>
+  <div class="fig" data-fig="map" style="left:860px;top:110px;width:560px;height:740px"></div>
+</section>
+
+<!-- 53 -->
+<section class="slide" data-plain="1">
+  <div class="center">
+    <div class="kicker">Next time · Lecture 7 · Sat 21 Nov</div>
+    <h1 style="font-size:96px">Trust</h1>
+    <p class="lede" style="margin-top:22px">Workflows now run with nobody watching. Whom do they act as, who checks them, and what happens when one breaks at 2 AM? Identity, approvals, evals, traces, recovery, deploy.</p>
+  </div>
+</section>
+
+</div>
+<script src="figdata.js"></script>
+<script src="figs.js"></script>
+<script src="../../engine/plates.js"></script>
+</body>
+</html>

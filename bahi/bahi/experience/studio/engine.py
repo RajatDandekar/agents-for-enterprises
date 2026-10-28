@@ -379,14 +379,23 @@ def TRIGGER(eng, run, node, ctx):
     raise StudioError(f"Unknown trigger kind '{kind}'.", f"Use one of {TRIGGER_KINDS}.")
 
 
+def _specs(eng, user="KJOSHI") -> dict:
+    """The tools this engine's toolbox offers: purchasing's SPECS, or a module kit's own toolbox specs (L6, A6)."""
+    try:
+        return getattr(eng.toolbox_for(user), "specs", None) or SPECS
+    except Exception:
+        return SPECS
+
+
 def TOOL(eng, run, node, ctx):
     """Call one toolbox tool as the chosen person. confirm comes from the node's Commit switch, never a template."""
     cfg = node.get("config", {})
     name = cfg.get("tool")
-    if name not in SPECS:
+    specs = _specs(eng, cfg.get("as", "KJOSHI"))
+    if name not in specs:
         raise StudioError(f"There is no tool '{name}'.", "Pick a tool from the palette.")
     args = {k: v for k, v in fill(cfg.get("args", {}), ctx).items() if v not in (None, "")}
-    if "confirm" in SPECS[name].spec["input_schema"].get("properties", {}):
+    if "confirm" in specs[name].spec["input_schema"].get("properties", {}):
         args["confirm"] = bool(cfg.get("confirm", False))
     else:
         args.pop("confirm", None)
@@ -488,7 +497,7 @@ def AGENT(eng, run, node, ctx):
     """Build-your-own agent: instructions + a chosen subset of tools + a model, in the L5 loop."""
     cfg = node.get("config", {})
     user = cfg.get("as", "KJOSHI")
-    names = [t for t in cfg.get("tools", []) if t in SPECS]
+    names = [t for t in cfg.get("tools", []) if t in _specs(eng, user)]
     if not names:
         raise StudioError("This agent has no tools.", "Tick at least one tool in the agent's panel.")
     tb = eng.toolbox_for(user, names)
@@ -584,12 +593,12 @@ class Engine:
             if typ not in HANDLERS:
                 problems.append(f"Node {nid}: unknown type '{typ}'.")
                 continue
-            if typ == "tool" and cfg.get("tool") not in SPECS:
+            if typ == "tool" and cfg.get("tool") not in _specs(self, cfg.get("as", "KJOSHI")):
                 problems.append(f"Node {nid}: tool '{cfg.get('tool')}' does not exist.")
             if typ == "trigger" and cfg.get("kind", "manual") not in TRIGGER_KINDS:
                 problems.append(f"Node {nid}: trigger kind '{cfg.get('kind')}' is not one of {TRIGGER_KINDS}.")
             if typ == "agent":
-                bad = [t for t in cfg.get("tools", []) if t not in SPECS]
+                bad = [t for t in cfg.get("tools", []) if t not in _specs(self, cfg.get("as", "KJOSHI"))]
                 if bad:
                     problems.append(f"Node {nid}: agent tools {bad} do not exist.")
             for who in [cfg.get("as"), cfg.get("approver")]:

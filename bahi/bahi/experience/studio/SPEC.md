@@ -58,7 +58,7 @@ Files (all in `bahi/bahi/experience/studio/`):
 |---|---|---|
 | `KJOSHI` | Kavita Joshi, purchase executive | look up, raise PRs and POs, release, receive, message |
 | `RMEHTA` | Rohit Mehta, purchase manager | look up, approve, release, message |
-| `NDESAI` | Neha Desai, stores | look up, receive goods (cannot send messages) |
+| `NDESAI` | Neha Desai, stores | look up, receive goods, send messages |
 
 A node acts **with that person's own Bahi permissions**, nothing more: the toolbox is
 `players.toolbox(pid, user)`. There is no super-user.

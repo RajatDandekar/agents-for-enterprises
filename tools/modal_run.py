@@ -19,7 +19,7 @@ import modal
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 ENV_FILE = os.environ.get("BAHI_ENV_FILE", "/Users/raj/Claude_Brain/wm-lecture6-ijepa/.env")
-SKIP_DIRS = {".git", "qa", "node_modules", "__pycache__", ".ipynb_checkpoints", "site-dist", ".venv"}
+SKIP_DIRS = {".git", "qa", "archive", "node_modules", "__pycache__", ".ipynb_checkpoints", "site-dist", ".venv"}
 
 
 def _secret_env():

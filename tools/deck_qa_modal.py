@@ -24,7 +24,9 @@ image = (
     .pip_install("playwright==1.47.0")
     .run_commands("playwright install --with-deps chromium")
     .add_local_dir(ROOT, "/course", ignore=lambda p: any(x in SKIP for x in pathlib.Path(p).parts)
-                   or str(p).endswith((".ipynb", ".jsonl", ".mp4", ".png", ".env")))
+                   or "archive" in pathlib.Path(p).parts
+                   or str(p).endswith((".ipynb", ".jsonl", ".mp4", ".env"))
+                   or (str(p).endswith(".png") and "/qa/" in str(p)))  # figures and app screenshots are mounted
 )
 app = modal.App("forms-to-agents-deck-qa", image=image)
 

@@ -236,9 +236,12 @@ capno = wf_of(*[x for x in cap["nodes"][1:2]])
 rcn = eng_e.run_until_pause(eng_e.start(capno))
 check("direct-PO cap with no error path: the run fails naming the node", rcn["status"] == "failed"
       and rcn["error"].startswith("po:") or "50,000" in (rcn.get("error") or ""), rcn.get("error"))
-neha = wf_of({"id": "m", "type": "message", "config": {"to": "@kavita", "as": "NDESAI", "text": "hi"}})
+# Neha (stores) may send messages since 2026-10-28, but she still cannot approve an order.
+neha = wf_of({"id": "m", "type": "tool", "config": {"tool": "approve_purchase_order", "as": "NDESAI", "confirm": True,
+                                                    "args": {"po_no": "PO/2026/01179"}}})
 rn = eng_e.run_until_pause(eng_e.start(neha))
-check("permissions hold: Neha cannot send messages", rn["status"] == "failed", rn.get("error"))
+check("permissions hold: Neha cannot approve an order", rn["status"] == "failed" and "ERR-SEC" in (rn.get("error") or ""),
+      rn.get("error"))
 print("     Neha:", rn.get("error"))
 badref = wf_of({"id": "m", "type": "message", "config": {"to": "@kavita", "text": "{{ nodes.start.po_no }}"}})
 rbr = eng_e.run_until_pause(eng_e.start(badref))
