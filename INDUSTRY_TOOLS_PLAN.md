@@ -37,7 +37,7 @@ Each lecture gains a 12–15 minute "In industry" segment (6–10 plates) and an
 | L5 The Loop (14 Nov) | OpenAI Agents SDK, the same harness rebuilt; LangGraph is already taught | Google ADK, Claude Agent SDK, CrewAI on one comparison plate | Port Ask Rasoi to the Agents SDK in ~60 lines and compare traces with our harness |
 | L6 The Studio (15 Nov) | n8n (self-hosted, free) running the same workflows | Copilot Studio and Agentforce as the enterprise low-code equivalents | Import the Diwali workflow into n8n, calling the Rasoi toolbox over MCP |
 | L7 Trust (21 Nov) | Langfuse (open source) over OpenTelemetry GenAI traces; DeepEval in CI; promptfoo red-teaming; Temporal for durable waits | LangSmith, Phoenix, Braintrust, Datadog; NeMo Guardrails / Llama Guard; Bedrock AgentCore as a managed runtime | Trace Ask Rasoi in Langfuse; add a CI eval gate; red-team it for prompt injection |
-| L8 Your Module (22 Nov) | *(student's choice)* | A "production stack" menu | Capstone must use at least two industry tools, chosen with a written reason; rubric +10 |
+| L12 Your Module (6 Dec) | *(student's choice)* | A "production stack" menu | Capstone must use at least two industry tools, chosen with a written reason; 10 of the 100 rubric points |
 
 ## Delivery order (honest about time)
 - **Before Sat 31 Oct:** the L1 stack-map plate only, plus a one-line mention in the curriculum.
@@ -52,3 +52,6 @@ Each lecture gains a 12–15 minute "In industry" segment (6–10 plates) and an
 - **API churn:** vendor SDKs change quickly. Pin versions in `nb_setup.txt`, and keep recorded fixtures so replay never breaks.
 - **Key-free replay:** a live call through a third-party SDK can't use our cassettes directly. The labs replay the recorded trace and tool calls, and go live only with a student's key.
 - **Bias:** some evidence above comes from vendor-run surveys. Teach concepts first, and present tools as current choices, not permanent truths.
+
+
+**Update, 2026-10-28:** Rajat chose dedicated lectures. The tools are taught in L8–L11 (see COURSE_V3.md v3.1) rather than as segments inside L1–L7. The per-lecture table above was the first proposal.

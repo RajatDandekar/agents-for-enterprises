@@ -9,7 +9,7 @@ For each module it checks the complexity budget and the behaviour the brief prom
   the legacy happy path; every trap (silent outcome, variants, screen state, cascades, shared engine);
   4 scenarios whose check() passes the careful reference run and catches the naive run with a never-event;
 then installs all eight together and re-runs the reference scenarios on the combined sandbox.
-v3 (Lecture 8): each kit's toolbox/ folders (tool.json + tool.py) are linted, every tool's example is called as the
+v3 (Lecture 12): each kit's toolbox/ folders (tool.json + tool.py) are linted, every tool's example is called as the
 kit's speaker and must return ok=true, and the folders are served over MCP and listed by a client. The TEMPLATE's two
 example tools are exercised end to end: preview, commit, the same commit again (found by its key), read-back.
 A full run writes modules/test_kits.log.

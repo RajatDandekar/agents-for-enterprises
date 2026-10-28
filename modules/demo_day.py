@@ -1,6 +1,6 @@
-"""Demo day (Lecture 8): the change each module must absorb, and the hidden test the grader runs.
+"""Demo day (Lecture 12): the change each module must absorb, and the hidden test the grader runs.
 
-Each kit has `modules/<name>/demo_change.py` (announced at the end of Lecture 7; `CHANGE.md` beside it is the
+Each kit has `modules/<name>/demo_change.py` (announced at the end of Lecture 11; `CHANGE.md` beside it is the
 client's announcement). A demo_change module provides:
 
     CHANGE      dict: module, kind ("policy" | "variant"), id, title, announcement (the client's words), effective

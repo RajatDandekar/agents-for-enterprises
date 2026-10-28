@@ -1,7 +1,7 @@
-"""Lecture 8 experiments. Every number on the L8 plates comes from the logs this script writes.
+"""Lecture 12 experiments (built as Lecture 8 before v3.1). Every number on the plates comes from the logs this script writes.
 
-    modal run tools/modal_run.py --script lectures/L8-your-module/experiments/runs8.py --args "--what final"
-    modal run tools/modal_run.py --script lectures/L8-your-module/experiments/runs8.py --args "--what leave"
+    modal run tools/modal_run.py --script lectures/L12-your-module/experiments/runs8.py --args "--what final"
+    modal run tools/modal_run.py --script lectures/L12-your-module/experiments/runs8.py --args "--what leave"
 
 final  Kavita's 20,000 gaskets through every piece, as three people use Ask Rasoi (+ the trust layer) on one Rasoi:
        Kavita asks about stock and policy and orders; Rohit approves in his own conversation; Kavita's order is made

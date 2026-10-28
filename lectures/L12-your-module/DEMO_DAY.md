@@ -1,9 +1,9 @@
 # Demo day: format, timing, the change, the final demo
 
-**Lecture 8, AI Agents for Enterprises · Sunday 22 November 2026, 7:00–9:00 AM IST.**
+**Lecture 12, Agentic Systems Engineering · Sunday 6 December 2026, 7:00–9:00 AM IST.**
 
-Each student shows their module's Before and After on the shared Rasoi, absorbs a change announced the evening
-before, and answers the client. Dr. Dandekar plays the client: Anand Patil, or whoever owns the module's money.
+Each student shows their module's Before and After on the shared Rasoi, built by hand (L1–L7) and running on a
+production stack they chose (L8–L11), absorbs a change announced the morning before, and answers the client. Dr. Dandekar plays the client: Anand Patil, or whoever owns the module's money.
 The last part of the morning is Ask Rasoi itself, live, end to end.
 
 Everything is fictional: Rasoi Steel Works, Bahi ERP 7.2, the people and the data.
@@ -12,9 +12,9 @@ Everything is fictional: Rasoi Steel Works, Bahi ERP 7.2, the people and the dat
 
 | Time | What | Who |
 |---|---|---|
-| 7:00–7:30 | The deck, Parts 1–3: the whole build as one figure, Kavita's order through every piece, the six moves, the rules of the morning | Dr. Dandekar |
+| 7:00–7:30 | The deck, Parts 1–3: the whole build as one figure, by hand and on the industry stack, Kavita's order through every piece, the six moves, the rules of the morning and the production stack | Dr. Dandekar |
 | 7:30–8:36 | Live modules, 8 minutes each, back to back (up to 8 slots = 64 minutes, plus changeovers) | Students; Dr. Dandekar as the client |
-| 8:36–8:55 | The deck, Part 4: the final demo, Ask Rasoi live from Kavita's first question to Neha's goods receipt (section 6) | Dr. Dandekar |
+| 8:36–8:55 | The deck, Part 4: the final demo, Ask Rasoi live from Kavita's first question to Neha's goods receipt (section 7) | Dr. Dandekar |
 | 8:55–9:00 | What comes next; how recorded demos are graded | Dr. Dandekar |
 
 With fewer live slots, the spare minutes go to longer question rounds.
@@ -30,7 +30,7 @@ No slides. You run the real thing on the shared Rasoi: your module's legacy scre
 | Minute | Show | Say |
 |---|---|---|
 | 0:00–1:00 | **The Before.** Your careful legacy path on the screens, and the silent outcome | Your counts (screens, fields, codes, people). "Bahi says SAVED. It is held. Nobody hears." |
-| 1:00–3:00 | **The After.** Your one sentence, live, in the speaker's own session. The preview, the approver in their own session, the receipt read back | Which piece did what: tools, knowledge, the loop, the trust layer |
+| 1:00–3:00 | **The After.** Your one sentence, live, in the speaker's own session. The preview, the approver in their own session, the receipt read back | Which piece did what: tools, knowledge, the loop, the trust layer, and which two industry tools now run or watch them, and why |
 | 3:00–5:00 | **The change.** Where the new rule (or path) now lives: the document, the tool argument, the guard | The grader runs the hidden test on your agent meanwhile; its PASS or FAIL goes on screen at 5:00 |
 | 5:00–8:00 | **The client's questions.** Three minutes (`question-bank.md`) | Answer from your logs: the suite's results, the gate verdict, the recovery check, Bahi's call log |
 
@@ -39,8 +39,8 @@ operations line rewards an honest recovery more than a smooth demo.
 
 ## 3. The demo-day change
 
-At 9 AM on Saturday 21 November (the end of Lecture 7), each kit's change is announced in the client's words, in
-`modules/<kit>/CHANGE.md`. You have one evening to absorb it.
+At 9 AM on Saturday 5 December (the end of Lecture 11), each kit's change is announced in the client's words, in
+`modules/<kit>/CHANGE.md`. You have one day and an evening to absorb it.
 
 | Module | Kind | Circular | The change |
 |---|---|---|---|
@@ -73,7 +73,7 @@ passes with all eight kits installed together.
 **Grading the change on demo day (10 points):**
 
 ```
-/Users/raj/.venv/bin/modal run tools/modal_run.py --script lectures/L8-your-module/experiments/grade_change.py \
+/Users/raj/.venv/bin/modal run tools/modal_run.py --script lectures/L12-your-module/experiments/grade_change.py \
     --args "--module hr_leave --agent py:<your_package.module>:make_agent" --mode replay
 ```
 
@@ -90,15 +90,15 @@ For every module not presenting live. Same sheet.
 | 0:00–1:00 | The Before on the real screens, with your counts on screen |
 | 1:00–2:30 | The After: the sentence, the preview, the approver's own session, the read-back |
 | 2:30–4:00 | The change: the new rule in your knowledge or tools, the hidden scenario run, its result |
-| 4:00–5:00 | The proof: your suite's 12 runs, the gate verdict, the recovery check, opened from the files |
+| 4:00–5:00 | The proof: your suite's 12 runs, the gate verdict, the recovery check, and your two industry tools at work (`STACK.md`), opened from the files |
 
 - One take, screen and voice, 1080p, at most 5:30. No edits that hide a failure.
-- Upload the MP4 and your repository link by **Saturday 21 November, 11:59 PM IST**.
+- Upload the MP4 and your repository link by **Saturday 5 December, 11:59 PM IST**.
 - Include `grade_change.py`'s output for your module, run once by you in replay mode.
 - The grader re-runs your four scenarios and the hidden test in replay mode. A recording whose numbers do not match
   the replay scores the lower of the two.
 - The grader adds one general and one module question from `question-bank.md` in writing; answer each in two lines,
-  from your logs, by Monday 23 November.
+  from your logs, by Monday 7 December.
 
 ## 5. What a finished module contains (v3)
 
@@ -108,16 +108,33 @@ For every module not presenting live. Same sheet.
 | What the bare model cannot do for your module | A2 | A2 note | (foundation) |
 | Knowledge: your documents indexed, cited, the stale one handled | A3 | retrieval results | retrieval 15 |
 | Tool folders (`tool.json` + `tool.py`), the six promises, MCP | A4 | your tool folder, `a4_wire.json` | tools 20 |
-| The harness: your prompt, three scenarios, the pause | A5 | A5 table and traces | scenario 25, route and authority 15, operations 15 |
+| The harness: your prompt, three scenarios, the pause | A5 | A5 table and traces | scenario 20, route and authority 15, operations 10 |
 | Workflows and your own agent in the Studio | A6 | workflow JSON, run logs | scenario, operations |
 | Trust: identity, guards, read-back, suite, judge, gate, trace, recovery | A7 | `results.json`, `NOTE.md` | route and authority, operations, scenario |
-| The change, absorbed overnight | L7 → L8 | `grade_change.py` output | demo-day change 10 |
+| The production stack: two industry tools from two layers, each with a reason, one measured comparison | L8–L11 | `STACK.md`, the tools' recorded outputs | production stack 10 |
+| The change, absorbed overnight | L11 → L12 | `grade_change.py` output | demo-day change 10 |
 
 Every kit's starter tool and the plan for its After are in `modules/<kit>/README.md` ("The After") and
 `bahi/bahi/modules/<kit>/toolbox/`. `modules/test_kits.py` must stay green on your kit:
 `/Users/raj/.venv/bin/modal run tools/modal_run.py --script modules/test_kits.py --args "--only <kit>"`.
 
-## 6. The final demo (8:36–8:55)
+## 6. Your production stack (L8–L11)
+
+Lectures 8–11 put each hand-built piece on the tools companies use. On demo day your module runs on **at least two of
+them, from two different layers**, each with a written reason. It is worth 10 of the 100 points (`rubric.md`, line 7,
+which also has the full menu).
+
+- **Write `STACK.md`** in your repository: for each tool, the layer, the pinned version, the problem it solves for your
+  module, the hand-built piece it replaces or watches, the alternative you did not pick and why (at most 150 words),
+  and the command that produced its output.
+- **Commit what the tool produced:** a recorded trace, an exported run, a test report. The grader replays with no key.
+- **Measure one comparison yourself:** the hand-built piece and the tool on the same task, for example the four
+  scenarios through our harness and through the OpenAI Agents SDK, or your A7 suite in our gate and in DeepEval.
+- **Good pairs, for a start:** Langfuse traces + a DeepEval gate; the Agents SDK + LiteLLM with a budget; n8n running
+  your workflow + your toolbox as a remote MCP server; Temporal for the approval wait + NeMo Guardrails before writes.
+- **Keep the trust rules.** Whatever runs the loop, writes go through your tool folders in the speaker's own session.
+
+## 7. The final demo (8:36–8:55)
 
 Ask Rasoi on the live Experience (`https://rajatworkspace--rasoi-experience.us-east.modal.run/after?stage=agent`),
 "How it works" switched on so the tool cards show. Three people, one Rasoi, each in their own session:

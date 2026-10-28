@@ -346,24 +346,48 @@ FIGS.agentdef = (el) => {
   return { step(k) { ps.forEach((p, i) => show(p, i <= k)); show(d, k >= 4); } };
 };
 
-/* ---------- The series map: Ask Rasoi's pieces, lit one lecture at a time ---------- */
+/* ---------- The series map: twelve lectures (COURSE_V3.md v3.1), Ask Rasoi's pieces lit one lecture at a time ---------- */
 FIGS.series = (el) => {
-  const L = [[1, 'The Before and the After', 'The whole thing, from outside'], [2, 'The Brain', 'How an LLM works'], [3, 'The Memory', 'Knowledge, search, citations'], [4, 'The Hands', 'Tools and MCP'], [5, 'The Loop', 'What makes it an agent'], [6, 'The Studio', 'Workflows and your own agents'], [7, 'Trust', 'Taking it to production'], [8, 'Your Module', 'Demo day']];
+  const L = [[1, 'Sat 31 Oct', 'The Before and the After', 'Before & After', 'The whole thing, seen from outside'],
+    [2, 'Sun 1 Nov', 'The Brain: How an LLM Works', 'The Brain', 'Tokens, attention, the transformer, training, sampling'],
+    [3, 'Sat 7 Nov', 'The Memory: Giving It Knowledge', 'The Memory', 'Search Rasoi’s policies and cite the clause'],
+    [4, 'Sun 8 Nov', 'The Hands: Tools and MCP', 'The Hands', 'One tool per activity, served over MCP'],
+    [5, 'Sat 14 Nov', 'The Loop: What Makes It an Agent', 'The Loop', 'The harness: reason, act, observe; the pause for Rohit'],
+    [6, 'Sun 15 Nov', 'The Studio: Workflows and Your Own Agents', 'The Studio', 'Fixed jobs as workflows; agents as nodes'],
+    [7, 'Sat 21 Nov', 'Trust: Taking It to Production', 'Trust', 'Identity, approvals, guards, evals, traces, recovery'],
+    [8, 'Sun 22 Nov', 'Agent Frameworks in Industry', 'Frameworks', 'The same harness on the OpenAI Agents SDK and Google ADK; models through OpenRouter and LiteLLM'],
+    [9, 'Sat 28 Nov', 'Protocols and Integration', 'Protocols', 'MCP in depth, A2A between agents, and n8n running the Studio’s workflows'],
+    [10, 'Sun 29 Nov', 'Observability and Evals in Industry', 'Observability & evals', 'Traces in Langfuse and Phoenix; DeepEval as a CI gate; Ragas; promptfoo red-teaming'],
+    [11, 'Sat 5 Dec', 'Running Agents in Production', 'Production', 'Guardrails, Temporal for durable waits, pgvector and Redis, LiteLLM budgets'],
+    [12, 'Sun 6 Dec', 'Your Module: Demo Day', 'Your Module', 'Your module’s After, on a production stack you chose']];
   el.innerHTML = `<div class="sm">
-    <div class="sm-l lec1 lec6 lec8"><div class="sm-h">Where people work</div><div class="sm-row"><div class="sm-b lec1">Ask Rasoi chat</div><div class="sm-b lec6">Workflow Studio</div><div class="sm-b lec1">Approvals inbox</div></div></div>
-    <div class="sm-l harness lec5"><div class="sm-h">Harness: the agent loop <span class="sm-n">L5</span></div><div class="sm-row"><div class="sm-b lec2">LLM: the brain <span class="sm-n">L2</span></div><div class="sm-b lec5">reason → act → observe <span class="sm-n">L5</span></div><div class="sm-b lec3">Knowledge: policy search <span class="sm-n">L3</span></div></div></div>
-    <div class="sm-l lec4 mcp"><div class="sm-h">MCP <span class="sm-n">L4</span></div></div>
-    <div class="sm-l lec4"><div class="sm-h">Toolbox: one tool per activity <span class="sm-n">L4</span></div><div class="sm-row"><div class="sm-b lec4 mono">check_stock</div><div class="sm-b lec4 mono">create_purchase_request</div><div class="sm-b lec4 mono">create_purchase_order</div><div class="sm-b lec4 mono">receive_goods</div><div class="sm-b lec8">your module’s tools <span class="sm-n">L8</span></div></div></div>
+    <div class="sm-l lec1 lec6 lec9"><div class="sm-h">Where people work</div><div class="sm-row"><div class="sm-b lec1">Ask Rasoi chat</div><div class="sm-b lec6 lec9">Workflow Studio <span class="sm-n">L6 · L9</span></div><div class="sm-b lec1">Approvals inbox</div></div></div>
+    <div class="sm-l harness lec5 lec8"><div class="sm-h">Harness: the agent loop <span class="sm-n">L5 · L8</span></div><div class="sm-row"><div class="sm-b lec2 lec8 lec11">LLM: the brain <span class="sm-n">L2 · L8</span></div><div class="sm-b lec5 lec8">reason → act → observe <span class="sm-n">L5</span></div><div class="sm-b lec3 lec10 lec11">Knowledge: policy search <span class="sm-n">L3 · L10</span></div></div></div>
+    <div class="sm-l lec4 lec9 mcp"><div class="sm-h">MCP <span class="sm-n">L4 · L9</span></div></div>
+    <div class="sm-l lec4 lec12"><div class="sm-h">Toolbox: one tool per activity <span class="sm-n">L4</span></div><div class="sm-row"><div class="sm-b lec4 mono">check_stock</div><div class="sm-b lec4 mono">create_purchase_request</div><div class="sm-b lec4 mono">create_purchase_order</div><div class="sm-b lec4 mono">receive_goods</div><div class="sm-b lec12">your module’s tools <span class="sm-n">L12</span></div></div></div>
     <div class="sm-l bahi"><div class="sm-h">Bahi ERP 7.2 (1998) services · black boxes</div></div>
-    <div class="sm-trust lec7"><span>Trust: identity, approvals, evals, traces, recovery · L7</span></div></div>
-    <div class="ctl sm-ctl">${L.map(([n, t]) => `<button data-n="${n}">L${n} · ${t}</button>`).join('')}</div><div class="sm-cap"></div>`;
+    <div class="sm-trust lec7 lec10 lec11"><span>Trust: identity, approvals, evals, traces · L7 · L10 · L11</span></div></div>
+    <div class="sm-ctl">${[['By hand', 1, 7], ['Industry stack', 8, 11], ['Demo day', 12, 12]].map(([h, a, b]) => `<div class="sm-grp"><span class="sm-gl">${h}</span>${L.slice(a - 1, b).map(([n, , , s]) => `<button data-n="${n}">L${n} ${s}</button>`).join('')}</div>`).join('')}</div><div class="sm-cap"></div>`;
   const bs = [...el.querySelectorAll('.sm-ctl button')], cap = el.querySelector('.sm-cap'), sm = el.querySelector('.sm');
   const set = (n) => {
     sm.querySelectorAll('.sm-b,.sm-l,.sm-trust').forEach((x) => { const on = n === 1 ? true : x.classList.contains('lec' + n); x.classList.toggle('lit', on && n !== 1); x.classList.toggle('dim', !on && !x.classList.contains('bahi')); });
     bs.forEach((b) => b.classList.toggle('on', +b.dataset.n === n));
-    const l = L[n - 1]; cap.innerHTML = `<b>Lecture ${n} · ${l[1]}.</b> ${l[2]}.`;
+    const l = L[n - 1]; cap.innerHTML = `<b>Lecture ${n} · ${l[1]} · ${l[2]}.</b> ${l[4]}.`;
   };
   bs.forEach((b) => b.addEventListener('click', () => set(+b.dataset.n)));
-  return { step(k) { set(Math.min(k + 1, 8)); } };
+  return { step(k) { set([1, 2, 8, 12][Math.min(k, 3)]); } };
+};
+})();
+
+/* ---------- Market evidence (not our measurement): Stack Overflow Developer Survey 2025, as cited in INDUSTRY_TOOLS_PLAN.md ---------- */
+(() => {
+const FIGS = (window.FIGS = window.FIGS || {});
+FIGS.market = (el) => {
+  const R = [['Ollama', 51], ['LangChain', 33], ['LangGraph', 16], ['Vertex AI', 15], ['Bedrock Agents', 15], ['OpenRouter', 13], ['LlamaIndex', 13]];
+  el.innerHTML = `<div class="mk"><div class="mk-h">Of developers who had used AI agents, the share who had used each tool</div>
+    ${R.map(([n, v]) => `<div class="mk-r" title="${n}: ${v}% of respondents who had used agents"><span class="mk-n">${n}</span><span class="mk-tr"><span class="mk-b" data-v="${v}"></span></span><span class="mk-v">${v}%</span></div>`).join('')}
+    <div class="mk-src">Source: Stack Overflow Developer Survey 2025. Self-selected developers; a tool can be counted in several rows. Not our measurement.</div></div>`;
+  const bars = [...el.querySelectorAll('.mk-b')];
+  return { step(k, instant) { bars.forEach((b) => { b.style.transition = instant ? 'none' : ''; b.style.width = (+b.dataset.v / 60 * 100) + '%'; }); } };
 };
 })();

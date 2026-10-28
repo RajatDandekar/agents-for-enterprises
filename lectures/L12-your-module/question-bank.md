@@ -23,6 +23,10 @@ What a good answer sounds like: a document number read from Bahi, a log file nam
 | Time | "How long does the user wait for an answer?" | Model seconds per conversation from the suite; where the seconds go (model calls, not Bahi) |
 | Trust | "How often is it wrong? Not on average: how bad is the worst?" | Passes out of 12 (four scenarios, three runs); never-events = 0 or named; the gate verdict |
 | Testing | "How do you know your test would catch an agent that cheats?" | The careless NAIVE run caught by a never-event; the LLM judge's disagreements explained |
+| Stack | "Why this tool and not its rival? What would you lose if you switched tomorrow?" | The reason in `STACK.md`, the rival named, the one thing the rival does worse for this module |
+| Stack | "Its SDK changes next month. What breaks?" | The pinned version; the hand-built piece still in the repository; the folders and guards untouched by the tool |
+| Stack | "Did the framework make it better, or only different?" | The one comparison measured on their own run, hand-built vs tool, same scenarios; "only different" is an honest answer |
+| Stack | "Does your framework ever write to Bahi without your guards?" | Every write through the tool folders in the speaker's session; the guard refusing a real call under the framework |
 | Retrieval | "Your old FAQ says the opposite. Which one does the agent believe?" | The stale document marked, a retrieval test question about it (A3) |
 | Rollout | "Tomorrow I want it for ten users, not all three hundred. How?" | Staging before production, the same image; the pause switch and the ₹ cap (as the Experience has) |
 | Scope | "What will it refuse to do, and how does it say so?" | One out-of-scope request and the reply |

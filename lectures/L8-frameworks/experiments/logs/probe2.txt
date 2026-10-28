@@ -1,0 +1,274 @@
+===== LiteLlm.__init__
+  def __init__(self, model: str, **kwargs: Any) -> None:
+    """Initializes the LiteLlm class.
+
+    Args:
+      model: The name of the LiteLlm model.
+      **kwargs: Additional arguments to pass to the litellm completion api.
+    """
+    drop_params = kwargs.pop("drop_params", None)
+    super().__init__(model=model, **kwargs)
+    # Warn if using Gemini via LiteLLM
+    _warn_gemini_via_litellm(model)
+    self._additional_args = dict(kwargs)
+    # preventing generation call with llm_client
+    # and overriding messages, tools and stream which are managed internally
+    self._additional_args.pop("llm_client", None)
+    self._additional_args.pop("messages", None)
+    self._additional_args.pop("tools", None)
+    # public api called from runner determines to stream or not
+    self._additional_args.pop("stream", None)
+    if drop_params is not None:
+      self._additional_args["drop_params"] = drop_params
+ADK RunConfig fields ['speech_config', 'http_options', 'labels', 'service_tier', 'response_modalities', 'avatar_config', 'save_input_blobs_as_artifacts', 'support_cfc', 'streaming_mode', 'output_audio_transcription', 'input_audio_transcription', 'realtime_input_config', 'explicit_vad_signal', 'translation_config', 'enable_affective_dialog', 'proactivity', 'session_resumption', 'history_config', 'context_window_compression', 'save_live_blob', 'tool_thread_pool_config', 'save_live_audio', 'max_llm_calls', 'custom_metadata', 'telemetry', 'get_session_config', 'model_input_context', 'include_thoughts_from_other_agents']
+SIG Runner.run_async (self, *, user_id: 'str', session_id: 'str', invocation_id: 'Optional[str]' = None, new_message: 'Optional[types.Content]' = None, state_delta: 'Optional[dict[str, Any]]' = None, run_config: 'Optional[RunConfig]' = None, yield_user_message: 'bool' = False, abort_signal: 'Optional[asyncio.Event]' = None) -> 'AsyncGenerator[Event, None]'
+ADK Event fields ['model_version', 'content', 'grounding_metadata', 'partial', 'turn_complete', 'turn_complete_reason', 'interaction_status', 'finish_reason', 'error_code', 'error_message', 'interrupted', 'custom_metadata', 'usage_metadata', 'live_session_resumption_update', 'live_session_id', 'go_away', 'voice_activity', 'input_transcription', 'output_transcription', 'avg_logprobs', 'logprobs_result', 'cache_metadata', 'citation_metadata', 'interaction_id', 'environment_id', 'invocation_id', 'author', 'actions', 'output', 'node_info', 'long_running_tool_ids', 'branch', 'isolation_scope', 'id', 'timestamp']
+SIG Event.is_final_response (self) -> 'bool'
+SIG Runner.run (starting_agent: 'Agent[TContext]', input: 'str | list[TResponseInputItem] | RunState[TContext]', *, context: 'TContext | None' = None, max_turns: 'int | None' = 10, hooks: 'RunHooks[TContext] | None' = None, run_config: 'RunConfig | dict[str, Any] | None' = None, error_handlers: 'RunErrorHandlers[TContext] | None' = None, previous_response_id: 'str | None' = None, auto_previous_response_id: 'bool' = False, conversation_id: 'str | None' = None, session: 'Session | None' = None) -> 'RunResult'
+agents RunConfig (model: 'str | Model | None' = None, model_provider: 'ModelProvider' = <factory>, model_settings: 'ModelSettings | None' = None, handoff_input_filter: 'HandoffInputFilter | None' = None, nest_handoff_history: 'bool' = False, handoff_history_mapper: 'HandoffHistoryMapper | None' = None, input_guardrails: 'list[InputGuardrail[Any]] | None' = None, output_guardrails: 'list[OutputGuardrail[Any]] | None' = None, tracing_disabled: 'bool' = False, tracing: 'TracingConfig | None' = None, trace_include_sensitive_data: 'bool' = <factory>, workflow_name: 'str' = 'Agent workflow', trace_id: 'str | None' = None, group_id: 'str | None' = None, trace_metadata: 'dict[str, Any] | None' = None, session_input_callback: 'SessionInputCallback | None' = None, call_model_input_filter: 'CallModelInputFilter | None' = None, tool_error_formatter: 'ToolErrorFormatter | None' = None, session_settings: 'SessionSettings | None' = None, reasoning_item_id_policy: 'ReasoningItemIdPolicy | None' = None, sandbox: 'SandboxRunConfig | None' = None, tool_execution: 'ToolExecutionConfig | None' = None, tool_not_found_behavior: 'ToolNotFoundBehavior' = 'raise_error', tool_name_collision_policy: 'ToolNameCollisionPolicy' = 'warn') -> None
+===== TracingProcessor
+class TracingProcessor(abc.ABC):
+    """Interface for processing and monitoring traces and spans in the OpenAI Agents system.
+
+    This abstract class defines the interface that all tracing processors must implement.
+    Processors receive notifications when traces and spans start and end, allowing them
+    to collect, process, and export tracing data.
+
+    Example:
+        ```python
+        class CustomProcessor(TracingProcessor):
+            def __init__(self):
+                self.active_traces = {}
+                self.active_spans = {}
+
+            def on_trace_start(self, trace):
+                self.active_traces[trace.trace_id] = trace
+
+            def on_trace_end(self, trace):
+                # Process completed trace
+                del self.active_traces[trace.trace_id]
+
+            def on_span_start(self, span):
+                self.active_spans[span.span_id] = span
+
+            def on_span_end(self, span):
+                # Process completed span
+                del self.active_spans[span.span_id]
+
+            def shutdown(self):
+                # Clean up resources
+                self.active_traces.clear()
+                self.active_spans.clear()
+
+            def force_flush(self):
+                # Force processing of any queued items
+                pass
+        ```
+
+    Notes:
+        - All methods should be thread-safe
+        - Methods should not block for long periods
+        - Handle errors gracefully to prevent disrupting agent execution
+    """
+
+    @abc.abstractmethod
+    def on_trace_start(self, trace: "Trace") -> None:
+        """Called when a new trace begins execution.
+
+        Args:
+            trace: The trace that started. Contains workflow name and metadata.
+
+        Notes:
+            - Called synchronously on trace start
+            - Should return quickly to avoid blocking execution
+            - Any errors should be caught and handled internally
+        """
+        pass
+
+    @abc.abstractmethod
+    def on_trace_end(self, trace: "Trace") -> None:
+MCPServerStreamableHttpParams {'url': ForwardRef('str', module='agents.mcp.server'), 'headers': ForwardRef('NotRequired[dict[str, str]]', module='agents.mcp.server'), 'timeout': ForwardRef('NotRequired[timedelta | float]', module='agents.mcp.server'), 'sse_read_timeout': ForwardRef('NotRequired[timedelta | float]', module='agents.mcp.server'), 'terminate_on_close': ForwardRef('NotRequired[bool]', module='agents.mcp.server'), 'httpx_client_factory': ForwardRef('NotRequired[HttpClientFactory]', module='agents.mcp.server'), 'auth': ForwardRef('NotRequired[Any]', module='agents.mcp.server'), 'ignore_initialized_notification_failure': ForwardRef('NotRequired[bool]', module='agents.mcp.server')}
+SIG create_react_agent (model: Union[str, langchain_core.runnables.base.Runnable[langchain_core.prompt_values.PromptValue | str | collections.abc.Sequence[langchain_core.messages.base.BaseMessage | list[str] | tuple[str, str | list[str | dict[str, Any]]] | str | dict[str, Any]], langchain_core.messages.base.BaseMessage | str], collections.abc.Callable[[~StateSchema, langgraph.runtime.Runtime[~ContextT]], langchain_core.language_models.chat_models.BaseChatModel], collections.abc.Callable[[~StateSchema, langgraph.runtime.Runtime[~ContextT]], collections.abc.Awaitable[langchain_core.language_models.chat_models.BaseChatModel]], collections.abc.Callable[[~StateSchema, langgraph.runtime.Runtime[~ContextT]], langchain_core.runnables.base.Runnable[langchain_core.prompt_values.PromptValue | str | collections.abc.Sequence[langchain_core.messages.base.BaseMessage | list[str] | tuple[str, str | list[str | dict[str, Any]]] | str | dict[str, Any]], langchain_core.messages.base.BaseMessage]], collections.abc.Callable[[~StateSchema, langgraph.runtime.Runtime[~ContextT]], collections.abc.Awaitable[langchain_core.runnables.base.Runnable[langchain_core.prompt_values.PromptValue | str | collections.abc.Sequence[langchain_core.messages.base.BaseMessage | list[str] | tuple[str, str | list[str | dict[str, Any]]] | str | dict[str, Any]], langchain_core.messages.base.BaseMessage]]]], tools: collections.abc.Sequence[langchain_core.tools.base.BaseTool | collections.abc.Callable | dict[str, typing.Any]] | langgraph.prebuilt.tool_node.ToolNode, *, prompt: Union[langchain_core.messages.system.SystemMessage, str, collections.abc.Callable[[~StateSchema], langchain_core.prompt_values.PromptValue | str | collections.abc.Sequence[langchain_core.messages.base.BaseMessage | list[str] | tuple[str, str | list[str | dict[str, Any]]] | str | dict[str, Any]]], langchain_core.runnables.base.Runnable[~StateSchema, langchain_core.prompt_values.PromptValue | str | collections.abc.Sequence[langchain_core.messages.base.BaseMessage | list[str] | tuple[str, str | list[str | dict[str, Any]]] | str | dict[str, Any]]], NoneType] = None, response_format: dict | type[pydantic.main.BaseModel] | tuple[str, dict | type[pydantic.main.BaseModel]] | None = None, pre_model_hook: Union[langchain_core.runnables.base.Runnable[-Input, +Output], collections.abc.Callable[[-Input], +Output], collections.abc.Callable[[-Input], collections.abc.Awaitable[+Output]], collections.abc.Callable[[collections.abc.Iterator[-Input]], collections.abc.Iterator[+Output]], collections.abc.Callable[[collections.abc.AsyncIterator[-Input]], collections.abc.AsyncIterator[+Output]], langchain_core.runnables.base._RunnableCallableSync[-Input, +Output], langchain_core.runnables.base._RunnableCallableAsync[-Input, +Output], langchain_core.runnables.base._RunnableCallableIterator[-Input, +Output], langchain_core.runnables.base._RunnableCallableAsyncIterator[-Input, +Output], collections.abc.Mapping[str, Any], langgraph._internal._runnable._RunnableWithWriter[-Input, +Output], langgraph._internal._runnable._RunnableWithStore[-Input, +Output], langgraph._internal._runnable._RunnableWithWriterStore[-Input, +Output], langgraph._internal._runnable._RunnableWithConfigWriter[-Input, +Output], langgraph._internal._runnable._RunnableWithConfigStore[-Input, +Output], langgraph._internal._runnable._RunnableWithConfigWriterStore[-Input, +Output], NoneType] = None, post_model_hook: Union[langchain_core.runnables.base.Runnable[-Input, +Output], collections.abc.Callable[[-Input], +Output], collections.abc.Callable[[-Input], collections.abc.Awaitable[+Output]], collections.abc.Callable[[collections.abc.Iterator[-Input]], collections.abc.Iterator[+Output]], collections.abc.Callable[[collections.abc.AsyncIterator[-Input]], collections.abc.AsyncIterator[+Output]], langchain_core.runnables.base._RunnableCallableSync[-Input, +Output], langchain_core.runnables.base._RunnableCallableAsync[-Input, +Output], langchain_core.runnables.base._RunnableCallableIterator[-Input, +Output], langchain_core.runnables.base._RunnableCallableAsyncIterator[-Input, +Output], collections.abc.Mapping[str, Any], langgraph._internal._runnable._RunnableWithWriter[-Input, +Output], langgraph._internal._runnable._RunnableWithStore[-Input, +Output], langgraph._internal._runnable._RunnableWithWriterStore[-Input, +Output], langgraph._internal._runnable._RunnableWithConfigWriter[-Input, +Output], langgraph._internal._runnable._RunnableWithConfigStore[-Input, +Output], langgraph._internal._runnable._RunnableWithConfigWriterStore[-Input, +Output], NoneType] = None, state_schema: type[~StateSchema] | None = None, context_schema: type[typing.Any] | None = None, checkpointer: None | bool | langgraph.checkpoint.base.BaseCheckpointSaver = None, store: langgraph.store.base.BaseStore | None = None, interrupt_before: list[str] | None = None, interrupt_after: list[str] | None = None, debug: bool = False, version: Literal['v1', 'v2'] = 'v2', name: str | None = None, **deprecated_kwargs: Any) -> langgraph.graph.state.CompiledStateGraph
+SIG TransportMixin.http_app (self: 'FastMCP', path: 'str | None' = None, middleware: 'list[ASGIMiddleware] | None' = None, json_response: 'bool | None' = None, stateless_http: 'bool | None' = None, transport: "Literal['http', 'streamable-http', 'sse']" = 'http', event_store: 'EventStore | None' = None, retry_interval: 'int | None' = None, host_origin_protection: 'HostOriginProtection | None' = None, allowed_hosts: 'list[str] | None' = None, allowed_origins: 'list[str] | None' = None) -> 'StarletteWithLifespan'
+===== McpTool._run_async_impl
+  @override
+  async def _run_async_impl(
+      self, *, args, tool_context: ToolContext, credential: AuthCredential
+  ) -> dict[str, Any]:
+    """Runs the tool asynchronously.
+
+    Args:
+        args: The arguments as a dict to pass to the tool.
+        tool_context: The tool context of the current invocation.
+
+    Returns:
+        Any: The response from the tool.
+    """
+    # Extract headers from credential for session pooling
+    auth_headers = await self._get_headers(tool_context, credential)
+    dynamic_headers = None
+    if self._header_provider:
+      dynamic_headers = self._header_provider(
+          ReadonlyContext(tool_context._invocation_context)  # pylint: disable=protected-access
+      )
+      if inspect.isawaitable(dynamic_headers):
+        dynamic_headers = await dynamic_headers
+
+    headers: dict[str, str] = {}
+    if auth_headers:
+      headers.update(auth_headers)
+    if dynamic_headers:
+      headers.update(dynamic_headers)
+    final_headers = headers if headers else None
+
+    # Propagate trace context in the _meta field as sprcified by MCP protocol.
+    # See https://agentclientprotocol.com/protocol/extensibility#the-meta-field
+    trace_carrier: dict[str, str] = {}
+    propagate.get_global_textmap().inject(carrier=trace_carrier)
+    meta_trace_context = trace_carrier if trace_carrier else None
+
+    # Get the session from the session manager
+    session = await self._create_session(headers=final_headers)
+
+    # Resolve progress callback (may be a factory that needs runtime context)
+    resolved_callback = self._resolve_progress_callback(tool_context)
+
+    call_coro = session.call_tool(
+        self._mcp_tool.name,
+        arguments=args,
+        progress_callback=resolved_callback,
+        meta=meta_trace_context,
+    )
+
+    # Hold the session out of the pool's idle sweep for as long as the call
+    # runs. A tool call can easily outlive the idle TTL, and a session that
+    # only looks idle because its call has not come back yet must not have
+    # its transport closed underneath it.
+    self._mcp_session_manager._begin_session_use(final_headers)  # pylint: disable=protected-access
+    try:
+      try:
+        if is_feature_enabled(FeatureName._MCP_GRACEFUL_ERROR_HANDLING):  # pylint: disable=protected-access
+          # Race the tool call against the background session task so that
+          # transport crashes (e.g. non-2xx HTTP responses from an AGW with
+          # Model Armor) surface immediately instead of hanging until
+===== LiteLlm.generate_content_async
+  async def generate_content_async(
+      self, llm_request: LlmRequest, stream: bool = False
+  ) -> AsyncGenerator[LlmResponse, None]:
+    """Generates content asynchronously.
+
+    Args:
+      llm_request: LlmRequest, the request to send to the LiteLlm model.
+      stream: bool = False, whether to do streaming call.
+
+    Yields:
+      LlmResponse: The model response.
+    """
+    _ensure_litellm_imported()
+
+    self._maybe_append_user_content(llm_request)
+    _append_fallback_user_content_if_missing(llm_request)
+    if logger.isEnabledFor(logging.DEBUG):
+      logger.debug(_build_request_log(llm_request))
+
+    effective_model = llm_request.model or self.model
+    messages, tools, response_format, generation_params, tool_choice = (
+        await _get_completion_inputs(llm_request, effective_model)
+    )
+    normalized_messages = _normalize_ollama_chat_messages(
+        messages,
+        model=effective_model,
+        custom_llm_provider=self._additional_args.get("custom_llm_provider"),
+    )
+
+    if "functions" in self._additional_args:
+      # LiteLLM does not support both tools and functions together.
+      tools = None
+      # No tools -> a "required"/"none" tool_choice would be rejected.
+      tool_choice = None
+
+    completion_args: dict[str, Any] = {
+        "model": effective_model,
+        "messages": normalized_messages,
+        "tools": tools,
+        "response_format": response_format,
+    }
+    completion_args.update(self._additional_args)
+
+    # A caller who named their own injection points at construction has said
+    # more about their provider than the app-level config can, so leave those
+    # alone.
+    cache_config = _prompt_cache.resolve_cache_config(llm_request)
+    if (
+        cache_config is not None
+        and "cache_control_injection_points" not in completion_args
+    ):
+      completion_args["cache_control_injection_points"] = (
+          _cache_control_injection_points(cache_config)
+      )
+
+    # merge headers
+    if _is_litellm_vertex_model(effective_model) or _is_litellm_gemini_model(
+        effective_model
+    ):
+      completion_args["headers"] = merge_tracking_headers(
+          completion_args.get("headers")
+      )
+
+    if generation_params:
+      completion_args.update(generation_params)
+
+    if tool_choice is not None:
+      completion_args["tool_choice"] = tool_choice
+
+    if llm_request.config.http_options:
+      http_opts = llm_request.config.http_options
+      if http_opts.headers:
+        extra_headers = completion_args.get("extra_headers", {})
+        if isinstance(extra_headers, dict):
+          extra_headers = extra_headers.copy()
+        else:
+          extra_headers = {}
+        extra_headers.update(http_opts.headers)
+        completion_args["extra_headers"] = extra_headers
+
+      if http_opts.timeout is not None:
+        # HttpOptions.timeout is milliseconds; LiteLLM's timeout is seconds.
+        completion_args["timeout"] = http_opts.timeout / 1000
+
+      if (
+          http_opts.retry_options is not None
+          and http_opts.retry_options.attempts is not None
+      ):
+        # LiteLLM accepts num_retries as a top-level parameter.
+        completion_args["num_retries"] = http_opts.retry_options.attempts
+
+      if http_opts.extra_body is not None:
+        completion_args["extra_body"] = http_opts.extra_body
+
+    if stream:
+      # Accumulate into lists and join once: `+=` on a closure cell or a dict
+      # item does not get CPython's in-place unicode concat, so it would copy
+      # the whole buffer on every streamed chunk.
+      text_parts: list[str] = []
+      reasoning_parts: List[types.Part] = []
+      # Track function calls by index
+      function_calls: dict[int, dict[str, Any]] = (
+          {}
+      )  # index -> {name, args_parts, id}
+      tool_call_trackers: Dict[int, _BraceDepthTracker] = {}
+      completion_args["stream"] = True
+      completion_args["stream_options"] = {"include_usage": True}
+      aggregated_llm_response = None
+      aggregated_llm_response_with_tool_call = None
+      usage_metadata = None
+      grounding_metadata = None
+      last_finish_reason: str | None = None
+      last_model_version: str | None = None
+      fallback_index = 0
+      multiple_choices_logged = False
+
+      def _finalize_tool_call_response(
+          *, model_version: str, finish_reason: str
+      ) -> LlmResponse:
+        # The finish reason cannot reveal a truncated call: LiteLLM

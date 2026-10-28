@@ -1,6 +1,6 @@
 # Lecture 1 · The Before and the After: speaker notes
 
-Sat 31 Oct 2026, 7:00–9:00 AM IST. 62 slides (54 plates and 8 hero slides). Deck: `lectures/L1-before-and-after/index.html`. Use the arrow keys or click to step through; every `.step` reveals one line, and every figure builds with it.
+Sat 31 Oct 2026, 7:00–9:00 AM IST. 64 slides (56 plates and 8 hero slides). Deck: `lectures/L1-before-and-after/index.html`. Use the arrow keys or click to step through; every `.step` reveals one line, and every figure builds with it.
 
 **Live links:**
 - **Base:** https://rajatworkspace--rasoi-experience.us-east.modal.run
@@ -20,10 +20,10 @@ Sat 31 Oct 2026, 7:00–9:00 AM IST. 62 slides (54 plates and 8 hero slides). De
 | 1 Rasoi needs you | 12 | 7:00–7:12 |
 | 2 What an ERP is | 22 | 7:12–7:34 |
 | 3 The Before, with 15 minutes hands-on | 34 | 7:34–8:08 |
-| 4 Wishlist | 10 | 8:08–8:18 |
-| 5 The After | 16 | 8:18–8:34 |
-| 6 How it works | 16 | 8:34–8:50 |
-| 7 Agent, series map, NB1, A1 | 10 | 8:50–9:00 |
+| 4 Wishlist | 8 | 8:08–8:16 |
+| 5 The After | 15 | 8:16–8:31 |
+| 6 How it works | 16 | 8:31–8:47 |
+| 7 Agent, the 2026 stack, series map, NB1, A1 | 13 | 8:47–9:00 |
 
 ---
 
@@ -74,7 +74,7 @@ Sat 31 Oct 2026, 7:00–9:00 AM IST. 62 slides (54 plates and 8 hero slides). De
 - "Keep an eye on DR."
 
 **Plate 10 · Procure-to-pay (3 min).** Six steps appear one by one, each with who does it, the screen code, and what came out in our run.
-- This chain is the running example for all eight lectures.
+- This chain is the running example for all twelve lectures.
 
 **Plate 11 · Kavita's numbers (3 min).** INTERACTIVE: drag the quantity slider.
 - At 20,000 the estimate is ₹2,69,040, above ₹2,50,000, so it goes to Rohit.
@@ -132,18 +132,18 @@ Sat 31 Oct 2026, 7:00–9:00 AM IST. 62 slides (54 plates and 8 hero slides). De
 
 **Plate 28 · Check yourself (1 min).**
 
-## Part 4 · Your wishlist (10 min)
+## Part 4 · Your wishlist (8 min)
 
 **Slide 33 · Part Four (hero).** "Before you see anything new."
 
-**Plate 29 · What would you build? (7 min).** DEMO: open `/brief`. Its four questions build up on the plate, then the twelve picks (screenshot on the right). Give them 6–7 quiet minutes.
+**Plate 29 · What would you build? (5 min).** DEMO: open `/brief`. Its four questions build up on the plate, then the twelve picks (screenshot on the right). Give them 4–5 quiet minutes.
 - Encourage ambitious answers, and "what must never happen".
 
 **Plate 30 · The class wall (3 min).** DEMO: show the live wall on `/brief` ("Most picked" bars and the cards). The plate's screenshot holds only test players, so use the live page. Read out three or four entries.
 - Map what they wrote onto the six pains.
 - "Keep the tab open; tick and circle in Part 5."
 
-## Part 5 · The After (16 min)
+## Part 5 · The After (15 min)
 
 **Slide 36 · Part Five (hero).** Pause before the reveal.
 
@@ -162,7 +162,7 @@ Sat 31 Oct 2026, 7:00–9:00 AM IST. 62 slides (54 plates and 8 hero slides). De
 **Plate 37 · The Shakti question (2 min).** No screen answers this. It cites Purchase Policy §6.2, registers nobody and orders nothing.
 - "This is pain 6 gone: the rule that lived in Suresh's head."
 
-**Plate 38 · The scorecard (3 min).** Real numbers on both sides.
+**Plate 38 · The scorecard (2 min).** Real numbers on both sides.
 - **Be honest that the After types more characters:** 474 against 228. Those characters are words people already know, there are no codes or route to remember, and there are no errors.
 - **6 of the 12 messages were "Yes, go ahead."**
 - **Time:** about 2.5 minutes of typing (an estimate) plus 1.3 minutes waiting (measured), against about 4.8 minutes for the careful Before.
@@ -216,7 +216,7 @@ Folded lines (idempotency, timeout) belong to Lecture 7.
 
 **Plate 48 · Check yourself (1 min).** DEMO: switch on "How it works" on `/after` and watch the cards appear. The screenshot on the plate shows one card with its JSON result.
 
-## Part 7 · So this is an AI agent (10 min)
+## Part 7 · So this is an AI agent (13 min)
 
 **Slide 56 · Part Seven (hero).** "Go back over what you saw and name it."
 
@@ -224,25 +224,62 @@ Folded lines (idempotency, timeout) belong to Lecture 7.
 - **AI agent:** a model that uses tools in a loop to finish a job for someone.
 - **Enterprise agent:** one that does it inside the company's systems, as a named person, under the company's rules.
 
-**Plate 50 · What makes it enterprise (2 min).** Permissions, approvals, proof, legacy systems, each with evidence from our run.
+**Plate 50 · What makes it enterprise (1 min).** Permissions, approvals, proof, legacy systems, each with evidence from our run. Lecture 7 builds the first three by hand; Lecture 11 runs them on production tools.
 
-**Plate 51 · The series map (2 min).** INTERACTIVE: click L2 to L8 to light each piece.
-- **The pieces:**
-  - L2 the brain;
-  - L3 the memory;
-  - L4 the hands (toolbox and MCP);
-  - L5 the loop;
-  - L6 the studio;
-  - L7 trust;
-  - L8 your module.
-- "By 22 November you will have built every piece of what you just used."
+**Plate 51 · The 2026 agent stack (3 min).** INTERACTIVE: the master architecture figure; click each piece.
+- Define "agent stack": the set of tools a company runs for each piece of an agent.
+- Click in this order:
+  - **Harness** → frameworks: the OpenAI Agents SDK and Google ADK (L8), and LangGraph (L5, recapped in L8). "In L5 you write the loop; the Agents SDK's Runner is that loop."
+  - **LLM** → gateways: OpenRouter and LiteLLM (L8; LiteLLM budgets and fallbacks in L11), Ollama for local models (L8).
+  - **MCP** → MCP in depth and A2A (L9).
+  - **Trust bar** → observability: Langfuse, Phoenix, LangSmith (L10); evals: DeepEval, Ragas, promptfoo (L10); guardrails: NeMo Guardrails, Llama Guard (L11); durable execution: Temporal (L11).
+  - **Where people work** → n8n (L9), with Copilot Studio and Agentforce as the enterprise low-code builders.
+  - **Bahi** → "Nothing replaces it."
+  - **Or rent the whole stack** → Bedrock AgentCore, Microsoft Foundry (L11).
+- The three-step strip is the promise of the course:
+  1. build each piece by hand first (L2–L7);
+  2. then use the tool companies use, on the same Ask Rasoi and the same tasks (L8–L11);
+  3. choose your own stack for demo day (L12).
+- "We never use a tool before you could have built it yourself."
+
+**Plate 52 · What companies use (2 min).** Other people's numbers, said as such.
+- **Bar chart:** Stack Overflow Developer Survey 2025, developers who had used agents:
+  - Ollama 51%, LangChain 33%, LangGraph 16%;
+  - Vertex AI 15%, Bedrock Agents 15%;
+  - OpenRouter 13%, LlamaIndex 13%.
+- **Cards** (each source said aloud):
+  - PyPI downloads: LangGraph about 34.5M a month vs about 10.3M for the OpenAI Agents SDK (a secondary source);
+  - MCP SDKs about 97M a month; A2A with 150+ organisations, released at the Linux Foundation in April 2026;
+  - LangChain's State of Agent Engineering, a vendor's own survey: 89% have observability, 62% full step tracing, 52% offline evals, 37% online;
+  - prompt injection is #1 in the OWASP LLM Top 10 2025;
+  - Temporal's Agents SDK integration went GA in March 2026;
+  - low-code has no reliable public numbers.
+- **The caveat card is the point:** downloads are not companies, vendors run surveys, tools change every quarter. "That is why we build each piece first."
+
+**Plate 53 · The series map (2 min).** INTERACTIVE: twelve lectures in three groups; click any one to light its piece.
+- **By hand:**
+  - L1 Sat 31 Oct, the Before and the After;
+  - L2 Sun 1 Nov, the brain;
+  - L3 Sat 7 Nov, the memory;
+  - L4 Sun 8 Nov, the hands (toolbox and MCP);
+  - L5 Sat 14 Nov, the loop;
+  - L6 Sun 15 Nov, the studio;
+  - L7 Sat 21 Nov, trust.
+- **The industry stack:**
+  - L8 Sun 22 Nov, agent frameworks;
+  - L9 Sat 28 Nov, protocols and integration;
+  - L10 Sun 29 Nov, observability and evals;
+  - L11 Sat 5 Dec, running agents in production.
+- **Demo day:** L12 Sun 6 Dec, your module.
+- The steps light L2, then L8, then L12.
+- "Twelve lectures, six weekends. By 21 November you will have built every piece of what you just used by hand; by 5 December you will have run each piece on the tools companies use."
 - The master architecture figure (`figures/ask_rasoi_architecture.png`) is the same picture, used at the end of every lecture.
 
-**Plate 52 · NB1 (2 min).** Colab, replay mode, no key, six exercises. Show the four-line code block.
+**Plate 54 · NB1 (1 min).** Colab, replay mode, no key, six exercises. Show the four-line code block.
 
-**Plate 53 · A1 (1 min).** Due before Lecture 3. Choose a module kit now; the table lists all eight.
+**Plate 55 · A1 (1 min).** Due before Lecture 3. Choose a module kit now; the table lists all eight.
 
-**Plate 54 · Next time (1 min).** "Tomorrow we take the tools away and ask about the gaskets. With no tools, Ask Rasoi makes up a stock figure. To see why, we open the model."
+**Plate 56 · Next time (1 min).** "Tomorrow we take the tools away and ask about the gaskets. With no tools, Ask Rasoi makes up a stock figure. To see why, we open the model."
 - Link: `/after?stage=brain`.
 
 ---
@@ -258,9 +295,11 @@ Folded lines (idempotency, timeout) belong to Lecture 7.
 | 25, 27 | screens, fields, codes, errors, minutes (KLM estimate) | `before_measure.json` |
 | 32–38, 45–47, 50 | transcripts, tool calls, 6 of 12, 474 characters, 1.3 min waiting, 15 tools over MCP | `experiments/logs/after_run.json` (gemini-3.8-flash, cassette `L1v3_after`) |
 | 14 | 412 screens, about 3,100 procedures, about 1,200 plants, 1998 | the story canon (BUILD.md §1), not measured |
+| 52 | market evidence: survey shares, downloads, A2A organisations, survey percentages, OWASP rank, release dates | not our measurement: market evidence as collected in `INDUSTRY_TOOLS_PLAN.md` (2026-10-28), each source named on the plate with its caveat |
 | 1–3, 29–31, 39, 48 | the app's letter, quotes, brief, wall, home page, scorecard, Studio, tool cards | Experience screenshots (`bahi/bahi/experience/shots/`, `studio/shots/`) → `figs/app/*.jpg`; story numbers in the quotes (600 cookers, eleven days) are the Experience's fiction |
 
 **How the figures were made:**
 - **PaperBanana** (on Modal, `tools/pb_modal.py`; specs in `figs/figs.json`): `erp_shared_record`, `ask_rasoi_how_it_works` and `tool_anatomy` are used; `before_after` is spare.
+- **The 2026 agent stack (plate 51):** `figs/ask_rasoi_stack_base.jpg` is the lead's master PaperBanana figure `figures/ask_rasoi_architecture_wide.png`, resized; `stackfig.js` lays clickable layers over it (the same file is in `lectures/L12-your-module/`).
 - **Live SVG/HTML** in `figs.js`.
 - **Regenerating:** `python3 gen_figdata.py` rebuilds `figdata.js` from the logs.

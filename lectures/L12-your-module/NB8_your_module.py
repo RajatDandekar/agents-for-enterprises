@@ -1,15 +1,20 @@
 # %% [markdown]
-# # NB8 · Your module: from one department to the next
+# # NB8 · Lecture 12 · Your Module: Demo Day
 #
-# Seven lectures built **Ask Rasoi** for purchasing, one piece at a time. This notebook does two things:
+# **Agentic Systems Engineering · Lecture 12 · Sun 6 Dec 2026 · Vizuara · Dr. Rajat Dandekar.** (The file keeps its
+# old name, NB8, from when demo day was Lecture 8.)
+#
+# Eleven lectures built **Ask Rasoi** for purchasing: seven by hand, one piece at a time, and four that put each piece
+# on the tools companies use. This notebook does three things:
 #
 # 1. **Walks Kavita's order through every piece**, replayed from our recorded run: three people (Kavita, Rohit, Neha),
 #    each in their own conversation, one Rasoi.
 # 2. **Takes the whole recipe to a second department**, HR leave: the kit's Before, a toolbox in the course format
 #    (`tool.json` + `tool.py` folders), served over MCP, with Ask Rasoi on top, and the kit's four scenarios as the
 #    evaluation.
+# 3. **Plans your production stack:** two industry tools from Lectures 8–11, each with a reason (`STACK.md`).
 #
-# Replay mode, no key: the model replies come from our run on Modal (`lectures/L8-your-module/experiments/runs8.py`).
+# Replay mode, no key: the model replies come from our run on Modal (`lectures/L12-your-module/experiments/runs8.py`).
 
 # %% setup
 
@@ -248,7 +253,7 @@ if SOLUTION:
 # %% [markdown]
 # ## 7 · Demo day
 #
-# Your module's demo-day change is announced at the end of Lecture 7 (`modules/<kit>/CHANGE.md`). For HR leave it is
+# Your module's demo-day change is announced at the end of Lecture 11 (`modules/<kit>/CHANGE.md`). For HR leave it is
 # circular HR-CIR-2026-07: purchase staff now need the plant head for leave in the Diwali run. The hidden test asks
 # for 5 and 6 November off; it passes only if the leave is paid, goes to **Anand Patil**, and the reply names the rule.
 #
@@ -261,3 +266,38 @@ if SOLUTION:
     print("1. Knowledge: add hr-circular-2026-07.md (HR-CIR-2026-07) to the corpus; search_policy must find it.")
     print("2. Tool: apply_leave gets an optional forward_to, passed to lv_save as fwd_to (APATIL in the Diwali run).")
     print("3. Trust: a guard refusing leave for Purchase staff in 2-14 Nov unless forwarded to the plant head (NE4).")
+
+# %% [markdown]
+# ## 8 · Your production stack
+#
+# The rubric's line 7 (10 points): your module runs on at least two industry tools from Lectures 8–11, from two
+# different layers, each chosen with a written reason, and you measure one comparison yourself. The full menu is in
+# `lectures/L12-your-module/rubric.md`. Whatever runs the loop, writes still go through your tool folders.
+#
+# ### TODO (exercise 5): draft your STACK.md
+# Pick two layers for HR leave. For each: the tool and its pinned version, the hand-built piece it replaces or
+# watches, why this tool and not its rival, and the comparison you will measure on your own run.
+
+# %%
+STACK = {
+    "observability": {"tool": "TODO", "replaces_or_watches": "TODO", "why": "TODO", "not_picked": "TODO", "compare": "TODO"},
+    "evals": {"tool": "TODO", "replaces_or_watches": "TODO", "why": "TODO", "not_picked": "TODO", "compare": "TODO"},
+}
+if SOLUTION:
+    STACK = {
+        "observability": {"tool": "Langfuse (pin the version you install)", "replaces_or_watches": "the Lecture 7 trace, read by hand",
+                          "why": "open source and self-hostable, so HR data stays on Rasoi's machines",
+                          "not_picked": "LangSmith: hosted only for us, and no key in our build",
+                          "compare": "the same failing scenario 2 run: the wrong step found in our trace vs in Langfuse"},
+        "evals": {"tool": "DeepEval (pin the version you install)", "replaces_or_watches": "the Lecture 7 suite and gate",
+                  "why": "runs the four scenarios as tests in CI, so a change cannot merge if a scenario breaks",
+                  "not_picked": "promptfoo: kept for red-teaming, not as the gate",
+                  "compare": "the 12 runs (4 scenarios x 3): our gate's verdict vs DeepEval's, case by case"},
+    }
+layers = [k for k, v in STACK.items() if v["tool"] != "TODO"]
+print(f"{len(layers)} layers chosen:", ", ".join(layers) or "none yet")
+for layer, v in STACK.items():
+    print(f"\n## {layer}: {v['tool']}")
+    for k in ("replaces_or_watches", "why", "not_picked", "compare"):
+        print(f"- {k.replace('_', ' ')}: {v[k]}")
+

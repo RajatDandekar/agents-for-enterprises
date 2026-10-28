@@ -19,7 +19,10 @@ Use this if none of the eight modules fits your work. Your module must live insi
    - serve them over MCP: `build_module_server(erp, "<speaker>", "<your_module>")` (`bahi.modules._toolbox`);
    - index your documents for retrieval (A3) and put Ask Rasoi or the Lecture 5 harness on the tools (A5);
    - draw one workflow in the Studio (A6);
-   - add the trust layer and turn your four scenarios into a suite with a gate (A7).
+   - add the trust layer and turn your four scenarios into a suite with a gate (A7);
+   - put it on a production stack: at least two industry tools from Lectures 8–11, from two different layers (for
+     example Langfuse traces and a DeepEval gate, or the OpenAI Agents SDK through LiteLLM), each with a written
+     reason and one measured comparison in `STACK.md` (menu: `modules/README.md`, "The production stack").
 10. **Test on Modal.** Run `/Users/raj/.venv/bin/modal run tools/modal_run.py --script modules/test_kits.py --args "--only <your_module>"` until it says RESULT: PASS. It also lints every tool folder, calls each tool's `example` as your speaker, and lists the folders over MCP. Fill in the brief below with the measured numbers.
 
 ## The budget you must meet
@@ -38,6 +41,7 @@ Use this if none of the eight modules fits your work. Your module must live insi
 | Seed records | ≈50 | |
 | Scenarios | 4, with code checks and never-events | |
 | Tools (v3) | 4–6 folders, `tool.json` + `tool.py`, at least one read and one write | |
+| Production stack (v3.1) | 2 industry tools from 2 layers (L8–L11), each with a reason, in `STACK.md` | |
 
 ## Rules
 
@@ -63,6 +67,7 @@ Measured on our run: N service calls, N screens, N fields typed.
 | Tool | Business activity | Bahi services behind it | Writes | Notes |
 ### MCP server · Knowledge (the stale document, the rule only the documents know) · Harness and a workflow
 ### Trust: identity, a guard per never-event, read-back of the silent outcome, the four scenarios as a suite, recovery
+### Production stack: two industry tools from two layers, why each, the hand-built piece it replaces, one comparison
 
 ## Complexity budget
 | Item | Budget | In this module |

@@ -1,6 +1,6 @@
-"""Build figdata.js for the L8 deck (stdlib only; safe on the laptop).
+"""Build figdata.js for the L12 deck (was L8) (stdlib only; safe on the laptop).
 
-    python3 lectures/L8-your-module/gen_figdata.py
+    python3 lectures/L12-your-module/gen_figdata.py
 
 Sources: experiments/logs/final_demo.json, leave_askrasoi.json, demo_changes.json, test_kits.log (copy of
 modules/test_kits.log), from_other_lectures/L1_before_measure.json (L1's own log), ../L7-trust/experiments/logs/six_*.json,

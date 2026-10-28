@@ -1,6 +1,6 @@
 """Demo day: run a module's hidden demo-day test on an agent and print the 6 points it earns. On Modal:
 
-    /Users/raj/.venv/bin/modal run tools/modal_run.py --script lectures/L8-your-module/experiments/grade_change.py \
+    /Users/raj/.venv/bin/modal run tools/modal_run.py --script lectures/L12-your-module/experiments/grade_change.py \
         --args "--module hr_leave --agent py:student_pkg.agent:make_agent" --mode replay
     ... --args "--module hr_leave --agent reference"      # the scripted careful run (NEW): proves the grader itself works
     ... --args "--module all --agent reference"

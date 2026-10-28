@@ -1,6 +1,6 @@
 # Capstone modules: eight befores and afters
 
-Each student picks one module, gives it its own **before** (the legacy forms) and **after** (one sentence to Ask Rasoi), adds one piece per lecture (assignments A1–A7: the brief, the brain, the knowledge, the tool folders over MCP, the harness, a workflow, the trust layer), and demos it on Sunday 22 November (`lectures/L8-your-module/DEMO_DAY.md`).
+Each student picks one module, gives it its own **before** (the legacy forms) and **after** (one sentence to Ask Rasoi), adds one piece per lecture by hand (assignments A1–A7: the brief, the brain, the knowledge, the tool folders over MCP, the harness, a workflow, the trust layer), puts it on a **production stack** of at least two industry tools from Lectures 8–11, each chosen with a written reason, and demos it on Sunday 6 December, Lecture 12 (`lectures/L12-your-module/DEMO_DAY.md`; the sheet is `rubric.md`).
 
 All eight live inside the same Rasoi Steel Works and the same Bahi sandbox. They reuse purchasing's people, cost centres, suppliers, items and shared procedures, and they install together:
 
@@ -22,6 +22,29 @@ erp = ERP(modules=["pur_amend", "fin_payables"])   # any combination; all eight 
 | Legal · contracts | `ct_` | Kavita | "Raise an NDA with Shakti Seals on our paper, valid two years." | Party without PAN/GSTIN: "SAVED", pending KYC (PK), never reaches Legal | [legal_contracts](legal_contracts/README.md) |
 
 Inventing your own module instead? Start from [TEMPLATE](TEMPLATE/README.md).
+
+## The production stack (v3.1, Lectures 8–11)
+
+The kits are built by hand first, in the course format, so every piece is yours and understood. Lectures 8–11 then
+show the same pieces in the tools companies use. Your capstone runs on **at least two of them, from two different
+layers**, each with a written reason in `STACK.md` (10 of the 100 points; the full menu is in
+`lectures/L12-your-module/rubric.md`, line 7):
+
+| Layer | Lecture | Tools | On your kit, it replaces or watches |
+|---|---|---|---|
+| Agent framework | L8 | OpenAI Agents SDK, Google ADK, LangGraph | the A5 harness |
+| Model gateway, local model | L8, L11 | OpenRouter, LiteLLM, Ollama | the model call |
+| Protocols | L9 | MCP in depth (official SDK, Inspector, remote server with sign-in), A2A | the A4 MCP server |
+| Workflow, low-code | L9 | n8n (Copilot Studio, Agentforce with recorded output) | the A6 workflow |
+| Observability | L10 | Langfuse, Arize Phoenix (LangSmith with an exported trace) | the A7 trace |
+| Evals | L10 | DeepEval, Ragas, promptfoo | the A7 suite and gate, the A3 grader |
+| Guardrails | L11 | NeMo Guardrails, Llama Guard | a second layer behind the A7 guards |
+| Durable execution | L11 | Temporal | the approval wait and recovery |
+| Data stores | L11 | pgvector, Redis | the A3 index |
+| Managed platform | L11 | Bedrock AgentCore, Microsoft Foundry | the whole runtime (recorded output only) |
+
+Whatever runs the loop, every write still goes through the kit's tool folders, in the speaker's own session, with
+the six promises. `test_kits.py` checks the folders; the industry tools sit above them.
 
 ## The complexity budget (every module, the same)
 

@@ -86,7 +86,20 @@ NDAs are signed by the plant head (delegation-of-authority.md).
 - **Evals:** the four scenarios below are your suite (`run_module_scenario`), three runs each, code checks on Bahi,
   an LLM judge beside them, and the regression gate before every change.
 - **Recovery:** `erp.inject("<save service>", "timeout_after_commit", 1)`; the retry finds the document by its key.
-- **The demo-day change** (`CHANGE.md`): announced at the end of Lecture 7, absorbed by demo day.
+- **The demo-day change** (`CHANGE.md`): announced at the end of Lecture 11, absorbed by demo day (Lecture 12).
+
+### 6 · Production stack (Lectures 8–11)
+
+Once each piece works by hand, put the module on at least two industry tools from two different layers, each with a
+written reason in `STACK.md` (rubric line 7, 10 points; menu in `modules/README.md`). For this kit, for example:
+- **L8:** the same harness on the OpenAI Agents SDK or Google ADK, calling these tool folders over MCP, models through
+  OpenRouter or LiteLLM.
+- **L9:** the workflow (Request cleared by Legal (event trigger) → approval node (Anand signs) → send_message to Kavita with the register entry) in self-hosted n8n; the folders as a remote MCP server checked in MCP Inspector.
+- **L10:** the four scenarios as a DeepEval gate, traces in Langfuse or Phoenix, retrieval scored with Ragas,
+  promptfoo red-teaming Kavita's chat.
+- **L11:** NeMo Guardrails or Llama Guard behind the never-event guards; Temporal holding the approval wait.
+
+Writes still go through the tool folders, in Kavita's own session.
 
 ### What is checked automatically
 

@@ -1,6 +1,6 @@
 # Finance · payables: the demo-day change
 
-**Announced:** end of Lecture 7 (Saturday 21 November, 9 AM). **Absorb it by:** demo day, Sunday 22 November, 7 AM. One evening: that is the test.
+**Announced:** end of Lecture 11 (Saturday 5 December, 9 AM). **Absorb it by:** demo day (Lecture 12), Sunday 6 December, 7 AM. One day and an evening: that is the test.
 **Kind:** a new variant. **Worth:** 10 of the 100 points.
 
 ## What the client says

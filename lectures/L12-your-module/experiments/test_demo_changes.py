@@ -1,6 +1,6 @@
-"""Lecture 8: prove each module's demo-day change is fair. Run on Modal, never on the laptop:
+"""Lecture 12 (demo day): prove each module's demo-day change is fair. Run on Modal, never on the laptop:
 
-    /Users/raj/.venv/bin/modal run tools/modal_run.py --script lectures/L8-your-module/experiments/test_demo_changes.py
+    /Users/raj/.venv/bin/modal run tools/modal_run.py --script lectures/L12-your-module/experiments/test_demo_changes.py
     ... --args "--only hr_leave"
 
 For every kit that has modules/<name>/demo_change.py:

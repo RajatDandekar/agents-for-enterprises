@@ -1,4 +1,4 @@
-/* Lecture 8 · Your Module. Live figures; every number comes from window.FD (figdata.js, built by gen_figdata.py). */
+/* Lecture 12 · Your Module: Demo Day (was Lecture 8 before v3.1). Live figures; every number comes from window.FD (figdata.js, built by gen_figdata.py). */
 (() => {
 const FIGS = (window.FIGS = window.FIGS || {});
 const FD = window.FD || {};
@@ -124,21 +124,52 @@ FIGS.slot = (el) => {
   return { step(k) { g.forEach((gg, i) => { gg.style.opacity = i <= k ? 1 : 0.1; }); } };
 };
 
-/* Fig: the rubric, out of 100 */
+/* Fig: the rubric, out of 100 (rubric.md; v3.1 adds the production stack line) */
 FIGS.rubric = (el) => {
-  const R = [['Scenario pass rate', 25, 'A5, A6, A7', 'The four kit scenarios replayed on your agent; your A7 suite (4 × 3 runs); A5\'s harness scenarios; A6\'s workflow end states. A never-event zeroes that scenario.'],
+  const R = [['Scenario pass rate', 20, 'A5, A6, A7', 'The four kit scenarios replayed on your agent; your A7 suite (4 × 3 runs); A5\'s harness scenarios; A6\'s workflow end states. A never-event zeroes that scenario.'],
     ['Tools', 20, 'A4', 'Activities not services; the six promises in every tool; the lost-reply test; served over MCP; the tool you chose not to write.'],
     ['Route and authority', 15, 'A5, A7', 'The pause resumed on Bahi\'s word; the speaker\'s own session; a guard per never-event; the silent outcome caught.'],
     ['Retrieval', 15, 'A3', 'Your documents indexed and cited; the stale one handled; who may read what.'],
-    ['Operations', 15, 'A5, A6, A7', 'The judge beside the checks; one change gated; one failing trace read; safe re-runs; calls, tokens and ₹.'],
-    ['Demo-day change', 10, 'L7 → L8', 'The hidden test passes (6); where the change lives, a new case, the gate run (4).']];
-  const C = ['#0b57d0', '#2a78d6', '#c4511f', '#138a60', '#45474d', '#9a6b1f'];
-  let sel = 0;
+    ['Operations', 10, 'A5, A6, A7', 'The judge beside the checks; one change gated; one failing trace read; safe re-runs; calls, tokens and ₹.'],
+    ['Demo-day change', 10, 'L11 → L12', 'The hidden test passes (6); where the change lives, a new case, the gate run (4).'],
+    ['Production stack', 10, 'L8–L11', 'Two industry tools from two layers, each wired in and shown working (4); a written reason for each (4); one comparison measured on your own run (2).']];
+  const C = ['#0b57d0', '#2a78d6', '#c4511f', '#138a60', '#45474d', '#9a6b1f', '#7a5af5'];
+  let sel = 6;
   const draw = () => {
-    html(el, `<div style="display:flex;height:64px;border-radius:16px;overflow:hidden;margin-bottom:16px">${R.map((r, i) => `<div data-i="${i}" style="cursor:pointer;width:${r[1]}%;background:${C[i]};opacity:${i === sel ? 1 : 0.55};display:flex;align-items:center;justify-content:center;color:#fff;font:500 18px var(--font)">${r[1]}</div>`).join('')}</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">${R.map((r, i) => `<div data-i="${i}" class="card" style="cursor:pointer;padding:12px 16px;font-size:17px;${i === sel ? 'box-shadow:inset 0 0 0 2px ' + C[i] : ''}"><b style="color:${C[i]}">${r[0]} · ${r[1]}</b><br><span class="small">from ${r[2]}</span></div>`).join('')}</div>
+    html(el, `<div style="display:flex;height:64px;border-radius:16px;overflow:hidden;margin-bottom:16px;gap:2px">${R.map((r, i) => `<div data-i="${i}" style="cursor:pointer;width:${r[1]}%;background:${C[i]};opacity:${i === sel ? 1 : 0.55};display:flex;align-items:center;justify-content:center;color:#fff;font:500 18px var(--font)">${r[1]}</div>`).join('')}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">${R.map((r, i) => `<div data-i="${i}" class="card" style="cursor:pointer;padding:12px 16px;font-size:17px;${i === sel ? 'box-shadow:inset 0 0 0 2px ' + C[i] : ''}"><b style="color:${C[i]}">${r[0]} · ${r[1]}</b><br><span class="small" style="font-size:16px">from ${r[2]}</span></div>`).join('')}</div>
       <div class="card af" style="margin-top:14px;font-size:20px"><b>${R[sel][0]}, ${R[sel][1]} points.</b> ${esc(R[sel][3])}</div>`);
     el.querySelectorAll('[data-i]').forEach((d) => d.onclick = (e) => { stop(e); sel = +d.dataset.i; draw(); });
+  };
+  draw();
+  return { step() {} };
+};
+
+/* Fig: the production stack menu (rubric.md, line 7): pick two layers, see the tools, what each replaces, the free route */
+FIGS.stackMenu = (el) => {
+  const M = [['Agent framework', 'L8', 'OpenAI Agents SDK, Google ADK, LangGraph', 'The L5 harness and loop', 'OpenRouter key, or replay'],
+    ['Model gateway', 'L8 · L11', 'OpenRouter; LiteLLM with a budget and a fallback; Ollama for a local model', 'The model call in bahi/llm.py', 'LiteLLM and Ollama are open source'],
+    ['Protocols', 'L9', 'Your toolbox as a remote MCP server with sign-in, checked in MCP Inspector; an A2A agent card', 'The L4 server in the speaker’s session', 'Open source'],
+    ['Workflow', 'L9', 'n8n, self-hosted, running your A6 workflow over MCP', 'The L6 Studio workflow', 'Free self-hosted; Copilot Studio and Agentforce only with recorded output'],
+    ['Observability', 'L10', 'Langfuse or Arize Phoenix, over OpenTelemetry GenAI traces', 'The L7 trace you read by hand', 'Open source; LangSmith only with an exported trace'],
+    ['Evals', 'L10', 'DeepEval as a CI gate; Ragas on your retrieval; promptfoo red-teaming', 'The L7 suite and gate; the A3 grader', 'Open source'],
+    ['Guardrails', 'L11', 'NeMo Guardrails; Llama Guard; a prompt-injection filter', 'A second layer behind your L7 guards', 'NeMo open source; Llama Guard weights are gated'],
+    ['Durable execution', 'L11', 'Temporal holding the approval wait', 'The L5 pause and the L7 recovery keys', 'Temporal’s local dev server is free'],
+    ['Data stores', 'L11', 'pgvector or Redis for your index or memory', 'The L3 in-memory index', 'Open source'],
+    ['Managed platform', 'L11', 'Bedrock AgentCore, Microsoft Foundry', 'The whole runtime', 'Paid: counts only with recorded output']];
+  const picked = new Set([4, 5]);
+  let sel = 4;
+  const draw = () => {
+    const m = M[sel];
+    html(el, `<div style="display:grid;grid-template-columns:330px 1fr;gap:18px;height:100%">
+      <div class="ctl" style="margin:0;flex-direction:column;align-items:stretch;gap:7px">${M.map((r, i) => `<button data-i="${i}" class="${i === sel ? 'on' : ''}" style="text-align:left;display:flex;justify-content:space-between;gap:8px;padding:9px 14px"><span>${picked.has(i) ? '● ' : '○ '}${r[0]}</span><span style="opacity:.7">${r[1]}</span></button>`).join('')}</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="card af" style="font-size:20px"><span class="tag af">${m[1]} · ${m[0]}</span><h3 style="margin-bottom:6px">Pick one of</h3>${esc(m[2])}</div>
+        <div class="card" style="font-size:19px"><b>It replaces or watches:</b> ${esc(m[3])}. Keep the hand-built piece in your repository and show both.</div>
+        <div class="card" style="font-size:19px"><b>Free route for the grader:</b> ${esc(m[4])}. Commit what the tool produced; the grader replays with no key.</div>
+        <div class="card bf" style="font-size:18px">Your picks: <b>${[...picked].map((i) => M[i][0]).join(' + ') || 'none yet'}</b>. ${picked.size >= 2 && new Set([...picked]).size >= 2 ? 'Two layers: this meets the line.' : 'Pick at least two layers.'} <span class="small" style="font-size:16px">Click a layer to read it; click it again to pick or drop it.</span></div>
+      </div></div>`);
+    el.querySelectorAll('[data-i]').forEach((d) => d.onclick = (e) => { stop(e); const i = +d.dataset.i; if (i === sel) { if (picked.has(i)) picked.delete(i); else picked.add(i); } sel = i; draw(); });
   };
   draw();
   return { step() {} };
