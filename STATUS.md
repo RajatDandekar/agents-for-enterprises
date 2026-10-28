@@ -20,7 +20,7 @@ v2 is archived in `archive/v2/`; the sections below "v2 record" describe that ve
 - **Slides:** https://forms-to-agents.vercel.app (`tools/build_site.sh --deploy`).
 - **Hub artifact:** https://claude.ai/artifact/BxkGjPwuBwLEhoaVyuroii.
 - **Gemini key:** out of credits (HTTP 402) since 28 Oct. `llm.py` sends `gemini:*` through OpenRouter after the first 402, and the reply names the route. PaperBanana (`tools/pb_modal.py`) needs the Gemini key itself.
-- **Colab:** the notebooks install from GitHub, so the local commits must be pushed before Colab works for v3.
+- **Colab:** pushed 2026-10-28; all 8 v3 notebooks ran from GitHub in clean containers with no keys (0 errors; NB2 about 10 min because of the tiny-GPT training, the rest under 1 min). Not yet run inside a real Colab runtime.
 - **Uploads:** `tools/mrun.sh` wraps `modal run` and retries "modified during build".
 
 ## v2 record (27 Oct)
