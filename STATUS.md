@@ -1,5 +1,29 @@
 # From Forms to Agents: status
 
+## v3 (2026-10-28): story-first rebuild of every lecture. Read COURSE_V3.md first.
+v2 is archived in `archive/v2/`; the sections below "v2 record" describe that version.
+
+| Piece | State | Checked |
+|---|---|---|
+| Toolbox (15 tools, tool.json + tool.py), MCP server, goods receipt | done | `bahi/tests_toolbox.py`: full chain, traps, MCP, lost-reply retries |
+| Rasoi Experience (live app) | live at https://rajatworkspace--rasoi-experience.us-east.modal.run | 66/66 in-process checks after the 28 Oct redeploy; e2e 23/23; food-grade guard (§6.2) before commit and release |
+| Workflow Studio (/studio) | done | engine 82/82 (replay), UI 27/27 |
+| L1 The Before and the After | 62 slides | QA 0 issues; NB1 replay 0 errors |
+| L2 The Brain | 66 slides | QA 0; NB2 replay 0 errors; 3 PaperBanana figures to redo once the Gemini key has credit (`figs/figs_v2.json`) |
+| L3 The Memory | 66 slides | QA 0; NB3 replay 0 errors |
+| L4 The Hands | 55 slides | QA 0; NB4 replay 0 errors |
+| L5 The Loop | 59 slides | QA 0; NB5 replay 0 errors |
+| L6 The Studio | 58 slides | QA 0; NB6 replay 0 errors |
+| L7 Trust, L8 Your Module | being built | |
+
+- **Slides:** https://forms-to-agents.vercel.app (`tools/build_site.sh --deploy`).
+- **Hub artifact:** https://claude.ai/artifact/BxkGjPwuBwLEhoaVyuroii.
+- **Gemini key:** out of credits (HTTP 402) since 28 Oct. `llm.py` sends `gemini:*` through OpenRouter after the first 402, and the reply names the route. PaperBanana (`tools/pb_modal.py`) needs the Gemini key itself.
+- **Colab:** the notebooks install from GitHub, so the local commits must be pushed before Colab works for v3.
+- **Uploads:** `tools/mrun.sh` wraps `modal run` and retries "modified during build".
+
+## v2 record (27 Oct)
+
 AI Agents for Enterprises (Vizuara), 8 lectures, 31 Oct to 22 Nov 2026.
 - **Plan:** v2 deck `course-plan-deck.html` (artifact https://claude.ai/artifact/QimoD5eV2A5iTbrWgTgeCQ).
 - **Standard:** `BUILD.md`. Read it first.
