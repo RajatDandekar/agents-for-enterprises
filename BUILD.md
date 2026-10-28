@@ -1,5 +1,6 @@
 # From Forms to Agents: build standard
 
+> **v3 (2026-10-28): read `COURSE_V3.md` first.** It replaces §1 (the nine-jobs spine, lecture list, lecture shape) and §5 (owners) below. v2 lectures are in `archive/v2/lectures/`.
 Course: **AI Agents for Enterprises** (Vizuara), led by Dr. Rajat Dandekar. Eight lectures, Sat and Sun 7–9 AM IST, 31 Oct to 22 Nov 2026, plus a primer.
 The approved plan is the deck `course-plan-deck.html` (43 slides). Read its Part Four plates for your lecture before you build anything.
 
