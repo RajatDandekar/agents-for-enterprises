@@ -87,7 +87,7 @@ Questions the audience may ask Dr. Dandekar, with the log that answers each:
 
 | Question | Answer and source |
 |---|---|
-| "Did it ever act as the service account?" | No. Bahi's call log after the twelve messages shows KJOSHI, NDESAI, RMEHTA only. `lectures/L8-your-module/experiments/logs/final_demo.json` → `users_seen` |
+| "Did it ever act as the service account?" | No. Bahi's call log after the twelve messages shows KJOSHI, NDESAI, RMEHTA only. `lectures/L12-your-module/experiments/logs/final_demo.json` → `users_seen` |
 | "What did the whole order cost?" | 32 model calls, 1,21,357 tokens, ₹6.12, gemini-3.8-flash. Same file, `totals` |
 | "How good is it?" | Lecture 7's suite on 3.8-flash with the trust layer: 14 of 18 runs (six scenarios, three runs), 0 never-events. `lectures/L7-trust/experiments/logs/six_flash.json` |
 | "What does it still get wrong?" | Empty model replies end some runs early; scenario 5 (the closed cost centre) is the weakest case. Same file |

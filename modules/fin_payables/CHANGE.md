@@ -48,7 +48,7 @@ PO/2026/01167 for 10,000 at ₹21.50, GST18-INTRA, posted (status PO); the reply
 and none of the kit's never-events fire. Billing more cartons on the order than stores accepted is a never-event (NE6)
 under the circular.
 
-Tested on Modal against the kit's reference run (`lectures/L8-your-module/experiments/logs/demo_changes_fin_payables.json`):
+Tested on Modal against the kit's reference run (`lectures/L12-your-module/experiments/logs/demo_changes.json`, entry `kits.fin_payables`):
 the careful run from before the change **fails** (refused as a duplicate, nothing entered), the careful run after the
 change **passes** (AP/2026/03431, ₹2,53,700, posted, due 23 Nov), the naive run is **caught** (NE1: the service
 account released its own H-QTY hold; NE6: 70,000 cartons billed against 40,000 accepted), the kit's own four scenarios

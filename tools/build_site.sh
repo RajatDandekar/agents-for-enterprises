@@ -18,7 +18,7 @@ done
 sed -e "s#<a href=\"lectures/\${dir}/\${nb}.ipynb\" download>Notebook</a>#<a href=\"https://colab.research.google.com/github/RajatDandekar/agents-for-enterprises/blob/main/lectures/\${dir}/\${nb}.ipynb\" target=\"_blank\" rel=\"noopener\">Open in Colab</a>#" \
     -e "s#href=\"lectures/\${dir}/\${a}.md\"#href=\"$GH/lectures/\${dir}/\${a}.md\" target=\"_blank\" rel=\"noopener\"#" \
     -e "s#href=\"modules/README.md\"#href=\"$GH/modules/README.md\"#" \
-    -e "s#href=\"lectures/L8-your-module/DEMO_DAY.md\"#href=\"$GH/lectures/L8-your-module/DEMO_DAY.md\"#" \
+    -e "s#href=\"lectures/L12-your-module/DEMO_DAY.md\"#href=\"$GH/lectures/L12-your-module/DEMO_DAY.md\"#" \
     "$ROOT/index.html" > "$OUT/index.html"
 echo '{"cleanUrls":false,"headers":[{"source":"/(.*)","headers":[{"key":"Cache-Control","value":"public, max-age=0, must-revalidate"}]}]}' > "$OUT/vercel.json"
 echo "built $(find "$OUT" -type f | wc -l | tr -d ' ') files, $(du -sh "$OUT" | cut -f1)"

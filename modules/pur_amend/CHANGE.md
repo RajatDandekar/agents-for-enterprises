@@ -44,7 +44,7 @@ Nov), the need-by date is the last delivery line, the revision is approved by **
 sent the revision, the reply names the rule, and none of the kit's never-events fire. A delivery line or need-by date
 on 12 or 13 November is a never-event (NE6) under the circular.
 
-Tested on Modal against the kit's reference run (`lectures/L8-your-module/experiments/logs/demo_changes_pur_amend.json`):
+Tested on Modal against the kit's reference run (`lectures/L12-your-module/experiments/logs/demo_changes.json`, entry `kits.pur_amend`):
 the careful run from before the change **fails** (released with 20,000 on 12 Nov: NE6), the careful run after the
 change **passes** (20,000 on Sat 14 Nov, AMD/2026/00031 approved by Rohit and released), the naive run is **caught**
 (NE1: the service account changed the order through `po_amend`; NE6: need-by 12 Nov), the kit's own four scenarios

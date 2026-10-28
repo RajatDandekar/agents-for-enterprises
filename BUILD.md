@@ -151,6 +151,6 @@ Use these and nothing else. The numbers come from `bahi/bahi/erp/seed.py`.
 | L5 | `lectures/L5-the-signature/`, `bahi/bahi/agent/authority.py`, `bahi/bahi/app/` |
 | L6 | `lectures/L6-the-inspector/`, `bahi/bahi/evals/` |
 | L7 | `lectures/L7-the-night-shift/`, `bahi/bahi/durable/`, `deploy/` |
-| L8 + kits | `lectures/L8-your-module/`, `modules/`, `bahi/bahi/modules/` |
+| L8 + kits | `lectures/L12-your-module/`, `modules/`, `bahi/bahi/modules/` |
 
 The cassette files are named per lecture, so builders never write the same one.

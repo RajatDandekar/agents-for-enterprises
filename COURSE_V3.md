@@ -137,7 +137,7 @@ One web app on Modal, `rasoi-experience`. Everyone in the cohort uses it from a 
 | studio | `bahi/bahi/experience/studio/` |
 | L1 … L8 | `lectures/L<n>-<slug>/` (one folder each), plus any new module the lecture needs under `bahi/bahi/course/l<n>/` |
 
-Lecture folder slugs: `L1-before-and-after`, `L2-the-brain`, `L3-the-memory`, `L4-the-hands`, `L5-the-loop`, `L6-the-studio`, `L7-trust`, `L8-your-module`.
+Lecture folder slugs: `L1-before-and-after`, `L2-the-brain`, `L3-the-memory`, `L4-the-hands`, `L5-the-loop`, `L6-the-studio`, `L7-trust`, `L8-your-module` (now `L12-your-module`; v3.1 added `L8-frameworks` to `L11-production`).
 
 **Live URL contract.**
 - The experience builder deploys and writes the URL into `bahi/bahi/experience/DEPLOYED.md`.
@@ -148,7 +148,7 @@ Lecture folder slugs: `L1-before-and-after`, `L2-the-brain`, `L3-the-memory`, `L
 ## v3.1 (2026-10-28): twelve lectures, with four on the industry stack
 Rajat asked for the production tools companies use, each with a proper introduction, comprehensive content, interesting assignments and good visuals. They get four lectures of their own. The research behind the choice of tools is in `INDUSTRY_TOOLS_PLAN.md`.
 
-| # | Date (proposed) | Folder | Title | Flagship tools (taught in depth) | Also covered |
+| # | Date (confirmed 2026-10-28) | Folder | Title | Flagship tools (taught in depth) | Also covered |
 |---|---|---|---|---|---|
 | 1–7 | as before | as before | unchanged, except L1 gains a "2026 agent stack" map plate and a 12-lecture series map | | |
 | 8 | Sun 22 Nov | `L8-frameworks` | **Agent Frameworks in Industry** | OpenAI Agents SDK; Google ADK; LangGraph (recap); model gateways (OpenRouter, LiteLLM); local models (Ollama) | Claude Agent SDK, CrewAI, Microsoft Agent Framework, LlamaIndex on a "which one when" plate |

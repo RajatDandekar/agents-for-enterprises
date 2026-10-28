@@ -1,4 +1,6 @@
-# From Forms to Agents: status
+# Agentic Systems Engineering (formerly AI Agents for Enterprises): status
+
+## v3.1 (2026-10-28): twelve lectures. Four industry lectures added (L8–L11); demo day moved to L12, Sun 6 Dec.
 
 ## v3 (2026-10-28): story-first rebuild of every lecture. Read COURSE_V3.md first.
 v2 is archived in `archive/v2/`; the sections below "v2 record" describe that version.
@@ -15,11 +17,17 @@ v2 is archived in `archive/v2/`; the sections below "v2 record" describe that ve
 | L5 The Loop | 59 slides | QA 0; NB5 replay 0 errors |
 | L6 The Studio | 58 slides | QA 0; NB6 replay 0 errors |
 | L7 Trust | 57 slides | QA 0; NB7 replay 0 errors |
-| L8 Your Module | 45 slides; kits on the v3 toolbox | QA 0; NB8 replay 0 errors; modules/test_kits.py PASS |
+| L8 Agent Frameworks in Industry | 61 slides; `bahi/bahi/course/frameworks/`, cassettes IND8_* | QA 0; NB8_frameworks replay 0 errors. Agents SDK, ADK and LangGraph pass rates nearly equal; every free loop broke §6.2 at least once, only the code gates held |
+| L9 Protocols and Integration | 63 slides; `bahi/bahi/course/protocols/`, IND9_* | QA 0; NB9 replay 0 errors. A2A Deccan negotiation (36 events); tool poisoning 10/10 on the plain host, 0/10 with either defence; GitHub MCP 46 tools = 13,009 tokens vs ours 1,912 |
+| L10 Observability and Evals in Industry | 60 slides; `bahi/bahi/course/obs/`, IND10_* | QA 0; NB10 replay 0 errors. CI gate blocks a broken prompt; Ragas recall 0.758 vs 0.443; judge kappa 0.542; 6 public Langfuse traces (fictional) |
+| L11 Running Agents in Production | 57 slides; `bahi/bahi/course/production/`, IND11_* | QA 0; NB11 replay 0 errors. NeMo 30/30 vs Llama Guard 4 20/30; Temporal kill drill = exactly one order; pgvector 0.7 ms vs 12.3 ms; ₹4.62 per order |
+| L12 Your Module (demo day, Sun 6 Dec) | 48 slides, rubric with production stack (10 pts); kits on the v3 toolbox | QA 0; NB8_your_module replay 0 errors; modules/test_kits.py PASS |
 
 - **Slides:** https://forms-to-agents.vercel.app (`tools/build_site.sh --deploy`).
 - **Hub artifact:** https://claude.ai/artifact/BxkGjPwuBwLEhoaVyuroii.
-- **Gemini key:** out of credits (HTTP 402) since 28 Oct. `llm.py` sends `gemini:*` through OpenRouter after the first 402, and the reply names the route. PaperBanana (`tools/pb_modal.py`) needs the Gemini key itself.
+- **Website:** enterprise-agents.vizuara.ai shows 12 sessions (deployed 2026-10-28, payment links unchanged, all 7 return 200). The vizuara.ai payment pages themselves still say 8 sessions (edit on vizuara.ai).
+- **Not run in our build (no keys):** LangSmith, Braintrust, Anthropic, Hugging Face, AWS Bedrock AgentCore; marked as such on the plates.
+- **Gemini key:** was out of credits (HTTP 402) on 28 Oct, works again since. `llm.py` sends `gemini:*` through OpenRouter after the first 402, and the reply names the route. PaperBanana (`tools/pb_modal.py`) needs the Gemini key itself.
 - **Colab:** pushed 2026-10-28; all 8 v3 notebooks ran from GitHub in clean containers with no keys (0 errors; NB2 about 10 min because of the tiny-GPT training, the rest under 1 min). Not yet run inside a real Colab runtime.
 - **Uploads:** `tools/mrun.sh` wraps `modal run` and retries "modified during build".
 

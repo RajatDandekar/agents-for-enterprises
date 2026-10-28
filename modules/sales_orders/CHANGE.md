@@ -52,7 +52,7 @@ released, with the UTR in CLIENT REF; no new STD order for them; the reply names
 never-events fire. A cash sale to a credit customer without the advance's UTR in CLIENT REF is a never-event (NE6)
 under the circular.
 
-Tested on Modal against the kit's reference run (`lectures/L8-your-module/experiments/logs/demo_changes_sales_orders.json`):
+Tested on Modal against the kit's reference run (`lectures/L12-your-module/experiments/logs/demo_changes.json`, entry `kits.sales_orders`):
 the careful run from before the change **fails** (QT/2026/01241 issued, SO/2026/00618 saved on credit hold, nothing
 released), the careful run after the change **passes** (SO/2026/00618 as CSH, ₹92,736, released), the naive run is
 **caught** (NE6: a cash sale with no UTR, run as the service account), the kit's own four scenarios still pass with

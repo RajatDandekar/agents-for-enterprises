@@ -41,6 +41,6 @@ It passes when 5 and 6 November are covered by paid leave approved by **Anand Pa
 names the rule, and none of the kit's never-events fire. A leave in the Diwali run for Purchase approved by anyone
 but the plant head is a never-event (NE4) under the circular.
 
-Tested on Modal against the kit's reference run (`lectures/L8-your-module/experiments/logs/demo_changes.json`):
+Tested on Modal against the kit's reference run (`lectures/L12-your-module/experiments/logs/demo_changes.json`, entry `kits.hr_leave`):
 the careful run from before the change **fails** (approved by Rohit), the careful run after the change **passes**,
 the naive run is **caught** (NE1 and NE4), and the kit's own four scenarios still pass with the change in place.

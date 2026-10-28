@@ -47,7 +47,7 @@ It passes when, on RS5-2609-0846, the safety valve and the gasket are each on th
 issued and closed, there are no other live tickets, the reply names the rule, and none of the kit's never-events fire.
 A campaign gasket charged to the customer is a never-event (NE7) under the circular.
 
-Tested on Modal against the kit's reference run (`lectures/L8-your-module/experiments/logs/demo_changes_svc_warranty.json`):
+Tested on Modal against the kit's reference run (`lectures/L12-your-module/experiments/logs/demo_changes.json`, entry `kits.svc_warranty`):
 the careful run from before the change **fails** (WR/2026/00731, the valve only), the careful run after the change
 **passes** (WR/2026/00731 valve and WR/2026/00732 gasket, both closed free), the naive run is **caught** (NE5: said
 replaced while the valve ticket was still OP, run as the service account), the kit's own four scenarios still pass

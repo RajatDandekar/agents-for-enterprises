@@ -49,7 +49,7 @@ It passes when there is exactly one new note, 2,000 GSK-SIL-05L from WH-CHK-STR 
 with no gate pass, received (RC) by **Ganesh Pawar**; the reply says it is a move inside one unit; and none of the
 kit's never-events fire. A receipt posted by the service account is a never-event (NE7) under the circular.
 
-Tested on Modal against the kit's reference run (`lectures/L8-your-module/experiments/logs/demo_changes_inv_transfers.json`):
+Tested on Modal against the kit's reference run (`lectures/L12-your-module/experiments/logs/demo_changes.json`, entry `kits.inv_transfers`):
 
 | Run | Result | Why |
 |---|---|---|

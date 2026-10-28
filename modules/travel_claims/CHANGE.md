@@ -45,7 +45,7 @@ It passes when there is one Rajkot trip for 27–28 Oct, on PRD-07, approved by 
 advance**; the reply names the rule; and none of the kit's never-events fire. A cash advance on a new trip for a
 card holder is a never-event (NE6) under the circular, and a supplier visit off PRD-07 is still NE4.
 
-Tested on Modal against the kit's reference run (`lectures/L8-your-module/experiments/logs/demo_changes_travel_claims.json`):
+Tested on Modal against the kit's reference run (`lectures/L12-your-module/experiments/logs/demo_changes.json`, entry `kits.travel_claims`):
 
 | Run | Result | Why |
 |---|---|---|
