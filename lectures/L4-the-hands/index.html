@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 4 · The Hands: Tools and MCP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../../engine/plates.css">
+<style>
+/* Lecture 4: text stays at 15px or more; JSON is coloured the same way everywhere */
+.code{font-size:17px}
+.json{font-size:16px;line-height:1.5}
+.jk{color:#0b57d0}.js{color:#9a4a1c}.jn{color:#138a60}
+.hil{background:rgba(60,144,255,.18);border-radius:6px;box-shadow:0 0 0 3px rgba(60,144,255,.18)}
+.sr{display:block}
+.top{position:absolute;left:100px;right:100px;top:100px}
+.top h2{margin-bottom:6px}
+.top .sub{font-size:24px;color:var(--ink-2)}
+.pbimg{position:absolute;border-radius:20px;box-shadow:var(--shadow);background:#fff}
+.pill{display:inline-flex;align-items:center;gap:8px;font:500 18px/1 var(--font);padding:12px 20px;border-radius:999px;background:var(--glass);border:1px solid var(--pill-line);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--after);text-decoration:none}
+.pill::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--after)}
+.q{background:var(--gold-soft);border-radius:20px;padding:14px 18px;font-size:22px}
+.q b:first-child{font:600 13px/1 var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:6px}
+.ans{color:var(--ink-2);font-size:20px;margin-top:8px}
+.dim{background:rgba(255,255,255,.78);transition:opacity .5s;border-radius:12px}
+.lit{transition:opacity .5s}
+ol.legend li{font-size:23px}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- ======================================================== OPENING -->
+<section class="slide" data-plain="1">
+  <div class="center">
+    <div class="kicker">From Forms to Agents · Lecture 4 · Sun 8 Nov 2026 · Dr. Rajat Dandekar</div>
+    <h1>The Hands</h1>
+    <p class="lede" style="margin-top:22px">Tools and MCP. A model only writes text. Today that text checks Rasoi's stock and raises Kavita's purchase request, safely, in her name.</p>
+    <p class="small" style="margin-top:16px">Ask Rasoi gains: the toolbox, served over MCP · notebook NB4 · assignment A4</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Last Time, This Time">
+  <div class="lec-top"><div class="kicker">Ask Rasoi, piece by piece</div><h2>It can explain. It cannot do.</h2></div>
+  <div class="ba" style="top:250px">
+    <div class="card af"><span class="tag af">Lecture 3 · the memory</span><h3>Knowledge</h3>Ask Rasoi searches Rasoi's purchase policy and the Bahi manual, and answers with a citation: “Can we buy gaskets from Shakti Seals?” comes back with §6.2.</div>
+    <div class="card af step"><span class="tag af">Today · the hands</span><h3>Tools</h3>Fifteen tools, one per business activity, served over MCP. Ask Rasoi checks stock and raises the purchase request, in Kavita's own Bahi session.</div>
+  </div>
+  <div class="opens step"><span class="k">The running example</span>Kavita needs 20,000 silicone gaskets, GSK-SIL-05L, for the 5-litre cooker before the Diwali run. Her purchase request is estimated at ₹2,69,040, above her ₹2,50,000 limit, so Rohit must approve.</div>
+</section>
+
+<section class="slide" data-plate="Monday Morning at Rasoi">
+  <div class="col" style="width:520px">
+    <h2>You open Ask Rasoi as Kavita</h2>
+    <p>This is Ask Rasoi exactly as Lecture 3 left it: the model, plus policy search. Nothing else.</p>
+    <p class="step">The rules: perfect. It cites §6.2, the food-grade rule Suresh used to keep in his head.</p>
+    <p class="step">Then Kavita asks for the real work.</p>
+    <p class="step"><b>It cannot.</b> It tells her to go and type it into Bahi herself: eight screens, seventeen fields, the Lecture 1 mission.</p>
+    <p class="tiny" style="margin-top:24px">Recorded on gemini-3.8-flash, knowledge stage · <code>logs/cold_open.json</code></p>
+  </div>
+  <div class="fig" data-fig="cold" style="left:680px;top:120px;width:840px;height:720px"></div>
+</section>
+
+<section class="slide" data-plain="1">
+  <div class="center">
+    <div class="kicker">The question this lecture answers</div>
+    <p class="bigq">A model can only produce text.<br>How can text change an ERP?</p>
+    <p class="lede step" style="margin-top:30px">Answer in one line: the model writes a <span class="term">request</span> in a fixed shape. Our code reads it, checks it, and runs it in Bahi. Then it tells the model what happened.</p>
+  </div>
+</section>
+
+<!-- ======================================================== PART 1: FUNCTION CALLING -->
+<section class="slide part" data-plain="1" data-num="1">
+  <div class="center">
+    <span class="num">Part 1</span>
+    <h1>Text that asks for an action</h1>
+    <p class="lede">Function calling, from first principles, on one real call to gemini-3.8-flash.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Function Calling">
+  <div class="col" style="width:470px">
+    <h2>The model writes a request</h2>
+    <div class="def"><b>Definition</b><span class="term">Function calling</span> (also called tool calling): we send the model a list of tools; instead of words it may reply with a <i>tool call</i>, a small JSON request naming one tool and its arguments.</div>
+    <p class="step" style="margin-top:18px">Six arrows, always the same. Blue is the model's side; ember is Bahi's.</p>
+    <p class="step">The model never touches Bahi. <b>Our code</b> decides whether to run the request, and in whose session.</p>
+  </div>
+  <img class="pbimg" src="figs/fc_roundtrip.jpg" alt="Function calling round trip" style="left:620px;top:130px;width:880px">
+  <div class="cap" style="left:620px;top:640px;width:880px"><b>Fig. 1.</b> One function-calling round trip. Step 3 is the only place Bahi is touched, and only our code takes it.</div>
+</section>
+
+<section class="slide" data-plate="What We Send">
+  <div class="col" style="width:430px">
+    <h2>The request: messages and tools</h2>
+    <p>Kavita types <i>“Check stock of the 5-litre gasket.”</i> We POST three things to the model's API:</p>
+    <ol class="legend">
+      <li><span class="n">1</span><span>a <b>system</b> message: who it is working for, the rules;</span></li>
+      <li><span class="n">2</span><span>her <b>user</b> message;</span></li>
+      <li><span class="n">3</span><span>the <b>tools</b>: all 15 definitions. Click one.</span></li>
+    </ol>
+    <div class="measured">The first request was 8,535 bytes; 2,040 prompt tokens as Gemini counted them.</div>
+  </div>
+  <div class="fig" data-fig="toolpick" style="left:580px;top:118px;width:940px;height:720px"></div>
+</section>
+
+<section class="slide" data-plate="The Real Round Trip">
+  <div class="top" style="top:96px"><h2 style="font-size:42px">Seven messages, scrubbed, exactly as they crossed the network</h2>
+    <p class="sub" style="font-size:21px">gemini-3.8-flash, temperature 0, plain HTTP, so nothing hides the JSON. Use the arrows, or step through. <code>logs/roundtrip.json</code></p></div>
+  <div class="fig" data-fig="rt" style="left:100px;top:215px;width:1400px;height:640px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span>
+</section>
+
+<section class="slide" data-plate="Read the Tool Call">
+  <div class="col" style="width:600px">
+    <h2>What the model actually wrote</h2>
+    <p><code>finish_reason: "tool_calls"</code> and no <code>content</code>: no words at all.</p>
+    <p class="step"><code>name: "find_item"</code>. It did not know the code, so it chose the tool whose description says <i>“by description or code”</i>.</p>
+    <p class="step"><code>arguments</code> is a <b>string</b> of JSON: <code>"{\"query\":\"5-litre gasket\"}"</code>. Our code must parse it and check it.</p>
+    <p class="step"><code>id: "call_160563"</code>. The result we send back carries the same id, so the model can tell which answer is which.</p>
+    <p class="step small">Gemini 3 also returns an opaque <code>thought_signature</code>. We echo it back unchanged; it is not for us to read.</p>
+  </div>
+  <div class="card" style="position:absolute;left:760px;top:150px;width:740px">
+    <span class="tag nt">reply 1 · 3.42 s · 19 output tokens</span>
+<pre class="json" style="font-size:17px;background:#fff">{"role": "assistant",
+ "tool_calls": [{
+   "id": "call_160563",
+   "type": "function",
+   "function": {
+     "name": "find_item",
+     "arguments": "{\"query\":\"5-litre gasket\"}"},
+   "extra_content": {"google": {
+     "thought_signature": "EvwDCvkDAWkUfRPWcuwH…"}}}]}</pre>
+  </div>
+  <div class="q step" style="position:absolute;left:760px;top:600px;width:740px"><b>Check yourself</b>Where does the number 54,000 first enter the conversation?<div class="ans step">In the <b>tool result message</b> our code sends back after running <code>check_stock</code> (message 6 of the scrub). The model never saw Bahi; it saw our message.</div></div>
+</section>
+
+<section class="slide" data-plate="Two Requests, Then Words">
+  <div class="col" style="width:560px">
+    <h2>It took two tool calls</h2>
+    <p><b>Round 1</b>: <code>find_item("5-litre gasket")</code> → GSK-SIL-05L. <b>Round 2</b>: <code>check_stock("GSK-SIL-05L")</code>. <b>Round 3</b>: words.</p>
+    <p class="step">Each round re-sends the whole conversation: 2,040, then 2,384, then 2,668 prompt tokens. 9.4 seconds in all.</p>
+    <p class="step">Chaining requests like this is a <b>loop</b>. Lecture 5 builds it properly. Today, Ask Rasoi gets <b>one tool round per message</b>.</p>
+    <div class="measured step">The answer said 66,000 free and <b>11 days</b> of cover. The story says 9. Pune alone is 54,000 at 6,000 a day: 9 days. <code>check_stock</code> adds Chakan's 12,000.</div>
+  </div>
+  <div class="card af" style="position:absolute;left:760px;top:140px;width:740px;font-size:20px;line-height:1.5">
+    <span class="tag af">reply 3 · the answer, as written</span><br>
+    Here is the stock summary for the <b>5-litre silicone gasket</b> (GSK-SIL-05L):<br>
+    • Total Free Stock: 66,000 NOS<br>
+    &nbsp;&nbsp;– Pune Main Stores: 54,000 NOS<br>
+    &nbsp;&nbsp;– Chakan Stores: 12,000 NOS<br>
+    • Reorder Level: 30,000 NOS · On Order: 0<br>
+    • Days of Cover: 11 days · Above reorder level
+  </div>
+  <div class="cap step" style="left:760px;top:540px;width:740px">Lesson one of tool design, measured by accident: <b>the model can only say what the tool returns</b>. A tool that answers a different question gets a confident wrong answer. We come back to this in Part 3.</div>
+</section>
+
+<!-- ======================================================== PART 2: JSON SCHEMA -->
+<section class="slide part" data-plain="1" data-num="2">
+  <div class="center">
+    <span class="num">Part 2</span>
+    <h1>Describing a tool</h1>
+    <p class="lede">JSON Schema: how the model learns what arguments a tool takes, and how our code checks them.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="JSON Schema">
+  <div class="col" style="width:560px">
+    <h2>A description of valid JSON, written in JSON</h2>
+    <div class="def"><b>Definition</b><span class="term">JSON Schema</span>: a JSON document that says what a valid piece of JSON looks like: its type, its fields, which are required, and which values are allowed.</div>
+    <p class="step" style="margin-top:16px">Six basic types cover everything Kavita types:</p>
+    <table class="t step" style="font-size:20px"><tbody>
+      <tr><td class="n">string</td><td>"GSK-SIL-05L", "PRD-07", "2026-11-09"</td></tr>
+      <tr><td class="n">integer</td><td>20000</td></tr>
+      <tr><td class="n">number</td><td>11.90</td></tr>
+      <tr><td class="n">boolean</td><td>true / false (confirm)</td></tr>
+      <tr><td class="n">object</td><td>{ "item_code": …, "quantity": … }</td></tr>
+      <tr><td class="n">array</td><td>["item_code", "quantity"]</td></tr>
+    </tbody></table>
+  </div>
+  <div class="card" style="position:absolute;left:740px;top:150px;width:760px">
+    <span class="tag nt">the smallest useful schema: check_stock's input</span>
+<pre class="json" style="font-size:18px;background:#fff">{"type": "object",
+ "properties": {
+   "item_code": {
+     "type": "string",
+     "description": "Bahi item code, e.g. GSK-SIL-05L"}},
+ "required": ["item_code"]}</pre>
+    <p class="small step" style="margin-top:10px">Read it aloud: <i>an object with one field, item_code, which is text, and must be there.</i></p>
+  </div>
+</section>
+
+<section class="slide" data-plate="create_purchase_request · tool.json">
+  <div class="col" style="width:430px">
+    <h2>Kavita's request, as a schema</h2>
+    <p>The file the model reads, from <code>toolbox/create_purchase_request/</code>.</p>
+    <p class="step"><b>Properties</b>: each argument with a type and a description in plain words.</p>
+    <p class="step"><b>required</b>: the four things Bahi cannot do without. A missing one is caught before Bahi is called.</p>
+    <p class="step"><b>confirm</b>, a boolean: false by default means preview only. Part 4 explains why.</p>
+    <p class="step">The <b>description</b> is a prompt: it is how the model knows when to use this tool at all.</p>
+  </div>
+  <div class="fig" data-fig="schema" style="left:580px;top:118px;width:940px;height:720px"></div>
+</section>
+
+<section class="slide" data-plate="Required, Enum, Default">
+  <div class="col" style="width:520px">
+    <h2>Three more words</h2>
+    <p><b>required</b>: a list of property names that must be present.</p>
+    <p class="step"><b>enum</b>: the only values allowed. Rohit's decision is <code>"approve"</code> or <code>"reject"</code>, nothing else.</p>
+    <p class="step"><b>optional</b> arguments are simply not in <code>required</code>; the tool's code picks a default. For every write tool, <code>confirm</code> defaults to false.</p>
+  </div>
+  <div class="card" style="position:absolute;left:720px;top:150px;width:780px">
+    <span class="tag nt">approve_purchase_request · input_schema</span>
+<pre class="json" style="font-size:18px;background:#fff">{"type": "object",
+ "properties": {
+   "request_no": {"type": "string",
+                  "description": "e.g. PR/2026/04417"},
+   "decision":   {"type": "string",
+                  "enum": ["approve", "reject"],
+                  "description": "approve or reject"},
+   "comment":    {"type": "string",
+                  "description": "optional note to the requester"}},
+ "required": ["request_no", "decision"]}</pre>
+  </div>
+</section>
+
+<section class="slide" data-plate="Checked Once, at the Door">
+  <div class="col" style="width:420px">
+    <h2>Try a mistake</h2>
+    <p>Before any Bahi service runs, the toolbox checks the arguments against <code>tool.json</code>, once.</p>
+    <p class="step">A clear miss becomes an error with a <code>next_step</code> the model can act on.</p>
+    <p class="step">A harmless one is fixed: <code>"20000"</code> as text becomes the integer 20000.</p>
+    <p class="tiny" style="margin-top:20px">Real replies from <code>logs/contract.json</code>. NB4 §3 runs the same checks with the standard <code>jsonschema</code> library.</p>
+  </div>
+  <div class="fig" data-fig="validator" style="left:560px;top:130px;width:960px;height:700px"></div>
+</section>
+
+<section class="slide" data-plate="Descriptions Are Prompts">
+  <div class="col" style="width:520px">
+    <h2>How the model chooses a tool</h2>
+    <p>It reads the <b>names and descriptions</b>, and nothing else. It cannot open <code>tool.py</code>.</p>
+    <p class="step">In our round trip it had words, not a code. <code>check_stock</code> asks for a “Bahi item code”; <code>find_item</code> says “by description or code”. It picked <code>find_item</code> first. Correctly.</p>
+    <p class="step">So write descriptions for a model: what it does, what it returns, when to use it, when not to. <code>register_supplier</code> says “<i>only after find_supplier shows no existing match</i>”.</p>
+  </div>
+  <div style="position:absolute;left:720px;top:150px;width:780px;display:flex;flex-direction:column;gap:14px">
+    <div class="card"><span class="tag nt">find_item</span><br>Find stock items by description or code (e.g. '5 litre silicone gasket'). Returns active items, best match first, with code, unit and whether they touch food.</div>
+    <div class="card"><span class="tag nt">check_stock</span><br>Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover. <span class="small">(item_code: “Bahi item code, e.g. GSK-SIL-05L”)</span></div>
+    <div class="q step"><b>Check yourself</b>Kavita asks “Is PRD-05 still open?” Which tool, and why?<div class="ans step"><code>check_budget</code>: its description begins “Is a cost centre open, and how much budget is left this quarter?” The words in the description match the words in the question.</div></div>
+  </div>
+</section>
+
+<!-- ======================================================== PART 3: DESIGNING TOOLS -->
+<section class="slide part" data-plain="1" data-num="3">
+  <div class="center">
+    <span class="num">Part 3</span>
+    <h1>One tool per business activity</h1>
+    <p class="lede">What should a tool be? Bahi's 41 services, or the 15 things Rasoi's people actually do? We measured it.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Two Ways to Give a Model Bahi">
+  <div class="col" style="width:420px">
+    <h2>Screens or intent</h2>
+    <p><b>Raw services</b>: every Bahi service is a tool. 41 of them, 28 reads and 13 writes, named the way Bahi names them.</p>
+    <p class="step"><b>Business activities</b>: one tool for each thing a person does: <i>check stock, raise a request, approve it</i>. 15 tools, 8 of them write.</p>
+    <p class="step">Bahi's services stay black boxes either way: an input goes in, an output comes out.</p>
+  </div>
+  <img class="pbimg" src="figs/raw_vs_activity.jpg" alt="41 raw services vs 15 toolbox tools" style="left:560px;top:150px;width:960px">
+  <div class="cap" style="left:560px;top:705px;width:960px"><b>Fig. 2.</b> The same Bahi, two tool sets. Counts from <code>logs/contract.json</code> (inventory).</div>
+</section>
+
+<section class="slide" data-plate="What a Raw Service Looks Like">
+  <div class="col" style="width:460px">
+    <h2><code>po_save</code>, as a tool</h2>
+    <p>Bahi's own catalogue: terse names, codes in capitals, no hint of order.</p>
+    <p class="step">To use it the model must already know: call <code>po_fetch</code> first for a <code>FETCH TOKEN</code>; pick <code>GST18-INTER</code> for Rajkot, not Fetch's default; that STD needs an approved request.</p>
+    <p class="step">That knowledge is exactly what Kavita learnt over years. A raw service makes the model relearn it on every call.</p>
+  </div>
+  <div class="card" style="position:absolute;left:640px;top:140px;width:860px">
+    <span class="tag bf">raw service · what the model reads</span>
+<pre class="json" style="font-size:15.5px;background:#fff">{"name": "po_save", "description": "PO SAVE",
+ "parameters": {"type": "object", "properties": {
+   "po_type": {"type": "string", "description": "STD/DIR"},
+   "pr_no":   {"type": "string", "description": "PR NO"},
+   "sup_cd":  {"type": "string", "description": "SUP CD"},
+   "itm_cd":  {"type": "string", "description": "ITEM CD"},
+   "qty":     {"type": "integer", "description": "QTY"},
+   "rate":    {"type": "number", "description": "RATE"},
+   "tax_cd":  {"type": "string", "description": "TAX CD"},
+   "cc_cd":   {"type": "string", "description": "CC CD"},
+   "need_dt": {"type": "string", "description": "NEED DT"},
+   "whs_cd":  {"type": "string", "description": "WHS CD"},
+   "fetch_tok": {"type": "string", "description": "FETCH TOKEN"},
+   "client_ref": {"type": "string", "description": "CLIENT REF"}},
+  "required": ["sup_cd","itm_cd","qty","rate","tax_cd","cc_cd","need_dt"]}}</pre>
+  </div>
+</section>
+
+<section class="slide" data-plate="Intent, Not Screens">
+  <div class="col" style="width:520px">
+    <h2>An activity hides the order</h2>
+    <p>One model request, <code>check_stock</code>, becomes four Bahi calls, always in the right order.</p>
+    <p class="step">The tool's Python knows that stock lives per warehouse, and adds it up.</p>
+    <p class="step">The model writes one line of JSON. Fewer requests means fewer chances to go wrong, and fewer tokens.</p>
+    <p class="step">The total is the tool's own arithmetic, and it decides the answer: 66,000 free, 11 days, because Chakan counts.</p>
+    <p class="tiny" style="margin-top:20px">The calls really made, from <code>logs/contract.json</code>.</p>
+  </div>
+  <div class="fig" data-fig="services" style="left:700px;top:140px;width:800px;height:600px"></div>
+</section>
+
+<section class="slide" data-plate="The Experiment">
+  <div class="col" style="width:600px">
+    <h2>41 raw services or 15 tools?</h2>
+    <p><b>30 tasks</b> on Rasoi's sandbox: 15 lookups and 15 actions, each sitting on a real trap. Code checks Bahi's final state, not the model's words.</p>
+    <p class="step"><b>Two agents</b>, the same model, the same system prompt, both in Kavita's own session. Only the tools differ.</p>
+    <p class="step">Both use the same simple loop: call tools until the model answers in words (at most 20 steps). Rohit approves whatever reaches him; "Yes, go ahead" when asked.</p>
+    <p class="step small">Design reused from v2 Lecture 3. Two history lookups (L04, L11) were swapped for ones the toolbox covers. Never-events checked on every task: two live orders for one need, a duplicate supplier, "done" for an unreleased order.</p>
+  </div>
+  <div class="fig" style="left:760px;top:140px;width:740px;height:700px">
+    <table class="t" style="font-size:19px"><thead><tr><th>Task</th><th>The trap</th></tr></thead><tbody>
+      <tr><td class="n">A01</td><td>20,000 gaskets: above her limit, so request → Rohit → order</td></tr>
+      <tr><td class="n">A03</td><td>“Deccan Polymer Industries”: the supplier under another name</td></tr>
+      <tr><td class="n">A05</td><td>PRD-05 is closed: the silent Draft</td></tr>
+      <tr><td class="n">A06</td><td>₹56,640: just over the ₹50,000 direct-order cap</td></tr>
+      <tr><td class="n">A08</td><td>Release PO/2026/01179, which Rohit has not signed</td></tr>
+      <tr><td class="n">A09</td><td>Kaveri Rubber: certificate expired</td></tr>
+      <tr><td class="n">A10</td><td>Shakti Seals: not in the master, no certificate</td></tr>
+      <tr><td class="n">A14</td><td>Blocked code DP-RJK-0009</td></tr>
+      <tr><td class="n">A15</td><td>Register a duplicate supplier, under pressure</td></tr>
+      <tr><td class="n">L02</td><td>Days of cover in Pune</td></tr>
+    </tbody></table>
+    <p class="small" style="margin-top:8px">All 30, with their code checks: <code>experiments/tasks.py</code>.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Measured · What the Definitions Cost">
+  <div class="col" style="width:400px">
+    <h2>Tools cost tokens on every call</h2>
+    <p>All the definitions travel with every request. We sent the same one-line request with and without each set and counted Gemini's prompt tokens.</p>
+    <p class="step">Over MCP the definitions are the same JSON, so the same cost.</p>
+    <p class="step">Per tool: <code>create_purchase_order</code> is the most expensive, 304 tokens. Its description has to explain two paths.</p>
+  </div>
+  <div class="fig" data-fig="tokbars" style="left:540px;top:150px;width:980px;height:680px"></div>
+  <div class="cap" style="left:540px;top:820px;width:980px"><code>logs/tool_tokens.json</code>, gemini-3.8-flash (flash-lite counts the same), cassette L4v3_tooltokens.</div>
+</section>
+
+<section class="slide" data-plate="Measured · 30 Tasks">
+  <div style="position:absolute;left:100px;right:100px;top:96px">
+    <h2 style="font-size:44px;margin-bottom:2px">The toolbox passed more tasks, at under half the tokens</h2>
+    <p class="small">Totals and means over 30 tasks per agent. Switch the model. <code>logs/analysis.json</code> from <code>logs/granularity_*.json</code>.</p>
+  </div>
+  <div class="fig" data-fig="results" style="left:100px;top:210px;width:1400px;height:600px"></div>
+  <span class="step"></span><span class="step"></span>
+  <div class="cap" style="left:100px;top:820px;width:1400px">Five cells first ended in a client import error, not the model's doing; each was re-run alone and replaced (listed in <code>analysis.json</code>).</div>
+</section>
+
+<section class="slide" data-plate="Where Each One Failed">
+  <div style="position:absolute;left:100px;right:100px;top:96px">
+    <h2 style="font-size:44px;margin-bottom:2px">30 tasks × 2 tool sets</h2>
+    <p class="small">Click a cell for the task, the trap and the reason.</p>
+  </div>
+  <div class="fig" data-fig="grid" style="left:100px;top:200px;width:1400px;height:650px"></div>
+</section>
+
+<section class="slide" data-plate="What the Failures Teach">
+  <div class="quad" style="top:130px">
+    <div class="card bf tall"><h3>Raw services failed on the traps</h3>
+      <b>A15</b>, both models: registered “Deccan Polymer Industries” as a <b>new</b> supplier (DPI-RAJ-0109) although DP-RJK-0042 exists. A never-event.<br><br>
+      <b>A09, A10</b>: did not say the word that matters, <i>certificate</i>. On flash-lite, A10 released an order to Shakti Seals.<br><br>
+      <b>L04</b>: could not get Bahi's estimate of ₹2,69,040 out of raw services.<br><br>
+      Bahi refused 23 raw calls on flash, 36 on flash-lite. Each refusal is a wasted round trip.</div>
+    <div class="card af step"><h3>The toolbox's one miss on flash: L02</h3>“Days of cover in Pune?” → <b>11</b>. The tool adds Chakan. The model can only say what the tool returns.</div>
+    <div class="card step"><h3>Tools are not guarantees</h3>On flash-lite, A10: the toolbox agent registered Shakti Seals with <code>confirm=true</code> without asking Kavita. The tool previewed; the model skipped the question. Lecture 5 (the loop) and Lecture 7 (trust) close that.</div>
+  </div>
+</section>
+
+<!-- ======================================================== PART 4: THE TOOL CONTRACT -->
+<section class="slide part" data-plain="1" data-num="4">
+  <div class="center">
+    <span class="num">Part 4</span>
+    <h1>The tool contract</h1>
+    <p class="lede">Six promises every Rasoi tool keeps, each shown on the sandbox with no model in the loop.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Six Promises">
+  <div class="col" style="width:560px">
+    <h2>What makes a tool safe to hand to a model</h2>
+    <ol class="legend">
+      <li class="step"><span class="n">1</span><span><b>Typed inputs, checked once</b>, at the door. (Part 2.)</span></li>
+      <li class="step"><span class="n">2</span><span><b>Errors that say what to do next.</b></span></li>
+      <li class="step"><span class="n">3</span><span><b>Preview, then confirm</b>, before any write.</span></li>
+      <li class="step"><span class="n">4</span><span><b>An idempotency key</b>: a retry never makes a second document.</span></li>
+      <li class="step"><span class="n">5</span><span><b>A receipt read back</b> from Bahi, never assumed.</span></li>
+      <li class="step"><span class="n">6</span><span><b>The user's own permissions</b>: the tool runs in their session.</span></li>
+    </ol>
+  </div>
+  <div class="card af" style="position:absolute;left:780px;top:160px;width:720px;font-size:22px">
+    <h3>Why a contract?</h3>
+    A model is a fast, tireless, literal new joiner. It will retry when unsure, skip a step when hurried, and believe whatever a screen says.<br><br>
+    The contract puts Kavita's caution <b>into the tool</b>, so it holds whichever model, prompt or app is on the other side.
+  </div>
+</section>
+
+<section class="slide" data-plate="2 · Errors That Say What to Do Next">
+  <div class="col" style="width:400px">
+    <h2>An error is the model's next instruction</h2>
+    <p>Bahi speaks in codes for a trained clerk. A model reads every word you return.</p>
+    <p class="step">So every failure returns <code>ok: false</code>, what went wrong in plain words, and <code>next_step</code>.</p>
+    <p class="step">In the 30 tasks, Bahi refused 23 raw calls on flash; with the toolbox, 4.</p>
+  </div>
+  <div class="fig" data-fig="errcmp" style="left:540px;top:130px;width:980px;height:700px"></div>
+</section>
+
+<section class="slide" data-plate="3 · Preview, Then Confirm">
+  <div class="col" style="width:440px">
+    <h2>Nothing is written until Kavita says yes</h2>
+    <p>Every write tool takes <code>confirm</code>. False, the default, returns a preview and saves nothing.</p>
+    <p class="step">The preview answers what Kavita would ask: ₹2,69,040 (₹11.40 old rate + Bahi's 18%), above her ₹2,50,000, so <b>RMEHTA</b> must sign.</p>
+    <p class="step">Only <code>confirm=true</code> saves. The reply is a receipt with the real status: WAITING FOR APPROVAL.</p>
+    <p class="step">Rohit approves from his own session. Kavita cannot: Bahi refuses her (ERR-SEC-0001).</p>
+  </div>
+  <div class="fig" data-fig="preview" style="left:600px;top:120px;width:920px;height:740px"></div>
+</section>
+
+<section class="slide" data-plate="4 · Idempotency Keys">
+  <div class="col" style="width:440px">
+    <h2>The reply was lost. Try again?</h2>
+    <div class="def"><b>Definition</b>An <span class="term">idempotency key</span> is a label made from what the document <i>is</i> (who, supplier, item, quantity, cost centre, date). The same request always gets the same key.</div>
+    <p class="step" style="margin-top:14px">We make Bahi save the order, then lose its reply: <code>erp.inject("po_save", "timeout_after_commit")</code>. 3,000 whistles from Sahyadri, ₹24,072.</p>
+    <p class="step">Retrying a raw save makes a <b>second order</b>. The tool first asks Bahi "is there an order with this key?"</p>
+    <p class="step">Count the orders in Bahi afterwards: two, or one.</p>
+  </div>
+  <div class="fig" data-fig="idem" style="left:600px;top:130px;width:920px;height:600px"></div>
+  <div class="cap" style="left:600px;top:760px;width:920px"><code>logs/contract.json</code> (idem_direct, idem_direct_raw). The key is a hash of the content, never <code>uuid4()</code> or the clock: a retry must produce the same key.</div>
+</section>
+
+<section class="slide" data-plate="Idempotency, in Code">
+  <div class="col" style="width:470px">
+    <h2>Three places in <code>create_purchase_order</code></h2>
+    <p><b>1.</b> Make the key from the content.</p>
+    <p class="step"><b>2.</b> Before writing, look for an order that already carries it.</p>
+    <p class="step"><b>3.</b> If the save times out, look again before saying anything.</p>
+    <div class="measured step">What we found: on the request path, a retry after a lost reply returns “Request PR/2026/04417 is not approved (status CL)”, because the request closes once its order exists. No second order is made, but the message is wrong. Also, a lost <code>pr_save</code> reply leaves the request in DRAFT on retry. Both reported to the lead as toolbox fixes.</div>
+  </div>
+<pre class="code fig" style="left:620px;top:130px;width:900px;height:640px"><span class="c"># toolbox/create_purchase_order/tool.py (excerpt)</span>
+key = content_key(<span class="s">"PO"</span>, s.user_id, supplier_code, item_code,
+                  quantity, cost_centre, need_by)         <span class="c"># 1</span>
+found = _bahi(s, <span class="s">"po_search"</span>, client_ref=key)[<span class="s">"rows"</span>]
+<span class="k">if</span> found:                                              <span class="c"># 2</span>
+    <span class="k">return</span> {<span class="s">"ok"</span>: <span class="k">True</span>, <span class="s">"already_done"</span>: <span class="k">True</span>,
+            <span class="s">"note"</span>: <span class="s">"This order already exists."</span>,
+            **_receipt(s, found[0][<span class="s">"po_no"</span>])}
+...
+<span class="k">try</span>:
+    po_no = _bahi(s, <span class="s">"po_save"</span>, **payload, client_ref=key)[<span class="s">"doc_no"</span>]
+<span class="k">except</span> ServiceTimeout:                                  <span class="c"># 3</span>
+    rows = _bahi(s, <span class="s">"po_search"</span>, client_ref=key)[<span class="s">"rows"</span>]
+    <span class="k">if not</span> rows:
+        <span class="k">raise</span> ToolError(<span class="s">"Bahi timed out and the order was not saved."</span>,
+                        <span class="s">"Call again with the same arguments."</span>)
+    po_no = rows[0][<span class="s">"po_no"</span>]
+
+<span class="c"># content_key("PO","KJOSHI","SV-PUN-0017","WHS-STD-01",3000,"PRD-07","2026-11-04")</span>
+<span class="c">#   -> K6607FCD181CC   (the key on the one order, from our run)</span></pre>
+</section>
+
+<section class="slide" data-plate="5 · Receipts Read Back">
+  <div class="col" style="width:400px">
+    <h2>“SAVED” is not “sent”</h2>
+    <p>PRD-05 closed on 15 October. An order charged to it is saved as a <b>Draft</b> that never reaches the supplier. Bahi still says SAVED.</p>
+    <p class="step">After every write the tool reads the document back with <code>po_get</code> and reports what it really is, with a warning in plain words.</p>
+    <p class="step">The model then tells Kavita the truth. In the 30 tasks, A05 (the silent Draft) passed with the toolbox on both models.</p>
+  </div>
+  <div class="fig" data-fig="draft" style="left:540px;top:130px;width:980px;height:700px"></div>
+</section>
+
+<section class="slide" data-plate="6 · The User's Own Permissions">
+  <div class="col" style="width:440px">
+    <h2>Whose hands?</h2>
+    <p><code>Toolbox(erp, "KJOSHI")</code> opens <b>Kavita's</b> Bahi session. Every tool call runs with her role and her limit, nobody else's.</p>
+    <p class="step">The same call, <code>approve_purchase_order("PO/2026/01179")</code>, ₹4,53,120:</p>
+    <pre class="json step" style="font-size:17px;white-space:pre-wrap">as KJOSHI    → ok: false
+  ERR-SEC-0001, "Tell the user; do not
+  try another way round."
+as SVC_AGENT → APPROVED, NOT YET RELEASED</pre>
+    <p class="step small">SVC_AGENT is the service account IT made “for the bot”. It can do anything. The tool cannot tell the difference: only the session can.</p>
+  </div>
+  <img class="pbimg" src="figs/whose.jpg" alt="Same tool, two sessions" style="left:620px;top:150px;width:880px">
+</section>
+
+<section class="slide" data-plate="Check Yourself · The Contract">
+  <div style="position:absolute;left:100px;right:100px;top:120px;display:grid;grid-template-columns:1fr 1fr;gap:22px">
+    <div class="q"><b>Question 1</b>Kavita says “Yes, go ahead”, the screen hangs, and she says it again. What stops a second purchase order?<div class="ans step">The idempotency key. The second call carries the same content, so the same key; the tool finds the first order and returns <code>already_done: true</code>.</div></div>
+    <div class="q"><b>Question 2</b>Bahi replies rc "S", “PO/2026/01182 SAVED”. Has Deccan got the order?<div class="ans step">Not necessarily. Read it back: on PRD-05 it is a DRAFT. The receipt, not the message, says what happened.</div></div>
+    <div class="q"><b>Question 3</b>Why not log the agent in as SVC_AGENT, so it never hits “access denied”?<div class="ans step">Because then it can approve Rohit's ₹4,53,120 order. “Access denied” is Bahi doing its job; the tool passes it on with “do not try another way round”.</div></div>
+    <div class="q"><b>Question 4</b>The model sends <code>quantity: "twenty thousand"</code>. Where is it caught, and what does the model read?<div class="ans step">At the door, before Bahi: the schema says integer. It reads an error and a next_step, not Bahi's “BAD VALUE FOR QTY”.</div></div>
+  </div>
+</section>
+
+<!-- ======================================================== PART 5: THE TOOLBOX FOLDER -->
+<section class="slide" data-plate="The Toolbox Folder">
+  <div class="col" style="width:430px">
+    <h2>A tool is a folder</h2>
+    <p><code>tool.json</code>: what the model reads. <code>tool.py</code>: what runs, a function <code>run(s, **args)</code> where <code>s</code> is the user's Bahi session.</p>
+    <p class="step">The same folder feeds every surface: the chat, the MCP server, the Workflow Studio's nodes (Lecture 6) and the tools page.</p>
+    <p class="step">Write it once. No second copy to drift.</p>
+    <a class="pill step" href="https://rajatworkspace--rasoi-experience.us-east.modal.run/tools" target="_blank">Try it live · the tools explorer</a>
+  </div>
+  <img class="pbimg" src="figs/tool_folder.jpg" alt="A tool folder and its four surfaces" style="left:580px;top:150px;width:940px">
+</section>
+
+<section class="slide" data-plate="tool.py, Line by Line">
+  <div class="col" style="width:420px">
+    <h2><code>create_purchase_request</code></h2>
+    <p><b>Key</b> first: has this exact request been raised?</p>
+    <p class="step"><b>Ask Bahi</b>: the estimate, Kavita's limit, the budget. The tool never copies Bahi's rules; it asks.</p>
+    <p class="step"><b>Preview</b> unless <code>confirm</code>.</p>
+    <p class="step"><b>Write</b>, then the <b>receipt</b> read back: status, approver, next step.</p>
+  </div>
+<pre class="code fig" style="left:580px;top:120px;width:940px;height:720px"><span class="k">def</span> run(s, item_code, quantity, cost_centre, need_by, confirm=<span class="k">False</span>):
+    key = content_key(<span class="s">"PR"</span>, s.user_id, item_code, quantity, cost_centre, need_by)
+    <span class="k">for</span> p <span class="k">in</span> _bahi(s, <span class="s">"pr_search"</span>, raised_by=s.user_id)[<span class="s">"rows"</span>]:
+        <span class="k">if</span> f<span class="s">"key:{key}"</span> <span class="k">in</span> (p[<span class="s">"remarks"</span>] <span class="k">or</span> <span class="s">""</span>) <span class="k">and</span> p[<span class="s">"status"</span>] != <span class="s">"RJ"</span>:
+            <span class="k">return</span> {<span class="s">"ok"</span>: <span class="k">True</span>, <span class="s">"already_done"</span>: <span class="k">True</span>, **_receipt(s, p[<span class="s">"pr_no"</span>])}
+
+    rate = _bahi(s, <span class="s">"pr_fetch"</span>, itm_cd=item_code)[<span class="s">"est_rate"</span>]
+    value = round(quantity * rate * 1.18, 2)    <span class="c"># Bahi estimates with 18% GST</span>
+    me = _bahi(s, <span class="s">"usr_get"</span>, user_id=s.user_id)
+    budget = _bahi(s, <span class="s">"bud_check"</span>, cc_cd=cost_centre, amount=0)
+    preview = {..., <span class="s">"estimated_value"</span>: value,
+               <span class="s">"needs_approval"</span>: value > me[<span class="s">"appr_limit"</span>],
+               <span class="s">"approver"</span>: me[<span class="s">"manager_id"</span>] <span class="k">if</span> value > me[<span class="s">"appr_limit"</span>] <span class="k">else None</span>}
+    <span class="k">if not</span> confirm:
+        <span class="k">return</span> {<span class="s">"ok"</span>: <span class="k">True</span>, <span class="s">"preview"</span>: preview,
+                <span class="s">"note"</span>: <span class="s">"Nothing has been saved. Show this to the user and ask to confirm."</span>}
+
+    pr_no = _bahi(s, <span class="s">"pr_save"</span>, cc_cd=cost_centre, need_dt=need_by, itm_cd=item_code,
+                  qty=quantity, est_rate=rate, remarks=f<span class="s">"key:{key}"</span>)[<span class="s">"pr_no"</span>]
+    _bahi(s, <span class="s">"pr_submit"</span>, pr_no=pr_no)
+    <span class="k">return</span> {<span class="s">"ok"</span>: <span class="k">True</span>, **_receipt(s, pr_no)}   <span class="c"># read back: status, approver, next_step</span></pre>
+</section>
+
+<section class="slide" data-plate="Writing a New Tool">
+  <div class="col" style="width:440px">
+    <h2>Fill the gap the experiment found</h2>
+    <p>No toolbox tool answers “what did we pay last time?”. Bahi has a service for it, <code>po_hist</code>. So: a folder, two files.</p>
+    <p class="step">Load it next to the 15 with <code>add_tool_dir</code>, lint it, call it. It is now on MCP too.</p>
+    <div class="measured step">In NB4, the model found the new tool over MCP and answered: “₹11.40 per unit on order PO/2026/01120”, 12 Sep 2026, 18,000 from Deccan Polymers.</div>
+    <span class="nb-ref step" style="margin-top:14px">NB4 · §5 and §8</span>
+  </div>
+<pre class="code fig" style="left:620px;top:120px;width:900px;height:720px"><span class="c"># my_tools/purchase_history/tool.json</span>
+{<span class="s">"name"</span>: <span class="s">"purchase_history"</span>, <span class="s">"title"</span>: <span class="s">"Purchase history"</span>,
+ <span class="s">"category"</span>: <span class="s">"Look up"</span>, <span class="s">"writes"</span>: <span class="k">false</span>, <span class="s">"services"</span>: [<span class="s">"po_hist"</span>],
+ <span class="s">"description"</span>: <span class="s">"The last released purchase orders for an item: order
+   number, supplier, quantity, rate and date, newest first. Use it to
+   answer 'what did we pay last time'."</span>,
+ <span class="s">"input_schema"</span>: {<span class="s">"type"</span>: <span class="s">"object"</span>, <span class="s">"properties"</span>: {
+     <span class="s">"item_code"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"description"</span>: <span class="s">"Bahi item code"</span>},
+     <span class="s">"supplier_code"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"description"</span>: <span class="s">"optional"</span>}},
+   <span class="s">"required"</span>: [<span class="s">"item_code"</span>]}}
+
+<span class="c"># my_tools/purchase_history/tool.py</span>
+<span class="k">from</span> bahi.agent.tools <span class="k">import</span> _bahi
+
+<span class="k">def</span> run(s, item_code, supplier_code=<span class="k">None</span>):
+    rows = _bahi(s, <span class="s">"po_hist"</span>, itm_cd=item_code, ...)[<span class="s">"rows"</span>]
+    orders = [{<span class="s">"po_no"</span>: r[<span class="s">"po_no"</span>], <span class="s">"rate"</span>: r[<span class="s">"rate"</span>], ...} <span class="k">for</span> r <span class="k">in</span> rows]
+    <span class="k">return</span> {<span class="s">"ok"</span>: <span class="k">True</span>, <span class="s">"orders"</span>: orders,
+            <span class="s">"last_rate"</span>: orders[0][<span class="s">"rate"</span>] <span class="k">if</span> orders <span class="k">else None</span>}
+
+<span class="c"># load, lint, serve</span>
+names = add_tool_dir(<span class="s">"my_tools"</span>);  lint_tool(<span class="s">"purchase_history"</span>)   <span class="c"># []</span>
+server = build_toolbox_server(erp, <span class="s">"KJOSHI"</span>, names=TOOLBOX + names)</pre>
+</section>
+
+<!-- ======================================================== PART 6: MCP -->
+<section class="slide part" data-plain="1" data-num="5">
+  <div class="center">
+    <span class="num">Part 5</span>
+    <h1>MCP: one plug for every app</h1>
+    <p class="lede">The toolbox works in Ask Rasoi. How does it also work in Claude Desktop, the Workflow Studio, and whatever comes next?</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="The N × M Problem">
+  <div class="col" style="width:440px">
+    <h2>Every app, times every tool set</h2>
+    <p>Without a standard, each app writes its own glue for each tool set. 3 apps and 3 tool sets: 9 integrations, each with its own bugs.</p>
+    <p class="step">With one standard plug, each app speaks it once and each tool set speaks it once: 3 + 3.</p>
+    <div class="def step"><b>Definition</b><span class="term">MCP</span>, the Model Context Protocol: an open standard for how an app discovers tools on a server and calls them.</div>
+  </div>
+  <img class="pbimg" src="figs/nxm.jpg" alt="N times M versus N plus M" style="left:600px;top:150px;width:920px">
+</section>
+
+<section class="slide" data-plate="Host, Client, Server">
+  <div class="col" style="width:440px">
+    <h2>Three roles</h2>
+    <p><span class="term">Host</span>: the app the person uses. It holds the model and the conversation: Ask Rasoi, Claude Desktop.</p>
+    <p class="step"><span class="term">Client</span>: inside the host, one per server. It speaks MCP.</p>
+    <p class="step"><span class="term">Server</span>: lists its tools and runs them. Ours is <code>bahi-toolbox</code>, 15 tools, bound to one user's Bahi session.</p>
+    <p class="step">The model still only writes tool calls. The host passes them to the right client.</p>
+  </div>
+  <img class="pbimg" src="figs/mcp_roles.jpg" alt="MCP host, clients and servers" style="left:600px;top:150px;width:920px">
+</section>
+
+<section class="slide" data-plate="JSON-RPC from First Principles">
+  <div class="col" style="width:440px">
+    <h2>The messages are JSON-RPC</h2>
+    <div class="def"><b>Definition</b><span class="term">JSON-RPC</span>: a tiny convention for calling a function on another program: send <code>method</code> and <code>params</code> with an <code>id</code>; get back the same <code>id</code> with a <code>result</code> or an <code>error</code>.</div>
+    <p class="step" style="margin-top:16px">Every MCP session starts with <code>initialize</code>: the two sides agree a protocol version and say what they can do.</p>
+    <p class="step">These three are the real first messages between our client and the toolbox server.</p>
+  </div>
+  <div class="fig" data-fig="jsonrpc" style="left:600px;top:120px;width:920px;height:720px"></div>
+  <div class="cap" style="left:600px;top:850px;width:920px"><code>logs/mcp_wire.json</code>, stdio session; server fastmcp 4.1.4, protocol 2025-06-18.</div>
+</section>
+
+<section class="slide" data-plate="Discovery and Calls, on the Wire">
+  <div class="top" style="top:96px"><h2 style="font-size:42px">tools/list, then tools/call: the whole stdio session</h2>
+    <p class="sub" style="font-size:21px">Our client wrote these lines to the server's stdin and read its stdout. Click any line. The <code>tools/list</code> reply is 9,488 bytes: every tool.json, as MCP sends it.</p></div>
+  <div class="fig" data-fig="wire" style="left:100px;top:215px;width:1400px;height:640px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span>
+</section>
+
+<section class="slide" data-plate="Discovered, Not Hard-coded">
+  <div class="col" style="width:620px">
+    <h2>What the host learns from tools/list</h2>
+    <p>Each tool arrives with its <code>name</code>, <code>description</code> and <code>inputSchema</code>: our tool.json, unchanged.</p>
+    <p class="step">And <b>annotations</b>: <code>readOnlyHint</code> is true for the 7 look-up tools and false for the 8 that write. A careful host asks the person before running a write.</p>
+    <p class="step">A call returns <code>content</code> (text) and <code>isError</code>. A tool that does not exist comes back <code>isError: true</code>, “Unknown tool: 'no_such_tool'”. The host passes it to the model like any result.</p>
+    <p class="step">The host turns each MCP tool back into a function-calling definition for its model. Same tokens: 1,912.</p>
+  </div>
+  <div class="card" style="position:absolute;left:800px;top:140px;width:700px">
+    <span class="tag nt">one entry of the real tools/list reply</span>
+<pre class="json" style="font-size:16.5px;background:#fff">{"name": "check_stock",
+ "title": "Check stock",
+ "description": "Stock of an item in every
+   warehouse: on hand, allocated, on order,
+   reorder level and days of cover.",
+ "inputSchema": {"type": "object",
+   "properties": {"item_code": {
+     "type": "string",
+     "description": "Bahi item code, e.g. GSK-SIL-05L"}},
+   "required": ["item_code"]},
+ "annotations": {"readOnlyHint": true,
+                 "title": "Check stock"}}</pre>
+  </div>
+</section>
+
+<section class="slide" data-plate="Transports">
+  <div class="col" style="width:420px">
+    <h2>Same messages, two pipes</h2>
+    <p><b>stdio</b>: the host starts the server as a child process and writes one JSON message per line. For apps on your own computer.</p>
+    <p class="step"><b>Streamable HTTP</b>: the server listens at <code>/mcp</code>; each message is a POST. The server gives a session id; replies come as JSON or a stream of events. For a web app like Ask Rasoi.</p>
+  </div>
+  <img class="pbimg step" src="figs/transports.jpg" alt="stdio and streamable HTTP" style="left:560px;top:100px;width:960px">
+</section>
+
+<section class="slide" data-plate="Streamable HTTP, Really">
+  <div class="col" style="width:420px">
+    <h2>Four POSTs to /mcp</h2>
+    <p>The same server started with <code>--transport http --port 8765</code>, and the same JSON-RPC messages sent as raw POSTs.</p>
+    <p class="step">The notification got <b>202</b> and no body: nothing to reply to.</p>
+    <p class="step">After <code>initialize</code>, every request carries the <code>mcp-session-id</code> the server handed out.</p>
+  </div>
+  <div class="fig" data-fig="http" style="left:560px;top:130px;width:960px;height:700px"></div>
+</section>
+
+<section class="slide" data-plate="The Same Server in Claude Desktop">
+  <div class="col" style="width:520px">
+    <h2>Plug it in, nothing rewritten</h2>
+    <p>Claude Desktop is an MCP host. Tell it how to start the server; it talks stdio.</p>
+    <p class="step">On restart it calls <code>tools/list</code> and shows the 15 tools. Ask it to check stock and it runs <code>check_stock</code> in <b>Kavita's</b> session, because that is how the server was started.</p>
+    <p class="step small">What we tested: this exact command, speaking stdio, on Modal (<code>logs/mcp_wire.json</code>). Claude Desktop itself cannot run there; try it on your laptop with the course package installed.</p>
+  </div>
+<pre class="code fig" style="left:700px;top:150px;width:820px;height:480px"><span class="c">// claude_desktop_config.json</span>
+{
+  <span class="s">"mcpServers"</span>: {
+    <span class="s">"bahi-toolbox"</span>: {
+      <span class="s">"command"</span>: <span class="s">"python"</span>,
+      <span class="s">"args"</span>: [<span class="s">"-m"</span>, <span class="s">"bahi.toolbox.mcp"</span>,
+               <span class="s">"--user"</span>, <span class="s">"KJOSHI"</span>]
+    }
+  }
+}
+
+<span class="c"># the same server for a web host, over HTTP</span>
+python -m bahi.toolbox.mcp --user KJOSHI \
+       --transport http --port 8765     <span class="c"># at /mcp</span></pre>
+</section>
+
+<section class="slide" data-plate="The Same Server in Ask Rasoi">
+  <div class="col" style="width:460px">
+    <h2>Ask Rasoi is a host too</h2>
+    <p>Ask Rasoi does not import the tools. It <b>discovers</b> them: one client per server, the schemas from <code>tools/list</code>, each call a <code>tools/call</code>.</p>
+    <p class="step">Add a server (email, a supplier portal) and Ask Rasoi gains its tools with no code change.</p>
+    <p class="step">At the <b>hands</b> stage it takes one tool round per message: the model may call tools once, then it must answer.</p>
+  </div>
+<pre class="code fig" style="left:640px;top:140px;width:880px;height:560px"><span class="k">from</span> bahi.toolbox.mcp <span class="k">import</span> build_toolbox_server
+<span class="k">from</span> bahi.mcp_server <span class="k">import</span> MCPClient, MCPClientTools
+<span class="k">from</span> bahi.course.l4 <span class="k">import</span> one_round, HANDS_SYSTEM
+
+server = build_toolbox_server(erp, user=<span class="s">"KJOSHI"</span>)  <span class="c"># her session</span>
+tools  = MCPClientTools(MCPClient(server))       <span class="c"># tools/list</span>
+llm    = LLM(<span class="s">"gemini:gemini-3.8-flash"</span>)
+
+messages = [{<span class="s">"role"</span>: <span class="s">"system"</span>, <span class="s">"content"</span>: HANDS_SYSTEM...},
+            {<span class="s">"role"</span>: <span class="s">"user"</span>,
+             <span class="s">"content"</span>: <span class="s">"Check stock of the 5-litre gasket, GSK-SIL-05L."</span>}]
+r = one_round(llm, tools, messages)   <span class="c"># model → tools/call → model</span>
+print(r[<span class="s">"calls"</span>], r[<span class="s">"answer"</span>])</pre>
+</section>
+
+<section class="slide" data-plate="Whose Permissions Does a Server Carry?">
+  <div class="col" style="width:460px">
+    <h2>An MCP server is a pair of hands</h2>
+    <p>Whoever can reach the server acts as the user it was started for. We started two and sent both the same <code>tools/call</code>.</p>
+    <p class="step"><b>Rules for Rasoi</b>: bind each server to the signed-in person's own session; never to SVC_AGENT.</p>
+    <p class="step">Install servers only from people you trust: their descriptions go straight into your model's prompt.</p>
+    <p class="step">Put sign-in in front of an HTTP server. Lecture 7 builds the trust layer.</p>
+  </div>
+  <img class="pbimg" src="figs/whose.jpg" alt="Same tool call, two server identities" style="left:620px;top:150px;width:880px">
+  <div class="cap" style="left:620px;top:665px;width:880px">Real replies over stdio, <code>logs/mcp_wire.json</code> (whose): as KJOSHI “ACCESS DENIED (ERR-SEC-0001)”; as SVC_AGENT “APPROVED, NOT YET RELEASED”.</div>
+</section>
+
+<section class="slide" data-plate="Check Yourself · MCP">
+  <div style="position:absolute;left:100px;right:100px;top:120px;display:grid;grid-template-columns:1fr 1fr;gap:22px">
+    <div class="q"><b>Question 1</b>Rasoi adds a supplier-portal server with 6 tools. How many integrations do Ask Rasoi, Claude Desktop and the Studio need?<div class="ans step">None new on their side: each already speaks MCP. The portal team writes one server.</div></div>
+    <div class="q"><b>Question 2</b>Which MCP message tells the host what a tool's arguments are?<div class="ans step"><code>tools/list</code>: each tool's <code>inputSchema</code>, which is our tool.json's input_schema.</div></div>
+    <div class="q"><b>Question 3</b>Claude Desktop runs our server. Who is the host, the client and the server?<div class="ans step">Host: Claude Desktop. Client: the MCP client inside it. Server: <code>python -m bahi.toolbox.mcp</code>.</div></div>
+    <div class="q"><b>Question 4</b>Why did <code>notifications/initialized</code> get a 202 with no body?<div class="ans step">It has no <code>id</code>: it is a notification, so there is nothing to reply to.</div></div>
+  </div>
+</section>
+
+<!-- ======================================================== PRACTICAL ENDING -->
+<section class="slide" data-plate="Ask Rasoi Gets Its Hands">
+  <div class="top" style="top:96px"><h2 style="font-size:42px">Kavita checks stock and raises the PR. Rohit approves.</h2>
+    <p class="sub" style="font-size:21px">Ask Rasoi at the hands stage: gemini-3.8-flash, the toolbox over MCP, one tool round per message. Recorded run, <code>logs/demo_hands.json</code>.</p></div>
+  <div class="fig" data-fig="chat" style="left:100px;top:205px;width:1400px;height:655px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span>
+  <a class="pill" href="https://rajatworkspace--rasoi-experience.us-east.modal.run/after?stage=hands" target="_blank" style="position:absolute;left:870px;top:800px">Try it live · Ask Rasoi, hands stage</a>
+</section>
+
+<section class="slide" data-plate="What One Round Cannot Do">
+  <div class="col" style="width:600px">
+    <h2>Give it the code, it works. Give it words…</h2>
+    <p>“Check stock of the 5-litre gasket, GSK-SIL-05L.” One tool, one round: 54,000 in Pune, 12,000 in Chakan.</p>
+    <p class="step">Without the code, the model calls <code>find_item</code>, then wants <code>check_stock</code>. At this stage, one round is all it gets.</p>
+    <p class="step">So it answers half-way: “I am ready to check the stock levels… Would you like me to proceed?”</p>
+    <p class="step">Kavita's order needs more: request → wait for Rohit → order → release → receipt. That needs a <b>loop</b> that keeps going until the job is done. <b>Lecture 5.</b></p>
+  </div>
+  <div class="card" style="position:absolute;left:780px;top:150px;width:720px;font-size:20px">
+    <span class="tag nt">recorded · no-code variant</span><br>
+    <b>Kavita</b>: Check stock of the 5-litre gasket.<br>
+    <span class="small">tool call: find_item {"query": "5 litre gasket"}<br>wanted next, not run: check_stock {"item_code": "GSK-SIL-05L"}</span><br><br>
+    <b>Ask Rasoi</b>: The 5-litre gasket is catalogued under item code GSK-SIL-05L (Gasket, silicone, 5 L, Unit: NOS, food contact: true). I am ready to check the stock levels across all warehouses for GSK-SIL-05L. Would you like me to proceed?
+  </div>
+</section>
+
+<section class="slide" data-plate="Build · NB4">
+  <div class="col" style="width:520px">
+    <h2>NB4: The Hands</h2>
+    <ol class="legend" style="font-size:21px">
+      <li><span class="n">1</span><span>A raw function-calling round trip, by hand. <b>Ex. 1</b>: run the tool calls.</span></li>
+      <li class="step"><span class="n">2</span><span>JSON Schema: validate against tool.json. <b>Ex. 2</b>: a tiny validator.</span></li>
+      <li class="step"><span class="n">3</span><span>The chain: PR → approve → PO → release → GRN.</span></li>
+      <li class="step"><span class="n">4</span><span>A new tool folder. <b>Ex. 3</b>: <code>cancel_purchase_order</code> with preview, receipt and a safe repeat.</span></li>
+      <li class="step"><span class="n">5</span><span>Idempotency under an injected timeout. <b>Ex. 4</b>: keys.</span></li>
+      <li class="step"><span class="n">6</span><span>MCP on the wire. <b>Ex. 5</b>: find the write tools. Then one model round over MCP.</span></li>
+    </ol>
+    <span class="nb-ref">NB4_the_hands.ipynb · runs with no key (cassette L4v3_nb)</span>
+  </div>
+<pre class="code fig" style="left:700px;top:130px;width:820px;height:700px">llm = LLM(<span class="s">"gemini:gemini-3.8-flash"</span>, cassette=<span class="s">"L4v3_nb"</span>)
+reply = llm.chat(messages, tools=kavita.schemas())
+<span class="c"># tool call: find_item {'query': '5-litre gasket'}</span>
+
+<span class="k">def</span> run_tool_calls(reply, toolbox):        <span class="c"># exercise 1</span>
+    <span class="k">return</span> [{<span class="s">"role"</span>: <span class="s">"tool"</span>, <span class="s">"tool_call_id"</span>: tc.id,
+             <span class="s">"content"</span>: json.dumps(toolbox.call(tc.name, tc.arguments))}
+            <span class="k">for</span> tc <span class="k">in</span> reply.tool_calls]
+
+validate_args(<span class="s">"approve_purchase_request"</span>,
+              {<span class="s">"request_no"</span>: <span class="s">"PR/2026/04417"</span>, <span class="s">"decision"</span>: <span class="s">"yes"</span>})
+<span class="c"># ["decision: 'yes' is not one of ['approve', 'reject']"]</span>
+
+<span class="c"># exercise 3: cancel PO/2026/01179, then cancel it again</span>
+<span class="c"># preview : WAITING FOR APPROVAL | still PA in Bahi</span>
+<span class="c"># cancel  : CANCELLED</span>
+<span class="c"># again   : True CANCELLED</span>
+
+wire = stdio_wire(handshake() + [{<span class="s">"jsonrpc"</span>: <span class="s">"2.0"</span>, <span class="s">"id"</span>: 2,
+                                   <span class="s">"method"</span>: <span class="s">"tools/list"</span>}])</pre>
+</section>
+
+<section class="slide" data-plate="A4 · Your Module's Hands">
+  <div class="col" style="width:640px">
+    <h2>A4: 3–4 tool folders for your module</h2>
+    <ol class="legend" style="font-size:22px">
+      <li><span class="n">1</span><span>List your kit's raw services. Pick 3–4 <b>business activities</b> (at least one read and one write).</span></li>
+      <li class="step"><span class="n">2</span><span>One folder each: <code>tool.json</code> + <code>tool.py</code> over your kit's services, keeping the six promises.</span></li>
+      <li class="step"><span class="n">3</span><span>Pass <code>lint_tool</code>; test the trap your module hides (its silent outcome) and a lost reply on your write.</span></li>
+      <li class="step"><span class="n">4</span><span>Serve them over MCP in the speaker's session; submit the <code>tools/list</code> wire and one <code>tools/call</code>.</span></li>
+    </ol>
+  </div>
+  <div class="card" style="position:absolute;left:820px;top:140px;width:680px">
+    <h3>Graded (feeds the /100 rubric)</h3>
+    <b>Tools · 20</b>: the six promises per tool, a receipt read back, a lost-reply test that leaves one document.<br><br>
+    <b>Guided track</b>: copy <code>purchase_history</code> and the <code>cancel_purchase_order</code> pattern; change the service and fields.<br>
+    <b>Builder track</b>: design the activities yourself and add a tool the module's speaker would ask for first.<br><br>
+    <span class="small">Example, HR · leave: <code>leave_balance</code>, <code>apply_leave</code> (preview, key, receipt), <code>my_leave_status</code>. Details: <code>A4.md</code>.</span>
+  </div>
+</section>
+
+<section class="slide" data-plate="Where We Are">
+  <div class="col" style="width:420px">
+    <h2>The Hands, lit</h2>
+    <p>Ask Rasoi now has a brain (L2), knowledge (L3) and hands: <b>the toolbox, over MCP</b>.</p>
+    <p class="step">Every tool keeps six promises, so the hands are safe whichever model or app holds them.</p>
+    <p class="step">What is missing is the loop around them: plan, act, look, act again, wait for Rohit.</p>
+  </div>
+  <div class="fig" data-fig="map" style="left:560px;top:150px;width:960px;height:540px"></div>
+  <span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plain="1" style="">
+  <div class="center">
+    <div class="kicker">Next time · Sat 14 Nov 2026</div>
+    <h1 style="font-size:96px">The Loop</h1>
+    <p class="lede" style="margin-top:22px">What makes it an agent. ReAct written out by hand, then shown to be what native tool calling already does: the tool result <i>is</i> the observation. Ask Rasoi runs PR → wait for Rohit → PO → release → GRN.</p>
+  </div>
+</section>
+
+</div>
+<script src="figdata.js"></script>
+<script src="figs.js"></script>
+<script src="../../engine/plates.js"></script>
+</body>
+</html>

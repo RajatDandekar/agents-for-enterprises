@@ -1,0 +1,2447 @@
+{
+ "inmemory": {
+  "n_tools": 15,
+  "names": [
+   "find_item",
+   "check_stock",
+   "find_supplier",
+   "check_budget",
+   "search_policy",
+   "create_purchase_request",
+   "list_my_approvals",
+   "approve_purchase_request",
+   "create_purchase_order",
+   "approve_purchase_order",
+   "release_purchase_order",
+   "order_status",
+   "receive_goods",
+   "register_supplier",
+   "send_message"
+  ],
+  "wire": [
+   {
+    "method": "tools/list",
+    "params": {},
+    "result": {
+     "tools": [
+      {
+       "name": "find_item",
+       "title": "Find item",
+       "description": "Find stock items by description or code (e.g. '5 litre silicone gasket'). Returns active items, best match first, with code, unit and whether they touch food.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "query": {
+          "type": "string",
+          "description": "words describing the item, or its code"
+         }
+        },
+        "required": [
+         "query"
+        ]
+       },
+       "annotations": {
+        "title": "Find item",
+        "readOnlyHint": true
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "check_stock",
+       "title": "Check stock",
+       "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Bahi item code, e.g. GSK-SIL-05L"
+         }
+        },
+        "required": [
+         "item_code"
+        ]
+       },
+       "annotations": {
+        "title": "Check stock",
+        "readOnlyHint": true
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "find_supplier",
+       "title": "Find supplier",
+       "description": "Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid food-grade certificate. Use it before registering anyone new.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "description": "the supplier's name as the user said it"
+         },
+         "city": {
+          "type": "string",
+          "description": "optional city, to tell two branches apart"
+         }
+        },
+        "required": [
+         "name"
+        ]
+       },
+       "annotations": {
+        "title": "Find supplier",
+        "readOnlyHint": true
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "check_budget",
+       "title": "Check budget",
+       "description": "Is a cost centre open, and how much budget is left this quarter? Without a code, lists every open cost centre.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "cost_centre": {
+          "type": "string",
+          "description": "cost centre code, e.g. PRD-07; leave out to list the open ones"
+         }
+        },
+        "required": []
+       },
+       "annotations": {
+        "title": "Check budget",
+        "readOnlyHint": true
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "search_policy",
+       "title": "Search policy",
+       "description": "Search Rasoi's purchasing policy and the Bahi manual. Returns the relevant clauses with their citations, or says the documents do not cover it.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "question": {
+          "type": "string",
+          "description": "the policy question in plain words"
+         }
+        },
+        "required": [
+         "question"
+        ]
+       },
+       "annotations": {
+        "title": "Search policy",
+        "readOnlyHint": true
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "create_purchase_request",
+       "title": "Create purchase request",
+       "description": "Raise a purchase request (PR): the internal ask to buy something. With confirm=false it previews the estimated value and who must approve; with confirm=true it saves and submits it. Within your limit it is approved at once; above it, it waits for your manager.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Bahi item code"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "how many, in the item's unit"
+         },
+         "cost_centre": {
+          "type": "string",
+          "description": "who pays, e.g. PRD-07"
+         },
+         "need_by": {
+          "type": "string",
+          "description": "date needed, YYYY-MM-DD"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "item_code",
+         "quantity",
+         "cost_centre",
+         "need_by"
+        ]
+       },
+       "annotations": {
+        "title": "Create purchase request",
+        "readOnlyHint": false
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "list_my_approvals",
+       "title": "List my approvals",
+       "description": "What is waiting for the signed-in user's signature: purchase requests and orders, with value and who raised them.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+       },
+       "annotations": {
+        "title": "List my approvals",
+        "readOnlyHint": true
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "approve_purchase_request",
+       "title": "Approve purchase request",
+       "description": "Approve or reject a purchase request that waits for the signed-in user. Only the named approver can do this, never the person who raised it.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "request_no": {
+          "type": "string",
+          "description": "e.g. PR/2026/04417"
+         },
+         "decision": {
+          "type": "string",
+          "enum": [
+           "approve",
+           "reject"
+          ],
+          "description": "approve or reject"
+         },
+         "comment": {
+          "type": "string",
+          "description": "optional note to the requester"
+         }
+        },
+        "required": [
+         "request_no",
+         "decision"
+        ]
+       },
+       "annotations": {
+        "title": "Approve purchase request",
+        "readOnlyHint": false
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "create_purchase_order",
+       "title": "Create purchase order",
+       "description": "Create a purchase order (PO) with a supplier. Give request_no for an approved purchase request (it supplies item, quantity, cost centre and date), or item_code, quantity, cost_centre and need_by for a small direct order up to Rs 50,000. confirm=false previews price, tax and value; confirm=true saves it. Returns a receipt with the order's real status: an APPROVED order still has to be released.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "supplier_code": {
+          "type": "string",
+          "description": "Bahi supplier code, from find_supplier"
+         },
+         "request_no": {
+          "type": "string",
+          "description": "an APPROVED purchase request"
+         },
+         "item_code": {
+          "type": "string",
+          "description": "for a direct order"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "for a direct order"
+         },
+         "cost_centre": {
+          "type": "string",
+          "description": "for a direct order"
+         },
+         "need_by": {
+          "type": "string",
+          "description": "for a direct order, YYYY-MM-DD"
+         },
+         "rate": {
+          "type": "number",
+          "description": "omit to use the contract rate"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "supplier_code"
+        ]
+       },
+       "annotations": {
+        "title": "Create purchase order",
+        "readOnlyHint": false
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "approve_purchase_order",
+       "title": "Approve purchase order",
+       "description": "Approve a purchase order that waits for the signed-in user's signature.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         },
+         "comment": {
+          "type": "string",
+          "description": "optional"
+         }
+        },
+        "required": [
+         "po_no"
+        ]
+       },
+       "annotations": {
+        "title": "Approve purchase order",
+        "readOnlyHint": false
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "release_purchase_order",
+       "title": "Release purchase order",
+       "description": "Release an APPROVED purchase order to the supplier; only then does the supplier get it. Returns a receipt with the real status.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         }
+        },
+        "required": [
+         "po_no"
+        ]
+       },
+       "annotations": {
+        "title": "Release purchase order",
+        "readOnlyHint": false
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "order_status",
+       "title": "Order status",
+       "description": "The real status of a purchase order or a purchase request, read from Bahi, with approval, goods received and any warning.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         },
+         "request_no": {
+          "type": "string",
+          "description": "e.g. PR/2026/04417"
+         }
+        },
+        "required": []
+       },
+       "annotations": {
+        "title": "Order status",
+        "readOnlyHint": true
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "receive_goods",
+       "title": "Receive goods",
+       "description": "Record goods received (GRN) against a RELEASED purchase order: stock goes up, and the order closes once everything has arrived. Cannot receive more than was ordered.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "the released order the goods came against"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "how many arrived"
+         },
+         "warehouse": {
+          "type": "string",
+          "description": "optional; defaults to the order's warehouse"
+         },
+         "remarks": {
+          "type": "string",
+          "description": "optional, e.g. vehicle number"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "po_no",
+         "quantity"
+        ]
+       },
+       "annotations": {
+        "title": "Receive goods",
+        "readOnlyHint": false
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "register_supplier",
+       "title": "Register supplier",
+       "description": "Register a NEW supplier. Only after find_supplier shows no existing match. confirm=false previews and checks for duplicates; confirm=true creates it.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "description": "registered name"
+         },
+         "city": {
+          "type": "string",
+          "description": ""
+         },
+         "state": {
+          "type": "string",
+          "description": "Indian state"
+         },
+         "gstin": {
+          "type": "string",
+          "description": "15-character GSTIN"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "name",
+         "city",
+         "state",
+         "gstin"
+        ]
+       },
+       "annotations": {
+        "title": "Register supplier",
+        "readOnlyHint": false
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "send_message",
+       "title": "Send message",
+       "description": "Send a short message to a colleague or supplier (Slack handle like @rohit, or an email address). Goes through Bahi's notification queue.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "to": {
+          "type": "string",
+          "description": "@handle or email"
+         },
+         "text": {
+          "type": "string",
+          "description": "the message"
+         }
+        },
+        "required": [
+         "to",
+         "text"
+        ]
+       },
+       "annotations": {
+        "title": "Send message",
+        "readOnlyHint": false
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      }
+     ]
+    }
+   },
+   {
+    "method": "tools/call",
+    "params": {
+     "name": "check_stock",
+     "arguments": {
+      "item_code": "GSK-SIL-05L"
+     }
+    },
+    "result": {
+     "_meta": {
+      "io.modelcontextprotocol/serverInfo": {
+       "name": "bahi-toolbox",
+       "version": "4.1.4"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "{\"ok\": true, \"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"warehouses\": [{\"warehouse\": \"WH-PUN-STR\", \"name\": \"Pune main stores\", \"on_hand\": 54000, \"allocated\": 0, \"on_order\": 0, \"free\": 54000}, {\"warehouse\": \"WH-CHK-STR\", \"name\": \"Chakan stores\", \"on_hand\": 12000, \"allocated\": 0, \"on_order\": 0, \"free\": 12000}], \"free_total\": 66000, \"on_order_total\": 0, \"reorder_level\": 30000, \"cover_days\": 11, \"below_reorder\": false}"
+      }
+     ],
+     "isError": false,
+     "resultType": "complete"
+    }
+   },
+   {
+    "method": "tools/call",
+    "params": {
+     "name": "check_stock",
+     "arguments": {
+      "item_code": 42
+     }
+    },
+    "result": {
+     "_meta": {
+      "io.modelcontextprotocol/serverInfo": {
+       "name": "bahi-toolbox",
+       "version": "4.1.4"
+      }
+     },
+     "content": [
+      {
+       "type": "text",
+       "text": "{\"ok\": false, \"error\": \"'item_code' should be string, got int.\", \"next_step\": \"Pass item_code as string.\", \"bahi_code\": \"\"}"
+      }
+     ],
+     "isError": false,
+     "resultType": "complete"
+    }
+   },
+   {
+    "method": "tools/list",
+    "params": {},
+    "result": {
+     "tools": [
+      {
+       "name": "find_item",
+       "title": "Find item",
+       "description": "Find stock items by description or code (e.g. '5 litre silicone gasket'). Returns active items, best match first, with code, unit and whether they touch food.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "query": {
+          "type": "string",
+          "description": "words describing the item, or its code"
+         }
+        },
+        "required": [
+         "query"
+        ]
+       },
+       "annotations": {
+        "title": "Find item",
+        "readOnlyHint": true
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "check_stock",
+       "title": "Check stock",
+       "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Bahi item code, e.g. GSK-SIL-05L"
+         }
+        },
+        "required": [
+         "item_code"
+        ]
+       },
+       "annotations": {
+        "title": "Check stock",
+        "readOnlyHint": true
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "find_supplier",
+       "title": "Find supplier",
+       "description": "Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid food-grade certificate. Use it before registering anyone new.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "description": "the supplier's name as the user said it"
+         },
+         "city": {
+          "type": "string",
+          "description": "optional city, to tell two branches apart"
+         }
+        },
+        "required": [
+         "name"
+        ]
+       },
+       "annotations": {
+        "title": "Find supplier",
+        "readOnlyHint": true
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "check_budget",
+       "title": "Check budget",
+       "description": "Is a cost centre open, and how much budget is left this quarter? Without a code, lists every open cost centre.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "cost_centre": {
+          "type": "string",
+          "description": "cost centre code, e.g. PRD-07; leave out to list the open ones"
+         }
+        },
+        "required": []
+       },
+       "annotations": {
+        "title": "Check budget",
+        "readOnlyHint": true
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "search_policy",
+       "title": "Search policy",
+       "description": "Search Rasoi's purchasing policy and the Bahi manual. Returns the relevant clauses with their citations, or says the documents do not cover it.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "question": {
+          "type": "string",
+          "description": "the policy question in plain words"
+         }
+        },
+        "required": [
+         "question"
+        ]
+       },
+       "annotations": {
+        "title": "Search policy",
+        "readOnlyHint": true
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "create_purchase_request",
+       "title": "Create purchase request",
+       "description": "Raise a purchase request (PR): the internal ask to buy something. With confirm=false it previews the estimated value and who must approve; with confirm=true it saves and submits it. Within your limit it is approved at once; above it, it waits for your manager.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Bahi item code"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "how many, in the item's unit"
+         },
+         "cost_centre": {
+          "type": "string",
+          "description": "who pays, e.g. PRD-07"
+         },
+         "need_by": {
+          "type": "string",
+          "description": "date needed, YYYY-MM-DD"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "item_code",
+         "quantity",
+         "cost_centre",
+         "need_by"
+        ]
+       },
+       "annotations": {
+        "title": "Create purchase request",
+        "readOnlyHint": false
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "list_my_approvals",
+       "title": "List my approvals",
+       "description": "What is waiting for the signed-in user's signature: purchase requests and orders, with value and who raised them.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+       },
+       "annotations": {
+        "title": "List my approvals",
+        "readOnlyHint": true
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "approve_purchase_request",
+       "title": "Approve purchase request",
+       "description": "Approve or reject a purchase request that waits for the signed-in user. Only the named approver can do this, never the person who raised it.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "request_no": {
+          "type": "string",
+          "description": "e.g. PR/2026/04417"
+         },
+         "decision": {
+          "type": "string",
+          "enum": [
+           "approve",
+           "reject"
+          ],
+          "description": "approve or reject"
+         },
+         "comment": {
+          "type": "string",
+          "description": "optional note to the requester"
+         }
+        },
+        "required": [
+         "request_no",
+         "decision"
+        ]
+       },
+       "annotations": {
+        "title": "Approve purchase request",
+        "readOnlyHint": false
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "create_purchase_order",
+       "title": "Create purchase order",
+       "description": "Create a purchase order (PO) with a supplier. Give request_no for an approved purchase request (it supplies item, quantity, cost centre and date), or item_code, quantity, cost_centre and need_by for a small direct order up to Rs 50,000. confirm=false previews price, tax and value; confirm=true saves it. Returns a receipt with the order's real status: an APPROVED order still has to be released.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "supplier_code": {
+          "type": "string",
+          "description": "Bahi supplier code, from find_supplier"
+         },
+         "request_no": {
+          "type": "string",
+          "description": "an APPROVED purchase request"
+         },
+         "item_code": {
+          "type": "string",
+          "description": "for a direct order"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "for a direct order"
+         },
+         "cost_centre": {
+          "type": "string",
+          "description": "for a direct order"
+         },
+         "need_by": {
+          "type": "string",
+          "description": "for a direct order, YYYY-MM-DD"
+         },
+         "rate": {
+          "type": "number",
+          "description": "omit to use the contract rate"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "supplier_code"
+        ]
+       },
+       "annotations": {
+        "title": "Create purchase order",
+        "readOnlyHint": false
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "approve_purchase_order",
+       "title": "Approve purchase order",
+       "description": "Approve a purchase order that waits for the signed-in user's signature.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         },
+         "comment": {
+          "type": "string",
+          "description": "optional"
+         }
+        },
+        "required": [
+         "po_no"
+        ]
+       },
+       "annotations": {
+        "title": "Approve purchase order",
+        "readOnlyHint": false
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "release_purchase_order",
+       "title": "Release purchase order",
+       "description": "Release an APPROVED purchase order to the supplier; only then does the supplier get it. Returns a receipt with the real status.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         }
+        },
+        "required": [
+         "po_no"
+        ]
+       },
+       "annotations": {
+        "title": "Release purchase order",
+        "readOnlyHint": false
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "order_status",
+       "title": "Order status",
+       "description": "The real status of a purchase order or a purchase request, read from Bahi, with approval, goods received and any warning.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         },
+         "request_no": {
+          "type": "string",
+          "description": "e.g. PR/2026/04417"
+         }
+        },
+        "required": []
+       },
+       "annotations": {
+        "title": "Order status",
+        "readOnlyHint": true
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "receive_goods",
+       "title": "Receive goods",
+       "description": "Record goods received (GRN) against a RELEASED purchase order: stock goes up, and the order closes once everything has arrived. Cannot receive more than was ordered.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "the released order the goods came against"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "how many arrived"
+         },
+         "warehouse": {
+          "type": "string",
+          "description": "optional; defaults to the order's warehouse"
+         },
+         "remarks": {
+          "type": "string",
+          "description": "optional, e.g. vehicle number"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "po_no",
+         "quantity"
+        ]
+       },
+       "annotations": {
+        "title": "Receive goods",
+        "readOnlyHint": false
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "register_supplier",
+       "title": "Register supplier",
+       "description": "Register a NEW supplier. Only after find_supplier shows no existing match. confirm=false previews and checks for duplicates; confirm=true creates it.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "description": "registered name"
+         },
+         "city": {
+          "type": "string",
+          "description": ""
+         },
+         "state": {
+          "type": "string",
+          "description": "Indian state"
+         },
+         "gstin": {
+          "type": "string",
+          "description": "15-character GSTIN"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "name",
+         "city",
+         "state",
+         "gstin"
+        ]
+       },
+       "annotations": {
+        "title": "Register supplier",
+        "readOnlyHint": false
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      },
+      {
+       "name": "send_message",
+       "title": "Send message",
+       "description": "Send a short message to a colleague or supplier (Slack handle like @rohit, or an email address). Goes through Bahi's notification queue.",
+       "inputSchema": {
+        "type": "object",
+        "properties": {
+         "to": {
+          "type": "string",
+          "description": "@handle or email"
+         },
+         "text": {
+          "type": "string",
+          "description": "the message"
+         }
+        },
+        "required": [
+         "to",
+         "text"
+        ]
+       },
+       "annotations": {
+        "title": "Send message",
+        "readOnlyHint": false
+       },
+       "_meta": {
+        "fastmcp": {
+         "tags": []
+        }
+       }
+      }
+     ]
+    }
+   }
+  ],
+  "client_schema_check_stock": {
+   "type": "function",
+   "function": {
+    "name": "check_stock",
+    "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+    "parameters": {
+     "type": "object",
+     "properties": {
+      "item_code": {
+       "type": "string",
+       "description": "Bahi item code, e.g. GSK-SIL-05L"
+      }
+     },
+     "required": [
+      "item_code"
+     ]
+    }
+   }
+  }
+ },
+ "stdio": {
+  "command": [
+   "python",
+   "-m",
+   "bahi.toolbox.mcp",
+   "--user",
+   "KJOSHI"
+  ],
+  "seconds": 1.59,
+  "wire": [
+   {
+    "dir": "->",
+    "msg": {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "method": "initialize",
+     "params": {
+      "protocolVersion": "2025-06-18",
+      "capabilities": {},
+      "clientInfo": {
+       "name": "nb4-client",
+       "version": "1.0"
+      }
+     }
+    }
+   },
+   {
+    "dir": "<-",
+    "msg": {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "result": {
+      "protocolVersion": "2025-06-18",
+      "capabilities": {
+       "logging": {},
+       "prompts": {
+        "listChanged": true
+       },
+       "resources": {
+        "subscribe": false,
+        "listChanged": true
+       },
+       "tools": {
+        "listChanged": true
+       }
+      },
+      "serverInfo": {
+       "name": "bahi-toolbox",
+       "version": "4.1.4"
+      },
+      "instructions": "Rasoi Steel Works' Bahi ERP, as KJOSHI. One tool per business activity."
+     }
+    }
+   },
+   {
+    "dir": "->",
+    "msg": {
+     "jsonrpc": "2.0",
+     "method": "notifications/initialized"
+    }
+   },
+   {
+    "dir": "->",
+    "msg": {
+     "jsonrpc": "2.0",
+     "id": 2,
+     "method": "tools/list"
+    }
+   },
+   {
+    "dir": "<-",
+    "msg": {
+     "jsonrpc": "2.0",
+     "id": 2,
+     "result": {
+      "tools": [
+       {
+        "_meta": {
+         "fastmcp": {
+          "tags": []
+         }
+        },
+        "annotations": {
+         "readOnlyHint": true,
+         "title": "Find item"
+        },
+        "description": "Find stock items by description or code (e.g. '5 litre silicone gasket'). Returns active items, best match first, with code, unit and whether they touch food.",
+        "inputSchema": {
+         "properties": {
+          "query": {
+           "type": "string",
+           "description": "words describing the item, or its code"
+          }
+         },
+         "required": [
+          "query"
+         ],
+         "type": "object"
+        },
+        "name": "find_item",
+        "title": "Find item"
+       },
+       {
+        "_meta": {
+         "fastmcp": {
+          "tags": []
+         }
+        },
+        "annotations": {
+         "readOnlyHint": true,
+         "title": "Check stock"
+        },
+        "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+        "inputSchema": {
+         "properties": {
+          "item_code": {
+           "type": "string",
+           "description": "Bahi item code, e.g. GSK-SIL-05L"
+          }
+         },
+         "required": [
+          "item_code"
+         ],
+         "type": "object"
+        },
+        "name": "check_stock",
+        "title": "Check stock"
+       },
+       {
+        "_meta": {
+         "fastmcp": {
+          "tags": []
+         }
+        },
+        "annotations": {
+         "readOnlyHint": true,
+         "title": "Find supplier"
+        },
+        "description": "Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid food-grade certificate. Use it before registering anyone new.",
+        "inputSchema": {
+         "properties": {
+          "name": {
+           "type": "string",
+           "description": "the supplier's name as the user said it"
+          },
+          "city": {
+           "type": "string",
+           "description": "optional city, to tell two branches apart"
+          }
+         },
+         "required": [
+          "name"
+         ],
+         "type": "object"
+        },
+        "name": "find_supplier",
+        "title": "Find supplier"
+       },
+       {
+        "_meta": {
+         "fastmcp": {
+          "tags": []
+         }
+        },
+        "annotations": {
+         "readOnlyHint": true,
+         "title": "Check budget"
+        },
+        "description": "Is a cost centre open, and how much budget is left this quarter? Without a code, lists every open cost centre.",
+        "inputSchema": {
+         "properties": {
+          "cost_centre": {
+           "type": "string",
+           "description": "cost centre code, e.g. PRD-07; leave out to list the open ones"
+          }
+         },
+         "required": [],
+         "type": "object"
+        },
+        "name": "check_budget",
+        "title": "Check budget"
+       },
+       {
+        "_meta": {
+         "fastmcp": {
+          "tags": []
+         }
+        },
+        "annotations": {
+         "readOnlyHint": true,
+         "title": "Search policy"
+        },
+        "description": "Search Rasoi's purchasing policy and the Bahi manual. Returns the relevant clauses with their citations, or says the documents do not cover it.",
+        "inputSchema": {
+         "properties": {
+          "question": {
+           "type": "string",
+           "description": "the policy question in plain words"
+          }
+         },
+         "required": [
+          "question"
+         ],
+         "type": "object"
+        },
+        "name": "search_policy",
+        "title": "Search policy"
+       },
+       {
+        "_meta": {
+         "fastmcp": {
+          "tags": []
+         }
+        },
+        "annotations": {
+         "readOnlyHint": false,
+         "title": "Create purchase request"
+        },
+        "description": "Raise a purchase request (PR): the internal ask to buy something. With confirm=false it previews the estimated value and who must approve; with confirm=true it saves and submits it. Within your limit it is approved at once; above it, it waits for your manager.",
+        "inputSchema": {
+         "properties": {
+          "item_code": {
+           "type": "string",
+           "description": "Bahi item code"
+          },
+          "quantity": {
+           "type": "integer",
+           "description": "how many, in the item's unit"
+          },
+          "cost_centre": {
+           "type": "string",
+           "description": "who pays, e.g. PRD-07"
+          },
+          "need_by": {
+           "type": "string",
+           "description": "date needed, YYYY-MM-DD"
+          },
+          "confirm": {
+           "type": "boolean",
+           "description": "false (default) = preview only, nothing is saved; true = commit"
+          }
+         },
+         "required": [
+          "item_code",
+          "quantity",
+          "cost_centre",
+          "need_by"
+         ],
+         "type": "object"
+        },
+        "name": "create_purchase_request",
+        "title": "Create purchase request"
+       },
+       {
+        "_meta": {
+         "fastmcp": {
+          "tags": []
+         }
+        },
+        "annotations": {
+         "readOnlyHint": true,
+         "title": "List my approvals"
+        },
+        "description": "What is waiting for the signed-in user's signature: purchase requests and orders, with value and who raised them.",
+        "inputSchema": {
+         "properties": {},
+         "required": [],
+         "type": "object"
+        },
+        "name": "list_my_approvals",
+        "title": "List my approvals"
+       },
+       {
+        "_meta": {
+         "fastmcp": {
+          "tags": []
+         }
+        },
+        "annotations": {
+         "readOnlyHint": false,
+         "title": "Approve purchase request"
+        },
+        "description": "Approve or reject a purchase request that waits for the signed-in user. Only the named approver can do this, never the person who raised it.",
+        "inputSchema": {
+         "properties": {
+          "request_no": {
+           "type": "string",
+           "description": "e.g. PR/2026/04417"
+          },
+          "decision": {
+           "type": "string",
+           "enum": [
+            "approve",
+            "reject"
+           ],
+           "description": "approve or reject"
+          },
+          "comment": {
+           "type": "string",
+           "description": "optional note to the requester"
+          }
+         },
+         "required": [
+          "request_no",
+          "decision"
+         ],
+         "type": "object"
+        },
+        "name": "approve_purchase_request",
+        "title": "Approve purchase request"
+       },
+       {
+        "_meta": {
+         "fastmcp": {
+          "tags": []
+         }
+        },
+        "annotations": {
+         "readOnlyHint": false,
+         "title": "Create purchase order"
+        },
+        "description": "Create a purchase order (PO) with a supplier. Give request_no for an approved purchase request (it supplies item, quantity, cost centre and date), or item_code, quantity, cost_centre and need_by for a small direct order up to Rs 50,000. confirm=false previews price, tax and value; confirm=true saves it. Returns a receipt with the order's real status: an APPROVED order still has to be released.",
+        "inputSchema": {
+         "properties": {
+          "supplier_code": {
+           "type": "string",
+           "description": "Bahi supplier code, from find_supplier"
+          },
+          "request_no": {
+           "type": "string",
+           "description": "an APPROVED purchase request"
+          },
+          "item_code": {
+           "type": "string",
+           "description": "for a direct order"
+          },
+          "quantity": {
+           "type": "integer",
+           "description": "for a direct order"
+          },
+          "cost_centre": {
+           "type": "string",
+           "description": "for a direct order"
+          },
+          "need_by": {
+           "type": "string",
+           "description": "for a direct order, YYYY-MM-DD"
+          },
+          "rate": {
+           "type": "number",
+           "description": "omit to use the contract rate"
+          },
+          "confirm": {
+           "type": "boolean",
+           "description": "false (default) = preview only, nothing is saved; true = commit"
+          }
+         },
+         "required": [
+          "supplier_code"
+         ],
+         "type": "object"
+        },
+        "name": "create_purchase_order",
+        "title": "Create purchase order"
+       },
+       {
+        "_meta": {
+         "fastmcp": {
+          "tags": []
+         }
+        },
+        "annotations": {
+         "readOnlyHint": false,
+         "title": "Approve purchase order"
+        },
+        "description": "Approve a purchase order that waits for the signed-in user's signature.",
+        "inputSchema": {
+         "properties": {
+          "po_no": {
+           "type": "string",
+           "description": "e.g. PO/2026/01182"
+          },
+          "comment": {
+           "type": "string",
+           "description": "optional"
+          }
+         },
+         "required": [
+          "po_no"
+         ],
+         "type": "object"
+        },
+        "name": "approve_purchase_order",
+        "title": "Approve purchase order"
+       },
+       {
+        "_meta": {
+         "fastmcp": {
+          "tags": []
+         }
+        },
+        "annotations": {
+         "readOnlyHint": false,
+         "title": "Release purchase order"
+        },
+        "description": "Release an APPROVED purchase order to the supplier; only then does the supplier get it. Returns a receipt with the real status.",
+        "inputSchema": {
+         "properties": {
+          "po_no": {
+           "type": "string",
+           "description": "e.g. PO/2026/01182"
+          }
+         },
+         "required": [
+          "po_no"
+         ],
+         "type": "object"
+        },
+        "name": "release_purchase_order",
+        "title": "Release purchase order"
+       },
+       {
+        "_meta": {
+         "fastmcp": {
+          "tags": []
+         }
+        },
+        "annotations": {
+         "readOnlyHint": true,
+         "title": "Order status"
+        },
+        "description": "The real status of a purchase order or a purchase request, read from Bahi, with approval, goods received and any warning.",
+        "inputSchema": {
+         "properties": {
+          "po_no": {
+           "type": "string",
+           "description": "e.g. PO/2026/01182"
+          },
+          "request_no": {
+           "type": "string",
+           "description": "e.g. PR/2026/04417"
+          }
+         },
+         "required": [],
+         "type": "object"
+        },
+        "name": "order_status",
+        "title": "Order status"
+       },
+       {
+        "_meta": {
+         "fastmcp": {
+          "tags": []
+         }
+        },
+        "annotations": {
+         "readOnlyHint": false,
+         "title": "Receive goods"
+        },
+        "description": "Record goods received (GRN) against a RELEASED purchase order: stock goes up, and the order closes once everything has arrived. Cannot receive more than was ordered.",
+        "inputSchema": {
+         "properties": {
+          "po_no": {
+           "type": "string",
+           "description": "the released order the goods came against"
+          },
+          "quantity": {
+           "type": "integer",
+           "description": "how many arrived"
+          },
+          "warehouse": {
+           "type": "string",
+           "description": "optional; defaults to the order's warehouse"
+          },
+          "remarks": {
+           "type": "string",
+           "description": "optional, e.g. vehicle number"
+          },
+          "confirm": {
+           "type": "boolean",
+           "description": "false (default) = preview only, nothing is saved; true = commit"
+          }
+         },
+         "required": [
+          "po_no",
+          "quantity"
+         ],
+         "type": "object"
+        },
+        "name": "receive_goods",
+        "title": "Receive goods"
+       },
+       {
+        "_meta": {
+         "fastmcp": {
+          "tags": []
+         }
+        },
+        "annotations": {
+         "readOnlyHint": false,
+         "title": "Register supplier"
+        },
+        "description": "Register a NEW supplier. Only after find_supplier shows no existing match. confirm=false previews and checks for duplicates; confirm=true creates it.",
+        "inputSchema": {
+         "properties": {
+          "name": {
+           "type": "string",
+           "description": "registered name"
+          },
+          "city": {
+           "type": "string",
+           "description": ""
+          },
+          "state": {
+           "type": "string",
+           "description": "Indian state"
+          },
+          "gstin": {
+           "type": "string",
+           "description": "15-character GSTIN"
+          },
+          "confirm": {
+           "type": "boolean",
+           "description": "false (default) = preview only, nothing is saved; true = commit"
+          }
+         },
+         "required": [
+          "name",
+          "city",
+          "state",
+          "gstin"
+         ],
+         "type": "object"
+        },
+        "name": "register_supplier",
+        "title": "Register supplier"
+       },
+       {
+        "_meta": {
+         "fastmcp": {
+          "tags": []
+         }
+        },
+        "annotations": {
+         "readOnlyHint": false,
+         "title": "Send message"
+        },
+        "description": "Send a short message to a colleague or supplier (Slack handle like @rohit, or an email address). Goes through Bahi's notification queue.",
+        "inputSchema": {
+         "properties": {
+          "to": {
+           "type": "string",
+           "description": "@handle or email"
+          },
+          "text": {
+           "type": "string",
+           "description": "the message"
+          }
+         },
+         "required": [
+          "to",
+          "text"
+         ],
+         "type": "object"
+        },
+        "name": "send_message",
+        "title": "Send message"
+       }
+      ]
+     }
+    }
+   },
+   {
+    "dir": "->",
+    "msg": {
+     "jsonrpc": "2.0",
+     "id": 3,
+     "method": "tools/call",
+     "params": {
+      "name": "check_stock",
+      "arguments": {
+       "item_code": "GSK-SIL-05L"
+      }
+     }
+    }
+   },
+   {
+    "dir": "<-",
+    "msg": {
+     "jsonrpc": "2.0",
+     "id": 3,
+     "result": {
+      "content": [
+       {
+        "text": "{\"ok\": true, \"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"warehouses\": [{\"warehouse\": \"WH-PUN-STR\", \"name\": \"Pune main stores\", \"on_hand\": 54000, \"allocated\": 0, \"on_order\": 0, \"free\": 54000}, {\"warehouse\": \"WH-CHK-STR\", \"name\": \"Chakan stores\", \"on_hand\": 12000, \"allocated\": 0, \"on_order\": 0, \"free\": 12000}], \"free_total\": 66000, \"on_order_total\": 0, \"reorder_level\": 30000, \"cover_days\": 11, \"below_reorder\": false}",
+        "type": "text"
+       }
+      ],
+      "isError": false
+     }
+    }
+   },
+   {
+    "dir": "->",
+    "msg": {
+     "jsonrpc": "2.0",
+     "id": 4,
+     "method": "tools/call",
+     "params": {
+      "name": "create_purchase_request",
+      "arguments": {
+       "item_code": "GSK-SIL-05L",
+       "quantity": 20000,
+       "cost_centre": "PRD-07",
+       "need_by": "2026-11-09"
+      }
+     }
+    }
+   },
+   {
+    "dir": "<-",
+    "msg": {
+     "jsonrpc": "2.0",
+     "id": 4,
+     "result": {
+      "content": [
+       {
+        "text": "{\"ok\": true, \"preview\": {\"item_code\": \"GSK-SIL-05L\", \"quantity\": 20000, \"estimated_rate\": 11.4, \"estimated_value\": 269040.0, \"cost_centre\": \"PRD-07\", \"cost_centre_state\": \"OK\", \"need_by\": \"2026-11-09\", \"needs_approval\": true, \"your_limit\": 250000.0, \"approver\": \"RMEHTA\"}, \"warnings\": [], \"note\": \"Nothing has been saved. Show this to the user and ask to confirm.\"}",
+        "type": "text"
+       }
+      ],
+      "isError": false
+     }
+    }
+   },
+   {
+    "dir": "->",
+    "msg": {
+     "jsonrpc": "2.0",
+     "id": 5,
+     "method": "tools/call",
+     "params": {
+      "name": "no_such_tool",
+      "arguments": {}
+     }
+    }
+   },
+   {
+    "dir": "<-",
+    "msg": {
+     "jsonrpc": "2.0",
+     "id": 5,
+     "result": {
+      "content": [
+       {
+        "text": "Unknown tool: 'no_such_tool'",
+        "type": "text"
+       }
+      ],
+      "isError": true
+     }
+    }
+   }
+  ],
+  "line_bytes": [
+   172,
+   378,
+   57,
+   51,
+   9488,
+   129,
+   616,
+   210,
+   505,
+   104,
+   127
+  ]
+ },
+ "http": {
+  "command": "python -m bahi.toolbox.mcp --user KJOSHI --transport http --port 8765",
+  "url": "http://127.0.0.1:8765/mcp",
+  "exchanges": [
+   {
+    "request": {
+     "method": "POST",
+     "url": "/mcp",
+     "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json, text/event-stream"
+     },
+     "body": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "initialize",
+      "params": {
+       "protocolVersion": "2025-06-18",
+       "capabilities": {},
+       "clientInfo": {
+        "name": "nb4-client",
+        "version": "1.0"
+       }
+      }
+     }
+    },
+    "response": {
+     "status": 200,
+     "content_type": "text/event-stream",
+     "session_id": "0b9d80df57e343f2a415ea2e18b73454",
+     "raw": "event: message\r\ndata: {\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"protocolVersion\":\"2025-06-18\",\"capabilities\":{\"logging\":{},\"prompts\":{\"listChanged\":true},\"resources\":{\"subscribe\":false,\"listChanged\":true},\"tools\":{\"listChanged\":true}},\"serverInfo\":{\"name\":\"bahi-toolbox\",\"version\":\"4.1.4\"},\"instructions\":\"Rasoi Steel Works' Bahi ERP, as KJOSHI. One tool per business activity.\"}}\r\n\r\n",
+     "json": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+       "protocolVersion": "2025-06-18",
+       "capabilities": {
+        "logging": {},
+        "prompts": {
+         "listChanged": true
+        },
+        "resources": {
+         "subscribe": false,
+         "listChanged": true
+        },
+        "tools": {
+         "listChanged": true
+        }
+       },
+       "serverInfo": {
+        "name": "bahi-toolbox",
+        "version": "4.1.4"
+       },
+       "instructions": "Rasoi Steel Works' Bahi ERP, as KJOSHI. One tool per business activity."
+      }
+     }
+    }
+   },
+   {
+    "request": {
+     "method": "POST",
+     "url": "/mcp",
+     "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json, text/event-stream",
+      "mcp-session-id": "0b9d80df57e343f2a415ea2e18b73454",
+      "mcp-protocol-version": "2025-06-18"
+     },
+     "body": {
+      "jsonrpc": "2.0",
+      "method": "notifications/initialized"
+     }
+    },
+    "response": {
+     "status": 202,
+     "content_type": "application/json",
+     "session_id": "0b9d80df57e343f2a415ea2e18b73454",
+     "raw": "",
+     "json": null
+    }
+   },
+   {
+    "request": {
+     "method": "POST",
+     "url": "/mcp",
+     "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json, text/event-stream",
+      "mcp-session-id": "0b9d80df57e343f2a415ea2e18b73454",
+      "mcp-protocol-version": "2025-06-18"
+     },
+     "body": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "method": "tools/list"
+     }
+    },
+    "response": {
+     "status": 200,
+     "content_type": "text/event-stream",
+     "session_id": "0b9d80df57e343f2a415ea2e18b73454",
+     "raw": "event: message\r\ndata: {\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"tools\":[{\"_meta\":{\"fastmcp\":{\"tags\":[]}},\"annotations\":{\"readOnlyHint\":true,\"title\":\"Find item\"},\"description\":\"Find stock items by description or code (e.g. '5 litre silicone gasket'). Returns active items, best match first, with code, unit and whether they touch food.\",\"inputSchema\":{\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"words describing the item, or its code\"}},\"required\":[\"query\"],\"type\":\"object\"},\"name\":\"find_item\",\"title\":\"Find item\"},{\"_meta\":{\"fastmcp\":{\"tags\":[]}},\"annotations\":{\"readOnlyHint\":true,\"title\":\"Check stock\"},\"description\":\"Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.\",\"inputSchema\":{\"properties\":{\"item_code\":{\"type\":\"string\",\"description\":\"Bahi item code, e.g. GSK-SIL-05L\"}},\"required\":[\"item_code\"],\"type\":\"object\"},\"name\":\"check_stock\",\"title\":\"Check stock\"},{\"_meta\":{\"fastmcp\":{\"tags\":[]}},\"annotations\":{\"readOnlyHint\":true,\"title\":\"Find supplier\"},\"description\":\"Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid food-grade certificate. Use it before registering anyone new.\",\"inputSchema\":{\"properties\":{\"name\":{\"type\":\"string\",\"description\":\"the supplier's name as the user said it\"},\"city\":{\"type\":\"string\",\"description\":\"optional city, to tell two branches apart\"}},\"required\":[\"name\"],\"type\":\"object\"},\"name\":\"find_supplier\",\"title\":\"Find",
+     "json": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": {
+       "tools": [
+        {
+         "_meta": {
+          "fastmcp": {
+           "tags": []
+          }
+         },
+         "annotations": {
+          "readOnlyHint": true,
+          "title": "Find item"
+         },
+         "description": "Find stock items by description or code (e.g. '5 litre silicone gasket'). Returns active items, best match first, with code, unit and whether they touch food.",
+         "inputSchema": {
+          "properties": {
+           "query": {
+            "type": "string",
+            "description": "words describing the item, or its code"
+           }
+          },
+          "required": [
+           "query"
+          ],
+          "type": "object"
+         },
+         "name": "find_item",
+         "title": "Find item"
+        },
+        {
+         "_meta": {
+          "fastmcp": {
+           "tags": []
+          }
+         },
+         "annotations": {
+          "readOnlyHint": true,
+          "title": "Check stock"
+         },
+         "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+         "inputSchema": {
+          "properties": {
+           "item_code": {
+            "type": "string",
+            "description": "Bahi item code, e.g. GSK-SIL-05L"
+           }
+          },
+          "required": [
+           "item_code"
+          ],
+          "type": "object"
+         },
+         "name": "check_stock",
+         "title": "Check stock"
+        },
+        {
+         "_meta": {
+          "fastmcp": {
+           "tags": []
+          }
+         },
+         "annotations": {
+          "readOnlyHint": true,
+          "title": "Find supplier"
+         },
+         "description": "Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid food-grade certificate. Use it before registering anyone new.",
+         "inputSchema": {
+          "properties": {
+           "name": {
+            "type": "string",
+            "description": "the supplier's name as the user said it"
+           },
+           "city": {
+            "type": "string",
+            "description": "optional city, to tell two branches apart"
+           }
+          },
+          "required": [
+           "name"
+          ],
+          "type": "object"
+         },
+         "name": "find_supplier",
+         "title": "Find supplier"
+        },
+        {
+         "_meta": {
+          "fastmcp": {
+           "tags": []
+          }
+         },
+         "annotations": {
+          "readOnlyHint": true,
+          "title": "Check budget"
+         },
+         "description": "Is a cost centre open, and how much budget is left this quarter? Without a code, lists every open cost centre.",
+         "inputSchema": {
+          "properties": {
+           "cost_centre": {
+            "type": "string",
+            "description": "cost centre code, e.g. PRD-07; leave out to list the open ones"
+           }
+          },
+          "required": [],
+          "type": "object"
+         },
+         "name": "check_budget",
+         "title": "Check budget"
+        },
+        {
+         "_meta": {
+          "fastmcp": {
+           "tags": []
+          }
+         },
+         "annotations": {
+          "readOnlyHint": true,
+          "title": "Search policy"
+         },
+         "description": "Search Rasoi's purchasing policy and the Bahi manual. Returns the relevant clauses with their citations, or says the documents do not cover it.",
+         "inputSchema": {
+          "properties": {
+           "question": {
+            "type": "string",
+            "description": "the policy question in plain words"
+           }
+          },
+          "required": [
+           "question"
+          ],
+          "type": "object"
+         },
+         "name": "search_policy",
+         "title": "Search policy"
+        },
+        {
+         "_meta": {
+          "fastmcp": {
+           "tags": []
+          }
+         },
+         "annotations": {
+          "readOnlyHint": false,
+          "title": "Create purchase request"
+         },
+         "description": "Raise a purchase request (PR): the internal ask to buy something. With confirm=false it previews the estimated value and who must approve; with confirm=true it saves and submits it. Within your limit it is approved at once; above it, it waits for your manager.",
+         "inputSchema": {
+          "properties": {
+           "item_code": {
+            "type": "string",
+            "description": "Bahi item code"
+           },
+           "quantity": {
+            "type": "integer",
+            "description": "how many, in the item's unit"
+           },
+           "cost_centre": {
+            "type": "string",
+            "description": "who pays, e.g. PRD-07"
+           },
+           "need_by": {
+            "type": "string",
+            "description": "date needed, YYYY-MM-DD"
+           },
+           "confirm": {
+            "type": "boolean",
+            "description": "false (default) = preview only, nothing is saved; true = commit"
+           }
+          },
+          "required": [
+           "item_code",
+           "quantity",
+           "cost_centre",
+           "need_by"
+          ],
+          "type": "object"
+         },
+         "name": "create_purchase_request",
+         "title": "Create purchase request"
+        },
+        {
+         "_meta": {
+          "fastmcp": {
+           "tags": []
+          }
+         },
+         "annotations": {
+          "readOnlyHint": true,
+          "title": "List my approvals"
+         },
+         "description": "What is waiting for the signed-in user's signature: purchase requests and orders, with value and who raised them.",
+         "inputSchema": {
+          "properties": {},
+          "required": [],
+          "type": "object"
+         },
+         "name": "list_my_approvals",
+         "title": "List my approvals"
+        },
+        {
+         "_meta": {
+          "fastmcp": {
+           "tags": []
+          }
+         },
+         "annotations": {
+          "readOnlyHint": false,
+          "title": "Approve purchase request"
+         },
+         "description": "Approve or reject a purchase request that waits for the signed-in user. Only the named approver can do this, never the person who raised it.",
+         "inputSchema": {
+          "properties": {
+           "request_no": {
+            "type": "string",
+            "description": "e.g. PR/2026/04417"
+           },
+           "decision": {
+            "type": "string",
+            "enum": [
+             "approve",
+             "reject"
+            ],
+            "description": "approve or reject"
+           },
+           "comment": {
+            "type": "string",
+            "description": "optional note to the requester"
+           }
+          },
+          "required": [
+           "request_no",
+           "decision"
+          ],
+          "type": "object"
+         },
+         "name": "approve_purchase_request",
+         "title": "Approve purchase request"
+        },
+        {
+         "_meta": {
+          "fastmcp": {
+           "tags": []
+          }
+         },
+         "annotations": {
+          "readOnlyHint": false,
+          "title": "Create purchase order"
+         },
+         "description": "Create a purchase order (PO) with a supplier. Give request_no for an approved purchase request (it supplies item, quantity, cost centre and date), or item_code, quantity, cost_centre and need_by for a small direct order up to Rs 50,000. confirm=false previews price, tax and value; confirm=true saves it. Returns a receipt with the order's real status: an APPROVED order still has to be released.",
+         "inputSchema": {
+          "properties": {
+           "supplier_code": {
+            "type": "string",
+            "description": "Bahi supplier code, from find_supplier"
+           },
+           "request_no": {
+            "type": "string",
+            "description": "an APPROVED purchase request"
+           },
+           "item_code": {
+            "type": "string",
+            "description": "for a direct order"
+           },
+           "quantity": {
+            "type": "integer",
+            "description": "for a direct order"
+           },
+           "cost_centre": {
+            "type": "string",
+            "description": "for a direct order"
+           },
+           "need_by": {
+            "type": "string",
+            "description": "for a direct order, YYYY-MM-DD"
+           },
+           "rate": {
+            "type": "number",
+            "description": "omit to use the contract rate"
+           },
+           "confirm": {
+            "type": "boolean",
+            "description": "false (default) = preview only, nothing is saved; true = commit"
+           }
+          },
+          "required": [
+           "supplier_code"
+          ],
+          "type": "object"
+         },
+         "name": "create_purchase_order",
+         "title": "Create purchase order"
+        },
+        {
+         "_meta": {
+          "fastmcp": {
+           "tags": []
+          }
+         },
+         "annotations": {
+          "readOnlyHint": false,
+          "title": "Approve purchase order"
+         },
+         "description": "Approve a purchase order that waits for the signed-in user's signature.",
+         "inputSchema": {
+          "properties": {
+           "po_no": {
+            "type": "string",
+            "description": "e.g. PO/2026/01182"
+           },
+           "comment": {
+            "type": "string",
+            "description": "optional"
+           }
+          },
+          "required": [
+           "po_no"
+          ],
+          "type": "object"
+         },
+         "name": "approve_purchase_order",
+         "title": "Approve purchase order"
+        },
+        {
+         "_meta": {
+          "fastmcp": {
+           "tags": []
+          }
+         },
+         "annotations": {
+          "readOnlyHint": false,
+          "title": "Release purchase order"
+         },
+         "description": "Release an APPROVED purchase order to the supplier; only then does the supplier get it. Returns a receipt with the real status.",
+         "inputSchema": {
+          "properties": {
+           "po_no": {
+            "type": "string",
+            "description": "e.g. PO/2026/01182"
+           }
+          },
+          "required": [
+           "po_no"
+          ],
+          "type": "object"
+         },
+         "name": "release_purchase_order",
+         "title": "Release purchase order"
+        },
+        {
+         "_meta": {
+          "fastmcp": {
+           "tags": []
+          }
+         },
+         "annotations": {
+          "readOnlyHint": true,
+          "title": "Order status"
+         },
+         "description": "The real status of a purchase order or a purchase request, read from Bahi, with approval, goods received and any warning.",
+         "inputSchema": {
+          "properties": {
+           "po_no": {
+            "type": "string",
+            "description": "e.g. PO/2026/01182"
+           },
+           "request_no": {
+            "type": "string",
+            "description": "e.g. PR/2026/04417"
+           }
+          },
+          "required": [],
+          "type": "object"
+         },
+         "name": "order_status",
+         "title": "Order status"
+        },
+        {
+         "_meta": {
+          "fastmcp": {
+           "tags": []
+          }
+         },
+         "annotations": {
+          "readOnlyHint": false,
+          "title": "Receive goods"
+         },
+         "description": "Record goods received (GRN) against a RELEASED purchase order: stock goes up, and the order closes once everything has arrived. Cannot receive more than was ordered.",
+         "inputSchema": {
+          "properties": {
+           "po_no": {
+            "type": "string",
+            "description": "the released order the goods came against"
+           },
+           "quantity": {
+            "type": "integer",
+            "description": "how many arrived"
+           },
+           "warehouse": {
+            "type": "string",
+            "description": "optional; defaults to the order's warehouse"
+           },
+           "remarks": {
+            "type": "string",
+            "description": "optional, e.g. vehicle number"
+           },
+           "confirm": {
+            "type": "boolean",
+            "description": "false (default) = preview only, nothing is saved; true = commit"
+           }
+          },
+          "required": [
+           "po_no",
+           "quantity"
+          ],
+          "type": "object"
+         },
+         "name": "receive_goods",
+         "title": "Receive goods"
+        },
+        {
+         "_meta": {
+          "fastmcp": {
+           "tags": []
+          }
+         },
+         "annotations": {
+          "readOnlyHint": false,
+          "title": "Register supplier"
+         },
+         "description": "Register a NEW supplier. Only after find_supplier shows no existing match. confirm=false previews and checks for duplicates; confirm=true creates it.",
+         "inputSchema": {
+          "properties": {
+           "name": {
+            "type": "string",
+            "description": "registered name"
+           },
+           "city": {
+            "type": "string",
+            "description": ""
+           },
+           "state": {
+            "type": "string",
+            "description": "Indian state"
+           },
+           "gstin": {
+            "type": "string",
+            "description": "15-character GSTIN"
+           },
+           "confirm": {
+            "type": "boolean",
+            "description": "false (default) = preview only, nothing is saved; true = commit"
+           }
+          },
+          "required": [
+           "name",
+           "city",
+           "state",
+           "gstin"
+          ],
+          "type": "object"
+         },
+         "name": "register_supplier",
+         "title": "Register supplier"
+        },
+        {
+         "_meta": {
+          "fastmcp": {
+           "tags": []
+          }
+         },
+         "annotations": {
+          "readOnlyHint": false,
+          "title": "Send message"
+         },
+         "description": "Send a short message to a colleague or supplier (Slack handle like @rohit, or an email address). Goes through Bahi's notification queue.",
+         "inputSchema": {
+          "properties": {
+           "to": {
+            "type": "string",
+            "description": "@handle or email"
+           },
+           "text": {
+            "type": "string",
+            "description": "the message"
+           }
+          },
+          "required": [
+           "to",
+           "text"
+          ],
+          "type": "object"
+         },
+         "name": "send_message",
+         "title": "Send message"
+        }
+       ]
+      }
+     }
+    }
+   },
+   {
+    "request": {
+     "method": "POST",
+     "url": "/mcp",
+     "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json, text/event-stream",
+      "mcp-session-id": "0b9d80df57e343f2a415ea2e18b73454",
+      "mcp-protocol-version": "2025-06-18"
+     },
+     "body": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "method": "tools/call",
+      "params": {
+       "name": "check_stock",
+       "arguments": {
+        "item_code": "GSK-SIL-05L"
+       }
+      }
+     }
+    },
+    "response": {
+     "status": 200,
+     "content_type": "text/event-stream",
+     "session_id": "0b9d80df57e343f2a415ea2e18b73454",
+     "raw": "event: message\r\ndata: {\"jsonrpc\":\"2.0\",\"id\":3,\"result\":{\"content\":[{\"text\":\"{\\\"ok\\\": true, \\\"item_code\\\": \\\"GSK-SIL-05L\\\", \\\"description\\\": \\\"Gasket, silicone, 5 L\\\", \\\"unit\\\": \\\"NOS\\\", \\\"warehouses\\\": [{\\\"warehouse\\\": \\\"WH-PUN-STR\\\", \\\"name\\\": \\\"Pune main stores\\\", \\\"on_hand\\\": 54000, \\\"allocated\\\": 0, \\\"on_order\\\": 0, \\\"free\\\": 54000}, {\\\"warehouse\\\": \\\"WH-CHK-STR\\\", \\\"name\\\": \\\"Chakan stores\\\", \\\"on_hand\\\": 12000, \\\"allocated\\\": 0, \\\"on_order\\\": 0, \\\"free\\\": 12000}], \\\"free_total\\\": 66000, \\\"on_order_total\\\": 0, \\\"reorder_level\\\": 30000, \\\"cover_days\\\": 11, \\\"below_reorder\\\": false}\",\"type\":\"text\"}],\"isError\":false}}\r\n\r\n",
+     "json": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": {
+       "content": [
+        {
+         "text": "{\"ok\": true, \"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"warehouses\": [{\"warehouse\": \"WH-PUN-STR\", \"name\": \"Pune main stores\", \"on_hand\": 54000, \"allocated\": 0, \"on_order\": 0, \"free\": 54000}, {\"warehouse\": \"WH-CHK-STR\", \"name\": \"Chakan stores\", \"on_hand\": 12000, \"allocated\": 0, \"on_order\": 0, \"free\": 12000}], \"free_total\": 66000, \"on_order_total\": 0, \"reorder_level\": 30000, \"cover_days\": 11, \"below_reorder\": false}",
+         "type": "text"
+        }
+       ],
+       "isError": false
+      }
+     }
+    }
+   }
+  ]
+ },
+ "whose": {
+  "KJOSHI": {
+   "jsonrpc": "2.0",
+   "id": 2,
+   "result": {
+    "content": [
+     {
+      "text": "{\"ok\": false, \"error\": \"Bahi refused po_approve: Access denied (ERR-SEC-0001).\", \"next_step\": \"The user is not allowed to do this in Bahi. Tell the user; do not try another way round.\", \"bahi_code\": \"ERR-SEC-0001\"}",
+      "type": "text"
+     }
+    ],
+    "isError": false
+   }
+  },
+  "SVC_AGENT": {
+   "jsonrpc": "2.0",
+   "id": 2,
+   "result": {
+    "content": [
+     {
+      "text": "{\"ok\": true, \"po_no\": \"PO/2026/01179\", \"status\": \"APPROVED, NOT YET RELEASED\", \"status_code\": \"AP\", \"supplier_code\": \"OSM-PUN-0031\", \"item_code\": \"LID-SS-05L\", \"quantity\": 4000, \"rate\": 96.0, \"gross_value\": 453120.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-10-23\", \"request_no\": null, \"created_by\": \"KJOSHI\", \"approved_by\": \"SVC_AGENT\", \"approval\": {\"doc_no\": \"PO/2026/01179\", \"approver\": \"RMEHTA\", \"status\": \"APPROVED\"}, \"warning\": null, \"idempotency_key\": null, \"sent_to_supplier\": false, \"tool\": \"order_status\", \"tool_version\": \"1.0\", \"next_step\": \"The buyer can now release_purchase_order PO/2026/01179.\"}",
+      "type": "text"
+     }
+    ],
+    "isError": false
+   }
+  }
+ }
+}

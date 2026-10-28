@@ -1,0 +1,82 @@
+"""Lecture 4: write ../figdata.js (window.L4) from the experiment logs, so every number and payload on a plate is
+copied from a run, never typed by hand. Pure standard library: python3 experiments/deck_data.py
+
+Sources (all in logs/): roundtrip.json, contract.json, tool_tokens.json, analysis.json (from granularity_*.json),
+mcp_wire.json, demo_hands.json, cold_open.json.
+"""
+import json
+import pathlib
+
+HERE = pathlib.Path(__file__).resolve().parent
+L = HERE / "logs"
+j = lambda n: json.loads((L / n).read_text())  # noqa: E731
+
+
+def strip_sig(m):
+    """Gemini's thought signature is opaque and long; keep its first characters so the plate shows it exists."""
+    m = json.loads(json.dumps(m))
+    for t in m.get("tool_calls") or []:
+        sig = (t.get("extra_content") or {}).get("google", {}).get("thought_signature")
+        if sig:
+            t["extra_content"] = {"google": {"thought_signature": sig[:22] + "…"}}
+    if (m.get("extra_content") or {}).get("google"):
+        m["extra_content"] = {"google": {"thought_signature": m["extra_content"]["google"]["thought_signature"][:22] + "…"}}
+    return m
+
+
+rt = j("roundtrip.json")
+rounds = []
+for r in rt["rounds"]:
+    resp = r["response_body"]
+    rounds.append({"round": r["round"], "seconds": r["seconds"], "request_bytes": r["request_bytes"],
+                   "n_messages": len(r["request_body"]["messages"]), "usage": resp.get("usage"),
+                   "finish": resp["choices"][0]["finish_reason"], "message": strip_sig(resp["choices"][0]["message"]),
+                   "ran": [{"tool": x["tool"], "arguments": x["arguments"], "services": [s["svc"] for s in x["bahi_services"]],
+                            "result": x["result"], "tool_message": x["tool_message"]} for x in r["ran"]]})
+first_req = rt["rounds"][0]["request_body"]
+c = j("contract.json")
+tt = j("tool_tokens.json")["models"]["gemini:gemini-3.8-flash"]
+an = j("analysis.json")
+mw = j("mcp_wire.json")
+demo = j("demo_hands.json")
+cold = j("cold_open.json")
+
+stdio = []
+for w in mw["stdio"]["wire"]:
+    m = w["msg"]
+    if m.get("result", {}).get("tools"):
+        m = {**m, "result": {"tools": [t for t in m["result"]["tools"] if t["name"] in ("find_item", "check_stock")]
+                             + [{"…": f"{len(m['result']['tools']) - 2} more tools"}]}}
+    stdio.append({"dir": w["dir"], "msg": m, "bytes": len(json.dumps(w["msg"]))})
+
+L4 = {
+    "roundtrip": {"model": rt["model"], "ask": rt["ask"], "n_tools": rt["n_tools"], "rounds": rounds,
+                  "system": first_req["messages"][0]["content"], "first_tools": first_req["tools"],
+                  "answer": rt["final_answer"]},
+    "inventory": {k: c["inventory"][k] for k in ("raw_services", "raw_reads", "raw_writes", "toolbox_tools", "toolbox_writes",
+                                                 "tools", "raw_names", "raw_example", "raw_stk_query", "toolbox_check_stock")},
+    "pr_json": c["inventory"]["create_pr_tool_json"],
+    "check_stock_services": c["check_stock_services"],
+    "check_stock": c["check_stock"],
+    "types": c["types"], "types_raw": c["types_raw"], "errors": c["errors"],
+    "preview": c["preview"], "confirm": c["confirm"], "self_approve": c["self_approve"], "rohit_approves": c["rohit_approves"],
+    "po_preview": c["po_preview"], "idem_direct": c["idem_direct"], "idem_direct_raw": c["idem_direct_raw"],
+    "idem_pr": c["idem_pr"], "idem_retry_pr_path": c["idem_retry"], "idem_first_pr_path": c["idem_first"],
+    "release": c["release"], "grn1": c["grn1"], "grn2": c["grn2"], "status_after": c["status_after"],
+    "draft_raw": c["draft_raw"], "draft_receipt": c["draft_receipt"], "perm": {k: c["perm"][k] for k in ("kavita", "svc_agent", "po_01179")},
+    "tokens": {"raw": tt["raw_41_services"], "toolbox": tt["toolbox_15"], "mcp": tt["toolbox_15_over_mcp"],
+               "per_tool": tt["per_tool"], "baseline": tt["baseline_prompt_tokens"]},
+    "exp": {m: {"model": b["model"], "configs": {k: v["all"] for k, v in b["configs"].items()},
+                "by_kind": {k: {kk: v[kk] for kk in ("lookup", "action")} for k, v in b["configs"].items()},
+                "grid": b["grid"], "replaced": [x["cell"] for x in b["replaced"]]} for m, b in an["models"].items()},
+    "wire": {"inmemory": mw["inmemory"]["wire"][:2], "stdio": stdio, "stdio_command": mw["stdio"]["command"],
+             "http": [{"method": x["request"]["body"].get("method"), "request_headers": x["request"]["headers"],
+                       "status": x["response"]["status"], "content_type": x["response"]["content_type"],
+                       "session_id": x["response"]["session_id"], "raw": x["response"]["raw"][:420]} for x in mw["http"]["exchanges"]],
+             "whose": mw["whose"]},
+    "demo": {"turns": demo["turns"], "pr": demo["bahi_pr"], "no_code": demo["no_code_variant"], "totals": demo["totals"]},
+    "cold": cold["turns"],
+}
+(HERE.parent / "figdata.js").write_text("/* Generated by experiments/deck_data.py from experiments/logs/*.json. Do not edit by hand. */\n"
+                                        "window.L4 = " + json.dumps(L4, ensure_ascii=False, default=str) + ";\n")
+print("figdata.js", round(len(json.dumps(L4)) / 1024), "KB")

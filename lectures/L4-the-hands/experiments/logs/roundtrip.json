@@ -1,0 +1,1578 @@
+{
+ "model": "gemini-3.8-flash",
+ "ask": "Check stock of the 5-litre gasket.",
+ "endpoint": "<gemini>/v1beta/openai/chat/completions",
+ "n_tools": 15,
+ "rounds": [
+  {
+   "round": 1,
+   "seconds": 3.42,
+   "request_body": {
+    "model": "gemini-3.8-flash",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are Ask Rasoi, the assistant on Rasoi Steel Works' home page, working in Bahi ERP for Kavita Joshi (KJOSHI).\nToday is Monday 26 October 2026. Use the tools to look things up and to do what Kavita asks. Every write tool\npreviews first (confirm=false); show the preview and commit (confirm=true) only after Kavita says yes.\nIf a tool returns ok=false, read its next_step. Report the status the receipt gives you, in plain words."
+     },
+     {
+      "role": "user",
+      "content": "Check stock of the 5-litre gasket."
+     }
+    ],
+    "tools": [
+     {
+      "type": "function",
+      "function": {
+       "name": "find_item",
+       "description": "Find stock items by description or code (e.g. '5 litre silicone gasket'). Returns active items, best match first, with code, unit and whether they touch food.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "query": {
+          "type": "string",
+          "description": "words describing the item, or its code"
+         }
+        },
+        "required": [
+         "query"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "check_stock",
+       "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Bahi item code, e.g. GSK-SIL-05L"
+         }
+        },
+        "required": [
+         "item_code"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "find_supplier",
+       "description": "Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid food-grade certificate. Use it before registering anyone new.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "description": "the supplier's name as the user said it"
+         },
+         "city": {
+          "type": "string",
+          "description": "optional city, to tell two branches apart"
+         }
+        },
+        "required": [
+         "name"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "check_budget",
+       "description": "Is a cost centre open, and how much budget is left this quarter? Without a code, lists every open cost centre.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "cost_centre": {
+          "type": "string",
+          "description": "cost centre code, e.g. PRD-07; leave out to list the open ones"
+         }
+        },
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "search_policy",
+       "description": "Search Rasoi's purchasing policy and the Bahi manual. Returns the relevant clauses with their citations, or says the documents do not cover it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "question": {
+          "type": "string",
+          "description": "the policy question in plain words"
+         }
+        },
+        "required": [
+         "question"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "create_purchase_request",
+       "description": "Raise a purchase request (PR): the internal ask to buy something. With confirm=false it previews the estimated value and who must approve; with confirm=true it saves and submits it. Within your limit it is approved at once; above it, it waits for your manager.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Bahi item code"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "how many, in the item's unit"
+         },
+         "cost_centre": {
+          "type": "string",
+          "description": "who pays, e.g. PRD-07"
+         },
+         "need_by": {
+          "type": "string",
+          "description": "date needed, YYYY-MM-DD"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "item_code",
+         "quantity",
+         "cost_centre",
+         "need_by"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "list_my_approvals",
+       "description": "What is waiting for the signed-in user's signature: purchase requests and orders, with value and who raised them.",
+       "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "approve_purchase_request",
+       "description": "Approve or reject a purchase request that waits for the signed-in user. Only the named approver can do this, never the person who raised it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "request_no": {
+          "type": "string",
+          "description": "e.g. PR/2026/04417"
+         },
+         "decision": {
+          "type": "string",
+          "enum": [
+           "approve",
+           "reject"
+          ],
+          "description": "approve or reject"
+         },
+         "comment": {
+          "type": "string",
+          "description": "optional note to the requester"
+         }
+        },
+        "required": [
+         "request_no",
+         "decision"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "create_purchase_order",
+       "description": "Create a purchase order (PO) with a supplier. Give request_no for an approved purchase request (it supplies item, quantity, cost centre and date), or item_code, quantity, cost_centre and need_by for a small direct order up to Rs 50,000. confirm=false previews price, tax and value; confirm=true saves it. Returns a receipt with the order's real status: an APPROVED order still has to be released.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "supplier_code": {
+          "type": "string",
+          "description": "Bahi supplier code, from find_supplier"
+         },
+         "request_no": {
+          "type": "string",
+          "description": "an APPROVED purchase request"
+         },
+         "item_code": {
+          "type": "string",
+          "description": "for a direct order"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "for a direct order"
+         },
+         "cost_centre": {
+          "type": "string",
+          "description": "for a direct order"
+         },
+         "need_by": {
+          "type": "string",
+          "description": "for a direct order, YYYY-MM-DD"
+         },
+         "rate": {
+          "type": "number",
+          "description": "omit to use the contract rate"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "supplier_code"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "approve_purchase_order",
+       "description": "Approve a purchase order that waits for the signed-in user's signature.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         },
+         "comment": {
+          "type": "string",
+          "description": "optional"
+         }
+        },
+        "required": [
+         "po_no"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "release_purchase_order",
+       "description": "Release an APPROVED purchase order to the supplier; only then does the supplier get it. Returns a receipt with the real status.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         }
+        },
+        "required": [
+         "po_no"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "order_status",
+       "description": "The real status of a purchase order or a purchase request, read from Bahi, with approval, goods received and any warning.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         },
+         "request_no": {
+          "type": "string",
+          "description": "e.g. PR/2026/04417"
+         }
+        },
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "receive_goods",
+       "description": "Record goods received (GRN) against a RELEASED purchase order: stock goes up, and the order closes once everything has arrived. Cannot receive more than was ordered.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "the released order the goods came against"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "how many arrived"
+         },
+         "warehouse": {
+          "type": "string",
+          "description": "optional; defaults to the order's warehouse"
+         },
+         "remarks": {
+          "type": "string",
+          "description": "optional, e.g. vehicle number"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "po_no",
+         "quantity"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "register_supplier",
+       "description": "Register a NEW supplier. Only after find_supplier shows no existing match. confirm=false previews and checks for duplicates; confirm=true creates it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "description": "registered name"
+         },
+         "city": {
+          "type": "string",
+          "description": ""
+         },
+         "state": {
+          "type": "string",
+          "description": "Indian state"
+         },
+         "gstin": {
+          "type": "string",
+          "description": "15-character GSTIN"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "name",
+         "city",
+         "state",
+         "gstin"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "send_message",
+       "description": "Send a short message to a colleague or supplier (Slack handle like @rohit, or an email address). Goes through Bahi's notification queue.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "to": {
+          "type": "string",
+          "description": "@handle or email"
+         },
+         "text": {
+          "type": "string",
+          "description": "the message"
+         }
+        },
+        "required": [
+         "to",
+         "text"
+        ]
+       }
+      }
+     }
+    ],
+    "temperature": 0
+   },
+   "request_bytes": 8535,
+   "response_body": {
+    "choices": [
+     {
+      "finish_reason": "tool_calls",
+      "index": 0,
+      "message": {
+       "role": "assistant",
+       "tool_calls": [
+        {
+         "extra_content": {
+          "google": {
+           "thought_signature": "EvwDCvkDAWkUfRPWcuwHpCe4QIQVqfu7zERbGoc2oVMw1tteVlNGajDxnPQdfiyRWHvicIt1QdnGqUbcmUIORYK/bOznGbK8itAYmOoJSLkdzsbM3fufmHMS5lgKlwHt+nKFl8x9HYmXX+LGEMBwUIS5FERwJWCdCW++TKK3W2kSTwq2n0jQ6VoSdw3P/P6MREh2SVFgQEQ8mPUAY2STMuxf9Y+F0+3FbyE4cfLe/8irydblhbTewShH3bNbzwcCTPbQMtblcGZlbUcI+Lzkri9VHLBNrq1JZ0zA9YEHS7XOuUWG/eVcY2PjChAdCYHbwHvFvc82OBtIaAMSSNJ0+htGhQClY5N2SX7OfjPostMpB0Sa/5UxwIQBH/Gl+wa8laCT5HrhEczpFA+s/EHcqAv77zHuc3TSL3xa7D4i3aE3DanC9aXX2YcHV21OOeE4oEEOv0q2/icCwyJDyKbhAtQQJRXpb/J9APeKjF5/lsiBF8d6tN8c+C3WeEqrLPjhrP02UPjY4it3GvpTU1YYEJjADH/kOSdmvr7x6SmH87fUEc0OJEHGvJ6T6dFLUW3vzyxqU8yDoBRYezT7Cssha5Hm2ILzXCOR1bosZuyOUVQlvuYk5iTyV0nX8E6P6UHdVTvbSfs9wAPdymaMotH/Km8vfbIPR5ZnNcYz3+/JAw=="
+          }
+         },
+         "function": {
+          "arguments": "{\"query\":\"5-litre gasket\"}",
+          "name": "find_item"
+         },
+         "id": "call_160563",
+         "type": "function"
+        }
+       ]
+      }
+     }
+    ],
+    "created": 1793146499,
+    "id": "gD7hauraD9iD1sgPxdXM-AM",
+    "model": "gemini-3.8-flash",
+    "object": "chat.completion",
+    "usage": {
+     "completion_tokens": 19,
+     "prompt_tokens": 2040,
+     "total_tokens": 2173
+    }
+   },
+   "ran": [
+    {
+     "tool": "find_item",
+     "arguments": {
+      "query": "5-litre gasket"
+     },
+     "bahi_services": [
+      {
+       "svc": "itm_search",
+       "payload": {
+        "q": "5-litre gasket"
+       },
+       "rc": "S"
+      },
+      {
+       "svc": "itm_search",
+       "payload": {
+        "q": "gasket"
+       },
+       "rc": "S"
+      },
+      {
+       "svc": "itm_get",
+       "payload": {
+        "itm_cd": "GSK-SIL-05L"
+       },
+       "rc": "S"
+      },
+      {
+       "svc": "itm_get",
+       "payload": {
+        "itm_cd": "GSK-SIL-05L-R"
+       },
+       "rc": "S"
+      },
+      {
+       "svc": "itm_get",
+       "payload": {
+        "itm_cd": "GSK-SIL-03L"
+       },
+       "rc": "S"
+      },
+      {
+       "svc": "itm_get",
+       "payload": {
+        "itm_cd": "GSK-SIL-07L"
+       },
+       "rc": "S"
+      }
+     ],
+     "result": {
+      "ok": true,
+      "items": [
+       {
+        "item_code": "GSK-SIL-05L",
+        "description": "Gasket, silicone, 5 L",
+        "unit": "NOS",
+        "food_contact": true
+       },
+       {
+        "item_code": "GSK-SIL-05L-R",
+        "description": "Gasket, silicone, 5 L (rework)",
+        "unit": "NOS",
+        "food_contact": true
+       },
+       {
+        "item_code": "GSK-SIL-03L",
+        "description": "Gasket, silicone, 3 L",
+        "unit": "NOS",
+        "food_contact": true
+       },
+       {
+        "item_code": "GSK-SIL-07L",
+        "description": "Gasket, silicone, 7.5 L",
+        "unit": "NOS",
+        "food_contact": true
+       }
+      ],
+      "note": "Inactive (cannot be ordered): GSK-RUB-05L."
+     },
+     "tool_message": {
+      "role": "tool",
+      "tool_call_id": "call_160563",
+      "content": "{\"ok\": true, \"items\": [{\"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-05L-R\", \"description\": \"Gasket, silicone, 5 L (rework)\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-03L\", \"description\": \"Gasket, silicone, 3 L\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-07L\", \"description\": \"Gasket, silicone, 7.5 L\", \"unit\": \"NOS\", \"food_contact\": true}], \"note\": \"Inactive (cannot be ordered): GSK-RUB-05L.\"}"
+     }
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "seconds": 2.03,
+   "request_body": {
+    "model": "gemini-3.8-flash",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are Ask Rasoi, the assistant on Rasoi Steel Works' home page, working in Bahi ERP for Kavita Joshi (KJOSHI).\nToday is Monday 26 October 2026. Use the tools to look things up and to do what Kavita asks. Every write tool\npreviews first (confirm=false); show the preview and commit (confirm=true) only after Kavita says yes.\nIf a tool returns ok=false, read its next_step. Report the status the receipt gives you, in plain words."
+     },
+     {
+      "role": "user",
+      "content": "Check stock of the 5-litre gasket."
+     },
+     {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+       {
+        "extra_content": {
+         "google": {
+          "thought_signature": "EvwDCvkDAWkUfRPWcuwHpCe4QIQVqfu7zERbGoc2oVMw1tteVlNGajDxnPQdfiyRWHvicIt1QdnGqUbcmUIORYK/bOznGbK8itAYmOoJSLkdzsbM3fufmHMS5lgKlwHt+nKFl8x9HYmXX+LGEMBwUIS5FERwJWCdCW++TKK3W2kSTwq2n0jQ6VoSdw3P/P6MREh2SVFgQEQ8mPUAY2STMuxf9Y+F0+3FbyE4cfLe/8irydblhbTewShH3bNbzwcCTPbQMtblcGZlbUcI+Lzkri9VHLBNrq1JZ0zA9YEHS7XOuUWG/eVcY2PjChAdCYHbwHvFvc82OBtIaAMSSNJ0+htGhQClY5N2SX7OfjPostMpB0Sa/5UxwIQBH/Gl+wa8laCT5HrhEczpFA+s/EHcqAv77zHuc3TSL3xa7D4i3aE3DanC9aXX2YcHV21OOeE4oEEOv0q2/icCwyJDyKbhAtQQJRXpb/J9APeKjF5/lsiBF8d6tN8c+C3WeEqrLPjhrP02UPjY4it3GvpTU1YYEJjADH/kOSdmvr7x6SmH87fUEc0OJEHGvJ6T6dFLUW3vzyxqU8yDoBRYezT7Cssha5Hm2ILzXCOR1bosZuyOUVQlvuYk5iTyV0nX8E6P6UHdVTvbSfs9wAPdymaMotH/Km8vfbIPR5ZnNcYz3+/JAw=="
+         }
+        },
+        "function": {
+         "arguments": "{\"query\":\"5-litre gasket\"}",
+         "name": "find_item"
+        },
+        "id": "call_160563",
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_160563",
+      "content": "{\"ok\": true, \"items\": [{\"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-05L-R\", \"description\": \"Gasket, silicone, 5 L (rework)\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-03L\", \"description\": \"Gasket, silicone, 3 L\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-07L\", \"description\": \"Gasket, silicone, 7.5 L\", \"unit\": \"NOS\", \"food_contact\": true}], \"note\": \"Inactive (cannot be ordered): GSK-RUB-05L.\"}"
+     }
+    ],
+    "tools": [
+     {
+      "type": "function",
+      "function": {
+       "name": "find_item",
+       "description": "Find stock items by description or code (e.g. '5 litre silicone gasket'). Returns active items, best match first, with code, unit and whether they touch food.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "query": {
+          "type": "string",
+          "description": "words describing the item, or its code"
+         }
+        },
+        "required": [
+         "query"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "check_stock",
+       "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Bahi item code, e.g. GSK-SIL-05L"
+         }
+        },
+        "required": [
+         "item_code"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "find_supplier",
+       "description": "Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid food-grade certificate. Use it before registering anyone new.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "description": "the supplier's name as the user said it"
+         },
+         "city": {
+          "type": "string",
+          "description": "optional city, to tell two branches apart"
+         }
+        },
+        "required": [
+         "name"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "check_budget",
+       "description": "Is a cost centre open, and how much budget is left this quarter? Without a code, lists every open cost centre.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "cost_centre": {
+          "type": "string",
+          "description": "cost centre code, e.g. PRD-07; leave out to list the open ones"
+         }
+        },
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "search_policy",
+       "description": "Search Rasoi's purchasing policy and the Bahi manual. Returns the relevant clauses with their citations, or says the documents do not cover it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "question": {
+          "type": "string",
+          "description": "the policy question in plain words"
+         }
+        },
+        "required": [
+         "question"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "create_purchase_request",
+       "description": "Raise a purchase request (PR): the internal ask to buy something. With confirm=false it previews the estimated value and who must approve; with confirm=true it saves and submits it. Within your limit it is approved at once; above it, it waits for your manager.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Bahi item code"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "how many, in the item's unit"
+         },
+         "cost_centre": {
+          "type": "string",
+          "description": "who pays, e.g. PRD-07"
+         },
+         "need_by": {
+          "type": "string",
+          "description": "date needed, YYYY-MM-DD"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "item_code",
+         "quantity",
+         "cost_centre",
+         "need_by"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "list_my_approvals",
+       "description": "What is waiting for the signed-in user's signature: purchase requests and orders, with value and who raised them.",
+       "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "approve_purchase_request",
+       "description": "Approve or reject a purchase request that waits for the signed-in user. Only the named approver can do this, never the person who raised it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "request_no": {
+          "type": "string",
+          "description": "e.g. PR/2026/04417"
+         },
+         "decision": {
+          "type": "string",
+          "enum": [
+           "approve",
+           "reject"
+          ],
+          "description": "approve or reject"
+         },
+         "comment": {
+          "type": "string",
+          "description": "optional note to the requester"
+         }
+        },
+        "required": [
+         "request_no",
+         "decision"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "create_purchase_order",
+       "description": "Create a purchase order (PO) with a supplier. Give request_no for an approved purchase request (it supplies item, quantity, cost centre and date), or item_code, quantity, cost_centre and need_by for a small direct order up to Rs 50,000. confirm=false previews price, tax and value; confirm=true saves it. Returns a receipt with the order's real status: an APPROVED order still has to be released.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "supplier_code": {
+          "type": "string",
+          "description": "Bahi supplier code, from find_supplier"
+         },
+         "request_no": {
+          "type": "string",
+          "description": "an APPROVED purchase request"
+         },
+         "item_code": {
+          "type": "string",
+          "description": "for a direct order"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "for a direct order"
+         },
+         "cost_centre": {
+          "type": "string",
+          "description": "for a direct order"
+         },
+         "need_by": {
+          "type": "string",
+          "description": "for a direct order, YYYY-MM-DD"
+         },
+         "rate": {
+          "type": "number",
+          "description": "omit to use the contract rate"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "supplier_code"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "approve_purchase_order",
+       "description": "Approve a purchase order that waits for the signed-in user's signature.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         },
+         "comment": {
+          "type": "string",
+          "description": "optional"
+         }
+        },
+        "required": [
+         "po_no"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "release_purchase_order",
+       "description": "Release an APPROVED purchase order to the supplier; only then does the supplier get it. Returns a receipt with the real status.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         }
+        },
+        "required": [
+         "po_no"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "order_status",
+       "description": "The real status of a purchase order or a purchase request, read from Bahi, with approval, goods received and any warning.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         },
+         "request_no": {
+          "type": "string",
+          "description": "e.g. PR/2026/04417"
+         }
+        },
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "receive_goods",
+       "description": "Record goods received (GRN) against a RELEASED purchase order: stock goes up, and the order closes once everything has arrived. Cannot receive more than was ordered.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "the released order the goods came against"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "how many arrived"
+         },
+         "warehouse": {
+          "type": "string",
+          "description": "optional; defaults to the order's warehouse"
+         },
+         "remarks": {
+          "type": "string",
+          "description": "optional, e.g. vehicle number"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "po_no",
+         "quantity"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "register_supplier",
+       "description": "Register a NEW supplier. Only after find_supplier shows no existing match. confirm=false previews and checks for duplicates; confirm=true creates it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "description": "registered name"
+         },
+         "city": {
+          "type": "string",
+          "description": ""
+         },
+         "state": {
+          "type": "string",
+          "description": "Indian state"
+         },
+         "gstin": {
+          "type": "string",
+          "description": "15-character GSTIN"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "name",
+         "city",
+         "state",
+         "gstin"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "send_message",
+       "description": "Send a short message to a colleague or supplier (Slack handle like @rohit, or an email address). Goes through Bahi's notification queue.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "to": {
+          "type": "string",
+          "description": "@handle or email"
+         },
+         "text": {
+          "type": "string",
+          "description": "the message"
+         }
+        },
+        "required": [
+         "to",
+         "text"
+        ]
+       }
+      }
+     }
+    ],
+    "temperature": 0
+   },
+   "request_bytes": 10102,
+   "response_body": {
+    "choices": [
+     {
+      "finish_reason": "tool_calls",
+      "index": 0,
+      "message": {
+       "role": "assistant",
+       "tool_calls": [
+        {
+         "extra_content": {
+          "google": {
+           "thought_signature": "Es4BCssBAWkUfRPIycUqiY77lRiwVrKungzQAITESkvFqvIf66zT65kGvC0Smt4sjKjN5A1dlODj15AoUOCHkEh/hUHXelbU7xsOEynO05imDrEsjN7U49m+P0SBqkVuwOH3bA5+YTnAJFRaEZ/qIRKxepqYcksjfoaxa522MqpRm/iKDHUfORw1yQAT8qFr6L8ACjqPvmbI/FbtW6lGlg4EWmmoFgwFYH2Un3jJg21+EYCXQOXWBRF1nKNB3DCLw0+2EZ1c9dUsblbyYvvxjec="
+          }
+         },
+         "function": {
+          "arguments": "{\"item_code\":\"GSK-SIL-05L\"}",
+          "name": "check_stock"
+         },
+         "id": "call_102410",
+         "type": "function"
+        }
+       ]
+      }
+     }
+    ],
+    "created": 1793146501,
+    "id": "gz7hasyUKNSB1sgPmb73gAU",
+    "model": "gemini-3.8-flash",
+    "object": "chat.completion",
+    "usage": {
+     "completion_tokens": 25,
+     "prompt_tokens": 2384,
+     "total_tokens": 2451
+    }
+   },
+   "ran": [
+    {
+     "tool": "check_stock",
+     "arguments": {
+      "item_code": "GSK-SIL-05L"
+     },
+     "bahi_services": [
+      {
+       "svc": "itm_get",
+       "payload": {
+        "itm_cd": "GSK-SIL-05L"
+       },
+       "rc": "S"
+      },
+      {
+       "svc": "whs_list",
+       "payload": {},
+       "rc": "S"
+      },
+      {
+       "svc": "stk_query",
+       "payload": {
+        "itm_cd": "GSK-SIL-05L",
+        "whs_cd": "WH-PUN-STR"
+       },
+       "rc": "S"
+      },
+      {
+       "svc": "stk_query",
+       "payload": {
+        "itm_cd": "GSK-SIL-05L",
+        "whs_cd": "WH-CHK-STR"
+       },
+       "rc": "S"
+      }
+     ],
+     "result": {
+      "ok": true,
+      "item_code": "GSK-SIL-05L",
+      "description": "Gasket, silicone, 5 L",
+      "unit": "NOS",
+      "warehouses": [
+       {
+        "warehouse": "WH-PUN-STR",
+        "name": "Pune main stores",
+        "on_hand": 54000,
+        "allocated": 0,
+        "on_order": 0,
+        "free": 54000
+       },
+       {
+        "warehouse": "WH-CHK-STR",
+        "name": "Chakan stores",
+        "on_hand": 12000,
+        "allocated": 0,
+        "on_order": 0,
+        "free": 12000
+       }
+      ],
+      "free_total": 66000,
+      "on_order_total": 0,
+      "reorder_level": 30000,
+      "cover_days": 11,
+      "below_reorder": false
+     },
+     "tool_message": {
+      "role": "tool",
+      "tool_call_id": "call_102410",
+      "content": "{\"ok\": true, \"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"warehouses\": [{\"warehouse\": \"WH-PUN-STR\", \"name\": \"Pune main stores\", \"on_hand\": 54000, \"allocated\": 0, \"on_order\": 0, \"free\": 54000}, {\"warehouse\": \"WH-CHK-STR\", \"name\": \"Chakan stores\", \"on_hand\": 12000, \"allocated\": 0, \"on_order\": 0, \"free\": 12000}], \"free_total\": 66000, \"on_order_total\": 0, \"reorder_level\": 30000, \"cover_days\": 11, \"below_reorder\": false}"
+     }
+    }
+   ]
+  },
+  {
+   "round": 3,
+   "seconds": 3.97,
+   "request_body": {
+    "model": "gemini-3.8-flash",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are Ask Rasoi, the assistant on Rasoi Steel Works' home page, working in Bahi ERP for Kavita Joshi (KJOSHI).\nToday is Monday 26 October 2026. Use the tools to look things up and to do what Kavita asks. Every write tool\npreviews first (confirm=false); show the preview and commit (confirm=true) only after Kavita says yes.\nIf a tool returns ok=false, read its next_step. Report the status the receipt gives you, in plain words."
+     },
+     {
+      "role": "user",
+      "content": "Check stock of the 5-litre gasket."
+     },
+     {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+       {
+        "extra_content": {
+         "google": {
+          "thought_signature": "EvwDCvkDAWkUfRPWcuwHpCe4QIQVqfu7zERbGoc2oVMw1tteVlNGajDxnPQdfiyRWHvicIt1QdnGqUbcmUIORYK/bOznGbK8itAYmOoJSLkdzsbM3fufmHMS5lgKlwHt+nKFl8x9HYmXX+LGEMBwUIS5FERwJWCdCW++TKK3W2kSTwq2n0jQ6VoSdw3P/P6MREh2SVFgQEQ8mPUAY2STMuxf9Y+F0+3FbyE4cfLe/8irydblhbTewShH3bNbzwcCTPbQMtblcGZlbUcI+Lzkri9VHLBNrq1JZ0zA9YEHS7XOuUWG/eVcY2PjChAdCYHbwHvFvc82OBtIaAMSSNJ0+htGhQClY5N2SX7OfjPostMpB0Sa/5UxwIQBH/Gl+wa8laCT5HrhEczpFA+s/EHcqAv77zHuc3TSL3xa7D4i3aE3DanC9aXX2YcHV21OOeE4oEEOv0q2/icCwyJDyKbhAtQQJRXpb/J9APeKjF5/lsiBF8d6tN8c+C3WeEqrLPjhrP02UPjY4it3GvpTU1YYEJjADH/kOSdmvr7x6SmH87fUEc0OJEHGvJ6T6dFLUW3vzyxqU8yDoBRYezT7Cssha5Hm2ILzXCOR1bosZuyOUVQlvuYk5iTyV0nX8E6P6UHdVTvbSfs9wAPdymaMotH/Km8vfbIPR5ZnNcYz3+/JAw=="
+         }
+        },
+        "function": {
+         "arguments": "{\"query\":\"5-litre gasket\"}",
+         "name": "find_item"
+        },
+        "id": "call_160563",
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_160563",
+      "content": "{\"ok\": true, \"items\": [{\"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-05L-R\", \"description\": \"Gasket, silicone, 5 L (rework)\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-03L\", \"description\": \"Gasket, silicone, 3 L\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-07L\", \"description\": \"Gasket, silicone, 7.5 L\", \"unit\": \"NOS\", \"food_contact\": true}], \"note\": \"Inactive (cannot be ordered): GSK-RUB-05L.\"}"
+     },
+     {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+       {
+        "extra_content": {
+         "google": {
+          "thought_signature": "Es4BCssBAWkUfRPIycUqiY77lRiwVrKungzQAITESkvFqvIf66zT65kGvC0Smt4sjKjN5A1dlODj15AoUOCHkEh/hUHXelbU7xsOEynO05imDrEsjN7U49m+P0SBqkVuwOH3bA5+YTnAJFRaEZ/qIRKxepqYcksjfoaxa522MqpRm/iKDHUfORw1yQAT8qFr6L8ACjqPvmbI/FbtW6lGlg4EWmmoFgwFYH2Un3jJg21+EYCXQOXWBRF1nKNB3DCLw0+2EZ1c9dUsblbyYvvxjec="
+         }
+        },
+        "function": {
+         "arguments": "{\"item_code\":\"GSK-SIL-05L\"}",
+         "name": "check_stock"
+        },
+        "id": "call_102410",
+        "type": "function"
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_102410",
+      "content": "{\"ok\": true, \"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"warehouses\": [{\"warehouse\": \"WH-PUN-STR\", \"name\": \"Pune main stores\", \"on_hand\": 54000, \"allocated\": 0, \"on_order\": 0, \"free\": 54000}, {\"warehouse\": \"WH-CHK-STR\", \"name\": \"Chakan stores\", \"on_hand\": 12000, \"allocated\": 0, \"on_order\": 0, \"free\": 12000}], \"free_total\": 66000, \"on_order_total\": 0, \"reorder_level\": 30000, \"cover_days\": 11, \"below_reorder\": false}"
+     }
+    ],
+    "tools": [
+     {
+      "type": "function",
+      "function": {
+       "name": "find_item",
+       "description": "Find stock items by description or code (e.g. '5 litre silicone gasket'). Returns active items, best match first, with code, unit and whether they touch food.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "query": {
+          "type": "string",
+          "description": "words describing the item, or its code"
+         }
+        },
+        "required": [
+         "query"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "check_stock",
+       "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Bahi item code, e.g. GSK-SIL-05L"
+         }
+        },
+        "required": [
+         "item_code"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "find_supplier",
+       "description": "Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid food-grade certificate. Use it before registering anyone new.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "description": "the supplier's name as the user said it"
+         },
+         "city": {
+          "type": "string",
+          "description": "optional city, to tell two branches apart"
+         }
+        },
+        "required": [
+         "name"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "check_budget",
+       "description": "Is a cost centre open, and how much budget is left this quarter? Without a code, lists every open cost centre.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "cost_centre": {
+          "type": "string",
+          "description": "cost centre code, e.g. PRD-07; leave out to list the open ones"
+         }
+        },
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "search_policy",
+       "description": "Search Rasoi's purchasing policy and the Bahi manual. Returns the relevant clauses with their citations, or says the documents do not cover it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "question": {
+          "type": "string",
+          "description": "the policy question in plain words"
+         }
+        },
+        "required": [
+         "question"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "create_purchase_request",
+       "description": "Raise a purchase request (PR): the internal ask to buy something. With confirm=false it previews the estimated value and who must approve; with confirm=true it saves and submits it. Within your limit it is approved at once; above it, it waits for your manager.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Bahi item code"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "how many, in the item's unit"
+         },
+         "cost_centre": {
+          "type": "string",
+          "description": "who pays, e.g. PRD-07"
+         },
+         "need_by": {
+          "type": "string",
+          "description": "date needed, YYYY-MM-DD"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "item_code",
+         "quantity",
+         "cost_centre",
+         "need_by"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "list_my_approvals",
+       "description": "What is waiting for the signed-in user's signature: purchase requests and orders, with value and who raised them.",
+       "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "approve_purchase_request",
+       "description": "Approve or reject a purchase request that waits for the signed-in user. Only the named approver can do this, never the person who raised it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "request_no": {
+          "type": "string",
+          "description": "e.g. PR/2026/04417"
+         },
+         "decision": {
+          "type": "string",
+          "enum": [
+           "approve",
+           "reject"
+          ],
+          "description": "approve or reject"
+         },
+         "comment": {
+          "type": "string",
+          "description": "optional note to the requester"
+         }
+        },
+        "required": [
+         "request_no",
+         "decision"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "create_purchase_order",
+       "description": "Create a purchase order (PO) with a supplier. Give request_no for an approved purchase request (it supplies item, quantity, cost centre and date), or item_code, quantity, cost_centre and need_by for a small direct order up to Rs 50,000. confirm=false previews price, tax and value; confirm=true saves it. Returns a receipt with the order's real status: an APPROVED order still has to be released.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "supplier_code": {
+          "type": "string",
+          "description": "Bahi supplier code, from find_supplier"
+         },
+         "request_no": {
+          "type": "string",
+          "description": "an APPROVED purchase request"
+         },
+         "item_code": {
+          "type": "string",
+          "description": "for a direct order"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "for a direct order"
+         },
+         "cost_centre": {
+          "type": "string",
+          "description": "for a direct order"
+         },
+         "need_by": {
+          "type": "string",
+          "description": "for a direct order, YYYY-MM-DD"
+         },
+         "rate": {
+          "type": "number",
+          "description": "omit to use the contract rate"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "supplier_code"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "approve_purchase_order",
+       "description": "Approve a purchase order that waits for the signed-in user's signature.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         },
+         "comment": {
+          "type": "string",
+          "description": "optional"
+         }
+        },
+        "required": [
+         "po_no"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "release_purchase_order",
+       "description": "Release an APPROVED purchase order to the supplier; only then does the supplier get it. Returns a receipt with the real status.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         }
+        },
+        "required": [
+         "po_no"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "order_status",
+       "description": "The real status of a purchase order or a purchase request, read from Bahi, with approval, goods received and any warning.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         },
+         "request_no": {
+          "type": "string",
+          "description": "e.g. PR/2026/04417"
+         }
+        },
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "receive_goods",
+       "description": "Record goods received (GRN) against a RELEASED purchase order: stock goes up, and the order closes once everything has arrived. Cannot receive more than was ordered.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "the released order the goods came against"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "how many arrived"
+         },
+         "warehouse": {
+          "type": "string",
+          "description": "optional; defaults to the order's warehouse"
+         },
+         "remarks": {
+          "type": "string",
+          "description": "optional, e.g. vehicle number"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "po_no",
+         "quantity"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "register_supplier",
+       "description": "Register a NEW supplier. Only after find_supplier shows no existing match. confirm=false previews and checks for duplicates; confirm=true creates it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "description": "registered name"
+         },
+         "city": {
+          "type": "string",
+          "description": ""
+         },
+         "state": {
+          "type": "string",
+          "description": "Indian state"
+         },
+         "gstin": {
+          "type": "string",
+          "description": "15-character GSTIN"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "name",
+         "city",
+         "state",
+         "gstin"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "send_message",
+       "description": "Send a short message to a colleague or supplier (Slack handle like @rohit, or an email address). Goes through Bahi's notification queue.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "to": {
+          "type": "string",
+          "description": "@handle or email"
+         },
+         "text": {
+          "type": "string",
+          "description": "the message"
+         }
+        },
+        "required": [
+         "to",
+         "text"
+        ]
+       }
+      }
+     }
+    ],
+    "temperature": 0
+   },
+   "request_bytes": 11202,
+   "response_body": {
+    "choices": [
+     {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+       "content": "Here is the stock summary for the **5-litre silicone gasket** (`GSK-SIL-05L`):\n\n* **Total Free Stock:** 66,000 NOS\n  * **Pune Main Stores (WH-PUN-STR):** 54,000 NOS (on hand: 54,000 | allocated: 0 | on order: 0)\n  * **Chakan Stores (WH-CHK-STR):** 12,000 NOS (on hand: 12,000 | allocated: 0 | on order: 0)\n* **Reorder Level:** 30,000 NOS\n* **On Order Total:** 0 NOS\n* **Days of Cover:** 11 days\n* **Status:** Above reorder level",
+       "extra_content": {
+        "google": {
+         "thought_signature": "EsIFCr8FAWkUfROx1h7d93zdL7pcUWwh3WeIn87RbosjwCvfEG865utw1De18QZbI9jSREnX2eZz1SbA2r4uZD6G5QT/KRSlXCgLDSPO2WaSYXDV3RYK2a/YT9LTDOO4ZnTXJgIyb7uvfgJ4N2ihjPEOSQR/EjA8vDPze4/Wac7wDt6C8XX5F4LK3+NX4ogPf4NxI2bqlHWiGTZeQaNw0u+J/ZHtcmEkzpXZTUdTR1VlDGq7lr3G2vB3fLehcL01Hu4vCMavTkQZREJ/uXwNlYMhurUXsg4lKyeKV74v9koRMaTxo7y5lxek3lD/w526pRSKVL0B2i+gvH4zMObTM3ckp75c2V0tB04VAUPV7yubBGNu8HGJx72MH4ZotnlEH3ze9Zne0D5/Kf6H0AlSFaGU76d/cg+G0AQCZa1iQ3Fwc5sihaf1wraAECccUU/qqAmHyMctcsS22h7ks+p5/lRhpUAQN4MqLuwnrXqMP+TfxB3122l5hsfhPt8NpuGbWyHv4/53Ks8n2FoP26ZAmHLskq927Q0FT1SktB7Jfl/yZTkpdE1+SkxEzl4IqlNahnZZszM9V2mPALQSfoVjTb55nD4P8QpTuttIJ/9CxecsTWOLN198qtJU0y01PcWRF7oVwkBKr7B9/BHpSHgWd2UEJphQB18VBMSw3dfFX+EJXjz0p3zIZgwfiS/DdVtHA3XDNzUlkNfA/QCM8yzUinYr19+N/j2jUPysynqWPCqKhDk1ZqiOFYPsZRfMvoEXV99Fiy+bOtC0gSOoj1fkR2zU/CciOX9sZpK/gDWPswuvErYLMaBWP8fTMdC3bzPkEbS2PnQWCul2mW50VqLYpfTM+4EIRc7keWZNXvNp8D1Sy4ULgKYUCmwdIMqi1aB407wxrJUj8Xwt0PqSQaAwmhzl3chjtmBeJ1AHWdwa1R7McVZlJw=="
+        }
+       },
+       "role": "assistant"
+      }
+     }
+    ],
+    "created": 1793146505,
+    "id": "hT7har2wKPCxuMYPhYeZyAY",
+    "model": "gemini-3.8-flash",
+    "object": "chat.completion",
+    "usage": {
+     "completion_tokens": 178,
+     "prompt_tokens": 2668,
+     "total_tokens": 3070
+    }
+   },
+   "ran": []
+  }
+ ],
+ "final_answer": "Here is the stock summary for the **5-litre silicone gasket** (`GSK-SIL-05L`):\n\n* **Total Free Stock:** 66,000 NOS\n  * **Pune Main Stores (WH-PUN-STR):** 54,000 NOS (on hand: 54,000 | allocated: 0 | on order: 0)\n  * **Chakan Stores (WH-CHK-STR):** 12,000 NOS (on hand: 12,000 | allocated: 0 | on order: 0)\n* **Reorder Level:** 30,000 NOS\n* **On Order Total:** 0 NOS\n* **Days of Cover:** 11 days\n* **Status:** Above reorder level",
+ "usage": [
+  {
+   "completion_tokens": 19,
+   "prompt_tokens": 2040,
+   "total_tokens": 2173
+  },
+  {
+   "completion_tokens": 25,
+   "prompt_tokens": 2384,
+   "total_tokens": 2451
+  },
+  {
+   "completion_tokens": 178,
+   "prompt_tokens": 2668,
+   "total_tokens": 3070
+  }
+ ]
+}

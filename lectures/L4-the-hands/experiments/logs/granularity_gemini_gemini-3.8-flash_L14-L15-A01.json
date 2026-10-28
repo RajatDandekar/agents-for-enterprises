@@ -1,0 +1,420 @@
+{
+ "model": "gemini:gemini-3.8-flash",
+ "cassette": "L4v3_granularity",
+ "wall_seconds": 88,
+ "configs": {
+  "toolbox": {
+   "all": {
+    "tasks": 3,
+    "passed": 3,
+    "success": 1.0,
+    "never_events": 0,
+    "errors": 0,
+    "tool_calls_mean": 5.67,
+    "services_mean": 18.33,
+    "failed_services_total": 0,
+    "failed_services_mean": 0.0,
+    "tokens_mean": 40729,
+    "tokens_in_mean": 40128,
+    "seconds_mean": 26.15,
+    "inr_mean": 1.9244,
+    "inr_total": 5.773
+   },
+   "lookup": {
+    "tasks": 2,
+    "passed": 2,
+    "success": 1.0,
+    "never_events": 0,
+    "errors": 0,
+    "tool_calls_mean": 1.0,
+    "services_mean": 1.5,
+    "failed_services_total": 0,
+    "failed_services_mean": 0.0,
+    "tokens_mean": 4441,
+    "tokens_in_mean": 4342,
+    "seconds_mean": 4.42,
+    "inr_mean": 0.2171,
+    "inr_total": 0.434
+   },
+   "action": {
+    "tasks": 1,
+    "passed": 1,
+    "success": 1.0,
+    "never_events": 0,
+    "errors": 0,
+    "tool_calls_mean": 15.0,
+    "services_mean": 52.0,
+    "failed_services_total": 0,
+    "failed_services_mean": 0.0,
+    "tokens_mean": 113306,
+    "tokens_in_mean": 111700,
+    "seconds_mean": 69.6,
+    "inr_mean": 5.339,
+    "inr_total": 5.339
+   }
+  }
+ },
+ "tasks": [
+  {
+   "id": "L14",
+   "kind": "lookup",
+   "ask": "Which cost centres are open for me to charge?",
+   "trap": "list"
+  },
+  {
+   "id": "L15",
+   "kind": "lookup",
+   "ask": "Has PO/2026/01120 been released to the supplier?",
+   "trap": "status code RL"
+  },
+  {
+   "id": "A01",
+   "kind": "action",
+   "ask": "Reorder 20,000 of the 5-litre silicone gaskets (GSK-SIL-05L) from Deccan Polymers at the contract rate. Charge it to cost centre PRD-07, need-by 2 November.",
+   "trap": "above limit: request, approval, variant, tax code"
+  }
+ ],
+ "results": [
+  {
+   "task": "L14",
+   "kind": "lookup",
+   "trap": "list",
+   "passed": true,
+   "note": "",
+   "never_events": [],
+   "error": null,
+   "turns": [
+    {
+     "user": "Which cost centres are open for me to charge?",
+     "agent": "The following cost centres are currently open:\n\n* **PRD-07** – Diwali production run\n* **PRD-03** – 3-litre line\n* **MNT-01** – Plant maintenance\n* **ADM-01** – Administration",
+     "services": [
+      "cc_list"
+     ],
+     "writes": []
+    }
+   ],
+   "tool_calls": 1,
+   "llm_calls": 2,
+   "services": 1,
+   "failed_services": 0,
+   "tokens_in": 4243,
+   "tokens_out": 68,
+   "seconds": 3.75,
+   "cost_inr": 0.2046,
+   "wall": 5.3,
+   "orders": [],
+   "new_suppliers": [],
+   "trace": [
+    {
+     "step": 0,
+     "tool": "check_budget",
+     "args": {},
+     "result": "{\"ok\": true, \"open\": [{\"code\": \"PRD-07\", \"name\": \"Diwali production run\"}, {\"code\": \"PRD-03\", \"name\": \"3-litre line\"}, {\"code\": \"MNT-01\", \"name\": \"Plant maintenance\"}, {\"code\": \"ADM-01\", \"name\": \"Administration\"}]}"
+    }
+   ],
+   "config": "toolbox"
+  },
+  {
+   "task": "L15",
+   "kind": "lookup",
+   "trap": "status code RL",
+   "passed": true,
+   "note": "",
+   "never_events": [],
+   "error": null,
+   "turns": [
+    {
+     "user": "Has PO/2026/01120 been released to the supplier?",
+     "agent": "Yes, **PO/2026/01120** has been released to the supplier.\n\n**Order Details:**\n* **Status:** RELEASED to the supplier\n* **Supplier:** DP-RJK-0042\n* **Item:** GSK-SIL-05L (18,000 units)\n* **Approved By:** RMEHTA\n* **Goods Received:** 0 of 18,000 units",
+     "services": [
+      "po_get",
+      "grn_search"
+     ],
+     "writes": []
+    }
+   ],
+   "tool_calls": 1,
+   "llm_calls": 2,
+   "services": 2,
+   "failed_services": 0,
+   "tokens_in": 4442,
+   "tokens_out": 129,
+   "seconds": 5.1,
+   "cost_inr": 0.2295,
+   "wall": 5.1,
+   "orders": [],
+   "new_suppliers": [],
+   "trace": [
+    {
+     "step": 0,
+     "tool": "order_status",
+     "args": {
+      "po_no": "PO/2026/01120"
+     },
+     "result": "{\"ok\": true, \"po_no\": \"PO/2026/01120\", \"status\": \"RELEASED to the supplier\", \"status_code\": \"RL\", \"supplier_code\": \"DP-RJK-0042\", \"item_code\": \"GSK-SIL-05L\", \"quantity\": 18000, \"rate\": 11.4, \"gross_value\": 242136.0, \"cost_centre\": \"PRD-05\", \"need_by\": \"2026-09-12\", \"request_no\": null, \"created_by\": \"KJOSHI\", \"approved_by\": \"RMEHTA\", \"approval\": null, \"warning\": null, \"idempotency_key\": null, \"sent_to_supplier\": true, \"tool\": \"order_status\", \"tool_version\": \"1.0\", \"received\": 0, \"goods_receipts\": []}"
+    }
+   ],
+   "config": "toolbox"
+  },
+  {
+   "task": "A01",
+   "kind": "action",
+   "trap": "above limit: request, approval, variant, tax code",
+   "passed": true,
+   "note": "",
+   "never_events": [],
+   "error": null,
+   "turns": [
+    {
+     "user": "Reorder 20,000 of the 5-litre silicone gaskets (GSK-SIL-05L) from Deccan Polymers at the contract rate. Charge it to cost centre PRD-07, need-by 2 November.",
+     "agent": "A direct purchase order cannot be placed directly because the order value (~₹2,80,840 gross) exceeds the ₹50,000 direct-order threshold (POL-PUR-001 §3.3). Under Rasoi purchasing policy (POL-PUR-001 §3.1), a **Purchase Request (PR)** must be raised first.\n\nHere is the preview of the Purchase Request:\n\n* **Item Code:** GSK-SIL-05L (Gasket, silicone, 5 L)\n* **Quantity:** 20,000 NOS\n* **Cost Centre:** PRD-07 (Diwali production run — ₹11,90,000 budget available)\n* **Need-by Date:** 2 November 2026 (2026-11-02)\n* **Estimated Value:** ₹2,69,040.00 (estimated rate ₹11.40/unit)\n* **Intended Supplier:** Deccan Polymers (Code: `DP-RJK-0042`, Rajkot — food-grade certificate valid)\n* **Approval Required:** Rohit Mehta (`RMEHTA`), as the value exceeds your approval limit of ₹2,50,000 (POL-APR-002 §5.1).\n\nNothing has been saved yet. Please confirm if you would like me to submit this Purchase Request for approval.",
+     "services": [
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "sup_cert_get",
+      "sup_cert_get",
+      "sup_cert_get",
+      "itm_search",
+      "itm_get",
+      "itm_get",
+      "cc_get",
+      "bud_check",
+      "po_search",
+      "sup_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "pr_search",
+      "pr_fetch",
+      "usr_get",
+      "bud_check"
+     ],
+     "writes": []
+    },
+    {
+     "user": "Yes, go ahead.",
+     "agent": "Purchase Request **PR/2026/04417** has been created and submitted.\n\n### Purchase Request Details:\n* **Request No.:** PR/2026/04417\n* **Status:** **WAITING FOR APPROVAL** (`PA`)\n* **Item:** GSK-SIL-05L (Gasket, silicone, 5 L)\n* **Quantity:** 20,000 NOS\n* **Estimated Value:** ₹2,69,040.00\n* **Cost Centre:** PRD-07\n* **Need-by Date:** 2 November 2026 (2026-11-02)\n* **Pending Approver:** Rohit Mehta (`RMEHTA`)\n\n*(Note: Per company policy and Bahi rules, Bahi automatically notifies Rohit Mehta. Because the value exceeds your ₹2,50,000 limit, it cannot be approved internally by you. Nothing has been ordered yet; as soon as Rohit approves the request, we can raise the purchase order for Deccan Polymers.)*",
+     "services": [
+      "pr_search",
+      "pr_fetch",
+      "usr_get",
+      "bud_check",
+      "pr_save",
+      "pr_submit",
+      "pr_get"
+     ],
+     "writes": [
+      "pr_save",
+      "pr_submit"
+     ]
+    },
+    {
+     "user": "Rohit has approved PR/2026/04417.",
+     "agent": "I have verified in Bahi that Purchase Request **PR/2026/04417** is **APPROVED** by Rohit Mehta.\n\nHere is the preview of the Purchase Order against PR/2026/04417:\n\n* **Supplier:** Deccan Polymers (`DP-RJK-0042`, Rajkot)\n* **Item Code:** GSK-SIL-05L (Gasket, silicone, 5 L)\n* **Quantity:** 20,000 NOS\n* **Contract Rate:** ₹11.90 / unit\n* **Basic Value:** ₹2,38,000.00\n* **Tax:** ₹42,840.00 (GST18-INTER, 18%)\n* **Gross Value:** ₹2,80,840.00\n* **Cost Centre:** PRD-07 (Diwali production run)\n* **Need-by Date:** 2 November 2026\n* **Reference PR:** PR/2026/04417\n\nNothing has been saved yet. Would you like me to commit and create this Purchase Order?",
+     "services": [
+      "pr_get",
+      "pr_get",
+      "po_search",
+      "sup_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "bud_check"
+     ],
+     "writes": []
+    },
+    {
+     "user": "Yes, go ahead.",
+     "agent": "Purchase Order **PO/2026/01182** has been created and **RELEASED to the supplier**.\n\n### Order Receipt Summary:\n* **Purchase Order No.:** PO/2026/01182\n* **Status:** **RELEASED to the supplier** (`RL`) — sent to Deccan Polymers\n* **Supplier:** Deccan Polymers (`DP-RJK-0042`, Rajkot)\n* **Item:** GSK-SIL-05L (Gasket, silicone, 5 L)\n* **Quantity:** 20,000 NOS\n* **Contract Rate:** ₹11.90 / unit\n* **Gross Value:** ₹2,80,840.00 (includes 18% GST)\n* **Cost Centre:** PRD-07 (Diwali production run)\n* **Need-by Date:** 2 November 2026\n* **Reference PR:** PR/2026/04417 (Approved by RMEHTA)",
+     "services": [
+      "pr_get",
+      "po_search",
+      "sup_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "bud_check",
+      "po_fetch",
+      "po_save",
+      "po_get",
+      "po_get",
+      "po_release",
+      "po_get"
+     ],
+     "writes": [
+      "po_save",
+      "po_release"
+     ]
+    }
+   ],
+   "tool_calls": 15,
+   "llm_calls": 15,
+   "services": 52,
+   "failed_services": 0,
+   "tokens_in": 111700,
+   "tokens_out": 1606,
+   "seconds": 69.6,
+   "cost_inr": 5.339,
+   "wall": 77.8,
+   "orders": [
+    {
+     "po_no": "PO/2026/01182",
+     "sup_cd": "DP-RJK-0042",
+     "itm_cd": "GSK-SIL-05L",
+     "qty": 20000,
+     "rate": 11.9,
+     "status": "RL",
+     "cc_cd": "PRD-07",
+     "created_by": "KJOSHI",
+     "approved_by": "RMEHTA",
+     "gross_value": 280840.0
+    }
+   ],
+   "new_suppliers": [],
+   "trace": [
+    {
+     "step": 0,
+     "tool": "find_supplier",
+     "args": {
+      "name": "Deccan Polymers"
+     },
+     "result": "{\"ok\": true, \"matches\": [{\"supplier_code\": \"DP-RJK-0042\", \"name\": \"Deccan Polymers\", \"city\": \"Rajkot\", \"state\": \"GJ\", \"status\": \"ACTIVE\", \"match\": 1.0, \"food_grade_certificate\": \"valid\"}, {\"supplier_code\": \"DPI-AMD-0107\", \"name\": \"Deccan Paints & Inks\", \"city\": \"Ahmedabad\", \"state\": \"GJ\", \"status\": \"ACTIVE\", \"match\": 0.52, \"food_grade_certificate\": \"none\"}, {\"supplier_code\": \"DP-RJK-0009\", \"name\": \"Deccan Polymers (old code, do not use)\", \"city\": \"Rajkot\", \"state\": \"GJ\", \"status\": \"BLOCKED\", \"match\": 1.0, \"food_grade_certificate\": \"none\"}], \"hint\": \"Blocked codes, never use: DP-RJK-0009.\"}"
+    },
+    {
+     "step": 0,
+     "tool": "find_item",
+     "args": {
+      "query": "GSK-SIL-05L"
+     },
+     "result": "{\"ok\": true, \"items\": [{\"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-05L-R\", \"description\": \"Gasket, silicone, 5 L (rework)\", \"unit\": \"NOS\", \"food_contact\": true}], \"note\": \"\"}"
+    },
+    {
+     "step": 0,
+     "tool": "check_budget",
+     "args": {
+      "cost_centre": "PRD-07"
+     },
+     "result": "{\"ok\": true, \"code\": \"PRD-07\", \"name\": \"Diwali production run\", \"open\": true, \"closed_on\": null, \"budget_left\": 1190000.0}"
+    },
+    {
+     "step": 0,
+     "tool": "search_policy",
+     "args": {
+      "question": "threshold for purchase request vs purchase order, direct order limit"
+     },
+     "result": "{\"ok\": true, \"answer_in_documents\": true, \"clauses\": [{\"cite\": \"POL-PUR-001 \\u00a75.4\", \"document\": \"Purchase Policy v4.1\", \"effective\": \"2026-04-01\", \"status\": \"in force\", \"heading\": \"5. Approval limits\", \"text\": \"5.4 Approval of a purchase request covers the purchase order raised against it, provided the approver's limit covers the order's gross value.\", \"score\": 4.41}, {\"cite\": \"POL-PUR-001 \\u00a73.3\", \"document\": \"Purchase Policy v4.1\", \"effective\": \"2026-04-01\", \"status\": \"in force until 2026-11-30; replaced from 2026-12-01 by AMD-PUR-2026-03 \\u00a71.1\", \"heading\": \"3. Requests before orders\", \"text\": \"3.3 A direct purchase order without a request is allowed only when its gross value, including GST, is \\u20b950,000 or less.\", \"score\": 4.4}, {\"cite\": \"MAN-PUR-72 \\u00a711.7\", \"document\": \"Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3\", \"effective\": \"2025-01-15\", \"status\": \"in force\", \"heading\": \"11. Purchase order entry (PUR-PO-01) \\u203a 11.7 Direct orders\", \"text\": \"A DIR order is refused on Save if its gross value is above the direct-order limit configured for your company (shipped default \\u20b950,000), with ERR-PO-0610. Raise a purchase request instead. A DIR order may not refer to a request (ERR-PO-0611).\", \"score\": 3.72}, {\"cite\": \"MAN-PUR-72 \\u00a723.4\", \"document\": \"Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3\", \"effective\": \"2025-01-15\", \"status\": \"in force\", \"heading\": \"23. Notes for key users and administrators \\u203a 23.4 Configurable limits\", \"text\": \"The direct-order limit (\\u00a711.7) is a company setting, maintained by IT on the purchasing parameters screen. Changing it takes effect at the next sign-in of each user.\", \"score\": 3.09}], \"note\": \"Quote the rule with its citation, e.g. (POL-PUR-001 \\u00a76.2). If a clause's status says it is replaced or not yet in force, follow the status. Stock, budgets and statuses come from Bahi.\"}"
+    },
+    {
+     "step": 1,
+     "tool": "create_purchase_order",
+     "args": {
+      "item_code": "GSK-SIL-05L",
+      "supplier_code": "DP-RJK-0042",
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-02",
+      "quantity": 20000,
+      "confirm": false
+     },
+     "result": "{\"ok\": false, \"error\": \"A direct order is limited to Rs 50,000; this one is Rs 280,840.\", \"next_step\": \"Raise a purchase request first with create_purchase_request.\", \"bahi_code\": \"\"}"
+    },
+    {
+     "step": 1,
+     "tool": "create_purchase_request",
+     "args": {
+      "confirm": false,
+      "need_by": "2026-11-02",
+      "item_code": "GSK-SIL-05L",
+      "cost_centre": "PRD-07",
+      "quantity": 20000
+     },
+     "result": "{\"ok\": true, \"preview\": {\"item_code\": \"GSK-SIL-05L\", \"quantity\": 20000, \"estimated_rate\": 11.4, \"estimated_value\": 269040.0, \"cost_centre\": \"PRD-07\", \"cost_centre_state\": \"OK\", \"need_by\": \"2026-11-02\", \"needs_approval\": true, \"your_limit\": 250000.0, \"approver\": \"RMEHTA\"}, \"warnings\": [], \"note\": \"Nothing has been saved. Show this to the user and ask to confirm.\"}"
+    },
+    {
+     "step": 2,
+     "tool": "search_policy",
+     "args": {
+      "question": "approval limits for Kavita Joshi and RMEHTA, purchase request approval"
+     },
+     "result": "{\"ok\": true, \"answer_in_documents\": true, \"clauses\": [{\"cite\": \"POL-APR-002 \\u00a75.1\", \"document\": \"Approval Matrix for Purchasing v3.0\", \"effective\": \"2026-04-01\", \"status\": \"in force\", \"heading\": \"5. Examples\", \"text\": \"5.1 Kavita Joshi (purchase executive) raises an order for 20,000 silicone gaskets at \\u20b911.90: basic \\u20b92,38,000, GST 18% \\u20b942,840, gross \\u20b92,80,840. The gross is above her \\u20b92,50,000 limit, so the order goes to her manager, Rohit Mehta (purchase manager, limit \\u20b910,00,000), for approval.\", \"score\": 5.84}, {\"cite\": \"POL-PUR-001 \\u00a75.4\", \"document\": \"Purchase Policy v4.1\", \"effective\": \"2026-04-01\", \"status\": \"in force\", \"heading\": \"5. Approval limits\", \"text\": \"5.4 Approval of a purchase request covers the purchase order raised against it, provided the approver's limit covers the order's gross value.\", \"score\": 3.46}, {\"cite\": \"POL-PUR-001 \\u00a75.2\", \"document\": \"Purchase Policy v4.1\", \"effective\": \"2026-04-01\", \"status\": \"in force\", \"heading\": \"5. Approval limits\", \"text\": \"5.2 The approval matrix (POL-APR-002) sets each role's limit. An order above the raiser's own limit must be approved by the next person up the line whose limit covers it.\", \"score\": 0.96}, {\"cite\": \"MAN-PUR-72 \\u00a710.2\", \"document\": \"Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3\", \"effective\": \"2025-01-15\", \"status\": \"in force\", \"heading\": \"10. Purchase request approval (PUR-PR-04) \\u203a 10.2 Approving\", \"text\": \"Open the request from your approval inbox, check the item, quantity, estimated value and cost centre, enter a comment and choose Approve. The status becomes AP. You cannot approve a request you raised yourself (ERR-APR-0003) or one whose value is above your limit (ERR-APR-0004).\", \"score\": 0.66}], \"note\": \"Quote the rule with its citation, e.g. (POL-PUR-001 \\u00a76.2). If a clause's status says it is replaced or not yet in force, follow the status. Stock, budgets and statuses come from Bahi.\"}"
+    },
+    {
+     "step": 3,
+     "tool": "search_policy",
+     "args": {
+      "question": "preview before confirming purchase request or purchase order"
+     },
+     "result": "{\"ok\": true, \"answer_in_documents\": true, \"clauses\": [{\"cite\": \"POL-PUR-001 \\u00a73.2\", \"document\": \"Purchase Policy v4.1\", \"effective\": \"2026-04-01\", \"status\": \"in force\", \"heading\": \"3. Requests before orders\", \"text\": \"3.2 A purchase request names the item, the quantity, the need-by date, the warehouse and the cost centre that will carry the spend.\", \"score\": 3.38}, {\"cite\": \"POL-PUR-001 \\u00a73.1\", \"document\": \"Purchase Policy v4.1\", \"effective\": \"2026-04-01\", \"status\": \"in force\", \"heading\": \"3. Requests before orders\", \"text\": \"3.1 Every purchase starts with a purchase request (PR) in Bahi, except a direct order under \\u00a73.3.\", \"score\": 3.36}, {\"cite\": \"POL-PUR-001 \\u00a73.4\", \"document\": \"Purchase Policy v4.1\", \"effective\": \"2026-04-01\", \"status\": \"in force\", \"heading\": \"3. Requests before orders\", \"text\": \"3.4 A purchase order raised against a request may not exceed the requested quantity.\", \"score\": 3.23}, {\"cite\": \"POL-PUR-001 \\u00a73.3\", \"document\": \"Purchase Policy v4.1\", \"effective\": \"2026-04-01\", \"status\": \"in force until 2026-11-30; replaced from 2026-12-01 by AMD-PUR-2026-03 \\u00a71.1\", \"heading\": \"3. Requests before orders\", \"text\": \"3.3 A direct purchase order without a request is allowed only when its gross value, including GST, is \\u20b950,000 or less.\", \"score\": 2.46}], \"note\": \"Quote the rule with its citation, e.g. (POL-PUR-001 \\u00a76.2). If a clause's status says it is replaced or not yet in force, follow the status. Stock, budgets and statuses come from Bahi.\"}"
+    },
+    {
+     "step": 0,
+     "tool": "create_purchase_request",
+     "args": {
+      "cost_centre": "PRD-07",
+      "confirm": true,
+      "need_by": "2026-11-02",
+      "quantity": 20000,
+      "item_code": "GSK-SIL-05L"
+     },
+     "result": "{\"ok\": true, \"request_no\": \"PR/2026/04417\", \"status\": \"WAITING FOR APPROVAL\", \"status_code\": \"PA\", \"item_code\": \"GSK-SIL-05L\", \"quantity\": 20000, \"estimated_value\": 269040.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-02\", \"approver\": \"RMEHTA\", \"approved_by\": null, \"next_step\": \"Waiting for RMEHTA. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417.\"}"
+    },
+    {
+     "step": 1,
+     "tool": "search_policy",
+     "args": {
+      "question": "notification when purchase request waits for manager approval"
+     },
+     "result": "{\"ok\": true, \"answer_in_documents\": true, \"clauses\": [{\"cite\": \"MAN-PUR-72 \\u00a718.1\", \"document\": \"Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3\", \"effective\": \"2025-01-15\", \"status\": \"in force\", \"heading\": \"18. Notifications \\u203a 18.1 E-mails Bahi sends\", \"text\": \"Bahi e-mails the approver when a request or order is waiting for approval, the raiser when a request is rejected, and the supplier when an order is released. It does not e-mail anyone when an order is saved as Draft.\", \"score\": 3.6}, {\"cite\": \"MAN-PUR-72 \\u00a722.3\", \"document\": \"Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3\", \"effective\": \"2025-01-15\", \"status\": \"in force\", \"heading\": \"22. Reports \\u203a 22.3 Orders pending approval\", \"text\": \"Lists every request and order in status PA with the approver and the number of days waiting. Purchase managers use it to chase approvals before month end.\", \"score\": 3.58}, {\"cite\": \"MAN-PUR-72 \\u00a79.5\", \"document\": \"Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3\", \"effective\": \"2025-01-15\", \"status\": \"in force\", \"heading\": \"9. Purchase request entry (PUR-PR-01) \\u203a 9.5 Submitting a request\", \"text\": \"Press F9 (Submit). If the estimated value is within your approval limit, the request is approved at once and the status becomes AP. If it is above your limit, Bahi routes it to your manager, or further up the line until it reaches someone whose limit covers it, sets the status PA (pending approval), and e-mails the approver.\", \"score\": 3.57}, {\"cite\": \"MAN-PUR-72 \\u00a710.1\", \"document\": \"Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3\", \"effective\": \"2025-01-15\", \"status\": \"in force\", \"heading\": \"10. Purchase request approval (PUR-PR-04) \\u203a 10.1 Purpose\", \"text\": \"Approvers approve or reject requests waiting for them.\", \"score\": 3.22}], \"note\": \"Quote the rule with its citation, e.g. (POL-PUR-001 \\u00a76.2). If a clause's status says it is replaced or not yet in force, follow the status. Stock, budgets and statuses come from Bahi.\"}"
+    },
+    {
+     "step": 0,
+     "tool": "order_status",
+     "args": {
+      "request_no": "PR/2026/04417"
+     },
+     "result": "{\"ok\": true, \"request_no\": \"PR/2026/04417\", \"status\": \"APPROVED\", \"status_code\": \"AP\", \"item_code\": \"GSK-SIL-05L\", \"quantity\": 20000, \"estimated_value\": 269040.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-02\", \"approver\": null, \"approved_by\": \"RMEHTA\", \"next_step\": \"Approved. Next: create_purchase_order with request_no=PR/2026/04417 and a supplier.\"}"
+    },
+    {
+     "step": 1,
+     "tool": "create_purchase_order",
+     "args": {
+      "request_no": "PR/2026/04417",
+      "supplier_code": "DP-RJK-0042",
+      "confirm": false
+     },
+     "result": "{\"ok\": true, \"preview\": {\"supplier\": \"Deccan Polymers (DP-RJK-0042)\", \"item_code\": \"GSK-SIL-05L\", \"quantity\": 20000, \"rate\": 11.9, \"tax_code\": \"GST18-INTER\", \"basic_value\": 238000.0, \"gross_value\": 280840.0, \"cost_centre\": \"PRD-07\", \"cost_centre_state\": \"OK\", \"need_by\": \"2026-11-02\", \"request_no\": \"PR/2026/04417\"}, \"warnings\": [], \"note\": \"Nothing has been saved. Show this to the user and ask to confirm.\"}"
+    },
+    {
+     "step": 0,
+     "tool": "create_purchase_order",
+     "args": {
+      "confirm": true,
+      "request_no": "PR/2026/04417",
+      "supplier_code": "DP-RJK-0042"
+     },
+     "result": "{\"ok\": true, \"po_no\": \"PO/2026/01182\", \"status\": \"APPROVED, NOT YET RELEASED\", \"status_code\": \"AP\", \"supplier_code\": \"DP-RJK-0042\", \"item_code\": \"GSK-SIL-05L\", \"quantity\": 20000, \"rate\": 11.9, \"gross_value\": 280840.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-02\", \"request_no\": \"PR/2026/04417\", \"created_by\": \"KJOSHI\", \"approved_by\": \"RMEHTA\", \"approval\": {\"doc_no\": \"PR/2026/04417\", \"approver\": \"RMEHTA\", \"status\": \"APPROVED\"}, \"warning\": null, \"idempotency_key\": \"K13740B9682A6\", \"sent_to_supplier\": false, \"tool\": \"create_purchase_order\", \"tool_version\": \"1.0\", \"next_step\": \"Approved but NOT sent to the supplier yet. Next: release_purchase_order PO/2026/01182.\"}"
+    },
+    {
+     "step": 1,
+     "tool": "search_policy",
+     "args": {
+      "question": "releasing a purchase order release_purchase_order"
+     },
+     "result": "{\"ok\": true, \"answer_in_documents\": true, \"clauses\": [{\"cite\": \"MAN-PUR-72 \\u00a713.2\", \"document\": \"Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3\", \"effective\": \"2025-01-15\", \"status\": \"in force\", \"heading\": \"13. Purchase order release (PUR-POR-05) \\u203a 13.2 Releasing\", \"text\": \"Open the order and press F9 (Release). The status becomes RL, the release date is recorded, the quantity is added to stock on order, and Bahi e-mails the order to the supplier's order address.\", \"score\": 7.96}, {\"cite\": \"MAN-PUR-72 \\u00a713.1\", \"document\": \"Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3\", \"effective\": \"2025-01-15\", \"status\": \"in force\", \"heading\": \"13. Purchase order release (PUR-POR-05) \\u203a 13.1 Purpose\", \"text\": \"Release sends an approved order to the supplier. Only orders in status AP can be released.\", \"score\": 7.29}, {\"cite\": \"MAN-PUR-72 \\u00a713.3\", \"document\": \"Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3\", \"effective\": \"2025-01-15\", \"status\": \"in force\", \"heading\": \"13. Purchase order release (PUR-POR-05) \\u203a 13.3 When release fails\", \"text\": \"An order in any other status gives ERR-PO-0715 (DOCUMENT NOT IN RELEASABLE STATUS) with the current status in brackets. DR usually means the cost centre was closed when the order was saved; PA means the approver has not yet approved.\", \"score\": 6.46}, {\"cite\": \"MAN-PUR-72 \\u00a713.4\", \"document\": \"Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3\", \"effective\": \"2025-01-15\", \"status\": \"in force\", \"heading\": \"13. Purchase order release (PUR-POR-05) \\u203a 13.4 What the supplier receives\", \"text\": \"The supplier receives the order number, item, quantity, rate, need-by date and delivery warehouse. Remarks are printed on the order.\", \"score\": 6.18}], \"note\": \"Quote the rule with its citation, e.g. (POL-PUR-001 \\u00a76.2). If a clause's status says it is replaced or not yet in force, follow the status. Stock, budgets and statuses come from Bahi.\"}"
+    },
+    {
+     "step": 2,
+     "tool": "release_purchase_order",
+     "args": {
+      "po_no": "PO/2026/01182"
+     },
+     "result": "{\"ok\": true, \"po_no\": \"PO/2026/01182\", \"status\": \"RELEASED to the supplier\", \"status_code\": \"RL\", \"supplier_code\": \"DP-RJK-0042\", \"item_code\": \"GSK-SIL-05L\", \"quantity\": 20000, \"rate\": 11.9, \"gross_value\": 280840.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-02\", \"request_no\": \"PR/2026/04417\", \"created_by\": \"KJOSHI\", \"approved_by\": \"RMEHTA\", \"approval\": {\"doc_no\": \"PR/2026/04417\", \"approver\": \"RMEHTA\", \"status\": \"APPROVED\"}, \"warning\": null, \"idempotency_key\": \"K13740B9682A6\", \"sent_to_supplier\": true, \"tool\": \"release_purchase_order\", \"tool_version\": \"1.0\"}"
+    }
+   ],
+   "config": "toolbox"
+  }
+ ]
+}

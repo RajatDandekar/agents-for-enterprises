@@ -1,0 +1,275 @@
+{
+ "model": "gemini:gemini-3.8-flash",
+ "stage": "hands: toolbox over MCP, one tool round per message",
+ "turns": [
+  {
+   "who": "Kavita",
+   "user": "Check stock of the 5-litre gasket, GSK-SIL-05L.",
+   "calls": [
+    {
+     "tool": "check_stock",
+     "args": {
+      "item_code": "GSK-SIL-05L"
+     },
+     "result": {
+      "ok": true,
+      "item_code": "GSK-SIL-05L",
+      "description": "Gasket, silicone, 5 L",
+      "unit": "NOS",
+      "warehouses": [
+       {
+        "warehouse": "WH-PUN-STR",
+        "name": "Pune main stores",
+        "on_hand": 54000,
+        "allocated": 0,
+        "on_order": 0,
+        "free": 54000
+       },
+       {
+        "warehouse": "WH-CHK-STR",
+        "name": "Chakan stores",
+        "on_hand": 12000,
+        "allocated": 0,
+        "on_order": 0,
+        "free": 12000
+       }
+      ],
+      "free_total": 66000,
+      "on_order_total": 0,
+      "reorder_level": 30000,
+      "cover_days": 11,
+      "below_reorder": false
+     }
+    }
+   ],
+   "wanted_more": [],
+   "answer": "Here is the current stock status for **GSK-SIL-05L** (*Gasket, silicone, 5 L*):\n\n* **Pune Main Stores (`WH-PUN-STR`):** 54,000 NOS on hand (54,000 free)\n* **Chakan Stores (`WH-CHK-STR`):** 12,000 NOS on hand (12,000 free)\n\n**Summary:**\n* **Total Free Stock:** 66,000 NOS\n* **On Order:** 0 NOS\n* **Reorder Level:** 30,000 NOS\n* **Days of Cover:** 11 days (currently above reorder level)",
+   "tokens_in": 4404,
+   "tokens_out": 183,
+   "seconds": 8.68,
+   "inr": 0.2421
+  },
+  {
+   "who": "Kavita",
+   "user": "We need 20,000 more before the Diwali run. Raise a purchase request on PRD-07, needed by 9 November.",
+   "calls": [
+    {
+     "tool": "create_purchase_request",
+     "args": {
+      "confirm": false,
+      "quantity": 20000,
+      "need_by": "2026-11-09",
+      "item_code": "GSK-SIL-05L",
+      "cost_centre": "PRD-07"
+     },
+     "result": {
+      "ok": true,
+      "preview": {
+       "item_code": "GSK-SIL-05L",
+       "quantity": 20000,
+       "estimated_rate": 11.4,
+       "estimated_value": 269040.0,
+       "cost_centre": "PRD-07",
+       "cost_centre_state": "OK",
+       "need_by": "2026-11-09",
+       "needs_approval": true,
+       "your_limit": 250000.0,
+       "approver": "RMEHTA"
+      },
+      "warnings": [],
+      "note": "Nothing has been saved. Show this to the user and ask to confirm."
+     }
+    }
+   ],
+   "wanted_more": [],
+   "answer": "Here is the preview of the purchase request:\n\n* **Item Code:** GSK-SIL-05L (Gasket, silicone, 5 L)\n* **Quantity:** 20,000 NOS\n* **Estimated Rate:** ₹11.40 per unit\n* **Estimated Total Value:** ₹2,69,040.00\n* **Cost Centre:** PRD-07\n* **Need By Date:** 09 November 2026\n* **Approval Required:** Yes — Since the estimated total exceeds your approval limit of ₹2,50,000.00, this request will route to **RMEHTA** for approval upon submission.\n\nWould you like me to go ahead and submit this purchase request?",
+   "tokens_in": 5552,
+   "tokens_out": 233,
+   "seconds": 7.7,
+   "inr": 0.3058
+  },
+  {
+   "who": "Kavita",
+   "user": "Yes, go ahead.",
+   "calls": [
+    {
+     "tool": "create_purchase_request",
+     "args": {
+      "need_by": "2026-11-09",
+      "quantity": 20000,
+      "confirm": true,
+      "cost_centre": "PRD-07",
+      "item_code": "GSK-SIL-05L"
+     },
+     "result": {
+      "ok": true,
+      "request_no": "PR/2026/04417",
+      "status": "WAITING FOR APPROVAL",
+      "status_code": "PA",
+      "item_code": "GSK-SIL-05L",
+      "quantity": 20000,
+      "estimated_value": 269040.0,
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-09",
+      "approver": "RMEHTA",
+      "approved_by": null,
+      "next_step": "Waiting for RMEHTA. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+     }
+    }
+   ],
+   "wanted_more": [],
+   "answer": "Purchase Request **PR/2026/04417** has been created successfully.\n\n* **Status:** Waiting for approval\n* **Request Number:** PR/2026/04417\n* **Item:** GSK-SIL-05L (20,000 NOS)\n* **Estimated Value:** ₹2,69,040.00\n* **Cost Centre:** PRD-07\n* **Need By:** 09 November 2026\n* **Pending Approver:** RMEHTA\n\nNothing has been ordered yet. Once RMEHTA approves the request, we can proceed with creating the purchase order.",
+   "tokens_in": 6628,
+   "tokens_out": 216,
+   "seconds": 4.65,
+   "inr": 0.3487
+  },
+  {
+   "who": "Rohit",
+   "user": "What is waiting for my approval?",
+   "calls": [
+    {
+     "tool": "list_my_approvals",
+     "args": {},
+     "result": {
+      "ok": true,
+      "waiting": [
+       {
+        "doc_type": "PO",
+        "doc_no": "PO/2026/01179",
+        "requested_by": "KJOSHI",
+        "requested_on": "2026-10-23",
+        "value": 453120.0,
+        "item_code": "LID-SS-05L",
+        "quantity": 4000
+       },
+       {
+        "doc_type": "PR",
+        "doc_no": "PR/2026/04417",
+        "requested_by": "KJOSHI",
+        "requested_on": "2026-10-26T09:01:52+05:30",
+        "value": 269040.0,
+        "item_code": "GSK-SIL-05L",
+        "quantity": 20000
+       }
+      ],
+      "count": 2
+     }
+    }
+   ],
+   "wanted_more": [],
+   "answer": "You have **2 items** waiting for your approval:\n\n1. **Purchase Order: `PO/2026/01179`**\n   - **Raised by:** K. Joshi (`KJOSHI`) on 23 Oct 2026\n   - **Item:** `LID-SS-05L` (4,000 units)\n   - **Total Value:** ₹4,53,120.00\n\n2. **Purchase Request: `PR/2026/04417`**\n   - **Raised by:** K. Joshi (`KJOSHI`) on 26 Oct 2026\n   - **Item:** `GSK-SIL-05L` (20,000 units)\n   - **Total Value:** ₹2,69,040.00\n\nWould you like more details on either of these, or would you like to take action on them?",
+   "tokens_in": 4384,
+   "tokens_out": 225,
+   "seconds": 6.88,
+   "inr": 0.2523
+  },
+  {
+   "who": "Rohit",
+   "user": "Approve PR/2026/04417.",
+   "calls": [
+    {
+     "tool": "approve_purchase_request",
+     "args": {
+      "decision": "approve",
+      "request_no": "PR/2026/04417"
+     },
+     "result": {
+      "ok": true,
+      "request_no": "PR/2026/04417",
+      "status": "APPROVED",
+      "status_code": "AP",
+      "decided_by": "RMEHTA",
+      "next_step": "The requester can now create_purchase_order with request_no=PR/2026/04417."
+     }
+    }
+   ],
+   "wanted_more": [],
+   "answer": "Purchase Request **`PR/2026/04417`** has been **approved**.\n\nThe requester can now proceed with creating a purchase order against this request.",
+   "tokens_in": 5583,
+   "tokens_out": 75,
+   "seconds": 5.75,
+   "inr": 0.2654
+  }
+ ],
+ "bahi_pr": {
+  "pr_no": "PR/2026/04417",
+  "status": "AP",
+  "raised_by": "KJOSHI",
+  "approved_by": "RMEHTA",
+  "est_value": 269040.0
+ },
+ "mcp_methods": [
+  "tools/list",
+  "tools/call",
+  "tools/call",
+  "tools/call",
+  "tools/list",
+  "tools/call",
+  "tools/call"
+ ],
+ "no_code_variant": [
+  {
+   "who": "Kavita",
+   "user": "Check stock of the 5-litre gasket.",
+   "calls": [
+    {
+     "tool": "find_item",
+     "args": {
+      "query": "5 litre gasket"
+     },
+     "result": {
+      "ok": true,
+      "items": [
+       {
+        "item_code": "GSK-SIL-05L",
+        "description": "Gasket, silicone, 5 L",
+        "unit": "NOS",
+        "food_contact": true
+       },
+       {
+        "item_code": "GSK-SIL-05L-R",
+        "description": "Gasket, silicone, 5 L (rework)",
+        "unit": "NOS",
+        "food_contact": true
+       },
+       {
+        "item_code": "GSK-SIL-03L",
+        "description": "Gasket, silicone, 3 L",
+        "unit": "NOS",
+        "food_contact": true
+       },
+       {
+        "item_code": "GSK-SIL-07L",
+        "description": "Gasket, silicone, 7.5 L",
+        "unit": "NOS",
+        "food_contact": true
+       }
+      ],
+      "note": "Inactive (cannot be ordered): GSK-RUB-05L."
+     }
+    }
+   ],
+   "wanted_more": [
+    {
+     "tool": "check_stock",
+     "args": {
+      "item_code": "GSK-SIL-05L"
+     }
+    }
+   ],
+   "answer": "The 5-litre gasket is catalogued under item code **GSK-SIL-05L** (*Gasket, silicone, 5 L*, Unit: NOS, food contact: true). \n\nI am ready to check the stock levels across all warehouses for **GSK-SIL-05L**. Would you like me to proceed with checking the stock for this item?",
+   "tokens_in": 6959,
+   "tokens_out": 122,
+   "seconds": 10.08,
+   "inr": 0.3384
+  }
+ ],
+ "totals": {
+  "calls": 13,
+  "tokens_in": 33510,
+  "tokens_out": 1054,
+  "seconds": 43.73,
+  "cost_inr": 1.7527
+ }
+}
