@@ -5,13 +5,14 @@ set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/site-dist"
 GH="https://github.com/RajatDandekar/agents-for-enterprises/blob/main"
-rm -rf "$OUT" && mkdir -p "$OUT/demo"
+rm -rf "$OUT" && mkdir -p "$OUT"
 cp -R "$ROOT/engine" "$OUT/engine"
-cp -R "$ROOT/demo/shots" "$OUT/demo/shots"
+cp -R "$ROOT/figures" "$OUT/figures"
+mkdir -p "$OUT/bahi/bahi/experience" && cp -R "$ROOT/bahi/bahi/experience/shots" "$OUT/bahi/bahi/experience/shots"
 for d in "$ROOT"/lectures/L*/; do
   n="$(basename "$d")"; mkdir -p "$OUT/lectures/$n"
   for f in index.html figs.js figdata.js; do [ -f "$d$f" ] && cp "$d$f" "$OUT/lectures/$n/"; done
-  [ -d "${d}shots" ] && cp -R "${d}shots" "$OUT/lectures/$n/shots"
+  for sub in figs shots; do [ -d "$d$sub" ] && rsync -a --exclude '*.json' "$d$sub/" "$OUT/lectures/$n/$sub/"; done
 done
 # Hub: notebooks open in Colab, assignments and kit briefs open on GitHub.
 sed -e "s#<a href=\"lectures/\${dir}/\${nb}.ipynb\" download>Notebook</a>#<a href=\"https://colab.research.google.com/github/RajatDandekar/agents-for-enterprises/blob/main/lectures/\${dir}/\${nb}.ipynb\" target=\"_blank\" rel=\"noopener\">Open in Colab</a>#" \
