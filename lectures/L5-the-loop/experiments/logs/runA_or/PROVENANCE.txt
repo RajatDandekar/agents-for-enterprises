@@ -1,0 +1,9 @@
+Run A, 2026-10-28: exp_tasks.py through OpenRouter (openrouter:google/gemini-3.8-flash, openrouter:google/gemini-3.5-flash-lite),
+cassettes bahi/bahi/cassettes/L5v3_exp_<agent>_or[_lite].jsonl. Harness v1.
+What run A taught us, and what changed for run B (logs/tasks_<agent>_or*.json):
+ 1. Models sometimes return an EMPTY reply (no words, no tool calls): lite did so in 5 of the harness's 12 tasks,
+    6 of prompt-only's, 5 of bare's, 10 of text ReAct's. The harness's recovery part now sends an empty reply back
+    (at most twice); text ReAct treats it as a format error; the one-round (hands) agent retries its words-only call.
+ 2. A runner bug: a scripted answer ("Use PRD-07 ...") was given again when the agent's next question also matched
+    ("cost centre PRD-07" in the preview), so Kavita never said yes in T05. Each scripted answer is now given once.
+Run B replays run A's recorded calls up to the first point where a prompt differs, then calls the model live.

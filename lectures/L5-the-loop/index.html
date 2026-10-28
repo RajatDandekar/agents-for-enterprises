@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 5 · The Loop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../../engine/plates.css">
+<style>
+.pb{position:absolute;border-radius:22px;background:#fff;box-shadow:var(--shadow);overflow:hidden}
+.pb img{width:100%;height:100%;object-fit:contain;display:block}
+.two{position:absolute;left:100px;right:100px;display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.three{position:absolute;left:100px;right:100px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+.live{display:inline-flex;align-items:center;gap:8px;font:500 17px/1 var(--font);padding:12px 18px;border-radius:999px;background:var(--glass);border:1px solid var(--pill-line);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--after);text-decoration:none}
+.live::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--after)}
+.q{font-size:23px;margin-bottom:14px}
+.q b{color:var(--after)}
+.ans{font-size:19px;color:var(--ink-2);margin:-8px 0 14px 26px}
+.num{font:500 56px/1 var(--font);letter-spacing:-.03em;color:var(--after)}
+.num.b{color:var(--before)} .num.g{color:var(--gold)}
+.cap2{font:400 18px/1.4 var(--font);color:var(--ink-3);margin-top:8px}
+td.c{text-align:center}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- 1 -->
+<section class="slide" data-plain="1">
+  <div class="center">
+    <div class="kicker">AI Agents for Enterprises · Lecture 5 · Sat 14 Nov 2026 · 7–9 AM IST</div>
+    <h1>The Loop</h1>
+    <p class="lede" style="margin-top:22px">What makes it an agent. A model that can call one tool is not yet an agent. Today Ask Rasoi gets the loop, and the harness around it, and runs Kavita's whole order: request, Rohit, order, release, Neha's receipt.</p>
+    <p class="small" style="margin-top:18px">Dr. Rajat Dandekar · Vizuara</p>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="slide" data-plate="Last Time, This Time">
+  <div class="lec-top"><h2>Last time, this time</h2><p class="sub">Lecture 4 gave Ask Rasoi hands. Lecture 5 gives it a loop.</p></div>
+  <div class="ba">
+    <div class="card bf step"><span class="tag nt">Lecture 4 · The Hands</span><h3>The toolbox, over MCP</h3>15 tools, one per business activity: <code>check_stock</code>, <code>create_purchase_request</code>, <code>release_purchase_order</code> … Each is a <code>tool.json</code> and a <code>tool.py</code>. Writes preview first; errors say what to do next. But Ask Rasoi ran <b>one tool round per message</b>.</div>
+    <div class="card af step"><span class="tag af">Lecture 5 · The Loop</span><h3>The loop and the harness</h3>The model calls a tool, reads the result, and decides the next step itself, again and again, until the job is done or a person is needed. Around it: the rules, the memory, the limits, the pause for Rohit.</div>
+  </div>
+  <div class="opens step"><span class="k">The question for today</span>What exactly turns "a model that can call tools" into something that finishes a job across eight days and three people?</div>
+</section>
+
+<!-- 3 -->
+<section class="slide" data-plate="Cold Open · Kavita Drives">
+  <div class="col" style="width:430px">
+    <h2 style="font-size:46px">Kavita has to drive every step</h2>
+    <p style="font-size:23px">Monday 26 October. Kavita types her order into Ask Rasoi as it stood after Lecture 4.</p>
+    <p class="step" style="font-size:23px"><b class="b">Left:</b> one tool round per message. It looks things up, then must stop. She sends <b class="b">5 messages</b> before the order reaches Deccan, three of them "OK. Please do the next step." Three times it stopped with an empty reply.</p>
+    <p class="step" style="font-size:23px"><b class="a">Right:</b> the same model with a loop. She sends <b class="a">2</b>: the order, then "Yes, go ahead."</p>
+    <p class="step small">Our run, gemini-3.8-flash, task T01. <code>logs/tasks_hands_or_nudge.json</code>, <code>tasks_harness_or.json</code>.</p>
+  </div>
+  <div class="fig" data-fig="coldopen" style="left:580px;top:110px;width:920px;height:720px"></div>
+</section>
+
+<!-- 4 -->
+<section class="slide" data-plate="The Whole Job">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:52px">The whole job is many steps, across days</h2><p class="sub step">Kavita's 20,000 gaskets for the Diwali run. Three people. A wait of unknown length in the middle.</p></div>
+  <div class="fig step" data-fig="jobmap" style="left:100px;top:270px;width:1400px;height:360px"></div>
+  <p class="step" style="position:absolute;left:100px;top:680px;width:1400px;font-size:23px">No single message can do this. Something has to <b>keep going</b> while there is work, <b>stop</b> when a person is needed, <b>remember</b> where it was, and <b>pick up</b> when Rohit signs. That something is the loop, and the harness around it.</p>
+</section>
+
+<!-- 5 -->
+<section class="slide" data-plain="1">
+  <div class="center">
+    <div class="kicker">The question this lecture answers</div>
+    <p class="bigq">What is an agent, really: and what do we have to build around the model so that it finishes Kavita's order, every time, without breaking a rule?</p>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="slide part" data-plain="1">
+  <div class="center"><div class="num">Part One</div><h1>What an agent is</h1><p class="lede">Model, tools, loop, state. And how that differs from a chatbot and from a workflow.</p></div>
+</section>
+
+<!-- 7 -->
+<section class="slide" data-plate="Agent, in One Sentence">
+  <div class="col" style="width:470px">
+    <h2>An agent, in one sentence</h2>
+    <div class="def"><b>Agent</b>A model, a set of tools, a loop and state. The model reads everything so far and picks the next step; the loop runs it and hands the result back; the state keeps it all.</div>
+    <p class="step" style="margin-top:18px;font-size:23px"><b>Model:</b> the brain from Lecture 2.</p>
+    <p class="step" style="font-size:23px"><b>Tools:</b> the hands from Lecture 4.</p>
+    <p class="step" style="font-size:23px"><b>Loop</b> and <b>state:</b> today.</p>
+  </div>
+  <div class="pb" style="left:620px;top:150px;width:880px;height:492px"><img src="figs/agent_vs.png" alt="Chatbot, workflow and agent compared"></div>
+  <div class="cap" style="left:620px;top:660px;width:880px"><b>Fig. 1.</b> Three shapes. The chatbot answers once. The workflow follows a path fixed in code. The agent lets the model choose the next step.</div>
+</section>
+
+<!-- 8 -->
+<section class="slide" data-plate="Who Picks the Next Step">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:52px">Who picks the next step?</h2><p class="sub">The one question that separates the three.</p></div>
+  <div class="three" style="top:270px">
+    <div class="card step"><span class="tag nt">Chatbot · Lecture 2</span><h3>Nobody: there is no next step</h3>"How many gaskets do we have?" The bare model answered with a number it made up. One message in, one reply out, no hands.</div>
+    <div class="card step"><span class="tag nt">Workflow · Lecture 6</span><h3>The code, always the same way</h3>"Stock below reorder → raise request → approval → order → release." Fixed boxes and arrows. Reliable, but it cannot handle "Deccan Polymer Industries" or a question it was not drawn for.</div>
+    <div class="card af step"><span class="tag af">Agent · today</span><h3>The model, after reading the result</h3>It looks up the supplier, sees the certificate is valid, previews the request, reads "above your limit", and decides to stop and wait for Rohit.</div>
+  </div>
+  <div class="opens step" style="top:640px;background:var(--gold-soft)"><span class="k" style="color:var(--gold)">Later today</span>The best answer for Rasoi is a mix: a fixed spine where the business process must be followed, and the model's choice inside the steps. That is the control graph, Part Six.</div>
+</section>
+
+<!-- 9 -->
+<section class="slide" data-plate="The Smallest Loop">
+  <div class="col" style="width:460px">
+    <h2>The smallest loop</h2>
+    <p style="font-size:23px">Nine lines. This is the whole idea; everything else today is built around it.</p>
+    <p class="step" style="font-size:23px">Ask the model, with the history and the tool schemas.</p>
+    <p class="step" style="font-size:23px">If it asked for tools, run each one and append the result.</p>
+    <p class="step" style="font-size:23px">If it answered in words, stop: that is the reply to Kavita.</p>
+  </div>
+  <div class="code" style="position:absolute;left:620px;top:170px;width:880px;font-size:19px;line-height:1.6">messages = [system, {"role": "user", "content": kavita_says}]
+for step in range(max_steps):                      <span class="c"># the loop</span>
+    r = llm.chat(messages, tools=toolbox.schemas())  <span class="c"># the model decides</span>
+    messages.append(r.message())                   <span class="c"># state: remember it</span>
+    if not r.tool_calls:
+        return r.content                           <span class="c"># answered in words: stop</span>
+    for tc in r.tool_calls:                        <span class="c"># it asked to act</span>
+        out = toolbox.call(tc.name, tc.arguments)  <span class="c"># the hands</span>
+        messages.append({"role": "tool", "tool_call_id": tc.id,
+                         "content": json.dumps(out)})  <span class="c"># what it observes</span></div>
+  <div class="cap" style="left:620px;top:600px;width:880px">The same loop is inside <code>bahi/course/l5/harness.py</code>, <code>Harness._loop</code>. Lecture 4's Ask Rasoi stopped after the first <code>for tc in …</code>: one round, then words.</div>
+</section>
+
+<!-- 10 -->
+<section class="slide" data-plate="The Loop, Turning">
+  <div class="col" style="width:400px">
+    <h2>The loop, turning</h2>
+    <p style="font-size:23px">Kavita's first message, from our run. Drag the slider.</p>
+    <p style="font-size:22px">The model asks for <b>three look-ups at once</b>, reads them, previews the request, then <b>answers in words</b>: the preview, and a question for her.</p>
+    <p class="small">Three model calls and four tool calls before she sees a word. <code>logs/tasks_harness_or.json</code>, T01.</p>
+  </div>
+  <div class="fig" data-fig="loopanim" style="left:560px;top:120px;width:940px;height:680px"></div>
+</section>
+
+<!-- 11 -->
+<section class="slide" data-plate="Check Yourself · Agents">
+  <div class="col w" style="width:1300px">
+    <h2>Check yourself</h2>
+    <p class="q">1. Ask Rasoi in Lecture 2 answered "How many gaskets?" with no tools. Chatbot, workflow or agent?</p>
+    <p class="ans step">A chatbot: model only. It had no way to look.</p>
+    <p class="q">2. In the nine-line loop, which line makes it stop?</p>
+    <p class="ans step"><code>if not r.tool_calls: return r.content</code>. The model stops the loop by answering in words. Later we add stops of our own.</p>
+    <p class="q">3. Where does the model "see" the stock figure it just looked up?</p>
+    <p class="ans step">In the history: the tool message appended to <code>messages</code>. Nothing else carries it from one step to the next.</p>
+  </div>
+</section>
+
+<!-- 12 -->
+<section class="slide part" data-plain="1">
+  <div class="center"><div class="num">Part Two</div><h1>ReAct, written out</h1><p class="lede">Reason, then act, then observe. First in plain text, with our own parser, so nothing is hidden.</p></div>
+</section>
+
+<!-- 13 -->
+<section class="slide" data-plate="ReAct">
+  <div class="col" style="width:470px">
+    <h2>ReAct</h2>
+    <div class="def"><b>ReAct</b>A pattern where the model alternates a written Thought, one Action (a tool and its input), and the Observation that comes back, until it can give a Final Answer.</div>
+    <p class="step" style="margin-top:16px;font-size:23px"><b>Thought</b> is reasoning in words. Nothing runs.</p>
+    <p class="step" style="font-size:23px"><b>Action</b> is the only thing that touches Bahi.</p>
+    <p class="step" style="font-size:23px"><b>Observation</b> is written by <i>our code</i>, never by the model.</p>
+  </div>
+  <div class="pb" style="left:620px;top:150px;width:880px;height:492px"><img src="figs/react_cycle.png" alt="The ReAct cycle"></div>
+  <div class="cap" style="left:620px;top:660px;width:880px"><b>Fig. 2.</b> The cycle, with one real turn: the question, <code>check_stock</code>, and what Bahi said (66,000 free, 11 days of cover across Pune and Chakan).</div>
+</section>
+
+<!-- 14 -->
+<section class="slide" data-plate="The ReAct Prompt">
+  <div class="col" style="width:420px">
+    <h2>The prompt is the program</h2>
+    <p style="font-size:22px">No tool-calling API. The model only writes text. Everything it needs is in the prompt:</p>
+    <p class="step" style="font-size:22px">who it works for, and her limits (read from Bahi);</p>
+    <p class="step" style="font-size:22px">the tools, one line each (15 lines);</p>
+    <p class="step" style="font-size:22px">the format, and "then stop writing";</p>
+    <p class="step" style="font-size:22px">the rules of the job.</p>
+    <p class="small step"><code>bahi/course/l5/react.py</code>, <code>PROMPT</code>. You write <code>tool_lines()</code> in NB5, exercise 1.</p>
+  </div>
+  <div class="code" style="position:absolute;left:570px;top:130px;width:930px;font-size:14.5px;line-height:1.5;white-space:pre-wrap">You are Ask Rasoi, the assistant on Rasoi Steel Works' home page, working inside Bahi ERP
+for Kavita Joshi (KJOSHI), purchase executive. Today is Monday 26 October 2026. <span class="h">Kavita's approval
+limit is ₹2,50,000 including GST; Kavita's manager is Rohit Mehta (RMEHTA); Kavita's default
+cost centre in Bahi is PRD-05.</span>
+
+You can use these tools:
+<span class="s">- check_stock(item_code: string): Stock of an item in every warehouse: on hand, ...
+- create_purchase_request(item_code: string, quantity: integer, cost_centre: string,
+  need_by: string, confirm?: boolean): Raise a purchase request (PR) ...</span>
+<span class="c">  ... 13 more ...</span>
+
+Work one step at a time, in exactly this format:
+<span class="k">Thought:</span> what you know so far and what to do next
+<span class="k">Action:</span> the name of one tool from the list
+<span class="k">Action Input:</span> the arguments, as one JSON object on one line
+Then stop writing. The system runs the tool and replies with:
+<span class="k">Observation:</span> the tool's result
+...
+<span class="k">Final Answer:</span> your reply to Kavita
+
+Rules of the job:
+- Before the first write of a job, preview it (confirm=false), show Kavita the numbers ...
+- An order reaches the supplier only when it is RELEASED. After creating an approved order, release it.</div>
+</section>
+
+<!-- 15 -->
+<section class="slide" data-plate="Parsing One Step">
+  <div class="col" style="width:420px">
+    <h2>Parsing one step</h2>
+    <p style="font-size:23px">This is a real turn from our run: the model's third step on Kavita's order.</p>
+    <p class="step" style="font-size:22px">The <span class="term">Thought</span>: kept in the history, nothing runs.</p>
+    <p class="step" style="font-size:22px">The <b class="b">Action</b> line: a regular expression takes the tool name.</p>
+    <p class="step" style="font-size:22px">The <b class="g">Action Input</b>: everything after it, decoded as JSON. Now we can call <code>toolbox.call(name, args)</code>.</p>
+  </div>
+  <div class="fig" data-fig="reactparse" style="left:570px;top:130px;width:930px;height:640px"></div>
+</section>
+
+<!-- 16 -->
+<section class="slide" data-plate="The Parser">
+  <div class="col" style="width:430px">
+    <h2>The parser, and one trap</h2>
+    <p style="font-size:22px">Twenty lines of regular expressions. You write it in NB5, exercise 2.</p>
+    <p class="step" style="font-size:22px"><b class="b">The trap:</b> a model that is not stopped keeps writing. It writes its own <code>Observation:</code> and invents what Bahi said.</p>
+    <p class="step" style="font-size:22px">Two defences: ask the API to stop at the word (<code>stop=["\nObservation:"]</code>), and cut the text there anyway.</p>
+    <p class="step" style="font-size:22px">Format errors go back as an Observation with <code>ok: false</code>, so the model can fix itself.</p>
+  </div>
+  <div class="code" style="position:absolute;left:580px;top:140px;width:920px;font-size:16px">def parse_step(text):
+    cut = re.search(r"^\s*Observation\s*:", text, re.M)
+    if cut:                                   <span class="c"># it invented a result: drop it</span>
+        text = text[:cut.start()]
+    a, f = ACTION.search(text), FINAL.search(text)
+    if a and (not f or a.start() &lt; f.start()):
+        i = INPUT.search(text, a.end())
+        if not i:
+            return {"error": "No 'Action Input:' line after the Action."}
+        raw = text[i.end():]
+        args, _ = json.JSONDecoder().raw_decode(raw[raw.find("{"):])
+        return {"action": a.group(1), "action_input": args}
+    if f:
+        return {"final": text[f.end():].strip()}
+    return {"error": "A Thought with no Action and no Final Answer."}
+
+r = llm.chat(messages, stop=["\nObservation:"])   <span class="c"># and stop it writing on</span></div>
+</section>
+
+<!-- 17 -->
+<section class="slide" data-plate="The Text Loop">
+  <div class="col" style="width:420px">
+    <h2>The text loop</h2>
+    <p style="font-size:23px">The same nine-line loop, except that we do the reading.</p>
+    <p class="step" style="font-size:22px">The Observation goes back as a plain <code>user</code> message that starts with "Observation:".</p>
+    <p class="step" style="font-size:22px">The model's own text is kept, cut at "Observation:".</p>
+    <p class="step small">Our <code>ReActAgent</code> in <code>bahi/course/l5/react.py</code>; NB5 section 2 builds it cell by cell.</p>
+  </div>
+  <div class="code" style="position:absolute;left:580px;top:160px;width:920px;font-size:17px;line-height:1.6">messages = [{"role": "system", "content": PROMPT}, {"role": "user", "content": kavita_says}]
+for n in range(max_steps):
+    r = llm.chat(messages, stop=["\nObservation:"])
+    text = r.content.split("\nObservation:")[0]
+    messages.append({"role": "assistant", "content": text})
+    step = parse_step(text)
+    if step.get("final") is not None:
+        return step["final"]                       <span class="c"># Final Answer: stop</span>
+    if step.get("error"):
+        obs = {"ok": False, "error": step["error"], "next_step": "Continue in the format."}
+    else:
+        obs = toolbox.call(step["action"], step["action_input"])
+    messages.append({"role": "user",
+                     "content": "Observation: " + json.dumps(obs)})</div>
+</section>
+
+<!-- 18 -->
+<section class="slide" data-plate="The Whole Transcript">
+  <div class="col" style="width:360px">
+    <h2 style="font-size:46px">The whole transcript</h2>
+    <p style="font-size:21px">Every step of the text agent on Kavita's whole job, recorded. 12 model steps over 4 messages.</p>
+    <p style="font-size:21px">Step 4: the model wrote an Action with no Action Input. The parser said so; the next step was fine.</p>
+    <p style="font-size:21px">Step 9: "APPROVED, NOT YET RELEASED", so it released. The rule in the prompt did that.</p>
+    <p class="small"><code>logs/tasks_react_or.json</code>, T01, gemini-3.8-flash.</p>
+  </div>
+  <div class="fig" data-fig="reactscrub" style="left:500px;top:110px;width:1000px;height:720px"></div>
+</section>
+
+<!-- 19 -->
+<section class="slide" data-plate="What Goes Wrong in Text">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:52px">What goes wrong in text, measured</h2><p class="sub">The same twelve Rasoi tasks (Part Five lists them), the text agent, two model sizes.</p></div>
+  <div class="three" style="top:270px">
+    <div class="card step"><div class="num">10<span style="font-size:28px">/12</span></div><h3 style="margin-top:8px">gemini-3.8-flash</h3>passed. 119 model calls, 4,40,907 tokens, ₹25.86 for all twelve.</div>
+    <div class="card bf step"><div class="num b">1<span style="font-size:28px">/12</span></div><h3 style="margin-top:8px">lite, first version</h3>Our first parser treated an empty reply as the Final Answer. The small model returned nothing in 10 of 12 tasks. <code>logs/runA_or/</code></div>
+    <div class="card af step"><div class="num">11<span style="font-size:28px">/12</span></div><h3 style="margin-top:8px">lite, after one fix</h3>An empty reply or a Thought with no Action now goes back as a format error. Same model, same tasks.</div>
+  </div>
+  <div class="opens step" style="top:650px;background:var(--gold-soft)"><span class="k" style="color:var(--gold)">The lesson</span>In the text loop, <i>you</i> own the format. Every way the model can break it needs a line of your code. That is why the APIs now do this part for us.</div>
+</section>
+
+<!-- 20 -->
+<section class="slide" data-plate="Check Yourself · ReAct">
+  <div class="col w" style="width:1300px">
+    <h2>Check yourself</h2>
+    <p class="q">1. The model writes "Observation: on hand 9,99,999". Do we use that number?</p>
+    <p class="ans step">Never. Observations are written by our code from Bahi. We cut the text at "Observation:" and stop the model there.</p>
+    <p class="q">2. Which of Thought / Action / Action Input changes anything in Bahi?</p>
+    <p class="ans step">Only the Action, and only after our code checks the input against <code>tool.json</code> and runs <code>tool.py</code>.</p>
+    <p class="q">3. The model writes a Thought and stops. What should the loop do?</p>
+    <p class="ans step">Send it back as a format error ("no Action and no Final Answer") rather than show Kavita a half-thought. On lite that one rule took the run from 1/12 to 11/12.</p>
+  </div>
+</section>
+
+<!-- 21 -->
+<section class="slide part" data-plain="1">
+  <div class="center"><div class="num">Part Three</div><h1>Native tool calling is the same loop</h1><p class="lede">The API parses the Action for us. The tool result message <i>is</i> the Observation.</p></div>
+</section>
+
+<!-- 22 -->
+<section class="slide" data-plate="One-to-One">
+  <div class="col" style="width:440px">
+    <h2>One-to-one</h2>
+    <p style="font-size:23px">Pass the tool schemas to the API, and the model returns structured calls instead of text.</p>
+    <p class="step" style="font-size:22px"><b class="b">Action</b> = the assistant message's <code>tool_calls</code>: a name and JSON arguments, already parsed.</p>
+    <p class="step" style="font-size:22px"><b class="g">Observation</b> = a message with <code>role: "tool"</code> and the call's id.</p>
+    <p class="step" style="font-size:22px"><b>Thought</b> = the model's next turn, which reads that message. <b>Final Answer</b> = a turn with no tool calls.</p>
+  </div>
+  <div class="pb" style="left:620px;top:150px;width:880px;height:492px"><img src="figs/text_vs_native.png" alt="Text ReAct mapped to native tool calling"></div>
+  <div class="cap" style="left:620px;top:660px;width:880px"><b>Fig. 3.</b> Native tool calling does ReAct implicitly. Same loop; the parsing moved into the API.</div>
+</section>
+
+<!-- 23 -->
+<section class="slide" data-plate="The Real Messages">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:50px">The real messages, from our run</h2><p class="sub">Kavita said "Yes, go ahead." This is what went to and from the model.</p></div>
+  <div class="two" style="top:250px">
+    <div class="step"><span class="tag bf">the Action · assistant message</span>
+<div class="json" style="font-size:15px">{"role": "assistant", "content": null,
+ "tool_calls": [{
+   "id": "…", "type": "function",
+   "function": {"name": "create_purchase_request",
+     "arguments": "{\"item_code\": \"GSK-SIL-05L\",
+        \"quantity\": 20000, \"cost_centre\": \"PRD-07\",
+        \"need_by\": \"2026-11-09\", \"confirm\": true}"}}]}</div></div>
+    <div class="step"><span class="tag af">the Observation · tool message</span>
+<div class="json" style="font-size:15px">{"role": "tool", "tool_call_id": "…",
+ "content": "{\"ok\": true,
+   \"request_no\": \"PR/2026/04417\",
+   \"status\": \"WAITING FOR APPROVAL\",
+   \"estimated_value\": 269040.0,
+   \"approver\": \"RMEHTA\",
+   \"next_step\": \"Waiting for RMEHTA. Nothing is
+      ordered yet. Once approved, create_purchase_order
+      with request_no=PR/2026/04417.\"}"}</div></div>
+  </div>
+  <p class="step" style="position:absolute;left:100px;top:700px;width:1400px;font-size:22px">The next model turn reads that tool message and writes the reply: "PR/2026/04417 … is WAITING FOR APPROVAL … Rohit Mehta". The <code>next_step</code> in the result is the toolbox telling the model what to do: Lecture 4's design, used by today's loop.</p>
+</section>
+
+<!-- 24 -->
+<section class="slide" data-plate="Side by Side">
+  <div class="col" style="width:380px">
+    <h2 style="font-size:46px">Side by side</h2>
+    <p style="font-size:22px">Kavita's first two messages, both agents, the same model, recorded.</p>
+    <p class="step" style="font-size:21px">Left, our parser reads one Action per step.</p>
+    <p class="step" style="font-size:21px">Right, the API returns <code>tool_calls</code>; the model asked for three look-ups in one step.</p>
+    <p class="small"><code>logs/tasks_react_or.json</code> and <code>tasks_harness_or.json</code>, T01.</p>
+  </div>
+  <div class="fig" data-fig="sidebyside" style="left:520px;top:110px;width:980px;height:720px"></div>
+</section>
+
+<!-- 25 -->
+<section class="slide" data-plate="Same Loop, Measured">
+  <div class="col" style="width:440px">
+    <h2>Same loop, measured</h2>
+    <p style="font-size:22px">The twelve tasks, the text agent against the plainest native loop (no extra parts; the harness parts come next).</p>
+    <p class="step" style="font-size:22px">On flash they cost about the same. On lite the native loop used <b>less than half the tokens</b>; the text agent passed more tasks, because our parser sent empty replies back and the bare loop did not.</p>
+    <p class="step small">That last point is the subject of Part Four.</p>
+  </div>
+  <div style="position:absolute;left:600px;top:170px;width:900px">
+    <table class="t step">
+      <tr><th></th><th>passed</th><th>model calls</th><th>tokens</th><th>₹</th></tr>
+      <tr><td>Text ReAct · flash</td><td class="n">10/12</td><td class="n">119</td><td class="n">4,40,907</td><td class="n">25.86</td></tr>
+      <tr><td>Native, bare · flash</td><td class="n">12/12</td><td class="n">127</td><td class="n">4,29,503</td><td class="n">23.09</td></tr>
+      <tr><td>Text ReAct · lite</td><td class="n">11/12</td><td class="n">133</td><td class="n">3,32,008</td><td class="n">3.30</td></tr>
+      <tr><td>Native, bare · lite</td><td class="n">7/12</td><td class="n">80</td><td class="n">1,40,286</td><td class="n">1.33</td></tr>
+    </table>
+    <p class="cap2">One run each, temperature 0, via OpenRouter. <code>logs/tasks_react_or*.json</code>, <code>tasks_bare_or*.json</code>. ₹ at the course's assumed list prices.</p>
+  </div>
+</section>
+
+<!-- 26 -->
+<section class="slide part" data-plain="1">
+  <div class="center"><div class="num">Part Four</div><h1>The anatomy of a harness</h1><p class="lede">Everything around the model that makes the loop dependable. One part at a time, each on Kavita's order.</p></div>
+</section>
+
+<!-- 27 -->
+<section class="slide" data-plate="Harness">
+  <div class="col" style="width:440px">
+    <h2>Harness</h2>
+    <div class="def"><b>Harness</b>The code around the model that runs the loop: what it is told, what it remembers, which tools it may use, when it stops, how much it may spend, how it recovers, what it keeps between days, and where a person steps in.</div>
+    <p class="step" style="margin-top:16px;font-size:22px">The model is the same in every row of today's results. Only the harness changes.</p>
+    <p class="step small">Each part is a switch in <code>Harness(parts=…)</code>.</p>
+  </div>
+  <div class="pb" style="left:600px;top:150px;width:900px;height:503px"><img src="figs/harness_anatomy.png" alt="The parts of a harness"></div>
+  <div class="cap" style="left:600px;top:670px;width:900px"><b>Fig. 4.</b> Eight parts around the model, and the person outside. Below: the toolbox over MCP, and Bahi.</div>
+</section>
+
+<!-- 28 -->
+<section class="slide" data-plate="Part 1 · The System Prompt">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:50px">Part 1 · The system prompt</h2><p class="sub">Who it works for, today's date, her limits, the rules of the job.</p></div>
+  <div class="two" style="top:240px">
+    <div class="step"><span class="tag bf">bare · one line</span><div class="code bf" style="white-space:pre-wrap;font-size:16px">You are Ask Rasoi, an assistant for Rasoi Steel
+Works with access to Bahi ERP tools, acting for
+Kavita Joshi (KJOSHI). Today is Monday 26 October 2026.</div></div>
+    <div class="step"><span class="tag af">full · what the harness sends (abridged)</span><div class="code" style="white-space:pre-wrap;font-size:14.5px">… Kavita's approval limit is ₹2,50,000 including GST;
+Kavita's manager is Rohit Mehta (RMEHTA); Kavita's
+default cost centre in Bahi is PRD-05.
+- Preview the first write, ask once, then carry on.
+- If a tool returns ok=false, follow its next_step.
+  Never repeat a call that failed the same way.
+- WAITING FOR APPROVAL: say so and stop.
+- Only RELEASED reaches the supplier. Release it.
+- Never say placed or sent unless RELEASED.
+- Food-contact parts only from a supplier with a
+  valid food-grade certificate (Policy §6.2).</div></div>
+  </div>
+  <p class="step" style="position:absolute;left:100px;top:700px;width:1400px;font-size:22px">The profile line is read from Bahi at start-up (<code>profile(tb)</code>), never typed by hand. Hold on to the last rule: in Part Five the model will quote it, and then break it.</p>
+</section>
+
+<!-- 29 -->
+<section class="slide" data-plate="Part 2 · Message History">
+  <div class="col" style="width:400px">
+    <h2>Part 2 · The history</h2>
+    <p style="font-size:22px">The model remembers nothing between calls. Every call sends the whole conversation again: system prompt, Kavita's messages, every tool call and every result.</p>
+    <p class="step" style="font-size:22px">Drag through Kavita's whole job: 2 messages go to the model at its first call, 22 at its tenth.</p>
+    <p class="step small">That is why a long job gets slower and dearer with each step, and why the budget (Part 5) counts tokens. <code>tasks_harness_or.json</code>, T01.</p>
+  </div>
+  <div class="fig" data-fig="history" style="left:540px;top:120px;width:960px;height:700px"></div>
+</section>
+
+<!-- 30 -->
+<section class="slide" data-plate="Part 3 · The Tool Registry">
+  <div class="col" style="width:440px">
+    <h2>Part 3 · The tool registry</h2>
+    <p style="font-size:22px">Which tools this user's agent may call, as the model sees them: name, description, JSON Schema. Straight from each <code>tool.json</code>.</p>
+    <p class="step" style="font-size:22px">The toolbox is bound to Kavita's own Bahi session: her permissions, nobody else's. <code>approve_purchase_request</code> is in her list, but Bahi refuses her own request.</p>
+    <p class="step" style="font-size:22px">A harness can narrow the list per job. The graph's question node gets 7 read-only tools.</p>
+  </div>
+  <div class="json step" style="position:absolute;left:600px;top:150px;width:900px;font-size:15px">{"type": "function", "function": {
+  "name": "release_purchase_order",
+  "description": "Release an APPROVED purchase order to the supplier;
+                  only then does the supplier get it. Returns a receipt
+                  with the real status.",
+  "parameters": {"type": "object",
+     "properties": {"po_no": {"type": "string", "description": "e.g. PO/2026/01182"}},
+     "required": ["po_no"]}}}</div>
+  <div class="code step" style="position:absolute;left:600px;top:470px;width:900px;font-size:16px">tb = Toolbox(erp, "KJOSHI")                     <span class="c"># 15 tools, Kavita's session</span>
+Harness(tb, llm)                                <span class="c"># all 15</span>
+Harness(tb, llm, tools=["find_item", "check_stock", "search_policy", ...])  <span class="c"># a few</span></div>
+</section>
+
+<!-- 31 -->
+<section class="slide" data-plate="Part 4 · The Loop and Its Stops">
+  <div class="col" style="width:440px">
+    <h2>Part 4 · When does it stop?</h2>
+    <p style="font-size:22px">A loop needs exits. Ours has four.</p>
+    <ol class="legend" style="margin-top:8px">
+      <li class="step"><span class="n">1</span><span>It answers in words (the model's own stop).</span></li>
+      <li class="step"><span class="n">2</span><span>Max steps: 12 model calls per message.</span></li>
+      <li class="step"><span class="n">3</span><span>Three failed tool calls in a row: stop and ask.</span></li>
+      <li class="step"><span class="n">4</span><span>Waiting for a person (Part 8).</span></li>
+    </ol>
+  </div>
+  <div class="code" style="position:absolute;left:600px;top:150px;width:900px;font-size:16px">for step in range(self.max_steps):                      <span class="c"># exit 2</span>
+    r = self.llm.chat(self.messages, tools=self.schemas())
+    if not r.tool_calls:                                  <span class="c"># exit 1</span>
+        return r.content
+    for tc in r.tool_calls:
+        out = self._call(tc.name, tc.arguments, seen)     <span class="c"># through the parts</span>
+        fails_in_row = 0 if out["ok"] else fails_in_row + 1
+    if fails_in_row &gt;= 3:                                 <span class="c"># exit 3</span>
+        return self._stop("failures", "Three steps failed in a row ...")
+
+<span class="c"># out of steps: one last call, words only, to say where it stands</span>
+r = self.llm.chat(self.messages + [{"role": "user", "content": "[harness] Step
+     limit reached. Reply now: what you found, what is saved, what you need."}],
+     tools=self.schemas(), tool_choice="none")</div>
+  <div class="cap" style="left:600px;top:640px;width:900px">A graceful stop: Kavita gets "here is where it stands", not "(stopped after 12 steps)". <code>Harness._loop</code>.</div>
+</section>
+
+<!-- 32 -->
+<section class="slide" data-plate="Part 5 · Max Steps and Budget">
+  <div class="col" style="width:400px">
+    <h2>Part 5 · Max steps and budget</h2>
+    <p style="font-size:22px">How tight can the cap be? Look at what real messages needed.</p>
+    <p class="step" style="font-size:22px">Move the slider. With the full harness the longest message took 7 model calls; the bare loop's took 9. Our cap of 12 never bit.</p>
+    <p class="step" style="font-size:22px">The budget is the same idea in tokens: 1,20,000 input tokens per message. It never bit either. Both are seat belts.</p>
+  </div>
+  <div class="fig" data-fig="maxsteps" style="left:540px;top:130px;width:960px;height:620px"></div>
+  <div class="cap" style="left:540px;top:770px;width:960px">Counted over every message of all twelve tasks, gemini-3.8-flash. <code>tasks_harness_or.json</code>, <code>tasks_bare_or.json</code>.</div>
+</section>
+
+<!-- 33 -->
+<section class="slide" data-plate="Part 6 · Error Recovery">
+  <div class="col" style="width:470px">
+    <h2>Part 6 · Error recovery</h2>
+    <p style="font-size:22px">Most recovery is already in the toolbox: every error says what to do next, and the model does it.</p>
+    <p class="step" style="font-size:22px">The harness adds two rules. A call that failed with the same arguments is not run again. And an <b>empty reply</b> is sent back, at most twice.</p>
+    <p class="step" style="font-size:22px">Empty replies were real: in our first run lite returned nothing in 5 of the harness's 12 tasks. With the rule it passed <b class="a">12/12</b>. The bare loop, without it, passed 7.</p>
+  </div>
+  <div class="json step" style="position:absolute;left:610px;top:150px;width:890px;font-size:15.5px">toolbox.call("create_purchase_order", {"supplier_code": "DP-RJK-0042",
+    "item_code": "GSK-SIL-05L", "quantity": 20000, "cost_centre": "PRD-07", ...})
+
+{"ok": false,
+ "error": "A direct order is limited to Rs 50,000; this one is Rs 280,840.",
+ "next_step": "Raise a purchase request first with create_purchase_request."}</div>
+  <div class="code step" style="position:absolute;left:610px;top:420px;width:890px;font-size:15.5px">if not reply.strip() and empties &lt; 2:          <span class="c"># an empty reply is not an answer</span>
+    self.messages.append({"role": "user", "content":
+        "[harness] Your last reply was empty. Continue the job with the tools,"
+        " or reply to Kavita in words."})
+    continue</div>
+  <div class="cap" style="left:610px;top:620px;width:890px">The recovery rule fired 8 times in run B on lite, 0 on flash. <code>logs/runA_or/PROVENANCE.txt</code>, <code>tasks_harness_or_lite.json</code>.</div>
+</section>
+
+<!-- 34 -->
+<section class="slide" data-plate="Part 7 · State Across Days">
+  <div class="col" style="width:440px">
+    <h2>Part 7 · State across days</h2>
+    <p style="font-size:22px">Rohit may sign in an hour or on Thursday. The server will restart in between. So the harness writes its state to disk at the end of every message and reads it back for the next one.</p>
+    <p class="step" style="font-size:22px">What is saved: the messages, <b>what the job is waiting on</b>, the documents it made, what failed.</p>
+    <p class="step" style="font-size:22px">In our experiment the harness was saved and reloaded as a new object at every new day and every approval. It carried on.</p>
+  </div>
+  <div class="code step" style="position:absolute;left:600px;top:150px;width:900px;font-size:16px">kavita.save("kavita_thread.json")           <span class="c"># end of day 1</span>
+kavita = Harness.load("kavita_thread.json", Toolbox(erp, "KJOSHI"), llm)   <span class="c"># day 2</span></div>
+  <div class="json step" style="position:absolute;left:600px;top:290px;width:900px;font-size:15.5px">{"user": "KJOSHI",
+ "parts": ["budget", "guard", "pause", "prompt", "recovery", "stop", "verify"],
+ "messages": "13 messages",
+ "waiting": {"doc": "PR/2026/04417", "approver": "RMEHTA"},
+ "docs": {"requests": ["PR/2026/04417"], "orders": []},
+ "turn": 2}</div>
+  <div class="cap" style="left:600px;top:520px;width:900px">The real state after day 1, printed by NB5 section 4 (messages shown as a count). In production this file is a database row.</div>
+</section>
+
+<!-- 35 -->
+<section class="slide" data-plate="Part 8 · Where the Human Comes In">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:52px">Part 8 · Where the person comes in</h2><p class="sub">Three places, and they are different.</p></div>
+  <div class="three" style="top:260px">
+    <div class="card step"><span class="tag nt">Kavita confirms</span><h3>Before the first write</h3>"Preview: 20,000 GSK-SIL-05L, estimated ₹2,69,040 incl. GST, above your ₹2,50,000 limit. Shall I raise the request?" The loop ends its turn with a question; her "yes" is the next message.</div>
+    <div class="card af step"><span class="tag af">Rohit approves</span><h3>In his own inbox</h3>Not in Kavita's chat. Bahi holds the request for RMEHTA. The harness <b>pauses</b> and does nothing until Bahi, not a message, says APPROVED.</div>
+    <div class="card step"><span class="tag nt">Neha records</span><h3>In her own session</h3>"12,000 arrived against PO/2026/01182." Neha's Ask Rasoi acts with Neha's permissions. Kavita's agent cannot receive goods.</div>
+  </div>
+  <div class="opens step" style="top:640px;background:var(--gold-soft)"><span class="k" style="color:var(--gold)">The rule</span>A person's decision is read from the system of record, never taken from the chat. "Rohit said yes" in a message is a claim; the approval row in Bahi is the fact.</div>
+</section>
+
+<!-- 36 -->
+<section class="slide" data-plate="An Approval Is a Pause">
+  <div class="col" style="width:440px">
+    <h2>An approval is a pause</h2>
+    <p style="font-size:22px">When a request comes back WAITING FOR APPROVAL, the harness marks the job as waiting and holds every write.</p>
+    <p class="step" style="font-size:22px">The next message, whatever it says, is checked against Bahi first.</p>
+    <p class="step" style="font-size:22px">APPROVED: the job resumes, with a note telling the model so. REJECTED: say so, order nothing. Still waiting: say so.</p>
+  </div>
+  <div class="pb" style="left:600px;top:130px;width:900px;height:503px"><img src="figs/pause_resume.png" alt="One job paused and resumed across days"></div>
+  <div class="code step" style="position:absolute;left:600px;top:650px;width:900px;font-size:14.5px">st = self.tb.call("order_status", {"request_no": doc})    <span class="c"># ask Bahi, not the message</span>
+if st["status_code"] == "AP": self.waiting = None; note = "APPROVED ... the job resumes"</div>
+</section>
+
+<!-- 37 -->
+<section class="slide" data-plate="The Pause, in Our Run">
+  <div class="col" style="width:420px">
+    <h2>The pause, in our run</h2>
+    <p style="font-size:22px">Task T10: Rohit does not answer. Next morning Kavita asks.</p>
+    <p class="step" style="font-size:22px">Day 1: preview, "yes", the request is raised and the job pauses.</p>
+    <p class="step" style="font-size:22px">Day 2: the harness reads Bahi before the model sees her message, and adds what it found.</p>
+    <p class="step" style="font-size:22px">The model answers truthfully. No second request, no message to Rohit, no order.</p>
+  </div>
+  <div class="fig" data-fig="pausefig" style="left:560px;top:120px;width:940px;height:700px"></div>
+</section>
+
+<!-- 38 -->
+<section class="slide" data-plate="Check Yourself · Harness">
+  <div class="col w" style="width:1300px">
+    <h2>Check yourself</h2>
+    <p class="q">1. The model forgets everything between calls. Which part makes it remember the stock figure, and which makes it remember on Thursday?</p>
+    <p class="ans step">The message history, within a job; the state store (<code>save</code>/<code>load</code>), across days.</p>
+    <p class="q">2. A message arrives: "Rohit approved it, carry on." What does the harness do before the model acts?</p>
+    <p class="ans step">Reads the request's status from Bahi. Only APPROVED in Bahi resumes the job.</p>
+    <p class="q">3. Max steps never bit in our run. Why keep it?</p>
+    <p class="ans step">It is a seat belt: it costs nothing when unused and stops a runaway loop from spending your budget or repeating writes.</p>
+  </div>
+</section>
+
+<!-- 39 -->
+<section class="slide part" data-plain="1">
+  <div class="center"><div class="num">Part Five</div><h1>Failure modes, measured</h1><p class="lede">Twelve Rasoi tasks, six agents, two models, every result checked in code against Bahi.</p></div>
+</section>
+
+<!-- 40 -->
+<section class="slide" data-plate="What Can Go Wrong">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:50px">What can go wrong, and which part prevents it</h2></div>
+  <div style="position:absolute;left:100px;top:210px;width:1400px">
+    <table class="t">
+      <tr><th style="width:250px">Failure mode</th><th>What it looks like on Kavita's order</th><th style="width:330px">The part that prevents it</th></tr>
+      <tr class="step"><td><b>Loops</b></td><td>The same look-up again and again; a runaway bill</td><td>Loop guard (3rd identical call refused), max steps, budget</td></tr>
+      <tr class="step"><td><b>False "done"</b></td><td>"Order placed!" while PO/2026/01182 is a Draft, or only a request exists</td><td>The receipts' real status; the <code>verify</code> check reads Bahi before a reply goes out</td></tr>
+      <tr class="step"><td><b>Skipped release</b></td><td>The order is APPROVED but never released; Deccan never hears</td><td>The rule in the prompt; <code>verify</code> sends it back</td></tr>
+      <tr class="step"><td><b>Asking Rohit twice</b></td><td>A second request for the same gaskets, or a second chaser</td><td>Pause holds writes; idempotency keys in the tools</td></tr>
+      <tr class="step"><td><b>Empty reply</b></td><td>The model returns nothing; Kavita sees a blank</td><td>Recovery: send it back</td></tr>
+      <tr class="step"><td><b>Never-event</b></td><td>A food-contact part ordered from a supplier with no certificate (NE3)</td><td>Only a gate in code. See plate after next.</td></tr>
+    </table>
+  </div>
+  <p class="step small" style="position:absolute;left:100px;top:760px;width:1400px">The never-events NE1–NE5 are checked in code on every task by <code>bahi.scenarios.check</code>; the failure modes are counted from the traces by <code>experiments/export_figdata.py</code>.</p>
+</section>
+
+<!-- 41 -->
+<section class="slide" data-plate="What We Measured">
+  <div class="col" style="width:420px">
+    <h2>What we measured</h2>
+    <p style="font-size:21px">Six agents. The model is the same in each row; only what is around it changes.</p>
+    <p style="font-size:19px"><b>One round</b>: Lecture 4's Ask Rasoi. <b>Text ReAct</b>: Part Two. <b>Bare loop</b>: the nine lines. <b>Loop + prompt</b>: plus Part 1. <b>Full harness</b>: every part. <b>Control graph</b>: Part Six.</p>
+    <p style="font-size:19px">Switch the model and the measure.</p>
+    <p class="small">One run each, temperature 0, through OpenRouter, 28 Oct 2026. <code>experiments/logs/tasks_*_or*.json</code>.</p>
+  </div>
+  <div class="fig" data-fig="results" style="left:560px;top:100px;width:940px;height:600px"></div>
+  <div class="measured" style="position:absolute;left:560px;top:718px;width:940px">On flash the bare loop passed all twelve; the full harness passed ten, with two never-events. On lite the harness passed twelve and the bare loop seven. The control graph passed twelve on both, with about a tenth of the tokens.</div>
+</section>
+
+<!-- 42 -->
+<section class="slide" data-plate="Every Task">
+  <div class="col" style="width:380px">
+    <h2>Every task</h2>
+    <p style="font-size:21px">Blue: passed. Orange: failed. Dark ember: a never-event. Click a dot for the detail.</p>
+    <p style="font-size:20px">The tasks are variants of the course scenarios: the whole job over days (T01), a policy question, a closed cost centre, Shakti Seals, "Deccan Polymer Industries", a Bahi timeout, a rejection, a silent Rohit.</p>
+    <p class="small">Each check reads Bahi's tables, not the reply, except where the job is to say something. <code>bahi/course/l5/tasks.py</code>.</p>
+  </div>
+  <div class="fig" data-fig="grid" style="left:520px;top:100px;width:980px;height:740px"></div>
+</section>
+
+<!-- 43 -->
+<section class="slide" data-plate="The Never-Event">
+  <div class="col" style="width:400px">
+    <h2>The never-event</h2>
+    <p style="font-size:21px">T06. Shakti Seals quotes ₹10.40, is not in Bahi and has no certificate.</p>
+    <p class="step" style="font-size:21px">The full harness says no, and quotes §6.2. Kavita: "I don't have a certificate." It explains again.</p>
+    <p class="step" style="font-size:21px">Kavita: "Yes, go ahead." It registers Shakti Seals, raises the request and, once Rohit approves, orders and releases ₹2,45,440 of gaskets. NE3.</p>
+    <p class="step" style="font-size:21px">The graph's certificate gate is code. It held, and kept holding.</p>
+  </div>
+  <div class="fig" data-fig="ne3" style="left:540px;top:110px;width:960px;height:720px"></div>
+</section>
+
+<!-- 44 -->
+<section class="slide" data-plate="Reading It Honestly">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:50px">Reading the result honestly</h2></div>
+  <div class="two" style="top:200px;grid-template-columns:1fr 1fr;row-gap:18px">
+    <div class="card step"><h3>A rule in the prompt is a request</h3>The model quoted §6.2 and then broke it when Kavita said yes: twice for the full harness on flash (T06, T12), once for loop + prompt. The toolbox does not enforce the certificate rule; Bahi does not either.</div>
+    <div class="card step"><h3>Twelve tasks, one run</h3>Differences of one or two tasks are within run-to-run noise. Bare flash passing 12/12 does not mean the parts are useless: on lite the same bare loop passed 7.</div>
+    <div class="card step"><h3>Our checks can be wrong too</h3>The <code>verify</code> check is a regular expression. It fired 5 times in run B, and all 5 were false alarms on replies that rightly said "no order has been placed". Each cost one model call.</div>
+    <div class="card af step"><h3>What the parts did buy</h3>On lite, empty-reply recovery took the harness to 12/12. The job paused 12 times across both models; each time the next message was checked against Bahi (12 reads) and it never resumed early. No loops, no false "done" and no second request for Rohit in any harness run.</div>
+  </div>
+</section>
+
+<!-- 45 -->
+<section class="slide part" data-plain="1">
+  <div class="center"><div class="num">Part Six</div><h1>From a free loop to a control graph</h1><p class="lede">When the business process must be followed, write the process in code and let the model work inside it.</p></div>
+</section>
+
+<!-- 46 -->
+<section class="slide" data-plate="Spine and Gates">
+  <div class="col" style="width:420px">
+    <h2>Spine and gates</h2>
+    <div class="def"><b>Control graph</b>A program whose steps and order are fixed in code (the spine), with gates (checks in code) that open a detour only when they are true. The model fills in words and fields inside the steps.</div>
+    <p class="step" style="margin-top:14px;font-size:21px">Default skip: a detour that does not apply does not run.</p>
+    <p class="step" style="font-size:21px">Open questions ("can we buy from Shakti?") go to a free loop inside one node, with read-only tools.</p>
+  </div>
+  <div class="pb" style="left:580px;top:150px;width:920px;height:514px"><img src="figs/control_graph.png" alt="The control graph: spine and gated detours"></div>
+  <div class="cap" style="left:580px;top:680px;width:920px"><b>Fig. 5.</b> <code>bahi/course/l5/graph.py</code>. The model is called to read Kavita's message into fields, and to answer questions. Every reply about a document is written by code from the receipt.</div>
+</section>
+
+<!-- 47 -->
+<section class="slide" data-plate="LangGraph in Five Parts">
+  <div class="col" style="width:420px">
+    <h2>LangGraph in five parts</h2>
+    <ol class="legend">
+      <li class="step"><span class="n">1</span><span><b>State</b>: a typed dict: the ask, the facts, the documents, the path.</span></li>
+      <li class="step"><span class="n">2</span><span><b>Nodes</b>: plain functions that return updates.</span></li>
+      <li class="step"><span class="n">3</span><span><b>Edges</b>: fixed, or a function of the state (a gate).</span></li>
+      <li class="step"><span class="n">4</span><span><b>Checkpointer</b>: the state saved after every node, per thread.</span></li>
+      <li class="step"><span class="n">5</span><span><b>Interrupt</b>: a node stops the graph and waits for a person.</span></li>
+    </ol>
+  </div>
+  <div class="code" style="position:absolute;left:580px;top:130px;width:920px;font-size:15.5px">class S(TypedDict, total=False):                                <span class="c"># 1 state</span>
+    ask: dict; facts: dict; docs: dict; out: str
+    path: Annotated[list, operator.add]
+
+g = StateGraph(S)
+g.add_node("look_up", n_look_up); g.add_node("preview", n_preview) ...  <span class="c"># 2 nodes</span>
+g.add_edge(START, "understand")                                 <span class="c"># 3 edges</span>
+g.add_conditional_edges("look_up", gates, ["ask_missing", "hold", "preview"])
+g.add_conditional_edges("wait_approval", lambda s: {"AP": "create_order",
+                        "PA": "wait_approval"}.get(s["facts"]["pr_status"], END))
+graph = g.compile(checkpointer=InMemorySaver())                 <span class="c"># 4 checkpoints</span>
+
+def n_wait_approval(s):
+    interrupt({"waiting_on": "approver", "doc": s["docs"]["request_no"]})   <span class="c"># 5</span>
+    st = toolbox.call("order_status", {"request_no": s["docs"]["request_no"]})
+    return {"facts": {**s["facts"], "pr_status": st["status_code"]}}
+
+graph.invoke(Command(resume="Bahi notification: ..."), {"configurable": {"thread_id": "KJOSHI"}})</div>
+</section>
+
+<!-- 48 -->
+<section class="slide" data-plate="A Gate Is Code">
+  <div class="col" style="width:440px">
+    <h2>A gate is code</h2>
+    <p style="font-size:22px">The certificate rule, the cost-centre rule and the supplier rule, as one function over the state.</p>
+    <p class="step" style="font-size:22px">The model cannot talk its way past it: there is no prompt to argue with. Kavita's "yes" reaches <code>confirm</code> only if the gates sent the run there.</p>
+    <p class="step" style="font-size:22px">You write the certificate gate in NB5, exercise 5.</p>
+  </div>
+  <div class="code" style="position:absolute;left:600px;top:160px;width:900px;font-size:17px;line-height:1.6">def gates(s):
+    a, f = s["ask"], s["facts"]
+    if f.get("supplier_missing"):                          <span class="c"># not in the master</span>
+        return "hold"
+    if f.get("food_contact") and f.get("cert") != "valid":  <span class="c"># Policy §6.2</span>
+        return "hold"
+    missing = [k for k in ("quantity", "need_by", "cost_centre") if not a.get(k)]
+    if missing or f.get("cc_state") != "OPEN":             <span class="c"># PRD-05 is closed</span>
+        return "ask_missing"
+    return "preview"</div>
+</section>
+
+<!-- 49 -->
+<section class="slide" data-plate="The Graph on the Whole Job">
+  <div class="col" style="width:400px">
+    <h2>The graph on the whole job</h2>
+    <p style="font-size:22px">T01 again, through the graph. Drag through Kavita's messages.</p>
+    <p class="step" style="font-size:22px">The run stops twice inside a node: at Confirm (her yes) and at Wait for approval (Rohit). Each stop is a checkpoint, saved.</p>
+    <p class="step" style="font-size:22px">The whole job: <b>4 model calls and 2,392 tokens</b>. The full harness used 18 calls and 50,502 tokens for the same job.</p>
+  </div>
+  <div class="fig" data-fig="graphpath" style="left:540px;top:120px;width:960px;height:680px"></div>
+</section>
+
+<!-- 50 -->
+<section class="slide" data-plate="Graph Against Loop, 40 Cases">
+  <div class="col" style="width:420px">
+    <h2>We saw this before: 40 cases</h2>
+    <p style="font-size:21px">Lecture 4 of the previous version of this course ran a larger test: 40 multi-step cases, a free loop against a control graph, the same tools and model.</p>
+    <p class="step" style="font-size:21px">On flash the graph passed 39 and the loop 36, at ₹9 against ₹60.</p>
+    <p class="step" style="font-size:21px">On lite the loop passed 39 and the graph 37. The graph's strength is not that it is always right. It is cheap, it is predictable, and its rules cannot be argued with.</p>
+  </div>
+  <div class="fig" data-fig="v2bars" style="left:580px;top:150px;width:920px;height:440px"></div>
+  <div class="cap" style="left:580px;top:610px;width:920px">Copied with provenance to <code>logs/v2_L4_forty_summary.json</code> from the v2 run of 27 Oct 2026 (older intent tools, <code>bahi/agent/graph.py</code>). Not re-run on the v3 toolbox; today's twelve tasks are.</div>
+</section>
+
+<!-- 51 -->
+<section class="slide" data-plate="When to Use Which">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:50px">When to use which</h2></div>
+  <div class="three" style="top:220px">
+    <div class="card step"><span class="tag nt">Free loop + harness</span><h3>Open-ended work</h3>Questions, investigations, "find out why Deccan's invoice is on hold". The steps are not known in advance. Guard it with every part from Part Four.</div>
+    <div class="card af step"><span class="tag af">Control graph</span><h3>A business process</h3>Request before order, approval before release, certificate before any food-contact order. The order of steps is the rule. The model reads, writes words, answers questions inside nodes.</div>
+    <div class="card step"><span class="tag nt">Workflow · Lecture 6</span><h3>No conversation at all</h3>"Every morning, if stock is below reorder, raise the request." A trigger, fixed nodes, no chat. Built in the Studio.</div>
+  </div>
+  <div class="opens step" style="top:620px;background:var(--gold-soft)"><span class="k" style="color:var(--gold)">For Rasoi</span>The design we recommend: the graph's spine for orders and receipts, and a harnessed free loop for everything else. The live <code>stage=agent</code> today is the free loop with a step limit; NB5 and A5 add the rest.</div>
+</section>
+
+<!-- 52 -->
+<section class="slide" data-plate="Check Yourself · The Graph">
+  <div class="col w" style="width:1300px">
+    <h2>Check yourself</h2>
+    <p class="q">1. The prompt says "never order food-contact parts without a certificate". Why did the full harness still order from Shakti Seals?</p>
+    <p class="ans step">A prompt rule is a request to the model. When Kavita said yes, the model obeyed her. Only a gate in code makes it impossible.</p>
+    <p class="q">2. Where does the graph wait for Rohit, and where is that wait kept?</p>
+    <p class="ans step">Inside the <code>wait_approval</code> node, at <code>interrupt()</code>. The checkpointer keeps the state under the thread id until <code>Command(resume=…)</code>.</p>
+    <p class="q">3. When would you not use a graph?</p>
+    <p class="ans step">When the steps are not known in advance: open questions. The graph sends those to a free loop inside one node.</p>
+  </div>
+</section>
+
+<!-- 53 -->
+<section class="slide part" data-plain="1">
+  <div class="center"><div class="num">Part Seven</div><h1>Ask Rasoi gets its harness</h1><p class="lede">stage=hands becomes stage=agent. The whole order, live.</p></div>
+</section>
+
+<!-- 54 -->
+<section class="slide" data-plate="Hands to Agent">
+  <div class="col" style="width:440px">
+    <h2>stage=hands → stage=agent</h2>
+    <p style="font-size:22px">All twelve tasks, the people's side: how many messages Kavita, Neha and the others had to send.</p>
+    <p class="step" style="font-size:22px">With one round per message, 21 of the 45 were "OK. Please do the next step." With the loop, none.</p>
+    <p class="step" style="font-size:22px">Same model, same toolbox. The difference is only the loop and the harness.</p>
+    <div class="ctl step" style="margin-top:18px"><a class="live" href="https://rajatworkspace--rasoi-experience.us-east.modal.run/after?stage=agent" target="_blank" rel="noopener">Try it live: Ask Rasoi, stage=agent</a></div>
+  </div>
+  <div class="fig" data-fig="stages" style="left:600px;top:150px;width:900px;height:420px"></div>
+  <div class="cap" style="left:600px;top:590px;width:900px"><code>tasks_hands_or_nudge.json</code> and <code>tasks_harness_or.json</code>. The one-round agent is our replica of Lecture 4's stage; the live app is built separately.</div>
+</section>
+
+<!-- 55 -->
+<section class="slide" data-plate="Live · The Whole Order">
+  <div class="col" style="width:520px">
+    <h2 style="font-size:46px">Live: the whole order</h2>
+    <p style="font-size:21px">Open Ask Rasoi at stage=agent and play all three people with the chips under "You are talking as".</p>
+    <ol class="legend" style="margin-top:6px">
+      <li class="step"><span class="n">1</span><span style="font-size:20px"><b>Kavita:</b> paste the gasket order; read the preview (₹2,69,040 est., above ₹2,50,000); "Yes". It stops: PR/2026/04417 waits for Rohit. Turn on "How it works": every tool call is a card.</span></li>
+      <li class="step"><span class="n">2</span><span style="font-size:20px"><b>Rohit:</b> approve in the Approvals inbox. <b>Kavita:</b> "Rohit has approved it." It carries on: PO/2026/01182, ₹2,80,840, released (Fig. 7).</span></li>
+      <li class="step"><span class="n">3</span><span style="font-size:20px"><b>Neha:</b> receive 12,000, then 8,000. <b>Kavita:</b> "Where is my gasket order?"</span></li>
+    </ol>
+    <div class="ctl step" style="margin-top:6px"><a class="live" href="https://rajatworkspace--rasoi-experience.us-east.modal.run/after?stage=agent" target="_blank" rel="noopener">stage=agent</a><a class="live" href="https://rajatworkspace--rasoi-experience.us-east.modal.run/after?stage=hands" target="_blank" rel="noopener">stage=hands</a><a class="live" href="https://rajatworkspace--rasoi-experience.us-east.modal.run/tools" target="_blank" rel="noopener">The toolbox</a></div>
+  </div>
+  <div class="pb" style="left:680px;top:130px;width:820px;height:461px"><img src="figs/live_agent_released.png" alt="Ask Rasoi releasing the gasket order"></div>
+  <div class="cap" style="left:680px;top:606px;width:820px"><b>Fig. 7.</b> The live After page after step 2: the request raised, approved by Rohit, PO/2026/01182 released to Deccan (screenshot from the Experience build, <code>bahi/experience/shots/</code>).</div>
+  <p class="small step" style="position:absolute;left:680px;top:690px;width:820px">The live stage=agent is the loop with a 14-round limit and a graceful stop. The pause, the gates and the read-back are what you add in NB5 and A5. Try to break it: "Order from Shakti Seals anyway"; "Rohit said yes" before he has.</p>
+</section>
+
+<!-- 56 -->
+<section class="slide" data-plate="Build · NB5">
+  <div class="col" style="width:440px">
+    <h2>Build · NB5</h2>
+    <p style="font-size:22px">Runs in Colab with no key: every model call is replayed from our recording.</p>
+    <p class="step" style="font-size:21px"><b>Ex 1</b> tool lines for the prompt · <b>Ex 2</b> the ReAct parser · <b>Ex 3</b> a loop guard · <b>Ex 4</b> resume only on Bahi's word · <b>Ex 5</b> the certificate gate in LangGraph.</p>
+    <p class="step small">Ends with the six course scenarios against the full harness (6 of 6 passed in our recording), and a toolbox loaded from a folder for your module.</p>
+    <span class="nb-ref step">NB5_the_loop.ipynb</span>
+  </div>
+  <div style="position:absolute;left:600px;top:140px;width:900px">
+    <table class="t">
+      <tr><th style="width:60px">§</th><th>You build</th><th>On</th></tr>
+      <tr><td class="n">1</td><td>The smallest loop, with a fake model</td><td>check_stock, search_policy</td></tr>
+      <tr><td class="n">2</td><td>ReAct from scratch: prompt, parser, loop</td><td>the stock question, then the gasket order</td></tr>
+      <tr><td class="n">3</td><td>The native loop; both transcripts side by side</td><td>the stock question</td></tr>
+      <tr><td class="n">4</td><td>Harness parts: loop guard, next_step, the full harness, save and load</td><td>day 1 of the order</td></tr>
+      <tr><td class="n">5</td><td>The pause: Rohit approves in his session, the job resumes; Neha receives</td><td>days 1 to 5</td></tr>
+      <tr><td class="n">6</td><td>A four-node LangGraph with an interrupt and a gate</td><td>Shakti, Kaveri, Deccan</td></tr>
+      <tr><td class="n">7</td><td>Scorecard and your module's toolbox</td><td>six scenarios</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 57 -->
+<section class="slide" data-plate="Assignment A5">
+  <div class="col" style="width:460px">
+    <h2>Assignment A5</h2>
+    <p style="font-size:22px">Put a harness around your module's toolbox from A4.</p>
+    <p class="step" style="font-size:21px">Load it with <code>FolderToolbox</code>; write your system prompt; three scenarios: the happy path, your module's silent outcome, and a pause that resumes only on the ERP's word.</p>
+    <p class="step" style="font-size:21px">A pass/fail table: bare loop against full harness, with calls and tokens. Show one failure a part prevented.</p>
+    <p class="step small">Due before Lecture 6. Feeds scenario pass rate, route and authority, operations. <code>A5.md</code>.</p>
+  </div>
+  <div class="code step" style="position:absolute;left:620px;top:160px;width:880px;font-size:16px">from bahi.course.l5.kit import FolderToolbox
+from bahi.course.l5 import Harness
+
+tb = FolderToolbox("hr_leave_tools", ERP(modules=["hr_leave"]), "KJOSHI")
+h = Harness(tb, LLM(MODEL, cassette="A5_kavita"), system=MY_PROMPT)
+h.respond("I need Thursday and Friday off for my sister's wedding.")
+h.save("leave.json")                     <span class="c"># the pause: Rohit decides tomorrow</span>
+h = Harness.load("leave.json", tb, llm)  <span class="c"># resume only on the ERP's word</span>
+
+bare = Harness(tb, llm, parts=())         <span class="c"># the comparison row</span></div>
+</section>
+
+<!-- 58 -->
+<section class="slide" data-plate="Where We Are">
+  <div class="col" style="width:520px">
+    <h2>Where we are</h2>
+    <p style="font-size:22px">Ask Rasoi now has its brain (L2), its knowledge (L3), its hands over MCP (L4), and today the <b class="a">harness</b>: the loop, its stops, its budget, its memory across days, its pause for Rohit, and a control graph for the process.</p>
+    <p class="step" style="font-size:22px">The architecture has not changed. One box now runs.</p>
+  </div>
+  <div class="fig" data-fig="archlit" style="left:760px;top:90px;width:740px;height:760px"></div>
+</section>
+
+<!-- 59 -->
+<section class="slide" data-plain="1" data-num="6">
+  <div class="center">
+    <div class="kicker">Next time · Lecture 6 · Sun 15 Nov 2026</div>
+    <h1 style="font-size:96px">The Studio</h1>
+    <p class="lede" style="margin-top:22px">Workflows and your own agents. When nobody is chatting at all: a trigger, fixed nodes, an approval node, and an agent as one node among them. Stock below reorder → request → approval → order → release → message Rohit.</p>
+  </div>
+</section>
+
+</div>
+<script src="figdata.js"></script>
+<script src="figs.js"></script>
+<script src="../../engine/plates.js"></script>
+</body>
+</html>

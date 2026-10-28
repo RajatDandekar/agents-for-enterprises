@@ -104,6 +104,38 @@ def _parse(txt):
         return {"text": txt}
 
 
+def food_grade_block(erp, tool: str, args: dict) -> dict | None:
+    """The trust layer's guard before a write (Lecture 7): Purchase Policy §6.2, food-contact parts only from a
+    supplier with a valid food-grade certificate. Lecture 5 measured a free loop ordering from Shakti Seals and Kaveri
+    Rubber after quoting this rule, so the live app checks it in code before the order is committed or released."""
+    if tool == "create_purchase_order" and args.get("confirm") in (True, "true", "True"):
+        sup, item = args.get("supplier_code"), args.get("item_code")
+        if not item and args.get("request_no"):
+            with erp.lock:
+                row = erp.q1("SELECT itm_cd FROM pr_line WHERE pr_no=?", args["request_no"])
+            item = row and row["itm_cd"]
+    elif tool == "release_purchase_order" and args.get("po_no"):
+        with erp.lock:
+            row = erp.q1("SELECT h.sup_cd, l.itm_cd FROM po_hdr h JOIN po_line l ON l.po_no=h.po_no WHERE h.po_no=?",
+                         args["po_no"])
+        sup, item = (row["sup_cd"], row["itm_cd"]) if row else (None, None)
+    else:
+        return None
+    if not sup or not item:
+        return None
+    with erp.lock:
+        food = erp.q1("SELECT food_contact FROM item WHERE itm_cd=?", item)
+        cert = erp.q1("SELECT MAX(valid_to) AS v FROM sup_cert WHERE sup_cd=? AND cert_type='FOOD-GRADE'", sup)
+        today = erp.today
+    if not food or not food["food_contact"] or (cert and cert["v"] and cert["v"] >= today):
+        return None
+    state = "has an expired food-grade certificate" if cert and cert["v"] else "has no food-grade certificate"
+    return json.dumps({"ok": False, "blocked_by": "food-grade guard (Purchase Policy §6.2)",
+                       "error": f"{item} touches food and supplier {sup} {state}. Rasoi may not order it from them.",
+                       "next_step": "Tell the user this order cannot go ahead under §6.2. Offer a certified supplier "
+                                    "(find_supplier shows certificates), or the supplier's valid certificate first."})
+
+
 class AskRasoi:
     """One conversation: one player, one person (Kavita, Rohit or Neha), one stage."""
 
@@ -113,6 +145,7 @@ class AskRasoi:
         from .players import locked_toolbox
 
         self.user, self.stage, self.guard, self.pid = user, stage, guard, pid
+        self.erp = erp
         self.llms: dict[str, LLM] = {}
         self.model_used = None
         self.busy = threading.Lock()
@@ -203,7 +236,8 @@ class AskRasoi:
             for tc in r.tool_calls:
                 t1 = time.perf_counter()
                 try:
-                    out = self.tools.call(tc.name, tc.arguments)
+                    blocked = food_grade_block(self.erp, tc.name, tc.arguments or {})
+                    out = blocked if blocked else self.tools.call(tc.name, tc.arguments)
                 except Exception as e:  # noqa: BLE001  (a broken tool must not kill the conversation)
                     out = json.dumps({"ok": False, "error": f"{type(e).__name__}: {e}"})
                 content = out if isinstance(out, str) else json.dumps(out, default=str)

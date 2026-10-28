@@ -1,0 +1,1416 @@
+{
+ "what": "Ask Rasoi (gemini-3.8-flash orchestrator + toolbox over MCP) doing the Before's missions",
+ "model": "gemini:gemini-3.8-flash",
+ "cassette": "L1v3_after",
+ "wall_seconds": 100.4,
+ "tools_discovered_over_mcp": [
+  "find_item",
+  "check_stock",
+  "find_supplier",
+  "check_budget",
+  "search_policy",
+  "create_purchase_request",
+  "list_my_approvals",
+  "approve_purchase_request",
+  "create_purchase_order",
+  "approve_purchase_order",
+  "release_purchase_order",
+  "order_status",
+  "receive_goods",
+  "register_supplier",
+  "send_message"
+ ],
+ "missions": [
+  {
+   "id": "stock",
+   "title": "Check the stock",
+   "user": "KJOSHI",
+   "who": "Kavita",
+   "turns": [
+    {
+     "user": "How many 5-litre silicone gaskets do we have, and how many days will they last?",
+     "reply": "We have **66,000** 5-litre silicone gaskets (`GSK-SIL-05L`) in stock across warehouses:\n* **Pune main stores:** 54,000 NOS\n* **Chakan stores:** 12,000 NOS\n\nAt current consumption, this gives **11 days of cover** (reorder level is 30,000 NOS).",
+     "tools": [
+      "find_item",
+      "check_stock"
+     ],
+     "seconds": 7.82
+    }
+   ],
+   "cards": [
+    {
+     "tool": "find_item",
+     "args": {
+      "query": "5 litre silicone gasket"
+     },
+     "result": {
+      "ok": true,
+      "items": [
+       {
+        "item_code": "GSK-SIL-05L",
+        "description": "Gasket, silicone, 5 L",
+        "unit": "NOS",
+        "food_contact": true
+       },
+       {
+        "item_code": "GSK-SIL-05L-R",
+        "description": "Gasket, silicone, 5 L (rework)",
+        "unit": "NOS",
+        "food_contact": true
+       },
+       {
+        "item_code": "GSK-SIL-03L",
+        "description": "Gasket, silicone, 3 L",
+        "unit": "NOS",
+        "food_contact": true
+       },
+       {
+        "item_code": "GSK-SIL-07L",
+        "description": "Gasket, silicone, 7.5 L",
+        "unit": "NOS",
+        "food_contact": true
+       }
+      ],
+      "note": "Inactive (cannot be ordered): GSK-RUB-05L."
+     }
+    },
+    {
+     "tool": "check_stock",
+     "args": {
+      "item_code": "GSK-SIL-05L"
+     },
+     "result": {
+      "ok": true,
+      "item_code": "GSK-SIL-05L",
+      "description": "Gasket, silicone, 5 L",
+      "unit": "NOS",
+      "warehouses": [
+       {
+        "warehouse": "WH-PUN-STR",
+        "name": "Pune main stores",
+        "on_hand": 54000,
+        "allocated": 0,
+        "on_order": 0,
+        "free": 54000
+       },
+       {
+        "warehouse": "WH-CHK-STR",
+        "name": "Chakan stores",
+        "on_hand": 12000,
+        "allocated": 0,
+        "on_order": 0,
+        "free": 12000
+       }
+      ],
+      "free_total": 66000,
+      "on_order_total": 0,
+      "reorder_level": 30000,
+      "cover_days": 11,
+      "below_reorder": false
+     }
+    }
+   ],
+   "done": true,
+   "user_turns": 1,
+   "words_typed": 15,
+   "chars_typed": 79,
+   "tool_calls": 2,
+   "seconds": 7.8
+  },
+  {
+   "id": "request",
+   "title": "Raise the purchase request",
+   "user": "KJOSHI",
+   "who": "Kavita",
+   "turns": [
+    {
+     "user": "Raise a purchase request for 20,000 of them for the Diwali run, needed by 9 November.",
+     "reply": "Here is the preview for the purchase request:\n\n* **Item:** 20,000 NOS of 5 L silicone gaskets (`GSK-SIL-05L`)\n* **Cost Centre & Need By:** PRD-07 (Diwali production run), needed by 09-Nov-2026\n* **Estimated Value:** Rs 2,69,040 (exceeds your Rs 2,50,000 limit; will go to RMEHTA for approval)\n\nShall I submit this purchase request?",
+     "tools": [
+      "check_budget",
+      "create_purchase_request"
+     ],
+     "seconds": 7.45
+    },
+    {
+     "user": "Yes, go ahead.",
+     "reply": "Purchase request **PR/2026/04417** for 20,000 NOS of 5 L silicone gaskets (estimated at Rs 2,69,040) has been submitted. \n\nIts current status is **Waiting for approval** from RMEHTA. Once approved, we can raise the purchase order.",
+     "tools": [
+      "create_purchase_request"
+     ],
+     "seconds": 4.1
+    }
+   ],
+   "cards": [
+    {
+     "tool": "check_budget",
+     "args": {},
+     "result": {
+      "ok": true,
+      "open": [
+       {
+        "code": "PRD-07",
+        "name": "Diwali production run"
+       },
+       {
+        "code": "PRD-03",
+        "name": "3-litre line"
+       },
+       {
+        "code": "MNT-01",
+        "name": "Plant maintenance"
+       },
+       {
+        "code": "ADM-01",
+        "name": "Administration"
+       }
+      ]
+     }
+    },
+    {
+     "tool": "create_purchase_request",
+     "args": {
+      "item_code": "GSK-SIL-05L",
+      "confirm": false,
+      "quantity": 20000,
+      "need_by": "2026-11-09",
+      "cost_centre": "PRD-07"
+     },
+     "result": {
+      "ok": true,
+      "preview": {
+       "item_code": "GSK-SIL-05L",
+       "quantity": 20000,
+       "estimated_rate": 11.4,
+       "estimated_value": 269040.0,
+       "cost_centre": "PRD-07",
+       "cost_centre_state": "OK",
+       "need_by": "2026-11-09",
+       "needs_approval": true,
+       "your_limit": 250000.0,
+       "approver": "RMEHTA"
+      },
+      "warnings": [],
+      "note": "Nothing has been saved. Show this to the user and ask to confirm."
+     }
+    },
+    {
+     "tool": "create_purchase_request",
+     "args": {
+      "item_code": "GSK-SIL-05L",
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-09",
+      "confirm": true,
+      "quantity": 20000
+     },
+     "result": {
+      "ok": true,
+      "request_no": "PR/2026/04417",
+      "status": "WAITING FOR APPROVAL",
+      "status_code": "PA",
+      "item_code": "GSK-SIL-05L",
+      "quantity": 20000,
+      "estimated_value": 269040.0,
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-09",
+      "approver": "RMEHTA",
+      "approved_by": null,
+      "next_step": "Waiting for RMEHTA. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+     }
+    }
+   ],
+   "done": true,
+   "user_turns": 2,
+   "words_typed": 19,
+   "chars_typed": 99,
+   "tool_calls": 3,
+   "seconds": 11.6
+  },
+  {
+   "id": "approve",
+   "title": "Approve it, as Rohit",
+   "user": "RMEHTA",
+   "who": "Rohit",
+   "turns": [
+    {
+     "user": "Approve Kavita's gasket request.",
+     "reply": "Here is the preview for Kavita's request:\n\n* **Request:** PR/2026/04417\n* **Item:** GSK-SIL-05L (20,000 units for PRD-07, needed by 09 Nov 2026)\n* **Estimated Value:** Rs 2,69,040\n\nShall I go ahead and approve this?",
+     "tools": [
+      "list_my_approvals",
+      "order_status"
+     ],
+     "seconds": 9.86
+    },
+    {
+     "user": "Yes, go ahead.",
+     "reply": "Purchase Request **PR/2026/04417** has been approved. \n\nThe status is now **APPROVED**. A purchase order can now be raised against this request.",
+     "tools": [
+      "approve_purchase_request"
+     ],
+     "seconds": 10.11
+    }
+   ],
+   "cards": [
+    {
+     "tool": "list_my_approvals",
+     "args": {},
+     "result": {
+      "ok": true,
+      "waiting": [
+       {
+        "doc_type": "PO",
+        "doc_no": "PO/2026/01179",
+        "requested_by": "KJOSHI",
+        "requested_on": "2026-10-23",
+        "value": 453120.0,
+        "item_code": "LID-SS-05L",
+        "quantity": 4000
+       },
+       {
+        "doc_type": "PR",
+        "doc_no": "PR/2026/04417",
+        "requested_by": "KJOSHI",
+        "requested_on": "2026-10-26T09:02:48+05:30",
+        "value": 269040.0,
+        "item_code": "GSK-SIL-05L",
+        "quantity": 20000
+       }
+      ],
+      "count": 2
+     }
+    },
+    {
+     "tool": "order_status",
+     "args": {
+      "request_no": "PR/2026/04417"
+     },
+     "result": {
+      "ok": true,
+      "request_no": "PR/2026/04417",
+      "status": "WAITING FOR APPROVAL",
+      "status_code": "PA",
+      "item_code": "GSK-SIL-05L",
+      "quantity": 20000,
+      "estimated_value": 269040.0,
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-09",
+      "approver": "RMEHTA",
+      "approved_by": null,
+      "next_step": "Waiting for RMEHTA. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+     }
+    },
+    {
+     "tool": "approve_purchase_request",
+     "args": {
+      "request_no": "PR/2026/04417",
+      "decision": "approve"
+     },
+     "result": {
+      "ok": true,
+      "request_no": "PR/2026/04417",
+      "status": "APPROVED",
+      "status_code": "AP",
+      "decided_by": "RMEHTA",
+      "next_step": "The requester can now create_purchase_order with request_no=PR/2026/04417."
+     }
+    }
+   ],
+   "done": true,
+   "user_turns": 2,
+   "words_typed": 7,
+   "chars_typed": 46,
+   "tool_calls": 3,
+   "seconds": 20.0
+  },
+  {
+   "id": "order",
+   "title": "Make and release the order",
+   "user": "KJOSHI",
+   "who": "Kavita",
+   "turns": [
+    {
+     "user": "Rohit has approved it. Order the gaskets from Deccan Polymers and send the order to them.",
+     "reply": "Here is the preview for the purchase order:\n\n* **Supplier:** Deccan Polymers (`DP-RJK-0042`)\n* **Item & Quantity:** 20,000 NOS of 5 L silicone gaskets (`GSK-SIL-05L`) against PR/2026/04417\n* **Total Value:** Rs 2,80,840 (basic Rs 2,38,000 + 18% IGST Rs 42,840)\n\nShall I create this purchase order?",
+     "tools": [
+      "order_status",
+      "find_supplier",
+      "create_purchase_order"
+     ],
+     "seconds": 8.59
+    },
+    {
+     "user": "Yes, go ahead.",
+     "reply": "Purchase order **PO/2026/01182** for Rs 2,80,840 has been created. \n\nIts current status is **Approved, not yet released**. It has not been sent to the supplier yet.\n\nShall I release PO/2026/01182 to Deccan Polymers?",
+     "tools": [
+      "create_purchase_order"
+     ],
+     "seconds": 6.44
+    },
+    {
+     "user": "Yes, go ahead.",
+     "reply": "Purchase order **PO/2026/01182** for Rs 2,80,840 has been **released to the supplier**. \n\nThe order is now officially placed with Deccan Polymers.",
+     "tools": [
+      "release_purchase_order"
+     ],
+     "seconds": 5.62
+    }
+   ],
+   "cards": [
+    {
+     "tool": "order_status",
+     "args": {
+      "request_no": "PR/2026/04417"
+     },
+     "result": {
+      "ok": true,
+      "request_no": "PR/2026/04417",
+      "status": "APPROVED",
+      "status_code": "AP",
+      "item_code": "GSK-SIL-05L",
+      "quantity": 20000,
+      "estimated_value": 269040.0,
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-09",
+      "approver": null,
+      "approved_by": "RMEHTA",
+      "next_step": "Approved. Next: create_purchase_order with request_no=PR/2026/04417 and a supplier."
+     }
+    },
+    {
+     "tool": "find_supplier",
+     "args": {
+      "name": "Deccan Polymers"
+     },
+     "result": {
+      "ok": true,
+      "matches": [
+       {
+        "supplier_code": "DP-RJK-0042",
+        "name": "Deccan Polymers",
+        "city": "Rajkot",
+        "state": "GJ",
+        "status": "ACTIVE",
+        "match": 1.0,
+        "food_grade_certificate": "valid"
+       },
+       {
+        "supplier_code": "DPI-AMD-0107",
+        "name": "Deccan Paints & Inks",
+        "city": "Ahmedabad",
+        "state": "GJ",
+        "status": "ACTIVE",
+        "match": 0.52,
+        "food_grade_certificate": "none"
+       },
+       {
+        "supplier_code": "DP-RJK-0009",
+        "name": "Deccan Polymers (old code, do not use)",
+        "city": "Rajkot",
+        "state": "GJ",
+        "status": "BLOCKED",
+        "match": 1.0,
+        "food_grade_certificate": "none"
+       }
+      ],
+      "hint": "Blocked codes, never use: DP-RJK-0009."
+     }
+    },
+    {
+     "tool": "create_purchase_order",
+     "args": {
+      "confirm": false,
+      "request_no": "PR/2026/04417",
+      "supplier_code": "DP-RJK-0042"
+     },
+     "result": {
+      "ok": true,
+      "preview": {
+       "supplier": "Deccan Polymers (DP-RJK-0042)",
+       "item_code": "GSK-SIL-05L",
+       "quantity": 20000,
+       "rate": 11.9,
+       "tax_code": "GST18-INTER",
+       "basic_value": 238000.0,
+       "gross_value": 280840.0,
+       "cost_centre": "PRD-07",
+       "cost_centre_state": "OK",
+       "need_by": "2026-11-09",
+       "request_no": "PR/2026/04417"
+      },
+      "warnings": [],
+      "note": "Nothing has been saved. Show this to the user and ask to confirm."
+     }
+    },
+    {
+     "tool": "create_purchase_order",
+     "args": {
+      "confirm": true,
+      "supplier_code": "DP-RJK-0042",
+      "request_no": "PR/2026/04417"
+     },
+     "result": {
+      "ok": true,
+      "po_no": "PO/2026/01182",
+      "status": "APPROVED, NOT YET RELEASED",
+      "status_code": "AP",
+      "supplier_code": "DP-RJK-0042",
+      "item_code": "GSK-SIL-05L",
+      "quantity": 20000,
+      "rate": 11.9,
+      "gross_value": 280840.0,
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-09",
+      "request_no": "PR/2026/04417",
+      "created_by": "KJOSHI",
+      "approved_by": "RMEHTA",
+      "approval": {
+       "doc_no": "PR/2026/04417",
+       "approver": "RMEHTA",
+       "status": "APPROVED"
+      },
+      "warning": null,
+      "idempotency_key": "K8A0FEC59B989",
+      "sent_to_supplier": false,
+      "tool": "create_purchase_order",
+      "tool_version": "1.0",
+      "next_step": "Approved but NOT sent to the supplier yet. Next: release_purchase_order PO/2026/01182."
+     }
+    },
+    {
+     "tool": "release_purchase_order",
+     "args": {
+      "po_no": "PO/2026/01182"
+     },
+     "result": {
+      "ok": true,
+      "po_no": "PO/2026/01182",
+      "status": "RELEASED to the supplier",
+      "status_code": "RL",
+      "supplier_code": "DP-RJK-0042",
+      "item_code": "GSK-SIL-05L",
+      "quantity": 20000,
+      "rate": 11.9,
+      "gross_value": 280840.0,
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-09",
+      "request_no": "PR/2026/04417",
+      "created_by": "KJOSHI",
+      "approved_by": "RMEHTA",
+      "approval": {
+       "doc_no": "PR/2026/04417",
+       "approver": "RMEHTA",
+       "status": "APPROVED"
+      },
+      "warning": null,
+      "idempotency_key": "K8A0FEC59B989",
+      "sent_to_supplier": true,
+      "tool": "release_purchase_order",
+      "tool_version": "1.0"
+     }
+    }
+   ],
+   "done": true,
+   "user_turns": 3,
+   "words_typed": 22,
+   "chars_typed": 117,
+   "tool_calls": 5,
+   "seconds": 20.7
+  },
+  {
+   "id": "receive",
+   "title": "Receive the goods, as Neha",
+   "user": "NDESAI",
+   "who": "Neha",
+   "turns": [
+    {
+     "user": "12,000 gaskets from Deccan Polymers arrived today against PO/2026/01182.",
+     "reply": "Here is the preview to record the goods receipt (GRN):\n\n- **PO:** PO/2026/01182 (Deccan Polymers)\n- **Item:** GSK-SIL-05L (Receiving: 12,000 | Remaining balance: 8,000)\n- **Warehouse:** WH-PUN-STR\n\nShall I go ahead and record this receipt?",
+     "tools": [
+      "receive_goods"
+     ],
+     "seconds": 6.84
+    },
+    {
+     "user": "Yes, go ahead.",
+     "reply": "Goods receipt **GRN/2026/30001** has been recorded for 12,000 gaskets against PO/2026/01182. \n\nThe remaining balance on the order is 8,000 units, and the updated stock for GSK-SIL-05L is 66,000 units.",
+     "tools": [
+      "receive_goods"
+     ],
+     "seconds": 4.36
+    }
+   ],
+   "cards": [
+    {
+     "tool": "receive_goods",
+     "args": {
+      "po_no": "PO/2026/01182",
+      "confirm": false,
+      "quantity": 12000
+     },
+     "result": {
+      "ok": true,
+      "preview": {
+       "po_no": "PO/2026/01182",
+       "supplier_code": "DP-RJK-0042",
+       "item_code": "GSK-SIL-05L",
+       "ordered": 20000,
+       "received_before": 0,
+       "receiving_now": 12000,
+       "balance_after": 8000,
+       "warehouse": "WH-PUN-STR"
+      },
+      "note": "Nothing has been saved. Confirm the count with the user."
+     }
+    },
+    {
+     "tool": "receive_goods",
+     "args": {
+      "confirm": true,
+      "po_no": "PO/2026/01182",
+      "quantity": 12000
+     },
+     "result": {
+      "ok": true,
+      "grn_no": "GRN/2026/30001",
+      "po_no": "PO/2026/01182",
+      "item_code": "GSK-SIL-05L",
+      "received": 12000,
+      "balance": 8000,
+      "order_closed": false,
+      "stock_after": 66000
+     }
+    }
+   ],
+   "done": true,
+   "user_turns": 2,
+   "words_typed": 12,
+   "chars_typed": 86,
+   "tool_calls": 2,
+   "seconds": 11.2
+  },
+  {
+   "id": "receive2",
+   "title": "Receive the rest",
+   "user": "NDESAI",
+   "who": "Neha",
+   "turns": [
+    {
+     "user": "The other 8,000 have come in too.",
+     "reply": "Here is the preview to record the goods receipt for the remaining balance:\n\n- **PO:** PO/2026/01182 (Deccan Polymers)\n- **Item:** GSK-SIL-05L (Receiving: 8,000 | Remaining balance: 0, order will close)\n- **Warehouse:** WH-PUN-STR\n\nShall I go ahead and record this receipt?",
+     "tools": [
+      "receive_goods"
+     ],
+     "seconds": 3.83
+    },
+    {
+     "user": "Yes, go ahead.",
+     "reply": "Goods receipt **GRN/2026/30002** has been recorded for the remaining 8,000 gaskets against PO/2026/01182. \n\nThe purchase order is now fully received and closed. Stock for GSK-SIL-05L stands at 74,000 units.",
+     "tools": [
+      "receive_goods"
+     ],
+     "seconds": 3.65
+    }
+   ],
+   "cards": [
+    {
+     "tool": "receive_goods",
+     "args": {
+      "po_no": "PO/2026/01182",
+      "confirm": false,
+      "quantity": 8000
+     },
+     "result": {
+      "ok": true,
+      "preview": {
+       "po_no": "PO/2026/01182",
+       "supplier_code": "DP-RJK-0042",
+       "item_code": "GSK-SIL-05L",
+       "ordered": 20000,
+       "received_before": 12000,
+       "receiving_now": 8000,
+       "balance_after": 0,
+       "warehouse": "WH-PUN-STR"
+      },
+      "note": "Nothing has been saved. Confirm the count with the user."
+     }
+    },
+    {
+     "tool": "receive_goods",
+     "args": {
+      "po_no": "PO/2026/01182",
+      "confirm": true,
+      "quantity": 8000
+     },
+     "result": {
+      "ok": true,
+      "grn_no": "GRN/2026/30002",
+      "po_no": "PO/2026/01182",
+      "item_code": "GSK-SIL-05L",
+      "received": 8000,
+      "balance": 0,
+      "order_closed": true,
+      "stock_after": 74000
+     }
+    }
+   ],
+   "done": true,
+   "user_turns": 2,
+   "words_typed": 10,
+   "chars_typed": 47,
+   "tool_calls": 2,
+   "seconds": 7.5
+  },
+  {
+   "id": "shakti",
+   "title": "A cheaper supplier?",
+   "user": "KJOSHI",
+   "who": "Kavita",
+   "turns": [
+    {
+     "user": "Shakti Seals in Vadodara quotes Rs 10.40 for the same gasket. Can we buy from them instead?",
+     "reply": "No, we cannot order from Shakti Seals right now:\n\n1. **Food-grade certification required:** Silicone gaskets are food-contact items and, per policy (POL-PUR-001 §6.2, POL-SUP-003 §4.1), can only be bought from suppliers holding a verified food-grade certificate on file in Bahi.\n2. **Not registered:** Shakti Seals is not registered in Bahi. They would first need to be onboarded and have their food-grade certificate verified.\n3. **Existing order released:** PO/2026/01182 has already been released to Deccan Polymers.",
+     "tools": [
+      "find_supplier",
+      "search_policy",
+      "search_policy"
+     ],
+     "seconds": 18.76
+    }
+   ],
+   "cards": [
+    {
+     "tool": "find_supplier",
+     "args": {
+      "name": "Shakti Seals",
+      "city": "Vadodara"
+     },
+     "result": {
+      "ok": true,
+      "matches": [],
+      "hint": "No existing supplier matches. A new supplier must be onboarded (Supplier Policy) before any order."
+     }
+    },
+    {
+     "tool": "search_policy",
+     "args": {
+      "question": "Can we buy food contact gaskets from a supplier without food grade certificate or switch suppliers after PO release?"
+     },
+     "result": {
+      "ok": true,
+      "answer_in_documents": true,
+      "clauses": [
+       {
+        "cite": "POL-PUR-001 §6.2",
+        "document": "Purchase Policy v4.1",
+        "effective": "2026-04-01",
+        "status": "in force",
+        "heading": "6. Supplier qualification",
+        "text": "6.2 **Parts that come into contact with food** (gaskets, lids, body blanks and any other item marked food-contact in the item master) may be bought only from a supplier holding a **valid food-grade certificate** on file in Bahi. The certificate must be uploaded and checked **before the first order** is placed. An expired certificate counts as no certificate.",
+        "score": 5.02
+       },
+       {
+        "cite": "POL-SUP-003 §4.1",
+        "document": "Supplier Policy v2.3",
+        "effective": "2026-04-01",
+        "status": "in force",
+        "heading": "4. Food-grade certificates",
+        "text": "4.1 A supplier of any part that comes into contact with food (gaskets, lids, body blanks, and any item marked food-contact in the item master) must hold a food-grade certificate. This is the certificate referred to in Purchase Policy §6.2.",
+        "score": 3.81
+       },
+       {
+        "cite": "POL-SUP-003 §4.5",
+        "document": "Supplier Policy v2.3",
+        "effective": "2026-04-01",
+        "status": "in force",
+        "heading": "4. Food-grade certificates",
+        "text": "4.5 An expired certificate counts as no certificate. The supplier stays ACTIVE in the master, but no food-contact part may be ordered from it until a new certificate is uploaded and checked.",
+        "score": 2.42
+       },
+       {
+        "cite": "POL-SUP-003 §4.7",
+        "document": "Supplier Policy v2.3",
+        "effective": "2026-04-01",
+        "status": "in force",
+        "heading": "4. Food-grade certificates",
+        "text": "4.7 Bahi does not stop an order to a supplier without a certificate. The check in this section is done by the person raising the order, and by the approver.",
+        "score": 1.52
+       }
+      ],
+      "note": "Quote the rule with its citation, e.g. (POL-PUR-001 §6.2). If a clause's status says it is replaced or not yet in force, follow the status. Stock, budgets and statuses come from Bahi."
+     }
+    },
+    {
+     "tool": "search_policy",
+     "args": {
+      "question": "Can we cancel a released purchase order or switch supplier?"
+     },
+     "result": {
+      "ok": true,
+      "answer_in_documents": true,
+      "clauses": [
+       {
+        "cite": "MAN-PUR-72 §14.5",
+        "document": "Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3",
+        "effective": "2025-01-15",
+        "status": "in force",
+        "heading": "14. Purchase order amendment and cancellation (PUR-POM-06) › 14.5 Cancelling",
+        "text": "Press Cancel and enter a reason. The status becomes CN, committed budget is released, and for a released order the quantity is removed from stock on order. Tell the supplier yourself; Bahi does not send a cancellation notice.",
+        "score": 4.57
+       },
+       {
+        "cite": "MAN-PUR-72 §14.4",
+        "document": "Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3",
+        "effective": "2025-01-15",
+        "status": "in force",
+        "heading": "14. Purchase order amendment and cancellation (PUR-POM-06) › 14.4 Moving a Draft off a closed cost centre",
+        "text": "To rescue an order stuck in Draft because its cost centre was closed, amend the cost centre to an open one. The order then becomes AP or PA by the normal rules, and can be released once approved.",
+        "score": 2.47
+       },
+       {
+        "cite": "MAN-PUR-72 §14.3",
+        "document": "Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3",
+        "effective": "2025-01-15",
+        "status": "in force",
+        "heading": "14. Purchase order amendment and cancellation (PUR-POM-06) › 14.3 Approval after amendment",
+        "text": "If the amended gross value is still covered by the original approval, the order keeps its status. If it is more than the approval covers, the order goes back to PA for approval, even if it had been released.",
+        "score": 1.21
+       },
+       {
+        "cite": "MAN-PUR-72 §14.1",
+        "document": "Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3",
+        "effective": "2025-01-15",
+        "status": "in force",
+        "heading": "14. Purchase order amendment and cancellation (PUR-POM-06) › 14.1 Purpose",
+        "text": "Change an order's quantity, need-by date or cost centre, or cancel it.",
+        "score": 0.39
+       }
+      ],
+      "note": "Quote the rule with its citation, e.g. (POL-PUR-001 §6.2). If a clause's status says it is replaced or not yet in force, follow the status. Stock, budgets and statuses come from Bahi."
+     }
+    }
+   ],
+   "done": true,
+   "user_turns": 1,
+   "words_typed": 17,
+   "chars_typed": 91,
+   "tool_calls": 3,
+   "seconds": 18.8
+  }
+ ],
+ "bahi_after": {
+  "pr": [
+   {
+    "pr_no": "PR/2026/04417",
+    "status": "CL",
+    "cc_cd": "PRD-07",
+    "est_value": 269040.0,
+    "approved_by": "RMEHTA"
+   }
+  ],
+  "po": [
+   {
+    "po_no": "PO/2026/01182",
+    "status": "CL",
+    "cc_cd": "PRD-07",
+    "tax_cd": "GST18-INTER",
+    "gross_value": 280840.0,
+    "approved_by": "RMEHTA",
+    "warn_cd": null
+   }
+  ],
+  "grn": [
+   {
+    "grn_no": "GRN/2026/30001",
+    "po_no": "PO/2026/01182",
+    "qty": 12000,
+    "received_by": "NDESAI"
+   },
+   {
+    "grn_no": "GRN/2026/30002",
+    "po_no": "PO/2026/01182",
+    "qty": 8000,
+    "received_by": "NDESAI"
+   }
+  ],
+  "shakti_registered": [],
+  "stock_pun": {
+   "on_hand": 74000,
+   "on_order": 0
+  }
+ },
+ "llm_totals_by_user": {
+  "KJOSHI": {
+   "calls": 19,
+   "tokens_in": 84225,
+   "tokens_out": 1124,
+   "seconds": 48.69,
+   "cost_inr": 4.0024
+  },
+  "RMEHTA": {
+   "calls": 5,
+   "tokens_in": 14062,
+   "tokens_out": 211,
+   "seconds": 19.96,
+   "cost_inr": 0.6744
+  },
+  "NDESAI": {
+   "calls": 8,
+   "tokens_in": 24068,
+   "tokens_out": 500,
+   "seconds": 18.64,
+   "cost_inr": 1.191
+  }
+ },
+ "wire_sample": [
+  {
+   "method": "tools/list",
+   "params": {},
+   "result": {
+    "tools": [
+     {
+      "name": "find_item",
+      "title": "Find item",
+      "description": "Find stock items by description or code (e.g. '5 litre silicone gasket'). Returns active items, best match first, with code, unit and whether they touch food.",
+      "inputSchema": {
+       "type": "object",
+       "properties": {
+        "query": {
+         "type": "string",
+         "description": "words describing the item, or its code"
+        }
+       },
+       "required": [
+        "query"
+       ]
+      },
+      "annotations": {
+       "title": "Find item",
+       "readOnlyHint": true
+      },
+      "_meta": {
+       "fastmcp": {
+        "tags": []
+       }
+      }
+     },
+     {
+      "name": "check_stock",
+      "title": "Check stock",
+      "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+      "inputSchema": {
+       "type": "object",
+       "properties": {
+        "item_code": {
+         "type": "string",
+         "description": "Bahi item code, e.g. GSK-SIL-05L"
+        }
+       },
+       "required": [
+        "item_code"
+       ]
+      },
+      "annotations": {
+       "title": "Check stock",
+       "readOnlyHint": true
+      },
+      "_meta": {
+       "fastmcp": {
+        "tags": []
+       }
+      }
+     },
+     {
+      "name": "find_supplier",
+      "title": "Find supplier",
+      "description": "Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid food-grade certificate. Use it before registering anyone new.",
+      "inputSchema": {
+       "type": "object",
+       "properties": {
+        "name": {
+         "type": "string",
+         "description": "the supplier's name as the user said it"
+        },
+        "city": {
+         "type": "string",
+         "description": "optional city, to tell two branches apart"
+        }
+       },
+       "required": [
+        "name"
+       ]
+      },
+      "annotations": {
+       "title": "Find supplier",
+       "readOnlyHint": true
+      },
+      "_meta": {
+       "fastmcp": {
+        "tags": []
+       }
+      }
+     },
+     {
+      "name": "check_budget",
+      "title": "Check budget",
+      "description": "Is a cost centre open, and how much budget is left this quarter? Without a code, lists every open cost centre.",
+      "inputSchema": {
+       "type": "object",
+       "properties": {
+        "cost_centre": {
+         "type": "string",
+         "description": "cost centre code, e.g. PRD-07; leave out to list the open ones"
+        }
+       },
+       "required": []
+      },
+      "annotations": {
+       "title": "Check budget",
+       "readOnlyHint": true
+      },
+      "_meta": {
+       "fastmcp": {
+        "tags": []
+       }
+      }
+     },
+     {
+      "name": "search_policy",
+      "title": "Search policy",
+      "description": "Search Rasoi's purchasing policy and the Bahi manual. Returns the relevant clauses with their citations, or says the documents do not cover it.",
+      "inputSchema": {
+       "type": "object",
+       "properties": {
+        "question": {
+         "type": "string",
+         "description": "the policy question in plain words"
+        }
+       },
+       "required": [
+        "question"
+       ]
+      },
+      "annotations": {
+       "title": "Search policy",
+       "readOnlyHint": true
+      },
+      "_meta": {
+       "fastmcp": {
+        "tags": []
+       }
+      }
+     },
+     {
+      "name": "create_purchase_request",
+      "title": "Create purchase request",
+      "description": "Raise a purchase request (PR): the internal ask to buy something. With confirm=false it previews the estimated value and who must approve; with confirm=true it saves and submits it. Within your limit it is approved at once; above it, it waits for your manager.",
+      "inputSchema": {
+       "type": "object",
+       "properties": {
+        "item_code": {
+         "type": "string",
+         "description": "Bahi item code"
+        },
+        "quantity": {
+         "type": "integer",
+         "description": "how many, in the item's unit"
+        },
+        "cost_centre": {
+         "type": "string",
+         "description": "who pays, e.g. PRD-07"
+        },
+        "need_by": {
+         "type": "string",
+         "description": "date needed, YYYY-MM-DD"
+        },
+        "confirm": {
+         "type": "boolean",
+         "description": "false (default) = preview only, nothing is saved; true = commit"
+        }
+       },
+       "required": [
+        "item_code",
+        "quantity",
+        "cost_centre",
+        "need_by"
+       ]
+      },
+      "annotations": {
+       "title": "Create purchase request",
+       "readOnlyHint": false
+      },
+      "_meta": {
+       "fastmcp": {
+        "tags": []
+       }
+      }
+     },
+     {
+      "name": "list_my_approvals",
+      "title": "List my approvals",
+      "description": "What is waiting for the signed-in user's signature: purchase requests and orders, with value and who raised them.",
+      "inputSchema": {
+       "type": "object",
+       "properties": {},
+       "required": []
+      },
+      "annotations": {
+       "title": "List my approvals",
+       "readOnlyHint": true
+      },
+      "_meta": {
+       "fastmcp": {
+        "tags": []
+       }
+      }
+     },
+     {
+      "name": "approve_purchase_request",
+      "title": "Approve purchase request",
+      "description": "Approve or reject a purchase request that waits for the signed-in user. Only the named approver can do this, never the person who raised it.",
+      "inputSchema": {
+       "type": "object",
+       "properties": {
+        "request_no": {
+         "type": "string",
+         "description": "e.g. PR/2026/04417"
+        },
+        "decision": {
+         "type": "string",
+         "enum": [
+          "approve",
+          "reject"
+         ],
+         "description": "approve or reject"
+        },
+        "comment": {
+         "type": "string",
+         "description": "optional note to the requester"
+        }
+       },
+       "required": [
+        "request_no",
+        "decision"
+       ]
+      },
+      "annotations": {
+       "title": "Approve purchase request",
+       "readOnlyHint": false
+      },
+      "_meta": {
+       "fastmcp": {
+        "tags": []
+       }
+      }
+     },
+     {
+      "name": "create_purchase_order",
+      "title": "Create purchase order",
+      "description": "Create a purchase order (PO) with a supplier. Give request_no for an approved purchase request (it supplies item, quantity, cost centre and date), or item_code, quantity, cost_centre and need_by for a small direct order up to Rs 50,000. confirm=false previews price, tax and value; confirm=true saves it. Returns a receipt with the order's real status: an APPROVED order still has to be released.",
+      "inputSchema": {
+       "type": "object",
+       "properties": {
+        "supplier_code": {
+         "type": "string",
+         "description": "Bahi supplier code, from find_supplier"
+        },
+        "request_no": {
+         "type": "string",
+         "description": "an APPROVED purchase request"
+        },
+        "item_code": {
+         "type": "string",
+         "description": "for a direct order"
+        },
+        "quantity": {
+         "type": "integer",
+         "description": "for a direct order"
+        },
+        "cost_centre": {
+         "type": "string",
+         "description": "for a direct order"
+        },
+        "need_by": {
+         "type": "string",
+         "description": "for a direct order, YYYY-MM-DD"
+        },
+        "rate": {
+         "type": "number",
+         "description": "omit to use the contract rate"
+        },
+        "confirm": {
+         "type": "boolean",
+         "description": "false (default) = preview only, nothing is saved; true = commit"
+        }
+       },
+       "required": [
+        "supplier_code"
+       ]
+      },
+      "annotations": {
+       "title": "Create purchase order",
+       "readOnlyHint": false
+      },
+      "_meta": {
+       "fastmcp": {
+        "tags": []
+       }
+      }
+     },
+     {
+      "name": "approve_purchase_order",
+      "title": "Approve purchase order",
+      "description": "Approve a purchase order that waits for the signed-in user's signature.",
+      "inputSchema": {
+       "type": "object",
+       "properties": {
+        "po_no": {
+         "type": "string",
+         "description": "e.g. PO/2026/01182"
+        },
+        "comment": {
+         "type": "string",
+         "description": "optional"
+        }
+       },
+       "required": [
+        "po_no"
+       ]
+      },
+      "annotations": {
+       "title": "Approve purchase order",
+       "readOnlyHint": false
+      },
+      "_meta": {
+       "fastmcp": {
+        "tags": []
+       }
+      }
+     },
+     {
+      "name": "release_purchase_order",
+      "title": "Release purchase order",
+      "description": "Release an APPROVED purchase order to the supplier; only then does the supplier get it. Returns a receipt with the real status.",
+      "inputSchema": {
+       "type": "object",
+       "properties": {
+        "po_no": {
+         "type": "string",
+         "description": "e.g. PO/2026/01182"
+        }
+       },
+       "required": [
+        "po_no"
+       ]
+      },
+      "annotations": {
+       "title": "Release purchase order",
+       "readOnlyHint": false
+      },
+      "_meta": {
+       "fastmcp": {
+        "tags": []
+       }
+      }
+     },
+     {
+      "name": "order_status",
+      "title": "Order status",
+      "description": "The real status of a purchase order or a purchase request, read from Bahi, with approval, goods received and any warning.",
+      "inputSchema": {
+       "type": "object",
+       "properties": {
+        "po_no": {
+         "type": "string",
+         "description": "e.g. PO/2026/01182"
+        },
+        "request_no": {
+         "type": "string",
+         "description": "e.g. PR/2026/04417"
+        }
+       },
+       "required": []
+      },
+      "annotations": {
+       "title": "Order status",
+       "readOnlyHint": true
+      },
+      "_meta": {
+       "fastmcp": {
+        "tags": []
+       }
+      }
+     },
+     {
+      "name": "receive_goods",
+      "title": "Receive goods",
+      "description": "Record goods received (GRN) against a RELEASED purchase order: stock goes up, and the order closes once everything has arrived. Cannot receive more than was ordered.",
+      "inputSchema": {
+       "type": "object",
+       "properties": {
+        "po_no": {
+         "type": "string",
+         "description": "the released order the goods came against"
+        },
+        "quantity": {
+         "type": "integer",
+         "description": "how many arrived"
+        },
+        "warehouse": {
+         "type": "string",
+         "description": "optional; defaults to the order's warehouse"
+        },
+        "remarks": {
+         "type": "string",
+         "description": "optional, e.g. vehicle number"
+        },
+        "confirm": {
+         "type": "boolean",
+         "description": "false (default) = preview only, nothing is saved; true = commit"
+        }
+       },
+       "required": [
+        "po_no",
+        "quantity"
+       ]
+      },
+      "annotations": {
+       "title": "Receive goods",
+       "readOnlyHint": false
+      },
+      "_meta": {
+       "fastmcp": {
+        "tags": []
+       }
+      }
+     },
+     {
+      "name": "register_supplier",
+      "title": "Register supplier",
+      "description": "Register a NEW supplier. Only after find_supplier shows no existing match. confirm=false previews and checks for duplicates; confirm=true creates it.",
+      "inputSchema": {
+       "type": "object",
+       "properties": {
+        "name": {
+         "type": "string",
+         "description": "registered name"
+        },
+        "city": {
+         "type": "string",
+         "description": ""
+        },
+        "state": {
+         "type": "string",
+         "description": "Indian state"
+        },
+        "gstin": {
+         "type": "string",
+         "description": "15-character GSTIN"
+        },
+        "confirm": {
+         "type": "boolean",
+         "description": "false (default) = preview only, nothing is saved; true = commit"
+        }
+       },
+       "required": [
+        "name",
+        "city",
+        "state",
+        "gstin"
+       ]
+      },
+      "annotations": {
+       "title": "Register supplier",
+       "readOnlyHint": false
+      },
+      "_meta": {
+       "fastmcp": {
+        "tags": []
+       }
+      }
+     },
+     {
+      "name": "send_message",
+      "title": "Send message",
+      "description": "Send a short message to a colleague or supplier (Slack handle like @rohit, or an email address). Goes through Bahi's notification queue.",
+      "inputSchema": {
+       "type": "object",
+       "properties": {
+        "to": {
+         "type": "string",
+         "description": "@handle or email"
+        },
+        "text": {
+         "type": "string",
+         "description": "the message"
+        }
+       },
+       "required": [
+        "to",
+        "text"
+       ]
+      },
+      "annotations": {
+       "title": "Send message",
+       "readOnlyHint": false
+      },
+      "_meta": {
+       "fastmcp": {
+        "tags": []
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "method": "tools/call",
+   "params": {
+    "name": "find_item",
+    "arguments": {
+     "query": "5 litre silicone gasket"
+    }
+   },
+   "result": {
+    "_meta": {
+     "io.modelcontextprotocol/serverInfo": {
+      "name": "bahi-toolbox",
+      "version": "4.1.4"
+     }
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "{\"ok\": true, \"items\": [{\"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-05L-R\", \"description\": \"Gasket, silicone, 5 L (rework)\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-03L\", \"description\": \"Gasket, silicone, 3 L\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-07L\", \"description\": \"Gasket, silicone, 7.5 L\", \"unit\": \"NOS\", \"food_contact\": true}], \"note\": \"Inactive (cannot be ordered): GSK-RUB-05L.\"}"
+     }
+    ],
+    "isError": false,
+    "resultType": "complete"
+   }
+  },
+  {
+   "method": "tools/call",
+   "params": {
+    "name": "check_stock",
+    "arguments": {
+     "item_code": "GSK-SIL-05L"
+    }
+   },
+   "result": {
+    "_meta": {
+     "io.modelcontextprotocol/serverInfo": {
+      "name": "bahi-toolbox",
+      "version": "4.1.4"
+     }
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "{\"ok\": true, \"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"warehouses\": [{\"warehouse\": \"WH-PUN-STR\", \"name\": \"Pune main stores\", \"on_hand\": 54000, \"allocated\": 0, \"on_order\": 0, \"free\": 54000}, {\"warehouse\": \"WH-CHK-STR\", \"name\": \"Chakan stores\", \"on_hand\": 12000, \"allocated\": 0, \"on_order\": 0, \"free\": 12000}], \"free_total\": 66000, \"on_order_total\": 0, \"reorder_level\": 30000, \"cover_days\": 11, \"below_reorder\": false}"
+     }
+    ],
+    "isError": false,
+    "resultType": "complete"
+   }
+  }
+ ]
+}
