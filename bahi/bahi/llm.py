@@ -27,6 +27,7 @@ from dataclasses import dataclass, field
 USD_INR = 88.0  # fixed for the course so costs are comparable across runs
 
 _CLIENT_LOCK = threading.Lock()
+_GEMINI_VIA_OPENROUTER: list = []  # set once a Gemini call returns 402 (key out of credits)
 
 PROVIDERS = {
     "gemini": ("https://generativelanguage.googleapis.com/v1beta/openai/", ["GEMINI_API_KEY", "GOOGLE_API_KEY"]),
@@ -162,12 +163,25 @@ class LLM:
             args["tools"] = tools
         if response_format:
             args["response_format"] = response_format
+        if self.provider == "gemini" and _GEMINI_VIA_OPENROUTER:
+            self._route_via_openrouter(OpenAI, args)
         t0 = time.perf_counter()
         try:
             resp = self._client.chat.completions.create(**args)
         except Exception as e:  # show the provider's reason, not just the status code
             body = getattr(getattr(e, "response", None), "text", "")
-            raise RuntimeError(f"{self.model}: {e} {body[:600]}") from e
+            if (self.provider == "gemini" and getattr(e, "status_code", None) == 402
+                    and os.environ.get("OPENROUTER_API_KEY") and not _GEMINI_VIA_OPENROUTER):
+                # The Gemini key is out of credits: send the same model through OpenRouter from now on.
+                _GEMINI_VIA_OPENROUTER.append(True)
+                self._route_via_openrouter(OpenAI, args)
+                try:
+                    resp = self._client.chat.completions.create(**args)
+                except Exception as e2:
+                    body = getattr(getattr(e2, "response", None), "text", "")
+                    raise RuntimeError(f"{self.model} (via OpenRouter): {e2} {body[:600]}") from e2
+            else:
+                raise RuntimeError(f"{self.model}: {e} {body[:600]}") from e
         secs = time.perf_counter() - t0
         msg = resp.choices[0].message
         calls = []
@@ -181,6 +195,14 @@ class LLM:
         u = resp.usage
         return Reply(msg.content, calls, getattr(u, "prompt_tokens", 0) or 0, getattr(u, "completion_tokens", 0) or 0,
                      round(secs, 3), self.model)
+
+    def _route_via_openrouter(self, OpenAI, args):
+        """Same Gemini model, billed through OpenRouter (google/<model>). Cassette keys do not change."""
+        if getattr(self, "_via_or", False) is False:
+            self._client = OpenAI(base_url=PROVIDERS["openrouter"][0], api_key=os.environ["OPENROUTER_API_KEY"],
+                                  max_retries=4, timeout=120)
+            self._via_or = True
+        args["model"] = "google/" + self.model_id
 
     # ------------------------------------------------------------------ cassette
     def _path(self) -> pathlib.Path:

@@ -76,7 +76,7 @@ ROLE_PERMS = {
                            "sup_create", "sup_cert_upload", "ntf_send", "pr_approve", "po_approve", "po_reject"],
     "PUR-MGR": READ_SVCS + ["pr_approve", "po_approve", "po_reject", "po_release", "ntf_send"],
     "PLANT-HEAD": READ_SVCS + ["pr_approve", "po_approve", "po_reject", "ntf_send"],
-    "STORES": READ_SVCS,
+    "STORES": READ_SVCS + ["ntf_send"],
     "SYS-ADMIN": ["*"],
 }
 
