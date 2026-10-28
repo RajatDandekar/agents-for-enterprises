@@ -193,8 +193,9 @@ class LLM:
             extra = (tc.model_extra or {}).get("extra_content")
             calls.append(ToolCall(tc.id or f"call_{i}", tc.function.name, a, extra))
         u = resp.usage
+        served_by = f"openrouter:google/{self.model_id}" if getattr(self, "_via_or", False) else self.model
         return Reply(msg.content, calls, getattr(u, "prompt_tokens", 0) or 0, getattr(u, "completion_tokens", 0) or 0,
-                     round(secs, 3), self.model)
+                     round(secs, 3), served_by)
 
     def _route_via_openrouter(self, OpenAI, args):
         """Same Gemini model, billed through OpenRouter (google/<model>). Cassette keys do not change."""
