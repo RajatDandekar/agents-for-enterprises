@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 3 · The Memory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../../engine/plates.css">
+<style>
+/* lecture-local helpers (layout only; colours and type come from plates.css) */
+.qa{font-size:23px;line-height:1.42}
+.cite{font:600 .82em/1 var(--mono);color:var(--after);background:var(--after-soft);padding:.12em .38em;border-radius:6px;white-space:nowrap}
+.clause{background:var(--g1);border-radius:24px;padding:18px 22px;font-size:22px;line-height:1.45}
+.clause .id{font:600 16px/1.3 var(--mono);color:var(--after);display:block;margin-bottom:8px}
+.pic{position:absolute;border-radius:22px;overflow:hidden;background:#fff;box-shadow:var(--shadow)}
+.pic img{display:block;width:100%;height:100%;object-fit:contain}
+.live{display:inline-flex;align-items:center;gap:8px;font:500 17px/1 var(--font);color:var(--ink);text-decoration:none;padding:12px 18px;border-radius:999px;background:var(--glass);border:1px solid var(--pill-line);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:var(--shadow)}
+.live::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--after)}
+.mini{font:17px/1.4 var(--font);color:var(--ink-2)}
+.who{font:500 14px/1 var(--font);color:var(--ink-3);margin-bottom:5px}
+.check li{margin-bottom:14px}
+.ans{font-size:20px;color:var(--ink-2);border-left:3px solid var(--gold);padding-left:12px;margin-top:6px}
+.fig .ctl{margin-top:10px}
+.card > .tag,.clause > .tag{display:flex;width:fit-content}
+.col .def{margin-bottom:16px}
+.col .code{margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- ============================================================ OPENING -->
+<section class="slide" data-plain="1">
+  <div class="center">
+    <div class="kicker">AI Agents for Enterprises · Lecture 3 · Sat 7 Nov 2026 · 7–9 AM IST</div>
+    <h1>The Memory</h1>
+    <p class="lede" style="margin-top:22px">Giving Ask Rasoi knowledge: how a model that has never seen Rasoi’s documents comes to answer from them, and prove it.</p>
+    <p class="small" style="margin-top:18px">Dr. Rajat Dandekar · Vizuara</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Last Time, This Time">
+  <div class="lec-top"><h2>Last time, this time</h2></div>
+  <div class="ba" style="top:220px">
+    <div class="card bf step"><span class="tag bf">Lecture 2 · The Brain</span><h3>A model, and nothing else</h3>We built Ask Rasoi’s brain: tokens, embeddings, attention, next-token prediction. Then we asked it how many gaskets Rasoi has. It gave a number. It had never seen Rasoi’s stock.</div>
+    <div class="card af step"><span class="tag af">Lecture 3 · The Memory</span><h3>Rasoi’s documents, at the right moment</h3>Rasoi’s rules live in a purchase policy, a supplier policy, an approval matrix, a manual and two amendments. Today Ask Rasoi learns to find the right clause, put it in front of the model, and cite it.</div>
+  </div>
+  <div class="opens step" style="top:620px"><span class="k">By the end</span>Ask Rasoi has a new tool, <code>search_policy</code>, and answers Kavita’s question with Purchase Policy §6.2 cited. You will have built every part of it in NB3.</div>
+</section>
+
+<section class="slide" data-plate="Monday Morning at Rasoi">
+  <div class="col" style="width:540px">
+    <div class="kicker">Monday 26 October 2026 · Pune</div>
+    <h2>Kavita has a cheaper quote</h2>
+    <p class="qa">Diwali is coming. Kavita needs 20,000 gaskets for the 5-litre cooker. Deccan Polymers’ contract rate is ₹11.90.</p>
+    <p class="qa step">Shakti Seals, Vadodara, quotes ₹10.40. She opens Ask Rasoi, as it stood at the end of Lecture 2, and asks.</p>
+    <p class="qa step">Three model sizes, the same question, from our run. Two say <b>yes</b>. The middle one invents an “Approved Vendor List” and a standard, and never mentions the certificate.</p>
+  </div>
+  <div class="fig" data-fig="coldchat" style="left:690px;top:120px;width:810px;height:640px"></div>
+  <div class="cap" style="left:690px;top:770px;width:810px"><b>Fig. 1.</b> Ask Rasoi at the brain stage (Lecture 2’s system prompt, no documents). Replies from <code>experiments/logs/story.json → brain</code>.</div>
+</section>
+
+<section class="slide" data-plate="What Suresh Knows">
+  <div class="col" style="width:560px">
+    <h2>What Suresh knows</h2>
+    <p class="qa">Suresh Kulkarni, the senior buyer, would say no in one breath. Gaskets touch food.</p>
+    <p class="qa step">Shakti Seals is not in Bahi’s supplier master and has no food-grade certificate. Bahi would not stop the order: the rule is not in the ERP. It lives in a PDF, and in Suresh’s head.</p>
+    <p class="qa step">The saving is real: 20,000 × (₹11.90 − ₹10.40) = ₹30,000 before GST. So is the risk: a cooker gasket that has never been tested for food contact.</p>
+  </div>
+  <div class="clause step" style="position:absolute;left:760px;top:200px;width:740px">
+    <span class="id">POL-PUR-001 §6.2 · Purchase Policy v4.1 · effective 2026-04-01</span>
+    Parts that come into contact with food (gaskets, lids, body blanks and any other item marked food-contact in the item master) may be bought only from a supplier holding a <b>valid food-grade certificate</b> on file in Bahi. The certificate must be uploaded and checked before the first order is placed. An expired certificate counts as no certificate.
+  </div>
+  <div class="cap step" style="left:760px;top:520px;width:740px"><b>The rule the brain needed.</b> 58 words, one clause, in <code>bahi/docs/purchase-policy.md</code>. The model has never read it.</div>
+</section>
+
+<section class="slide" data-plate="Today's Question">
+  <div class="center">
+    <div class="kicker">The question this lecture answers</div>
+    <p class="bigq">How does Ask Rasoi come to know what Rasoi knows, only what each person may read, as of today, <span class="a">and show where it read it?</span></p>
+  </div>
+</section>
+
+<section class="slide" data-plate="The Route Through Today">
+  <div class="col w" style="width:700px">
+    <h2>The route through today</h2>
+    <ol class="legend">
+      <li class="step"><span class="n">1</span><span><b>Why the model does not know Rasoi.</b> Training, fine-tuning, the context window.</span></li>
+      <li class="step"><span class="n">2</span><span><b>The simplest fix:</b> paste everything. What it costs.</span></li>
+      <li class="step"><span class="n">3</span><span><b>Retrieval:</b> chunks, keyword search, embeddings, fusion, reranking.</span></li>
+      <li class="step"><span class="n">4</span><span><b>RAG end to end</b> on Kavita’s question, citations and checking them.</span></li>
+      <li class="step"><span class="n">5</span><span><b>The LLM wiki</b>, and who may read what, since when.</span></li>
+      <li class="step"><span class="n">6</span><span><b>The measurement,</b> then <code>search_policy</code> joins Ask Rasoi.</span></li>
+    </ol>
+  </div>
+  <div class="card af step" style="position:absolute;left:900px;top:220px;width:600px;font-size:22px"><span class="tag af">One running example</span><h3>Kavita, Shakti Seals, §6.2</h3>Every idea today is shown on Rasoi’s real documents and on this one question. Every number is from our own runs, logged in <code>lectures/L3-the-memory/experiments/logs/</code>.</div>
+</section>
+
+<!-- ============================================================ PART 1 -->
+<section class="slide part" data-num="1">
+  <div class="center"><div class="num">Part one</div><h1>Why the model does not know Rasoi</h1><p class="lede">Frozen weights, and one way in.</p></div>
+</section>
+
+<section class="slide" data-plate="Private, and Newer Than the Model">
+  <div class="col">
+    <h2>Private, and newer</h2>
+    <p class="qa">A model learns in <span class="term">training</span>: months of reading public text, once. Then its weights are frozen.</p>
+    <div class="def step"><b>Training</b>Adjusting the model’s weights so it predicts the next token of a huge pile of text. It happens before you ever use the model.</div>
+    <p class="qa step">Rasoi’s documents are private. Two of them are dated after September 2026. One changes again on 1 December.</p>
+    <p class="qa step">So no amount of “asking nicely” helps. The model has nothing to remember.</p>
+  </div>
+  <div class="fig" data-fig="timeline" style="left:680px;top:200px;width:820px;height:440px"></div>
+  <div class="cap" style="left:680px;top:660px;width:820px"><b>Fig. 2.</b> Effective dates from each document’s front-matter in <code>bahi/docs/</code>.</div>
+</section>
+
+<section class="slide" data-plate="Two Places a Model Can Know From">
+  <div class="col" style="width:460px">
+    <h2>Two places to know from</h2>
+    <p class="qa"><b>Its weights</b>, learned in training. Fixed. Rasoi was never in them.</p>
+    <p class="qa step"><b>Its context window</b>: the tokens we send on this one call. The model reads them fresh, every time, and forgets them after.</p>
+    <div class="def step"><b>Context window</b>Everything the model reads on one call: system prompt, conversation, documents, question. Its only working memory.</div>
+  </div>
+  <div class="pic step" style="left:600px;top:150px;width:900px;height:502px"><img src="figs/two_memories.png" alt="Learned in training versus read on this call"></div>
+  <div class="cap" style="left:600px;top:670px;width:900px"><b>Fig. 3.</b> If Rasoi’s clause is not among this call’s tokens, it does not exist for the model.</div>
+</section>
+
+<section class="slide" data-plate="Why Not Teach It Rasoi?">
+  <div class="col" style="width:540px">
+    <h2>Why not train it on Rasoi?</h2>
+    <div class="def"><b>Fine-tuning</b>Training a finished model a little more, on your own examples, so the weights change.</div>
+    <p class="qa step">It is good at teaching a <b>style</b> or a format. It is a poor way to store <b>rules</b>:</p>
+    <ul class="legend">
+      <li class="step"><span class="n">1</span><span><b>Stale.</b> Every amendment means training again. Rasoi has had two this year.</span></li>
+      <li class="step"><span class="n">2</span><span><b>No citation.</b> A weight cannot tell you which clause it came from.</span></li>
+      <li class="step"><span class="n">3</span><span><b>One model, every reader.</b> HR’s salary bands would be in it for everyone.</span></li>
+    </ul>
+  </div>
+  <div class="card step" style="position:absolute;left:740px;top:200px;width:760px;font-size:22px"><span class="tag nt">What we did not measure</span>The cost and time of a fine-tuning run. We did not run one: the three problems above are true at any price. Everything else in this lecture is measured.</div>
+  <div class="card af step" style="position:absolute;left:740px;top:420px;width:760px;font-size:23px"><span class="tag af">The idea that remains</span>Leave the weights alone. Put the right clause <b>into the context window</b>, at the moment of the question.</div>
+</section>
+
+<section class="slide" data-plate="The Context Window Is the Memory">
+  <div class="col">
+    <h2>One clause changes the answer</h2>
+    <p class="qa">Same model, same question. The only difference is what is in its context window.</p>
+    <p class="qa step">Without §6.2 it invents rules that sound right.</p>
+    <p class="qa step">With §6.2 pasted in (363 tokens in all), it names the food-grade rule and cites it. Press the buttons.</p>
+  </div>
+  <div class="fig" data-fig="ctxwin" style="left:680px;top:130px;width:820px;height:640px"></div>
+  <div class="cap" style="left:680px;top:780px;width:820px"><b>Fig. 4.</b> gemini-3.8-flash, temperature 0. <code>logs/story.json → brain, with62</code>.</div>
+</section>
+
+<section class="slide" data-plate="Three Ways In">
+  <div class="pic" style="left:100px;top:110px;width:1000px;height:558px"><img src="figs/three_ways.png" alt="Fine-tune, paste everything, retrieve"></div>
+  <div class="col" style="left:1140px;width:380px;top:140px">
+    <h3>Three ways in</h3>
+    <p class="qa">Fine-tuning changes the weights. The other two fill the context window.</p>
+    <p class="qa step"><b>Paste everything</b> is the simplest. We try it first, and count.</p>
+    <p class="qa step"><b>Retrieve</b> sends only the clauses that answer. Most of today is how.</p>
+  </div>
+  <div class="cap" style="left:100px;top:690px;width:1000px"><b>Fig. 5.</b> The three ways to give a model your company’s knowledge.</div>
+</section>
+
+<section class="slide" data-plate="Check Yourself">
+  <div class="col w" style="width:1300px">
+    <h2>Check yourself</h2>
+    <ol class="legend check">
+      <li><span class="n">1</span><span>Rasoi’s certificate rule changed on 1 September. Where must the new rule be for Ask Rasoi to use it today?<div class="ans step">In the context window of the call that answers. Nowhere else counts.</div></span></li>
+      <li><span class="n">2</span><span>Why is fine-tuning a poor place to keep Purchase Policy §6.2?<div class="ans step">It goes stale at the next amendment, it cannot cite the clause, and every reader gets the same weights.</div></span></li>
+      <li><span class="n">3</span><span>The brain said “yes, if they are on the Approved Vendor List”. What is wrong with that, apart from the yes?<div class="ans step">Rasoi has no such list. The model filled the gap with a rule that sounds common. That is what “making things up” looks like.</div></span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================================================ PART 2 -->
+<section class="slide part" data-num="2">
+  <div class="center"><div class="num">Part two</div><h1>Paste everything</h1><p class="lede">The simplest fix. It works. Then we count.</p></div>
+</section>
+
+<section class="slide" data-plate="Rasoi's Documents">
+  <div class="col" style="width:460px">
+    <h2>Rasoi’s documents</h2>
+    <p class="qa">Eight files. Each starts with front-matter: an id, a version, the date it takes effect, and who may read it.</p>
+    <p class="qa step">The user manual is the big one. The HR salary bands are for HR only.</p>
+    <p class="qa step">A <span class="term">token</span> (Lecture 2) is the piece of text a model reads; we counted them with Gemini’s own counter.</p>
+  </div>
+  <div class="fig" data-fig="corpus" style="left:620px;top:130px;width:880px;height:640px"></div>
+  <div class="cap" style="left:620px;top:780px;width:880px"><b>Fig. 6.</b> Tokens per document, <code>logs/retrieval_eval.json → corpus</code>.</div>
+</section>
+
+<section class="slide" data-plate="Paste It All and Ask">
+  <div class="col" style="width:520px">
+    <h2>Paste it all, and ask</h2>
+    <p class="qa">All seven documents Kavita may read, then her question. One call.</p>
+    <p class="qa step"><b>It works.</b> The answer cites §6.2, §6.1, §6.4 and the September amendment, all real, all in front of it.</p>
+    <div class="measured step">13,596 tokens in, 19.1 seconds, ₹0.645 for one question. The answer starts “NOT IN DOCUMENTS” because whether Shakti holds a certificate is a fact in Bahi; the rule is cited right after.</div>
+  </div>
+  <div class="card" style="position:absolute;left:700px;top:150px;width:800px;font-size:20px" id="full-ans"><div class="who">Ask Rasoi with the whole corpus pasted in · gemini-3.8-flash</div><div id="full-ans-t"></div></div>
+  <div class="cap" style="left:700px;top:560px;width:800px"><b>Fig. 7.</b> The real reply, <code>logs/story.json → full</code>.</div>
+</section>
+
+<section class="slide" data-plate="What Pasting Costs">
+  <div class="col" style="width:470px">
+    <h2>What pasting costs</h2>
+    <p class="qa">Every question pays for every page, every time.</p>
+    <p class="qa step">We ran 40 questions each way. Per question, pasting Kavita’s documents cost 13 times what retrieval did.</p>
+    <p class="qa step">Slide the number of questions a day. The rupees per question are measured; the questions a day are yours to guess.</p>
+  </div>
+  <div class="fig" data-fig="costcalc" style="left:640px;top:150px;width:860px;height:600px"></div>
+  <div class="cap" style="left:640px;top:770px;width:860px"><b>Fig. 8.</b> ₹ for 40 questions ÷ 40, <code>logs/answers_eval.json → summary</code>. At the course’s list price for gemini-3.8-flash.</div>
+</section>
+
+<section class="slide" data-plate="Why It Breaks at Scale">
+  <div class="col" style="width:500px">
+    <h2>Why it breaks at scale</h2>
+    <p class="qa">We pasted the whole company’s documents too: purchasing plus all eight module kits.</p>
+    <p class="qa step">Still right on 40 of 40. But twice the tokens and twice the rupees, for the same answers.</p>
+    <p class="qa step">Two answers cited a finance document (POL-FIN-024 §1) on a purchasing question: real text, wrong shelf.</p>
+    <p class="qa step">And it cannot hide a page from one reader. Pasting “everything Kavita may read” means filtering first anyway.</p>
+  </div>
+  <div class="fig" data-fig="scale" style="left:660px;top:170px;width:840px;height:360px"></div>
+  <div class="ours step" style="left:660px;top:580px;width:840px">A real 400-page manual would be far larger than our 13,352 tokens. We did not measure one, and we did not test where the model’s context window runs out.</div>
+  <div class="cap" style="left:660px;top:700px;width:840px"><b>Fig. 9.</b> <code>logs/answers_eval.json → summary.full, .company, .rag</code>; corpus sizes from <code>logs/retrieval_eval.json</code>.</div>
+</section>
+
+<!-- ============================================================ PART 3 -->
+<section class="slide part" data-num="3">
+  <div class="center"><div class="num">Part three</div><h1>Retrieval</h1><p class="lede">Find the few paragraphs that answer, and send only those.</p></div>
+</section>
+
+<section class="slide" data-plate="Retrieval, in One Picture">
+  <div class="pic" style="left:100px;top:110px;width:1040px;height:580px"><img src="figs/retrieval_pipeline.png" alt="The retrieval pipeline"></div>
+  <div class="col" style="left:1180px;width:340px;top:130px">
+    <div class="def"><b>Retrieval</b>Picking, from all the documents, the few passages most likely to answer this question.</div>
+    <p class="qa step">Once: cut the documents and index them two ways.</p>
+    <p class="qa step">Every question: search both indexes, fuse, rerank, keep the top 4.</p>
+    <p class="qa step">We now build each box, left to right.</p>
+  </div>
+  <div class="cap" style="left:100px;top:710px;width:1040px"><b>Fig. 10.</b> The pipeline behind <code>search_policy</code> (<code>bahi/agent/retrieval.py</code>).</div>
+</section>
+
+<section class="slide" data-plate="Chunking">
+  <div class="col" style="width:470px">
+    <h2>Cutting the documents</h2>
+    <div class="def"><b>Chunk</b>A piece of a document small enough to be one idea, with enough context to stand on its own.</div>
+    <p class="qa step">The naive cut: windows of N words. Move the slider and watch where §6.2 (green underline) lands.</p>
+    <p class="qa step">The better cut for a policy: <b>one clause per chunk</b>, whole, with its heading. Its id is its citation.</p>
+  </div>
+  <div class="fig" data-fig="chunker" style="left:620px;top:115px;width:880px;height:680px"></div>
+</section>
+
+<section class="slide" data-plate="One Chunk, Zoomed In">
+  <div class="col" style="width:500px">
+    <h2>One chunk, zoomed in</h2>
+    <p class="qa">Besides its words, each chunk carries five things:</p>
+    <ul class="legend">
+      <li class="step"><span class="n">1</span><span>an <b>id</b> that is the citation;</span></li>
+      <li class="step"><span class="n">2</span><span>a <b>heading path</b>, searched with the text;</span></li>
+      <li class="step"><span class="n">3</span><span>a <b>version</b> and <b>effective date</b>, for freshness;</span></li>
+      <li class="step"><span class="n">4</span><span>an <b>audience</b>, for who may read it;</span></li>
+      <li class="step"><span class="n">5</span><span>a <b>status</b>: in force, replaced, or not yet.</span></li>
+    </ul>
+  </div>
+  <div class="fig" data-fig="chunkzoom" style="left:660px;top:150px;width:840px;height:560px"></div>
+  <div class="cap" style="left:660px;top:730px;width:840px"><b>Fig. 11.</b> The chunker cut the corpus into 251 chunks; Kavita’s index holds 247 (<code>logs/retrieval_eval.json</code>).</div>
+</section>
+
+<section class="slide" data-plate="Clauses or Windows, Measured">
+  <div class="col" style="width:470px">
+    <h2>Clauses or windows?</h2>
+    <p class="qa">33 of our test questions have a known right clause. Does a search find it, whole, in its top 5?</p>
+    <p class="qa step">By clause, more often, for every search method. Windows lose most with embeddings, which blur a window that mixes three rules.</p>
+    <p class="qa step">And a window has no clause id, so the answer could not cite it.</p>
+  </div>
+  <div class="fig" data-fig="fixsec" style="left:640px;top:170px;width:860px;height:520px"></div>
+  <div class="cap" style="left:640px;top:720px;width:860px"><b>Fig. 12.</b> <code>logs/retrieval_eval.json → fixed_vs_section, summary</code>.</div>
+</section>
+
+<section class="slide" data-plate="Keyword Search: Words In Common">
+  <div class="col" style="width:460px">
+    <h2>Keyword search</h2>
+    <p class="qa">The oldest idea: a chunk that shares the question’s words is probably about it.</p>
+    <p class="qa step">First, turn the question into <span class="term">terms</span>: lower case, drop the small words, cut plurals.</p>
+    <p class="qa step">We teach it on the question as Suresh would ask it (scenario 1). We come back to Kavita’s own words in Part four.</p>
+  </div>
+  <div class="fig" data-fig="tokens" style="left:620px;top:170px;width:880px;height:560px"></div>
+</section>
+
+<section class="slide" data-plate="BM25, Step 1: Repeats Help Less and Less">
+  <div class="col" style="width:470px">
+    <h2>Step 1: counting, with a ceiling</h2>
+    <p class="qa">A word that appears twice is more telling than once, but not twice as telling.</p>
+    <p class="qa step">BM25 bends the count: tf·(k₁+1) / (tf + k₁·L). It rises fast, then flattens at k₁+1. Slide k₁.</p>
+    <p class="qa step"><b>L</b> is the chunk’s length against the average. A long chunk mentions everything a little, so its words count less. Slide it.</p>
+  </div>
+  <div class="fig" data-fig="tfsat" style="left:660px;top:150px;width:840px;height:560px"></div>
+  <div class="cap" style="left:660px;top:730px;width:840px"><b>Fig. 13.</b> k₁ = 1.2, b = 0.75 in <code>retrieval.BM25</code>. The length slider starts at §6.2’s own: 47 terms against an average of 33.9.</div>
+</section>
+
+<section class="slide" data-plate="BM25, Step 2: Rare Words Count More">
+  <div class="col" style="width:470px">
+    <h2>Step 2: rare words count more</h2>
+    <p class="qa">“supplier” is in many chunks, so finding it says little. “litre” is in few.</p>
+    <div class="code step" style="font-size:17px;white-space:pre-wrap">idf(t) = ln(1 + (N − nₜ + ½) / (nₜ + ½))
+N  = 247 chunks Kavita may read
+nₜ = chunks that contain t</div>
+    <p class="qa step">These are the real counts in Kavita’s index.</p>
+  </div>
+  <div class="fig" data-fig="idf" style="left:660px;top:140px;width:840px;height:620px"></div>
+</section>
+
+<section class="slide" data-plate="BM25, Step 3: The Score for §6.2">
+  <div class="col" style="width:470px">
+    <h2>Step 3: add it up</h2>
+    <div class="code" style="font-size:15px">BM25(q, d) = Σₜ idf(t) · tf·(k₁+1)
+     / (tf + k₁·(1 − b + b·|d|/avgdl))</div>
+    <p class="qa step">For §6.2, term by term, with the real numbers.</p>
+    <p class="qa step">Six words earn points. The sum is §6.2’s score for this question.</p>
+    <div class="def step"><b>BM25</b>A keyword score: rare shared words count most, repeats saturate, long chunks are discounted.</div>
+  </div>
+  <div class="fig" data-fig="bm25work" style="left:660px;top:140px;width:840px;height:620px"></div>
+</section>
+
+<section class="slide" data-plate="BM25 Ranks Every Chunk">
+  <div class="col" style="width:460px">
+    <h2>BM25 ranks every chunk</h2>
+    <p class="qa">The same sum for all 247 chunks, highest first.</p>
+    <p class="qa step">§6.2 comes <b>fourth</b>.</p>
+    <p class="qa step">First is Supplier Policy §4.2, helped by <b>“better”</b>. Kavita meant a better price. §4.2 says “grade 304 or better”. Keywords cannot tell meanings apart.</p>
+  </div>
+  <div class="fig" data-fig="bm25" style="left:620px;top:140px;width:880px;height:620px"></div>
+  <div class="cap" style="left:620px;top:770px;width:880px"><b>Fig. 14.</b> Real BM25 scores, <code>logs/retrieval_eval.json → s1.bm25</code>.</div>
+</section>
+
+<section class="slide" data-plate="Embeddings for Search">
+  <div class="col" style="width:460px">
+    <h2>Embeddings, again</h2>
+    <p class="qa">In Lecture 2 an <span class="term">embedding</span> turned a token into a list of numbers. An embedding model does it for a whole passage: ours, bge-small-en-v1.5, gives 384 numbers.</p>
+    <p class="qa step">Passages that mean similar things get similar lists. Each dot is one real chunk, squeezed from 384 numbers to 2. The star is a question.</p>
+    <p class="qa step">It runs on a CPU, needs no key, and gives the same numbers every run.</p>
+  </div>
+  <div class="fig" data-fig="embed" style="left:640px;top:120px;width:860px;height:680px"></div>
+</section>
+
+<section class="slide" data-plate="Cosine Similarity, in Two Dimensions">
+  <div class="col" style="width:520px">
+    <h2>Cosine similarity</h2>
+    <div class="def"><b>Cosine similarity</b>How closely two lists of numbers point the same way: their dot product divided by both lengths. 1 = same direction, 0 = unrelated.</div>
+    <p class="qa step">Turn the angle. Length does not matter; only direction does.</p>
+    <p class="qa step">That is why it suits meaning: a long clause and a short question can still point the same way.</p>
+  </div>
+  <div class="fig" data-fig="cos2d" style="left:780px;top:130px;width:720px;height:660px"></div>
+</section>
+
+<section class="slide" data-plate="Cosine Similarity, for Real">
+  <div class="col" style="width:440px">
+    <h2>384 numbers, added up</h2>
+    <p class="qa">The same formula, on the real vectors of the question and §6.2.</p>
+    <p class="qa step">Multiply them dimension by dimension; add the products. Blue pushes towards “same”, ember away.</p>
+    <p class="qa step">Over all 384, §6.2 gets 0.7595: the highest of all 247 chunks for this question.</p>
+  </div>
+  <div class="fig" data-fig="cosreal" style="left:620px;top:120px;width:880px;height:640px"></div>
+  <div class="cap" style="left:620px;top:780px;width:880px"><b>Fig. 15.</b> Vectors from <code>logs/retrieval_eval.json → s1.qvec, s1.c62vec</code>.</div>
+</section>
+
+<section class="slide" data-plate="Where Each Method Goes Blind">
+  <div style="position:absolute;left:100px;right:100px;top:110px">
+    <h2 style="font-size:50px">Where each method goes blind</h2>
+    <p class="qa">Rank of the right clause among Kavita’s 247 chunks.</p>
+    <div class="fig" data-fig="blind" style="position:relative;width:100%;height:220px"></div>
+    <div class="ba" style="position:relative;left:0;right:0;top:20px">
+      <div class="card bf step"><span class="tag bf">Keywords miss meaning</span>“better price” matched “grade 304 or better”. BM25 put §6.2 fourth.</div>
+      <div class="card bf step"><span class="tag bf">Embeddings miss codes</span><code>ERR-PO-0412</code> is letters and digits, not a meaning. Embeddings did not find §17.2 in their top 10. BM25 found it second.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-plate="Hybrid Search: Reciprocal Rank Fusion">
+  <div class="col" style="width:470px">
+    <h2>Use both: fuse the ranks</h2>
+    <p class="qa">BM25 scores are around 20; cosines around 0.7. You cannot add them.</p>
+    <div class="def step"><b>Reciprocal rank fusion</b>Each list gives an item 1 / (k + its rank). Add them up. Ranks, not scores, so units do not matter.</div>
+    <p class="qa step">§6.2: rank 4 in BM25, rank 1 in vectors → 1/64 + 1/61 = 0.03202. Try a different k.</p>
+  </div>
+  <div class="fig" data-fig="rrf" style="left:640px;top:150px;width:860px;height:560px"></div>
+  <div class="cap" style="left:640px;top:720px;width:860px"><b>Fig. 16.</b> Top 20 from each list, <code>logs/retrieval_eval.json → s1.hybrid</code>.</div>
+</section>
+
+<section class="slide" data-plate="Reranking">
+  <div class="pic" style="left:100px;top:120px;width:900px;height:502px"><img src="figs/bi_vs_cross.png" alt="Embedding model versus reranker"></div>
+  <div class="col" style="left:1040px;width:470px;top:130px">
+    <h2 style="font-size:46px">Rerank the top 20</h2>
+    <div class="def"><b>Reranker</b>A model that reads the question and one passage together and scores how well the passage answers it.</div>
+    <p class="qa step">An embedding reads each text alone. A reranker sees both at once, so it can tell “better price” from “grade 304 or better”.</p>
+    <p class="qa step">Too slow for 247 chunks; fine for the fused top 20. Ours: ms-marco MiniLM, on a CPU.</p>
+  </div>
+  <div class="cap" style="left:100px;top:640px;width:900px"><b>Fig. 17.</b> Its score is a logit: 0 is even odds, below 0 probably not relevant.</div>
+</section>
+
+<section class="slide" data-plate="Four Rankings, One Question">
+  <div class="col" style="width:420px">
+    <h2>Four rankings</h2>
+    <p class="qa">Same question, real scores. Each step moves §6.2.</p>
+    <p class="qa step">BM25: 4th. Embeddings: 1st.</p>
+    <p class="qa step">Fused: 2nd, just behind §4.1.</p>
+    <p class="qa step">Reranked: 1st, and the only clause above 0.</p>
+  </div>
+  <div class="fig" data-fig="rankings" style="left:580px;top:115px;width:920px;height:680px"></div>
+</section>
+
+<section class="slide" data-plate="Ranking, Measured">
+  <div class="col" style="width:460px">
+    <h2>Ranking, measured</h2>
+    <p class="qa">All 33 questions with a known right clause. No chat model involved, so it is free to measure: do it every time you change the chunker.</p>
+    <div class="def step"><b>recall@k</b>The share of questions whose right clause is in the top k results.</div>
+    <div class="measured step">Hybrid + rerank put the right clause first for 28 of 33, and in the top 5 for all 33. Neither method alone got all 33 into the top 5.</div>
+  </div>
+  <div class="fig" data-fig="recall" style="left:620px;top:150px;width:880px;height:580px"></div>
+  <div class="cap" style="left:620px;top:750px;width:880px"><b>Fig. 18.</b> <code>logs/retrieval_eval.json → summary</code>.</div>
+</section>
+
+<section class="slide" data-plate="Check Yourself">
+  <div class="col w" style="width:1300px">
+    <h2>Check yourself</h2>
+    <ol class="legend check">
+      <li><span class="n">1</span><span>Why does BM25 give “litre” more weight than “supplier”?<div class="ans step">Fewer chunks contain it, so its idf is higher: finding it says more.</div></span></li>
+      <li><span class="n">2</span><span>A question asks about “ERR-SCR-0221”. Which search is more likely to find the right clause, and why?<div class="ans step">BM25: the code is an exact string. Embeddings carry meaning, and a code has little.</div></span></li>
+      <li><span class="n">3</span><span>Why fuse ranks rather than add the scores?<div class="ans step">The scores are in different units (BM25 about 20, cosine about 0.7). Ranks are comparable.</div></span></li>
+      <li><span class="n">4</span><span>Why not rerank all 247 chunks?<div class="ans step">A reranker reads each pair together, one model run per chunk. The fused top 20 is cheap enough.</div></span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================================================ PART 4 -->
+<section class="slide part" data-num="4">
+  <div class="center"><div class="num">Part four</div><h1>RAG, end to end</h1><p class="lede">Retrieve, augment the prompt, generate. On Kavita’s own words.</p></div>
+</section>
+
+<section class="slide" data-plate="Kavita's Words, Not the Rule's">
+  <div class="col" style="width:470px">
+    <h2>Her words, not the rule’s</h2>
+    <p class="qa">Now Kavita’s real question goes into the pipeline we just built.</p>
+    <p class="qa step">Her words: gaskets, Shakti Seals, quote. The rule’s words: food, certificate, supplier. They share one: <i>gasket</i>.</p>
+    <p class="qa step">The reranker scores every candidate below 0. <code>search_policy</code> says: “not in the documents”.</p>
+    <div class="measured step">The pipeline is right 40 of 40 on questions that use the rule’s words. On Kavita’s, it found nothing.</div>
+  </div>
+  <div class="fig" data-fig="gap" style="left:640px;top:130px;width:860px;height:660px"></div>
+</section>
+
+<section class="slide" data-plate="Our First Ask Rasoi Missed It Too">
+  <div class="col" style="width:470px">
+    <h2>Our first try missed it too</h2>
+    <p class="qa">We gave Ask Rasoi <code>search_policy</code> and let the model write its own searches. Scrub through the real run.</p>
+    <p class="qa step">Four searches. None says “food”. §6.2 never came back.</p>
+    <p class="qa step">The reply cites three real clauses, all true, and misses the one that decides the answer. Correct citations are not the same as the right answer.</p>
+  </div>
+  <div class="fig" data-fig="trace0" style="left:620px;top:120px;width:880px;height:690px"></div>
+</section>
+
+<section class="slide" data-plate="Writing the Search Query">
+  <div class="col" style="width:470px">
+    <h2>Writing the search</h2>
+    <p class="qa">What Suresh knows and the model did not: <b>Rasoi makes pressure cookers, so many of the parts it buys touch food.</b></p>
+    <p class="qa step">One long query with that line: §6.2 came first, but scored −1.25, under the cut. One query mixing four topics reads as a poor match for every clause.</p>
+    <p class="qa step">One short query per rule: §6.2 comes back at 3.94. This is <span class="term">query rewriting</span>.</p>
+  </div>
+  <div class="fig" data-fig="rewrite" style="left:620px;top:130px;width:880px;height:660px"></div>
+</section>
+
+<section class="slide" data-plate="RAG on Kavita's Question, Step by Step">
+  <div class="col" style="width:420px">
+    <h2>RAG, step by step</h2>
+    <div class="def"><b>RAG</b>Retrieval-augmented generation: retrieve the clauses, add them to the prompt, let the model write the answer from them.</div>
+    <p class="qa step">The queries and the clauses they found.</p>
+    <p class="qa step">The exact prompt the model read: 559 tokens, 777 with its instructions.</p>
+    <p class="qa step">The answer, and the citation check.</p>
+  </div>
+  <div class="fig" data-fig="ragstep" style="left:580px;top:115px;width:920px;height:560px"></div>
+  <div class="cap" style="left:580px;top:700px;width:920px"><b>Fig. 19.</b> <code>logs/finding62.json → rewrite</code>. These calls were recorded after the Gemini prepaid credit ran out on 28 Oct, so they reached the same model through OpenRouter.</div>
+</section>
+
+<section class="slide" data-plate="Citations">
+  <div class="col" style="width:520px">
+    <h2>A citation is a key</h2>
+    <div class="def"><b>Citation</b>The id of the clause an answer relies on, written next to the claim: [POL-PUR-001 §6.2].</div>
+    <p class="qa step">Because each chunk’s id <i>is</i> its citation, a citation is not decoration. It is something we can look up.</p>
+    <p class="qa step">Kavita can click it and read the clause. Rohit can check the answer before he approves. Audit can trace it a year later.</p>
+  </div>
+  <div class="clause step" style="position:absolute;left:720px;top:220px;width:780px;font-size:21px"><span class="id">What the answer said</span>“… gaskets are food-contact parts and may only be bought from a supplier holding a valid food-grade certificate on file in Bahi <span class="cite">POL-PUR-001 §6.2</span> <span class="cite">POL-SUP-003 §4.1</span> …”</div>
+  <div class="card step" style="position:absolute;left:720px;top:470px;width:780px;font-size:21px"><span class="tag nt">Two questions to ask of every citation</span>Does the clause exist? Was it in front of the model when it wrote the answer?</div>
+</section>
+
+<section class="slide" data-plate="Checking Citations">
+  <div class="col" style="width:600px">
+    <h2>Checking them, in code</h2>
+    <div class="code" style="font-size:15.5px">CITE = r"((?:POL|MAN|AMD|HR)-[A-Z0-9-]+)\s*§\s*(\d+(?:\.\d+)?)"
+
+<span class="k">def</span> check_citations(answer, context_ids, corpus_ids):
+    cites = extract_citations(answer)
+    <span class="k">return</span> {<span class="s">"invented"</span>:   [c <span class="k">for</span> c <span class="k">in</span> cites <span class="k">if</span> c <span class="k">not in</span> corpus_ids],
+            <span class="s">"ungrounded"</span>: [c <span class="k">for</span> c <span class="k">in</span> cites <span class="k">if</span> c <span class="k">in</span> corpus_ids
+                                    <span class="k">and</span> c <span class="k">not in</span> context_ids]}</div>
+    <p class="qa step" style="margin-top:16px"><b>Invented:</b> no such clause. <b>Ungrounded:</b> a real clause the model never received: a lucky guess.</p>
+    <div class="measured step" id="cite-measured"></div>
+  </div>
+  <div class="fig" data-fig="checker" style="left:760px;top:150px;width:740px;height:560px"></div>
+  <div class="cap" style="left:760px;top:730px;width:740px"><b>Fig. 20.</b> The second answer was edited by us, by hand, to show the check firing.</div>
+</section>
+
+<section class="slide" data-plate="When the Answer Is Not in Any Document">
+  <div class="col" style="width:520px">
+    <h2>Rules in documents, facts in Bahi</h2>
+    <p class="qa">“How many gaskets do we have?” has an answer: 54,000. It is in Bahi’s stock table, and it changes every hour. No document holds it.</p>
+    <p class="qa step">Can a low score tell us “not in the documents”? Each dot is one question’s best reranker score.</p>
+    <p class="qa step">The lowest answerable question scored 1.61: scenario 1 itself. Five of seven unanswerable ones scored above 0. No line separates them.</p>
+    <p class="qa step">So the cut only trims junk. Saying “the documents do not say” is the model’s job, told to in its instructions.</p>
+  </div>
+  <div class="fig" data-fig="tau" style="left:680px;top:200px;width:820px;height:330px"></div>
+  <div class="cap" style="left:680px;top:560px;width:820px"><b>Fig. 21.</b> <code>logs/retrieval_eval.json → tau</code>. Live facts (stock, budget, status) come from Bahi’s tools: Lecture 4.</div>
+</section>
+
+<section class="slide" data-plate="Check Yourself">
+  <div class="col w" style="width:1300px">
+    <h2>Check yourself</h2>
+    <ol class="legend check">
+      <li><span class="n">1</span><span>The retriever is right on 40 of 40 test questions. Why did it miss Kavita’s?<div class="ans step">Her words never name the rule (food, certificate). Retrieval finds text that looks like the question. The test questions used the rule’s words.</div></span></li>
+      <li><span class="n">2</span><span>An answer cites [POL-PUR-001 §6.2], a real clause, but §6.2 was not in its prompt. Is that fine?<div class="ans step">No. It is ungrounded: the model guessed a real id. Next time it may guess wrong.</div></span></li>
+      <li><span class="n">3</span><span>Why search one short query per rule rather than one long one?<div class="ans step">A reranker scores the pair. A query mixing four topics matches no single clause well; our long query put §6.2 under the cut.</div></span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================================================ PART 5 -->
+<section class="slide part" data-num="5">
+  <div class="center"><div class="num">Part five</div><h1>The LLM wiki</h1><p class="lede">Compile the documents once, into pages a model can browse.</p></div>
+</section>
+
+<section class="slide" data-plate="Compile Once, Read Many Times">
+  <div class="pic" style="left:100px;top:110px;width:960px;height:536px"><img src="figs/wiki_vs_rag.png" alt="LLM wiki versus RAG"></div>
+  <div class="col" style="left:1100px;width:410px;top:120px">
+    <div class="def"><b>LLM wiki</b>Pages about each topic, written once by a model from the documents, every rule cited, with an index. Andrej Karpathy’s idea.</div>
+    <p class="qa step">The model does the reading <b>before</b> anyone asks. A code check lints it: every citation must exist, every link must resolve.</p>
+    <p class="qa step">At question time it reads the index, picks up to three pages, and answers.</p>
+  </div>
+  <div class="cap" style="left:100px;top:665px;width:960px"><b>Fig. 22.</b> <code>retrieval.Wiki</code>: <code>compile()</code>, <code>update()</code>, <code>answer()</code>.</div>
+</section>
+
+<section class="slide" data-plate="Eighteen Pages, Linked">
+  <div class="col" style="width:430px">
+    <h2>Eighteen pages, linked</h2>
+    <p class="qa">The wiki our compile wrote. A circle is a page; a line is a link the model wrote. Click a page.</p>
+    <p class="qa step">The HR page is compiled on its own, from HR sources only, with no links: a restricted page must not be one click from an open one.</p>
+    <p class="measured step">Compiling took 21 model calls: 52,132 tokens in, 22,253 out, ₹8.17, once. The index a question reads first is 772 tokens.</p>
+  </div>
+  <div class="fig" data-fig="wikigraph" style="left:590px;top:120px;width:910px;height:640px"></div>
+  <div class="cap" style="left:590px;top:770px;width:910px"><b>Fig. 23.</b> <code>bahi/wiki/</code>, compiled 27 Oct (<code>logs/v2_wiki_compile.json</code>, copied from the v2 run).</div>
+</section>
+
+<section class="slide" data-plate="The Wiki on Kavita's Question">
+  <div class="col" style="width:470px">
+    <h2>The wiki finds it at once</h2>
+    <p class="qa">Same question, Kavita’s own words, no rewriting.</p>
+    <p class="qa step">The model reads the index, sees a page called “Food-grade compliance”, and knows that gaskets for cookers belong there. A search engine cannot make that jump; a model reading a table of contents can.</p>
+    <p class="qa step">It cites §6.2, §6.1, §6.4 and the amendment. All grounded.</p>
+  </div>
+  <div class="fig" data-fig="wikishakti" style="left:640px;top:140px;width:860px;height:620px"></div>
+  <div class="cap" style="left:640px;top:770px;width:860px"><b>Fig. 24.</b> <code>logs/finding62.json → wiki</code>.</div>
+</section>
+
+<section class="slide" data-plate="Wiki or RAG?">
+  <div style="position:absolute;left:100px;right:100px;top:105px">
+    <h2 style="font-size:50px;margin-bottom:14px">Wiki or RAG?</h2>
+    <table class="t" style="font-size:22px">
+      <thead><tr><th></th><th>RAG</th><th>LLM wiki</th></tr></thead>
+      <tbody>
+        <tr class="step"><td><b>Work before any question</b></td><td>Chunk and index: no model calls</td><td>Compile: 21 model calls, ₹8.17</td></tr>
+        <tr class="step"><td><b>Per question</b></td><td>1 call, 579 tokens in (measured mean)</td><td>2 calls, 2,802 tokens in</td></tr>
+        <tr class="step"><td><b>Kavita’s own words</b></td><td>missed until the model rewrote the query</td><td>found §6.2 from the index</td></tr>
+        <tr class="step"><td><b>When a rule changes</b></td><td>re-index the amendment’s 6 chunks, no model calls</td><td>recompile the 1 page it touches (2,221 tokens in); forget, and it is stale</td></tr>
+        <tr class="step"><td><b>What can go wrong</b></td><td>the search misses a clause</td><td>the page picker misses a page; a page freezes old wording</td></tr>
+      </tbody>
+    </table>
+    <p class="qa step" style="margin-top:18px">Ask Rasoi uses RAG behind <code>search_policy</code>, and the wiki is a good second opinion. Many teams keep both.</p>
+  </div>
+</section>
+
+<!-- ============================================================ PART 6 -->
+<section class="slide part" data-num="6">
+  <div class="center"><div class="num">Part six</div><h1>Who may read what, since when</h1><p class="lede">Access control and freshness.</p></div>
+</section>
+
+<section class="slide" data-plate="Access Control">
+  <div class="pic" style="left:100px;top:120px;width:900px;height:502px"><img src="figs/filter_first.png" alt="Filter first versus filter afterwards"></div>
+  <div class="col" style="left:1040px;width:470px;top:130px">
+    <h2 style="font-size:46px">Filter first</h2>
+    <div class="def"><b>Clearance</b>The set of audiences a person’s role may read. Kavita, PUR-EXEC: all staff and purchase. Not HR.</div>
+    <p class="qa step">Build each person’s index from only what they may read. What is not in her index cannot reach her context window, whatever the prompt says.</p>
+    <div class="measured step" id="leak-measured"></div>
+  </div>
+  <div class="cap" style="left:100px;top:640px;width:900px"><b>Fig. 25.</b> <code>Retriever(permissions=True)</code> filters by <code>audience</code> before ranking.</div>
+</section>
+
+<section class="slide" data-plate="Freshness">
+  <div class="col" style="width:480px">
+    <h2>Rules change</h2>
+    <p class="qa">An amendment names the clause it replaces and the date it starts. The retriever reads that date against Bahi’s clock.</p>
+    <p class="qa step">In force: the old clause leaves the index. Not yet in force: both stay, each labelled with its dates. Drag the date.</p>
+    <div class="measured step" id="fresh-measured"></div>
+  </div>
+  <div class="fig" data-fig="fresh" style="left:640px;top:140px;width:860px;height:620px"></div>
+</section>
+
+<!-- ============================================================ PART 7 -->
+<section class="slide part" data-num="7">
+  <div class="center"><div class="num">Part seven</div><h1>The measurement</h1><p class="lede">40 questions, five ways, graded by code.</p></div>
+</section>
+
+<section class="slide" data-plate="The Experiment">
+  <div style="position:absolute;left:100px;right:100px;top:105px">
+    <h2 style="font-size:50px;margin-bottom:10px">The experiment</h2>
+    <p class="qa" style="margin-bottom:10px">40 questions asked as Kavita: 20 policy, 8 manual, 5 where an amendment matters, 2 asking for HR’s page, 5 traps (live facts no document holds). One model, gemini-3.8-flash, the same answer instructions. Graded by code: facts by pattern, citations by clause id. No model judge.</p>
+    <table class="t" style="font-size:21px">
+      <thead><tr><th>System</th><th>What goes into the context window</th><th>Calls</th></tr></thead>
+      <tbody>
+        <tr class="step"><td><b>Model alone</b></td><td>The question only.</td><td class="n">1</td></tr>
+        <tr class="step"><td><b>Paste Kavita’s documents</b></td><td>All 7 she may read, every time (13,352 tokens).</td><td class="n">1</td></tr>
+        <tr class="step"><td><b>Paste the whole company’s</b></td><td>Purchasing plus the 8 module kits, 49 documents (28,173 tokens).</td><td class="n">1</td></tr>
+        <tr class="step"><td><b>RAG</b></td><td><code>search_policy</code>: top 4 clauses after hybrid search and rerank, filtered and dated.</td><td class="n">1</td></tr>
+        <tr class="step"><td><b>LLM wiki</b></td><td>The index, then up to three pages.</td><td class="n">2</td></tr>
+      </tbody>
+    </table>
+    <p class="small step" style="margin-top:12px">Script <code>experiments/answers_eval.py</code>; questions and grader <code>experiments/questions.py</code> (from v2, unchanged); re-run on 28 Oct with today’s code.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="What We Measured">
+  <div style="position:absolute;left:100px;right:100px;top:100px">
+    <h2 style="font-size:48px;margin-bottom:12px">What we measured</h2>
+    <div class="fig" data-fig="results" style="position:relative;width:100%;height:600px"></div>
+    <p class="step" style="display:none"></p><p class="step" style="display:none"></p><p class="step" style="display:none"></p><p class="step" style="display:none"></p><p class="step" style="display:none"></p>
+  </div>
+  <div class="cap" style="left:100px;top:790px;width:1400px"><b>Fig. 26.</b> <code>logs/answers_eval.json → summary</code>. “Right clause in context”: 100% by definition when everything is pasted. The whole-company paste’s 2 “invented” are POL-FIN-024 §1, a real finance-kit clause the purchasing checker does not know.</div>
+</section>
+
+<section class="slide" data-plate="Reading the Results">
+  <div style="position:absolute;left:100px;right:100px;top:105px">
+    <h2 style="font-size:48px;margin-bottom:14px">Reading the results</h2>
+    <div class="ba" style="position:relative;left:0;right:0;top:0;grid-template-columns:1fr 1fr 1fr">
+      <div class="card af step"><span class="tag af">RAG</span><h3>Right, and small</h3>40 of 40, the right clause cited on all 33, 579 tokens in per answer, ₹1.92 for all 40. No leaks, no invented citations.</div>
+      <div class="card step"><span class="tag nt">Pasting</span><h3>Right, and 23 to 49 times the tokens</h3>40 of 40 both ways. Kavita’s documents: ₹25.11 for 40. The whole company: ₹51.21, and two answers cited the wrong department’s document.</div>
+      <div class="card bf step"><span class="tag bf">Wiki · model alone</span><h3>One miss · seven of 40</h3>The wiki missed P14: its page picker chose three pages without §9.2. The model alone got 7 of 40, all of them refusals, and cited nothing.</div>
+    </div>
+    <div class="ours step" style="position:relative;margin-top:18px;width:1200px">These questions use the rules’ own words. Kavita’s did not, and that is where RAG needed help (Part four). A question set written by real users would be harder; ours is not yet.</div>
+  </div>
+</section>
+
+<!-- ============================================================ PART 8 -->
+<section class="slide part" data-num="8">
+  <div class="center"><div class="num">Part eight</div><h1>Ask Rasoi gains its memory</h1><p class="lede">Everything today, behind one tool.</p></div>
+</section>
+
+<section class="slide" data-plate="search_policy in the Toolbox">
+  <div class="col" style="width:440px">
+    <h2>One tool</h2>
+    <p class="qa">Ask Rasoi’s toolbox has one folder per business activity. This is the knowledge one: <code>bahi/toolbox/search_policy/</code>.</p>
+    <p class="qa step"><code>tool.json</code> tells the model what the tool does. <code>tool.py</code> runs it, as the signed-in user, so Kavita’s clearance applies.</p>
+    <p class="qa step">How a model decides to call a tool is Lecture 4. Today, watch it happen.</p>
+  </div>
+  <div class="json" id="tooljson" style="position:absolute;left:600px;top:120px;width:900px;font-size:14px;white-space:pre-wrap"></div>
+  <div class="code" id="toolpy" style="position:absolute;left:600px;top:600px;width:900px;font-size:14px;white-space:pre-wrap"></div>
+</section>
+
+<section class="slide" data-plate="Ask Rasoi Answers Kavita">
+  <div class="col" style="width:470px">
+    <h2>Kavita asks again</h2>
+    <p class="qa">Ask Rasoi at the knowledge stage, with the one line of company context. Scrub the real run.</p>
+    <p class="qa step">Third search: “food contact supplier approval test report”. §6.2 comes back.</p>
+    <p class="qa step">The reply cites §6.2 first, says what to check in Bahi, and admits what it cannot see yet. 0 invented citations.</p>
+    <p class="step" style="margin-top:20px"><a class="live" href="https://rajatworkspace--rasoi-experience.us-east.modal.run/after?stage=knowledge" target="_blank" rel="noopener">Try it live · Ask Rasoi, knowledge stage</a></p>
+  </div>
+  <div class="fig" data-fig="trace1" style="left:620px;top:110px;width:880px;height:700px"></div>
+</section>
+
+<section class="slide" data-plate="Did the Fix Hurt Anything?">
+  <div class="col" style="width:440px">
+    <h2>Did the line hurt anything?</h2>
+    <p class="qa">One line of context fixed Kavita’s question. Did it break others? Six of the 40, before and after.</p>
+    <p class="qa step">All six right both ways. It searched a little more on the food-grade questions, so they cost a little more.</p>
+    <div class="ours step">Six is a spot check, not a test suite. Lecture 7 builds the suite that runs on every change.</div>
+  </div>
+  <div class="fig" data-fig="check6" style="left:580px;top:170px;width:920px;height:520px"></div>
+  <div class="cap" style="left:580px;top:720px;width:920px"><b>Fig. 27.</b> <code>logs/finding62.json → check6</code>. Trap and HR questions count as right when the reply states no fact and says it cannot see or the documents do not cover it.</div>
+</section>
+
+<section class="slide" data-plate="The Build: NB3">
+  <div class="col" style="width:470px">
+    <h2>The build: NB3</h2>
+    <p class="qa">You build each piece by hand, on Rasoi’s documents.</p>
+    <ol class="legend" style="font-size:21px">
+      <li class="step"><span class="n">1</span><span>A clause chunker</span></li>
+      <li class="step"><span class="n">2</span><span>BM25: idf and the score</span></li>
+      <li class="step"><span class="n">3</span><span>Cosine similarity</span></li>
+      <li class="step"><span class="n">4</span><span>Reciprocal rank fusion</span></li>
+      <li class="step"><span class="n">5</span><span>The RAG prompt</span></li>
+      <li class="step"><span class="n">6</span><span>A citation checker</span></li>
+    </ol>
+    <p class="small step"><span class="nb-ref">NB3</span> Replays with no key and no model download, on free Colab.</p>
+  </div>
+  <div class="code" style="position:absolute;left:640px;top:140px;width:860px;font-size:17px"><span class="c"># Exercise 4: reciprocal rank fusion</span>
+<span class="k">def</span> my_rrf(lists, k=60):
+    out = {}
+    <span class="k">for</span> lst <span class="k">in</span> lists:
+        <span class="k">for</span> rank, item <span class="k">in</span> enumerate(lst, 1):
+            out[item] = out.get(item, 0) + 1 / (k + rank)
+    <span class="k">return</span> out
+
+b_ids = [ret.chunks[i].id <span class="k">for</span> i, _ <span class="k">in</span> ret.bm25_rank(q1)[:20]]
+v_ids = [ret.chunks[i].id <span class="k">for</span> i, _ <span class="k">in</span> ret.vector_rank(q1)[:20]]
+fused = my_rrf([b_ids, v_ids])
+<span class="c"># POL-SUP-003 §4.1  rrf=0.03226  bm25 rank=2  vector rank=2</span>
+<span class="c"># POL-PUR-001 §6.2  rrf=0.03202  bm25 rank=4  vector rank=1</span>
+
+<span class="c"># then Kavita's question: rewrite, search, prompt, answer, check</span>
+rw   = l3.rewrite_queries(SHAKTI, llm)
+hits = l3.multi_search(ps, rw[<span class="s">"queries"</span>])</div>
+</section>
+
+<section class="slide" data-plate="A3: The Memory for Your Module">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:50px">A3: the memory for your module</h2><p class="sub">Due before Lecture 4, Sun 8 Nov. Feeds the 15 retrieval points of the capstone.</p></div>
+  <div class="quad" style="top:260px">
+    <div class="card tall step"><h3>Build</h3><ol>
+      <li>Load and chunk your kit’s documents (<code>bahi/modules/&lt;kit&gt;/docs/</code>).</li>
+      <li>Map its audiences to roles; filter before ranking.</li>
+      <li>Show its stale or amended rule with two dates.</li>
+      <li>Hybrid search + rerank; one tool, <code>search_&lt;kit&gt;_policy</code>.</li>
+      <li>12 questions graded by code; recall@1, @5; RAG vs the model alone.</li>
+    </ol></div>
+    <div class="card step"><h3>Guided track</h3>Use <code>bahi.agent.retrieval</code> as it is. Write the audience map, the questions, the measurements.</div>
+    <div class="card step"><h3>Builder track</h3>Change one part (chunker, embedder, cut, query rewriting, a wiki) and measure before and after.</div>
+  </div>
+</section>
+
+<section class="slide" data-plate="Where We Are">
+  <div class="col" style="width:400px">
+    <h2>Where we are</h2>
+    <p class="qa">Ask Rasoi has a brain <b>and a memory</b>: retrieval with citations, filtered by who is asking, dated to today, behind <code>search_policy</code>.</p>
+    <p class="qa step">What it still cannot do: look in Bahi. It cannot see that Shakti Seals is not in the supplier master, or that Rasoi has 54,000 gaskets.</p>
+  </div>
+  <div class="fig" data-fig="archlit" style="left:540px;top:150px;width:960px;height:536px"></div>
+  <div class="cap" style="left:540px;top:705px;width:960px"><b>Fig. 28.</b> The Ask Rasoi architecture (<code>figures/ask_rasoi_architecture_wide.png</code>), Lecture 3’s piece lit: Knowledge, and its tool.</div>
+</section>
+
+<section class="slide" data-plain="1" style="">
+  <div class="center" style="align-items:center;text-align:center">
+    <div class="kicker">Next time · Lecture 4 · Sun 8 Nov 2026</div>
+    <h1 style="font-size:96px">The Hands</h1>
+    <p class="lede" style="max-width:1050px;margin:22px auto 0">Tools and MCP. Ask Rasoi checks the supplier master and the stock itself, and raises Kavita’s purchase request.</p>
+  </div>
+</section>
+
+</div>
+<script src="figdata.js"></script>
+<script src="figs.js"></script>
+<script>
+/* text filled from the logs (window.L3D, figdata.js) */
+(() => {
+  const D = window.L3D || {}, set = (id, h) => { const e = document.getElementById(id); if (e) e.innerHTML = h; };
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const cite = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>').replace(/((?:POL|MAN|AMD|HR)-[A-Z0-9-]+ §\d+(?:\.\d+)?)/g, '<span class="cite">$1</span>');
+  if (D.full_shakti) set('full-ans-t', cite(D.full_shakti.answer));
+  if (D.eval) {
+    const n = ['closed', 'full', 'company', 'rag', 'wiki'].reduce((a, s) => a + D.eval[s].all.n, 0);
+    const inv = ['closed', 'full', 'rag', 'wiki'].reduce((a, s) => a + D.eval[s].all.invented_cites, 0);
+    const ung = ['closed', 'full', 'company', 'rag', 'wiki'].reduce((a, s) => a + D.eval[s].all.answers_with_ungrounded_cites, 0);
+    set('cite-measured', `Across ${n} graded answers in our 40-question run: ${inv} invented citations from purchasing’s documents, ${ung} ungrounded. The only “not in the corpus” ids were the two finance-kit citations from the whole-company paste.`);
+    const A = D.ablate;
+    set('leak-measured', `Without the filter, HR’s salary chunks reached the top 5 for ${D.leak.without_filter} of the 2 salary questions, and ${A.rag_noperm.hr_leaks} answer gave Kavita a salary figure. With it: ${D.leak.with_filter}.`);
+    set('fresh-measured', `On the 5 amended questions: RAG with dates ${D.eval.rag.by_kind.fresh[0]} of 5, and ${A.rag_nofresh.correct} of 5 even without the date filter, because each amendment says what it replaces. The wiki as it stood before the amendments: ${A.wiki_stale.correct} of 5. What is compiled must be recompiled.`);
+  }
+  if (D.tool_json) { const j = JSON.parse(D.tool_json); const show = { name: j.name, title: j.title, category: j.category, description: j.description, writes: j.writes, input_schema: j.input_schema, example: j.example };
+    set('tooljson', '<span style="color:var(--ink-3)">tool.json (output_schema left out here)</span>\n' + esc(JSON.stringify(show, null, 1))); set('toolpy', '<span class="c"># tool.py</span>\n' + esc(D.tool_py.trim())); }
+})();
+</script>
+<script src="../../engine/plates.js"></script>
+</body>
+</html>

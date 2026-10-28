@@ -1,0 +1,1467 @@
+===== AMD-PUR-2026-03: Amendment 3 to the Purchase Policy v1.0, effective 2026-12-01, amends POL-PUR-001 §3.3 =====
+# Amendment 3 to the Purchase Policy (AMD-PUR-2026-03)
+
+## 1. What changes
+1.1 With effect from 1 December 2026, Purchase Policy POL-PUR-001 §3.3 is replaced by the following:
+"A direct purchase order without a request is allowed only when its gross value, including GST, is ₹25,000 or less."
+1.2 Until 30 November 2026 the limit in §3.3 stays at ₹50,000.
+
+## 2. Why
+2.1 The internal audit of the first half of 2026-27 found 212 direct orders between ₹25,000 and ₹50,000, many of them repeat orders for the same items that should have been planned through requests.
+
+## 3. What changes in Bahi
+3.1 IT will change the direct-order limit in Bahi from ₹50,000 to ₹25,000 on the evening of 30 November 2026 (MAN-PUR-72 §23.4). From 1 December, a direct order above ₹25,000 gross will be refused with ERR-PO-0610.
+3.2 Direct orders saved before 1 December are not affected.
+
+
+===== AMD-SUP-2026-02: Amendment 2 to the Supplier Policy v1.0, effective 2026-09-01, amends POL-SUP-003 §4.4 =====
+# Amendment 2 to the Supplier Policy (AMD-SUP-2026-02)
+
+## 1. What changes
+1.1 With effect from 1 September 2026, Supplier Policy POL-SUP-003 §4.4 is replaced by the following:
+"A food-grade certificate is accepted only if it was issued within the last 12 months, and its valid-to date is at least 60 days after the date the order is placed."
+1.2 A certificate that meets the old rule (issued within 24 months and not expired) but not the new one counts as no certificate for new orders from 1 September 2026. Orders released before that date are not affected.
+
+## 2. Why
+2.1 In July 2026 a gasket lot from a supplier with a 22-month-old test report failed our own migration test. The compound had changed in the meantime. A shorter window, and a margin before expiry, make sure the certificate describes what the supplier is actually making.
+
+## 3. What purchase staff must do
+3.1 Before raising an order for a food-contact part, check the certificate's issue date and its valid-to date against the new rule.
+3.2 The senior buyer runs the certificate-expiry report (MAN-PUR-72 §22.6) on the first working day of each month with 90 days as the window, and writes to every supplier whose food-grade certificate expires inside it.
+3.3 Every other part of POL-SUP-003 §4 stands.
+
+
+===== POL-APR-002: Approval Matrix for Purchasing v3.0, effective 2026-04-01 =====
+# Approval Matrix for Purchasing (POL-APR-002)
+
+## 1. Purpose
+This matrix sets who may approve a purchase request or purchase order, and up to what value. It is the matrix referred to in Purchase Policy §5.2.
+
+## 2. How limits are measured
+2.1 Every limit is a limit on the **gross value including GST** of one document. Freight and packing charged on the order count towards the gross value.
+2.2 A limit is per document, not per day or per supplier.
+2.3 Splitting one requirement into several orders to stay inside a limit is not allowed. Orders for the same item from the same supplier raised within seven days of each other are treated as one requirement.
+
+## 3. The limits
+3.1 Each role's approval limit, gross including GST:
+
+| Role code | Role | Limit (gross incl. GST) |
+|---|---|---|
+| PUR-EXEC | Purchase executive | ₹2,50,000 |
+| PUR-SR | Senior buyer | ₹5,00,000 |
+| PUR-MGR | Purchase manager | ₹10,00,000 |
+| PLANT-HEAD | Plant head | ₹50,00,000 |
+| STORES | Stores | no approval authority |
+
+3.2 A document within the raiser's own limit is approved when it is submitted. Bahi records the raiser as the approver.
+3.3 A document above the raiser's limit goes to the raiser's manager. If the manager's limit does not cover it, it goes on up the line to the first person whose limit does.
+3.4 Above ₹50,00,000 the order needs the Managing Director's written approval outside Bahi. Bahi shows ERR-APR-0009 (no approver found) for such a document; the plant head's office then records the MD's approval.
+
+## 4. Who may not approve
+4.1 Nobody may approve a document they raised (Purchase Policy §5.3). Bahi refuses with ERR-APR-0003.
+4.2 Integration and service accounts (role SYS-ADMIN, for example SVC_AGENT) have no approval authority under this matrix, whatever their technical permissions in Bahi. A document approved by a service account is treated as unapproved and must be cancelled or re-approved by a person.
+4.3 An approver on leave may delegate in writing to someone of the same or a higher role for a stated period. Delegation to a lower role is not allowed.
+
+## 5. Examples
+5.1 Kavita Joshi (purchase executive) raises an order for 20,000 silicone gaskets at ₹11.90: basic ₹2,38,000, GST 18% ₹42,840, gross ₹2,80,840. The gross is above her ₹2,50,000 limit, so the order goes to her manager, Rohit Mehta (purchase manager, limit ₹10,00,000), for approval.
+5.2 The same order at basic value alone (₹2,38,000) would look within her limit. That is why limits are measured on the gross value (§2.1).
+5.3 An order of ₹7,20,000 gross raised by the senior buyer goes to the purchase manager. An order of ₹12,00,000 gross raised by anyone in purchasing goes to the plant head, Anand Patil.
+
+## 6. Review
+6.1 The plant head reviews this matrix every April, and when the organisation changes.
+
+
+===== MAN-DD-72: Bahi ERP 7.2 Data Dictionary, Purchasing v7.2.3, effective 2025-01-15 =====
+# Bahi ERP 7.2 Data Dictionary: Purchasing (MAN-DD-72)
+
+## 1. About the data dictionary
+1.1 This dictionary lists the fields that Bahi's purchasing services send and return, with the legacy field names used in service payloads. Screen labels are given in brackets.
+1.2 Service responses come in an envelope with four fields: rc (return code: S for success, E for error), err_cd (the error code when rc is E), msg (a short message in capitals) and data (the result).
+1.3 Dates in payloads are YYYY-MM-DD. Amounts are in rupees with two decimals. Codes are capitals.
+
+## 2. Common codes
+2.1 ou_cd (Organisation unit): RSW-PUN-01 is the Pune plant; RSW-CHK-01 is the Chakan unit. Both are in Maharashtra (state code MH).
+2.2 state: two-letter state code of a supplier or organisation unit, for example MH (Maharashtra), GJ (Gujarat), WB (West Bengal).
+2.3 status (documents): DR, PA, AP, RL, RJ, CN, CL, as listed in the user manual (MAN-PUR-72 §16.1).
+2.4 status (suppliers): ACTIVE or BLOCKED.
+2.5 uom_cd (UOM): NOS for numbers (pieces), KG for kilograms.
+
+## 3. Item master (itm_*)
+3.1 itm_cd (Item code): the item's code, for example GSK-SIL-05L for the 5-litre silicone gasket.
+3.2 descr (Description): the item's description.
+3.3 food_contact (Food contact): 1 if the part touches food in use, else 0. Set by Quality.
+3.4 category: RAW, COMPONENTS, SPARES or PACKING.
+3.5 active: 1 if the item may be used on new documents.
+3.6 reorder_lvl (Reorder level) and avg_daily_issue (Average daily issue): used by the reorder report and for days of cover.
+
+## 4. Supplier master (sup_*)
+4.1 sup_cd (Supplier code): generated on creation, for example DP-RJK-0042.
+4.2 name, city, state, gstin (GSTIN), pt_cd (Payment terms), status.
+4.3 created_by and created_on: who created the supplier and when. Migrated suppliers show MIGRATION.
+4.4 Certificates (sup_cert): cert_type (FOOD-GRADE, ISO-9001 ...), doc_ref (document reference), valid_to, uploaded_by, uploaded_on.
+4.5 Rate contracts (sup_rate): itm_cd, rate, valid_from, valid_to.
+
+## 5. Purchase request (pr_*)
+5.1 pr_no (Request number): PR/<year>/<five digits>, for example PR/2026/04417.
+5.2 pr_type: STD.
+5.3 cc_cd (Cost centre), need_dt (Need-by date), whs_cd (Warehouse), remarks.
+5.4 est_value (Estimated value): quantity × estimated rate × 1.18.
+5.5 raised_by, raised_on, approved_by.
+
+## 6. Purchase order (po_*)
+6.1 po_no (Order number): PO/<year>/<five digits>, for example PO/2026/01182.
+6.2 po_type (Order type): STD or DIR.
+6.3 pr_no (Source PR), sup_cd, tax_cd (Tax code), pt_cd, cc_cd, need_dt, whs_cd.
+6.4 basic_value, tax_value, gross_value: gross = basic + tax.
+6.5 created_by, created_on, approved_by, approved_on, released_on.
+6.6 client_ref (Client reference): free text an integration may store to find the order again.
+6.7 warn_cd (Warning): for example W-CC-114 when the order was saved as Draft against a closed cost centre.
+6.8 fetch_tok: a token returned by the Fetch service (po_fetch) and required by Save (po_save). It is valid once, for one supplier and item.
+
+## 7. Tax codes
+7.1 GST18-INTRA: CGST 9% + SGST 9%, for a supplier in the same state as the organisation unit.
+7.2 GST18-INTER: IGST 18%, for a supplier in another state.
+7.3 GST12-INTRA and GST12-INTER: the same at 12%.
+
+## 8. Payment terms
+8.1 N30, N45, N60: net 30, 45 or 60 days from the invoice. ADV: advance payment.
+
+## 9. Cost centres and budgets
+9.1 cc_cd, name, status (OPEN or CLOSED), closed_on, owner.
+9.2 budget: amount for the period (for example 2026-Q4) and committed (the gross value of approved and pending orders).
+9.3 available = amount − committed, returned by the budget check service (bud_check).
+
+
+===== POL-PUR-001: Purchase Policy v4.1, effective 2026-04-01 =====
+# Purchase Policy (POL-PUR-001)
+
+## 1. Purpose
+This policy sets out how Rasoi Steel Works buys materials, components and services, so that every rupee is spent with the right approval, from a qualified supplier, against an open budget.
+
+## 2. Scope
+It applies to every purchase made for the Pune plant (RSW-PUN-01) and the Chakan unit (RSW-CHK-01), through Bahi ERP.
+
+## 3. Requests before orders
+3.1 Every purchase starts with a purchase request (PR) in Bahi, except a direct order under §3.3.
+3.2 A purchase request names the item, the quantity, the need-by date, the warehouse and the cost centre that will carry the spend.
+3.3 A direct purchase order without a request is allowed only when its gross value, including GST, is ₹50,000 or less.
+3.4 A purchase order raised against a request may not exceed the requested quantity.
+
+## 4. Cost centres and budgets
+4.1 Every request and order must be charged to an **open** cost centre.
+4.2 Finance closes cost centres at the end of a production programme. A closed cost centre cannot carry new spend. Bahi saves an order against a closed cost centre as a Draft; a Draft order is never sent to the supplier.
+4.3 Before raising an order, check the cost centre's status in Bahi (screen FIN-CC-01) or ask Finance.
+
+## 5. Approval limits
+5.1 Limits apply to the **gross value including GST**, not the basic value.
+5.2 The approval matrix (POL-APR-002) sets each role's limit. An order above the raiser's own limit must be approved by the next person up the line whose limit covers it.
+5.3 Nobody may approve an order they raised.
+5.4 Approval of a purchase request covers the purchase order raised against it, provided the approver's limit covers the order's gross value.
+
+## 6. Supplier qualification
+6.1 Orders may be placed only with suppliers that are **active** in the supplier master.
+6.2 **Parts that come into contact with food** (gaskets, lids, body blanks and any other item marked food-contact in the item master) may be bought only from a supplier holding a **valid food-grade certificate** on file in Bahi. The certificate must be uploaded and checked **before the first order** is placed. An expired certificate counts as no certificate.
+6.3 A new supplier is onboarded under the Supplier Policy (POL-SUP-003) before any order is placed with them.
+6.4 Prefer the supplier with a current rate contract. A cheaper quotation from a new supplier does not by itself justify a change of supplier for a food-contact part.
+
+## 7. Prices
+7.1 Use the rate in the current rate contract. Rates from older orders in the order history are for reference only.
+7.2 Any order at a rate more than 2% above the contract rate needs the manager's written reason in the remarks.
+
+## 8. Tax
+8.1 A supplier in Maharashtra is charged CGST + SGST (tax codes ending -INTRA). A supplier in any other state is charged IGST (tax codes ending -INTER).
+
+## 9. Records
+9.1 Every order must carry the document number Bahi gives it and must be in status Released before the supplier is told to deliver.
+9.2 Purchase staff must not tell a requester that an order has been placed until its status in Bahi is Released.
+
+
+===== POL-SUP-003: Supplier Policy v2.3, effective 2026-04-01 =====
+# Supplier Policy (POL-SUP-003)
+
+## 1. Purpose
+This policy says how a supplier enters the supplier master in Bahi, what papers it must give us, when it is blocked, and how we stop the same supplier being registered twice. It sits under the Purchase Policy (POL-PUR-001 §6).
+
+## 2. Scope
+2.1 It covers every supplier of materials, components, packing and services to the Pune plant (RSW-PUN-01) and the Chakan unit (RSW-CHK-01).
+2.2 It does not cover one-time cash purchases under ₹5,000 made from the petty-cash imprest; those follow the Finance petty-cash note.
+
+## 3. Onboarding a new supplier
+3.1 A new supplier is proposed by a purchase executive or senior buyer, with at least one written quotation and the reason an existing supplier cannot meet the need.
+3.2 Before the supplier is created in Bahi (screen PUR-SUP-01), the proposer must collect: the GST registration certificate (GSTIN), the PAN, a cancelled cheque or bank letter, the MSME certificate if the supplier claims MSME status, and the signed Supplier Code of Conduct.
+3.3 The proposer must search the supplier master first (screen PUR-SUP-03) by name, by city and by GSTIN, and attach the search result to the onboarding file. See §6 on duplicates.
+3.4 The purchase manager approves the onboarding file. Only after that approval may the supplier be created in Bahi.
+3.5 A supplier created in Bahi is ACTIVE from the day it is created, but no order may be placed with it until every document in §3.2 and, for food-contact parts, the certificate in §4 is on file.
+3.6 Onboarding normally takes five working days from a complete file. Urgency is not a reason to skip any step in this section.
+
+## 4. Food-grade certificates
+4.1 A supplier of any part that comes into contact with food (gaskets, lids, body blanks, and any item marked food-contact in the item master) must hold a food-grade certificate. This is the certificate referred to in Purchase Policy §6.2.
+4.2 The certificate must be a test report from a laboratory accredited for food-contact materials (for example an FSSAI-notified laboratory), or a BIS conformity certificate for stainless steel grade 304 or better.
+4.3 The certificate is uploaded in Bahi against the supplier (certificate type FOOD-GRADE) with its document reference and its valid-to date, and checked by the senior buyer before the first order.
+4.4 A food-grade certificate is accepted if it was issued within the last 24 months and its valid-to date has not passed.
+4.5 An expired certificate counts as no certificate. The supplier stays ACTIVE in the master, but no food-contact part may be ordered from it until a new certificate is uploaded and checked.
+4.6 The certificate covers the supplier, not a single item. If the supplier changes the material or the compound of a part (for example a new silicone grade), it must give a fresh test report for that part.
+4.7 Bahi does not stop an order to a supplier without a certificate. The check in this section is done by the person raising the order, and by the approver.
+
+## 5. Blocking and unblocking
+5.1 A supplier is BLOCKED in the master when: it has been replaced by a new code (for example after a merger or a change of GSTIN); it has failed two quality audits in a row; or Finance has asked for a block for unpaid debit notes.
+5.2 A blocked supplier keeps its code and history, but Bahi refuses new orders to it with ERR-SUP-0031.
+5.3 Only the purchase manager may ask IT to unblock a supplier, in writing, with the reason.
+5.4 When a supplier is given a new code, the old code is blocked and renamed "(old code, do not use)". Deccan Polymers' old code DP-RJK-0009 is an example.
+
+## 6. Duplicate suppliers
+6.1 One legal supplier has exactly one active code. The GSTIN is the test of sameness: two records with the same GSTIN are the same supplier.
+6.2 Suppliers are often called by short or slightly different names in quotations and e-mails (for example "Deccan Polymer Industries" for Deccan Polymers). A name that is close to an existing supplier in the same city must be treated as that supplier until shown otherwise.
+6.3 A near-match in a different city or with a different GSTIN is a different supplier (for example Deccan Paints & Inks, Ahmedabad, is not Deccan Polymers, Rajkot).
+6.4 Bahi refuses to create a second supplier with a GSTIN that is already registered (ERR-SUP-0118). It does not catch a duplicate entered without a GSTIN; that check is the proposer's job under §3.3.
+6.5 A duplicate created by mistake must be reported to the purchase manager the same day, blocked, and its open documents moved to the correct code.
+
+## 7. Rate contracts
+7.1 Each regular supplier of a regular item has a rate contract in Bahi with a valid-from and valid-to date.
+7.2 A new rate contract replaces the old one from its valid-from date. Older rates stay in the history for reference only.
+7.3 Rate contracts are reviewed every six months, in March and September.
+
+## 8. Supplier performance
+8.1 The senior buyer reviews each regular supplier every quarter on delivery on time, rejection rate and price.
+8.2 A supplier with a rejection rate above 2% for two quarters in a row is put on watch and visited by Quality.
+
+
+===== MAN-PUR-72: Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3, effective 2025-01-15 =====
+# Bahi ERP 7.2 User Manual: Purchasing (MAN-PUR-72)
+
+## 1. About this manual
+
+### 1.1 Who this manual is for
+This manual is for purchase executives, senior buyers, purchase managers, stores staff and approvers who use the Purchasing module of Bahi ERP 7.2. It describes the screens as they are shipped by Bahi Systems. Your company may have changed field labels, defaults or menus during implementation; where your screen differs from this manual, your company's own instructions apply.
+
+### 1.2 What this manual does not cover
+This manual explains how to use the screens. It does not set your company's purchasing rules. Approval limits, supplier qualification, certificate requirements and budget rules are set by your company's own policies. Bahi enforces some of them (for example approval limits configured against your user) and not others. When the manual says "your company's policy", read your company's policy documents.
+
+### 1.3 Conventions
+1. A field label followed by a red asterisk (*) is mandatory. Bahi will not save the screen while it is empty.
+2. A field with a small F2 button beside it has a lookup. Press F2 with the cursor in the field, or click the button, to open the lookup list.
+3. Grey fields are read-only. They are filled by Bahi when you press Fetch, or when the document is saved.
+4. Messages appear in the status bar at the bottom of the window. Errors are shown in red and begin with ERR-. Warnings begin with W- and are shown in black.
+5. Codes are shown in capitals. Bahi accepts lower case and converts it.
+6. Dates are entered as DD-MM-YYYY on screens and returned as YYYY-MM-DD by services.
+
+### 1.4 Screen codes
+Every screen has a code shown at the right of the title bar, for example PUR-PO-01. The first part is the module (PUR purchasing, INV inventory, FIN finance), the middle part the screen family, and the number the screen within the family. Quote the screen code when you raise a support ticket.
+
+### 1.5 Version history of this manual
+Version 7.2.3 (January 2025) added the Fetch requirement on the order screen (§11.3), the cost-centre warning W-CC-114 (§17.6) and the error catalogue in Chapter 17. Version 7.2.0 (2023) introduced the approval inbox (PUR-POA-04). Versions before 7.0 used a different menu and are not covered.
+
+## 2. Signing in and the main window
+
+### 2.1 Signing in
+Start the Bahi client from the desktop icon. Enter your user ID and password and choose your organisation unit (for example RSW-PUN-01). Your user ID is given to you by your IT department. After three wrong passwords your user ID is locked for 30 minutes; IT can unlock it sooner.
+
+### 2.2 The main window
+The main window has a menu bar (File, Edit, View, Masters, Purchase, Inventory, Reports, Help), a navigation tree on the left and the work area on the right. The navigation tree shows only the screens your role may open. A screen that appears grey in the tree is installed but not allowed for your role.
+
+### 2.3 The status bar
+The status bar at the bottom shows, from left to right: the last message, your user ID, and your organisation unit. Read the status bar after every Save. Bahi does not show a pop-up for most messages.
+
+### 2.4 Session timeout
+A session that has been idle for 20 minutes is closed. Unsaved work on open screens is lost. Bahi does not keep a half-filled screen across sessions; save as Draft where the screen allows it.
+
+### 2.5 Function keys
+The function keys work on every screen:
+
+| Key | Action |
+|---|---|
+| F2 | Open the lookup for the current field |
+| F3 | Fetch defaults (order and request screens) |
+| F5 | Refresh the screen from the database |
+| F7 | Clear the screen |
+| F8 | Save |
+| F9 | Submit or release, depending on the screen |
+| F10 | Open the menu bar |
+| Ctrl+P | Print the current document |
+| Ctrl+F | Find a document by number |
+
+### 2.6 Changing your password
+Choose File, then Change password. A password must be at least eight characters and include a digit. Passwords expire every 90 days.
+
+### 2.7 Printing
+Ctrl+P prints the current document on the default printer in the layout set by your company. A purchase order can be printed only after it is Released; before that the print shows the word DRAFT across the page.
+
+## 3. Item enquiry (INV-ITM-03)
+
+### 3.1 Purpose
+Item enquiry finds items in the item master by code or description. Use it before raising a request or an order, to get the exact item code.
+
+### 3.2 Searching
+Type any part of the description or code in Search text and press Enter. The search ignores case and spaces, so "5l gasket" and "5 L Gasket" find the same items. Use % as a wildcard in the middle of a word. Up to 20 rows are shown; refine the search if the item you want is not listed.
+
+### 3.3 Reading the list
+The list shows the item code, description, unit of measure (UOM) and whether the item is active. Inactive items are shown in grey and cannot be used on a new request or order. An item code ending in -R (for example GSK-SIL-05L-R) is a rework item used by Quality; do not order it from suppliers.
+
+### 3.4 Item details
+Double-click an item, or press Enter on the selected row, to open the item master view. It shows the category, the reorder level, the average daily issue and the food-contact flag. The food-contact flag is set by Quality for parts that touch food during use, such as gaskets, lids and body blanks.
+
+### 3.5 Lookup from other screens
+Pressing F2 in any Item code field opens the same search in a small window. Select a row and press Enter to copy the code back to the field.
+
+## 4. Stock enquiry (INV-STK-02)
+
+### 4.1 Purpose
+Stock enquiry shows how much of an item is in each warehouse: on hand, allocated, on order, and days of cover. Stock figures change all day as stores issue and receive material, so always read them from this screen at the time you need them. Do not copy stock figures into e-mails or documents as if they were permanent.
+
+### 4.2 Fields
+Item code (mandatory, F2 lookup) and Warehouse (optional, F2 lookup). Leave Warehouse empty to see every warehouse.
+
+### 4.3 Reading the result
+On hand is the quantity physically in the warehouse. Allocated is the quantity reserved for production orders. On order is the quantity on released purchase orders not yet received. Days of cover is on hand divided by the item's average daily issue, rounded down.
+
+### 4.4 The stock ledger
+Press the Ledger button to see every receipt and issue for the item, newest first. The ledger is read-only. Corrections are made by stores through a stock adjustment, which needs the stores manager's approval.
+
+### 4.5 Reorder list
+Reports, then Items below reorder level, lists every item whose on-hand plus on-order quantity is below its reorder level. Buyers usually run it every morning.
+
+## 5. Supplier enquiry (PUR-SUP-03)
+
+### 5.1 Purpose
+Supplier enquiry finds suppliers in the supplier master by name. Always search before creating a supplier.
+
+### 5.2 Searching
+Type part of the supplier's name in Name like and press Enter. The search matches any part of the name, ignoring case. It does not match spelling variants: "Deccan Polymer Industries" will not find "Deccan Polymers". Search on a short distinctive word (for example "Deccan") and read the whole list.
+
+### 5.3 Reading the list
+The list shows the supplier code, name, city, state and status. Status is ACTIVE or BLOCKED. Blocked suppliers are shown in red. A supplier whose name ends in "(old code, do not use)" has been replaced by a new code; use the active one.
+
+### 5.4 Supplier details
+Double-click a supplier to open the supplier master view: GSTIN, address, payment terms, certificates and rate contracts. The Certificates tab shows each certificate's type, document reference and valid-to date.
+
+## 6. Supplier master entry (PUR-SUP-01)
+
+### 6.1 Purpose
+Creates a new supplier. In most companies only purchase executives and senior buyers may open this screen, and only after the supplier has been approved under the company's supplier policy.
+
+### 6.2 Fields
+Supplier name*, City*, State code* (two letters, for example MH, GJ), GSTIN, Payment terms (F2 lookup; default N30). The supplier code is generated by Bahi on Save from the initials of the name, the first three letters of the city and a running number.
+
+### 6.3 GSTIN check
+If a GSTIN is entered, Bahi checks that no other supplier has the same GSTIN. If one does, Save fails with ERR-SUP-0118 and the existing supplier is not changed. Bahi cannot check for duplicates when the GSTIN field is left empty.
+
+### 6.4 After saving
+A new supplier is created ACTIVE. Bahi does not hold the supplier back for missing documents; any such check is a company procedure. The status bar shows SUPPLIER <code> CREATED.
+
+### 6.5 Uploading a certificate
+Open the supplier, go to the Certificates tab and press Add. Enter Certificate type* (for example FOOD-GRADE, ISO-9001), Document reference* and Valid to*. Attach the scanned file. Press F8. The status bar shows CERT SAVED. Bahi records who uploaded the certificate and when.
+
+### 6.6 Expired certificates
+Bahi keeps expired certificates on the tab for the record. It shows the valid-to date in red once it has passed. Bahi does not block orders for an expired certificate.
+
+## 7. Rate contracts
+
+### 7.1 Purpose
+A rate contract records the agreed price of an item from a supplier for a period (valid from, valid to). Rate contracts are entered by the purchase manager's office on the Rate contracts tab of the supplier master.
+
+### 7.2 Which rate Bahi uses
+When you press Fetch on the order screen, Bahi fills the rate from the rate contract whose period covers today. If no contract covers today, it fills the rate of the last order to that supplier for that item, and shows the rate field in yellow. A yellow rate is only a suggestion; check it before saving.
+
+### 7.3 Viewing rate history
+Press F2 in the Rate field of the order screen to see every rate contract for the supplier and item, oldest first, with their periods. Rates from expired contracts and from old orders are history, not prices you may use.
+
+## 8. Cost centres (FIN-CC-01)
+
+### 8.1 Purpose
+Every request and order is charged to a cost centre. The cost centre screen shows each cost centre's name, owner, status (OPEN or CLOSED) and the date it was closed, with its budget for the quarter and the amount already committed.
+
+### 8.2 Status
+Finance opens and closes cost centres. A closed cost centre cannot carry new spend. Bahi does not refuse a document charged to a closed cost centre: it saves the document as Draft and sets warning W-CC-114 (see §17.6).
+
+### 8.3 Your default cost centre
+Each user has a default cost centre, set by IT. The request and order screens fill it when you press Fetch. Defaults are not updated automatically when Finance closes a cost centre, so a default can point to a closed one. Always check the cost centre before saving.
+
+### 8.4 Budget check
+Budget available is the quarter's budget minus the committed amount. When an order is approved, Bahi commits its gross value against the cost centre. If the gross value is more than the budget available, Save fails with ERR-BUD-0207.
+
+## 9. Purchase request entry (PUR-PR-01)
+
+### 9.1 Purpose
+A purchase request (PR) asks for an item to be bought. In most companies every purchase above a set value must start with a request.
+
+### 9.2 Fields
+Item code* (F2), Quantity*, Need-by date*, Cost centre* (F2), Warehouse (F2; default WH-PUN-STR), Estimated rate, Remarks. Request type is STD for normal requests.
+
+### 9.3 Fetch
+Press F3 (Fetch) after entering the item code. Bahi fills the unit of measure, the warehouse, your default cost centre and an estimated rate. The estimated rate is the rate on the last released order for the item, not the current contract rate.
+
+### 9.4 Saving a request
+Press F8. Bahi gives the request a number (for example PR/2026/04417) and saves it in status DR (Draft). The estimated value is quantity times estimated rate times 1.18: Bahi assumes 18% GST on every request whatever the item's real tax.
+
+### 9.5 Submitting a request
+Press F9 (Submit). If the estimated value is within your approval limit, the request is approved at once and the status becomes AP. If it is above your limit, Bahi routes it to your manager, or further up the line until it reaches someone whose limit covers it, sets the status PA (pending approval), and e-mails the approver.
+
+### 9.6 Need-by date
+The need-by date must be today or later. A date in the past gives ERR-PR-0105.
+
+## 10. Purchase request approval (PUR-PR-04)
+
+### 10.1 Purpose
+Approvers approve or reject requests waiting for them.
+
+### 10.2 Approving
+Open the request from your approval inbox, check the item, quantity, estimated value and cost centre, enter a comment and choose Approve. The status becomes AP. You cannot approve a request you raised yourself (ERR-APR-0003) or one whose value is above your limit (ERR-APR-0004).
+
+### 10.3 Rejecting
+Choose Reject and enter the reason. The status becomes RJ and the raiser is told by e-mail. A rejected request cannot be resubmitted; raise a new one.
+
+## 11. Purchase order entry (PUR-PO-01)
+
+### 11.1 Purpose
+The purchase order (PO) screen creates an order to a supplier. It has a header (supplier, type, tax code, cost centre, need-by date, warehouse) and a line grid (item, quantity, rate).
+
+### 11.2 Order types
+STD (standard) orders are raised against an approved purchase request; enter the request number in Source PR. DIR (direct) orders have no request and are allowed only for small values (see §11.7). Bahi checks the type on Save.
+
+### 11.3 Fetch before Save
+After entering the supplier and the item, press F3 (Fetch). Fetch fills the rate, the tax code, the payment terms and the warehouse, and, for a STD order, the cost centre, need-by date and quantity from the request. Bahi 7.2.3 refuses to save an order on which Fetch was not run for the current supplier and item, with ERR-SCR-0221 (FETCH NOT DONE). If you change the supplier or the item after Fetch, press Fetch again.
+
+### 11.4 The tax code
+Fetch always fills the tax code GST18-INTRA (CGST + SGST), the code for a supplier in the plant's own state. For a supplier in another state you must change it to the -INTER code (IGST) before saving; otherwise Save fails with ERR-PO-0412. Press F2 in the Tax code field to see the codes.
+
+### 11.5 Header fields
+Supplier code* (F2), Order type*, Source PR (F2, STD orders only), Tax code* (F2), Payment terms (from the supplier), Cost centre* (F2), Need-by date*, Warehouse (F2). Remarks are optional and printed on the order.
+
+### 11.6 Line fields
+Item code* (F2), Quantity*, Rate* (filled by Fetch; F2 shows the rate history), UOM (read-only). Bahi 7.2 allows one line per order on this screen; for several items, raise several orders.
+
+### 11.7 Direct orders
+A DIR order is refused on Save if its gross value is above the direct-order limit configured for your company (shipped default ₹50,000), with ERR-PO-0610. Raise a purchase request instead. A DIR order may not refer to a request (ERR-PO-0611).
+
+### 11.8 Saving the order
+Press F8. Bahi checks the supplier, the item, the quantity, the need-by date, the tax code and the source request, computes tax and gross value, checks the cost centre and budget, and gives the order its number (for example PO/2026/01182). The status bar shows <PO number> SAVED. The message is the same whatever status the order was saved in. Read the Status field on the header after saving.
+
+### 11.9 The status after saving
+If the cost centre is closed, the order is saved as DR (Draft) with warning W-CC-114, and nothing is sent to anyone. If the gross value is within your limit, the order is AP (approved). If the order is against a request whose approver's limit covers the order's gross value, it is AP and the request's approver is recorded. Otherwise the order is PA and goes to the approver's inbox.
+
+### 11.10 Quantity against the request
+An order against a request may not be for a different item or a larger quantity than the request (ERR-PO-0604). The request is closed (CL) when the order is saved against it.
+
+### 11.11 Supplier status
+Orders can be saved only for ACTIVE suppliers. A blocked supplier gives ERR-SUP-0031. Bahi does not check certificates on this screen.
+
+## 12. Purchase order approval (PUR-POA-04)
+
+### 12.1 The approval inbox
+Approvers see documents waiting for them in the approval inbox: Purchase, then Order approval. Each row shows the document type, number, who raised it and when. Bahi also e-mails the approver when a document arrives.
+
+### 12.2 Approving an order
+Open the order, check it and press Approve with an optional comment. The status becomes AP. You cannot approve an order you created (ERR-APR-0003), one above your limit (ERR-APR-0004), or one that is not pending approval (ERR-PO-0702).
+
+### 12.3 Rejecting an order
+Press Reject and enter a reason (mandatory). The status becomes RJ and the budget committed for the order is released.
+
+### 12.4 Approved is not released
+An approved order (AP) has not been sent to the supplier. It must be released (Chapter 13).
+
+## 13. Purchase order release (PUR-POR-05)
+
+### 13.1 Purpose
+Release sends an approved order to the supplier. Only orders in status AP can be released.
+
+### 13.2 Releasing
+Open the order and press F9 (Release). The status becomes RL, the release date is recorded, the quantity is added to stock on order, and Bahi e-mails the order to the supplier's order address.
+
+### 13.3 When release fails
+An order in any other status gives ERR-PO-0715 (DOCUMENT NOT IN RELEASABLE STATUS) with the current status in brackets. DR usually means the cost centre was closed when the order was saved; PA means the approver has not yet approved.
+
+### 13.4 What the supplier receives
+The supplier receives the order number, item, quantity, rate, need-by date and delivery warehouse. Remarks are printed on the order.
+
+## 14. Purchase order amendment and cancellation (PUR-POM-06)
+
+### 14.1 Purpose
+Change an order's quantity, need-by date or cost centre, or cancel it.
+
+### 14.2 Amending
+Open the order, change the fields and press F8. Bahi recalculates the gross value, releases the budget the order had committed, checks the new cost centre and commits again. If the new cost centre is closed, the order goes back to Draft with W-CC-114.
+
+### 14.3 Approval after amendment
+If the amended gross value is still covered by the original approval, the order keeps its status. If it is more than the approval covers, the order goes back to PA for approval, even if it had been released.
+
+### 14.4 Moving a Draft off a closed cost centre
+To rescue an order stuck in Draft because its cost centre was closed, amend the cost centre to an open one. The order then becomes AP or PA by the normal rules, and can be released once approved.
+
+### 14.5 Cancelling
+Press Cancel and enter a reason. The status becomes CN, committed budget is released, and for a released order the quantity is removed from stock on order. Tell the supplier yourself; Bahi does not send a cancellation notice.
+
+### 14.6 Closed orders
+Orders in status CN, RJ or CL cannot be amended (ERR-PO-0801).
+
+## 15. Purchase order history (PUR-POH-02)
+
+### 15.1 Purpose
+Shows the last ten released orders for an item, optionally for one supplier, newest first, with quantity, rate and date.
+
+### 15.2 Using history
+History tells you who supplied an item before and at what price. Rates on old orders are history; the price for a new order comes from the current rate contract (§7.2).
+
+### 15.3 Searching orders
+Purchase, then Order list, searches orders by supplier, item, status, client reference and creation date.
+
+## 16. Document statuses
+
+### 16.1 Status codes
+Requests and orders move through these statuses:
+
+| Code | Meaning |
+|---|---|
+| DR | Draft: saved, not submitted or not valid to proceed; never sent to the supplier |
+| PA | Pending approval: waiting in an approver's inbox |
+| AP | Approved: may be released |
+| RL | Released: sent to the supplier |
+| RJ | Rejected by the approver |
+| CN | Cancelled |
+| CL | Closed: a request converted into an order |
+
+### 16.2 Which status means the supplier has the order
+Only RL. An order in DR, PA or AP has not been sent to the supplier.
+
+## 17. Messages and error codes
+
+### 17.1 How to read a message
+Every message has a code and a short text, for example ERR-PO-0412 TAX REGION DOES NOT MATCH SUPPLIER STATE (GJ). The code tells you which rule failed; the text in brackets gives the value that failed it. Errors stop the Save. Warnings do not.
+
+### 17.2 ERR-PO-0412 Tax region does not match supplier state
+Cause: the tax code is for the wrong region. A supplier in the plant's own state needs an -INTRA code (CGST + SGST); a supplier in any other state needs an -INTER code (IGST). Fetch always fills GST18-INTRA. Remedy: change the tax code to the -INTER code with the same rate (for example GST18-INTER) and save again.
+
+### 17.3 ERR-SCR-0221 Fetch not done
+Cause: the order was saved without pressing Fetch for the current supplier and item, or after changing them. Remedy: press F3, check the fetched values and save again.
+
+### 17.4 ERR-PO-0610 Direct PO limit exceeded, raise PR
+Cause: a DIR order's gross value is above the direct-order limit. Remedy: raise a purchase request on PUR-PR-01, get it approved, then raise a STD order against it.
+
+### 17.5 ERR-PO-0611 Direct PO cannot refer PR
+Cause: a source request was entered on a DIR order. Remedy: change the order type to STD, or clear Source PR.
+
+### 17.6 W-CC-114 Cost centre closed, document saved as Draft
+Cause: the cost centre on the document is CLOSED. This is a warning, not an error: the document is saved with a number, in status DR, and the status bar shows only <number> SAVED. The warning code is visible on the header's Warning field and in the order list. Remedy: amend the order to an open cost centre (§14.4).
+
+### 17.7 ERR-PO-0602 Source PR mandatory for STD PO
+Cause: a STD order has no source request. Remedy: enter the approved request number, or use a DIR order if the value allows.
+
+### 17.8 ERR-PO-0603 Source PR not approved
+Cause: the source request is not in status AP. The current status is shown in brackets. Remedy: wait for the approver, or follow up with them.
+
+### 17.9 ERR-PO-0604 Item or quantity not as per PR
+Cause: the order's item differs from the request's item, or the quantity is more than requested. Remedy: correct the line, or raise a new request for the extra quantity.
+
+### 17.10 ERR-PO-0201 Quantity must be more than zero
+Cause: quantity is zero or negative. Remedy: enter the quantity in the item's unit of measure.
+
+### 17.11 ERR-PO-0105 and ERR-PR-0105 Need date in past
+Cause: the need-by date is before today. Remedy: enter today's date or a later one.
+
+### 17.12 ERR-PO-0715 Document not in releasable status
+Cause: release was attempted on an order not in AP. Remedy: see §13.3.
+
+### 17.13 ERR-PO-0702 PO not pending approval
+Cause: approve or reject was attempted on an order not in PA. Remedy: refresh the inbox; someone else may have acted on it.
+
+### 17.14 ERR-PO-0801 PO closed
+Cause: amendment or cancellation was attempted on an order in CN, RJ or CL. Remedy: none; raise a new order if needed.
+
+### 17.15 ERR-PO-0001 PO not found
+Cause: no order with that number. Remedy: check the number with Ctrl+F or the order list.
+
+### 17.16 ERR-SUP-0030 Supplier not found
+Cause: no supplier with that code. Remedy: use F2 on the supplier field, or search on PUR-SUP-03.
+
+### 17.17 ERR-SUP-0031 Supplier not active
+Cause: the supplier is BLOCKED. Remedy: use the supplier's active code; a blocked old code usually has a replacement (see §5.3).
+
+### 17.18 ERR-SUP-0118 GSTIN already registered
+Cause: a supplier with this GSTIN already exists. Remedy: search for it and use the existing code; do not create a second record.
+
+### 17.19 ERR-ITM-0010 Item not found and ERR-ITM-0011 Item not found or inactive
+Cause: the item code does not exist, or the item is inactive. Remedy: use item enquiry (Chapter 3) to find an active item.
+
+### 17.20 ERR-CC-0009 Cost centre not found
+Cause: no cost centre with that code. Remedy: press F2 in the Cost centre field for the list.
+
+### 17.21 ERR-BUD-0207 Budget exceeded
+Cause: the gross value is more than the cost centre's budget available for the quarter. Remedy: ask the cost centre owner which cost centre to charge, or ask Finance for a budget transfer.
+
+### 17.22 ERR-TAX-0101 Invalid tax code
+Cause: the tax code does not exist. Remedy: press F2 in the Tax code field.
+
+### 17.23 ERR-APR-0003 Self approval not allowed
+Cause: an approver tried to approve a document they raised. Remedy: the document must be approved by someone else.
+
+### 17.24 ERR-APR-0004 Value above your limit
+Cause: the document's value is above the approver's limit. Remedy: Bahi routes documents to the right approver on submit; if you see this, the document was opened from the wrong inbox.
+
+### 17.25 ERR-APR-0009 No approver found
+Cause: nobody in the approver's management line has a limit that covers the value. Remedy: follow your company's procedure for approvals above the highest limit in Bahi.
+
+### 17.26 ERR-SEC-0001 Not authorised
+Cause: your role does not allow this screen or action. Remedy: ask your manager; IT changes roles only on a written request.
+
+### 17.27 ERR-SEC-0002 Invalid credentials
+Cause: wrong user ID or password. After three attempts the user ID is locked (§2.1).
+
+### 17.28 ERR-PR-0007 and ERR-PR-0008 Request not in the right status
+Cause: ERR-PR-0007 means a request was submitted that is not in Draft; ERR-PR-0008 means an approval was attempted on a request that is not pending. Remedy: refresh and check the request's status.
+
+## 18. Notifications
+
+### 18.1 E-mails Bahi sends
+Bahi e-mails the approver when a request or order is waiting for approval, the raiser when a request is rejected, and the supplier when an order is released. It does not e-mail anyone when an order is saved as Draft.
+
+### 18.2 Sending a note from Bahi
+The Notify button on any document sends a short e-mail or SMS with the document number to a user or supplier. Notes sent this way are logged against the document.
+
+## 19. Troubleshooting
+
+### 19.1 The order saved, but the supplier never received it
+Check the order's status (Ctrl+F, then the order number). If it is DR, the cost centre was probably closed; see §17.6 and §14.4. If it is PA, it is waiting for the approver. If it is AP, it was approved but never released; release it (Chapter 13). Only RL orders reach the supplier.
+
+### 19.2 The rate on my order is different from last time
+Fetch takes the rate from the current rate contract (§7.2). A new contract may have started since the last order. Old orders' rates are history.
+
+### 19.3 I cannot find a supplier the requester named
+Search on one short word of the name (§5.2), check the city, and compare GSTINs. Suppliers are often called by short or slightly different names.
+
+### 19.4 The screen hung after I pressed Save
+Do not press Save again. Wait one minute, then search for the order (Purchase, Order list) by supplier, item and today's date, or by client reference. If the order exists, the Save worked; continue from it. Pressing Save again creates a second order.
+
+### 19.5 The approver cannot see my document
+Check that it was submitted (status PA, not DR). Approvers see only documents routed to them; a document above their limit goes to the next person up.
+
+## 20. Keyboard and lookup reference
+
+### 20.1 F2 lookups by field
+F2 opens these lookups: Item code (item search, active items only), Supplier code (supplier search, active suppliers first), Cost centre (all cost centres with their status), Warehouse (warehouses of your organisation unit), Tax code (all tax codes with their region), Payment terms (all payment terms), Source PR (approved requests not yet converted), Rate (rate history for the supplier and item).
+
+### 20.2 Lookup tips
+In a lookup window, type to filter the list, use the arrow keys to move and Enter to select. Esc closes the lookup without changing the field.
+
+## 21. Glossary
+
+### 21.1 Terms
+Basic value: quantity times rate, before tax. Gross value: basic value plus GST. Cost centre: the budget unit a purchase is charged to. Fetch: the button that fills defaults from the masters. Rate contract: an agreed price for a period. Release: sending an approved order to the supplier. Organisation unit: a plant or unit with its own address and state, for example RSW-PUN-01. Client reference: a reference your integration may store on an order so it can find the order again.
+
+## 22. Reports
+
+### 22.1 Running a report
+Reports are under the Reports menu. Each report has a parameter window; fill it and press F8 to run. Results open in a grid that can be exported to a spreadsheet with Ctrl+E. Reports read the database at the moment they run.
+
+### 22.2 Open orders by supplier
+Lists every order in status AP or RL that has not been fully received, grouped by supplier, with the quantity outstanding and the need-by date. Parameters: supplier (optional), need-by from and to.
+
+### 22.3 Orders pending approval
+Lists every request and order in status PA with the approver and the number of days waiting. Purchase managers use it to chase approvals before month end.
+
+### 22.4 Draft orders
+Lists every order in status DR with its warning code. Run it every morning: a Draft order has not reached the supplier, and nobody is told when an order is saved as Draft.
+
+### 22.5 Price variance
+Compares the rate on each released order with the rate contract that covered its date, and lists orders whose rate differs by more than a tolerance you enter.
+
+### 22.6 Certificate expiry
+Lists supplier certificates whose valid-to date falls within a number of days you enter, by certificate type. Use it to ask suppliers for renewed certificates in good time.
+
+### 22.7 Budget utilisation
+Lists each cost centre's budget, committed amount and budget available for a quarter. Finance owns the figures; the report reads them as they stand when it runs.
+
+### 22.8 Supplier performance
+Lists, per supplier, orders released, deliveries on time and rejections in a period. Quality enters rejections on the goods-inspection screen, which is outside this manual.
+
+## 23. Notes for key users and administrators
+
+### 23.1 Users and roles
+IT creates users on the security console (outside this manual) and assigns one role each. The role decides which screens appear in the navigation tree and which services the user may call. The approval limit is stored on the user, not the role, and is set from the company's approval matrix.
+
+### 23.2 Service accounts
+Integrations call Bahi's services with a service account. A service account's role decides what it can call. Bahi treats a service account like any other user: it applies the account's own approval limit and records the account as the creator of documents. Companies should give service accounts only the services they need.
+
+### 23.3 Default cost centres
+Each user's default cost centre is set by IT on the user record and is used by Fetch. Review defaults when Finance closes cost centres; Bahi does not update them.
+
+### 23.4 Configurable limits
+The direct-order limit (§11.7) is a company setting, maintained by IT on the purchasing parameters screen. Changing it takes effect at the next sign-in of each user.
+
+### 23.5 The audit trail
+Every service call is written to the audit trail with the time, user, service, payload, return code and error code. The audit trail cannot be edited from any screen.
+
+## 24. Moving from Bahi 6.x
+
+### 24.1 What changed
+Bahi 7 replaced the single order screen of 6.x with separate entry, approval and release screens, added the Fetch requirement, and moved approval limits from roles to users. Supplier codes migrated from 6.x keep their old format and show MIGRATION as the creator.
+
+### 24.2 Migrated documents
+Orders migrated from 6.x appear with status RL or CL only. Their rates and tax codes are as they were in 6.x and are not recalculated.
+
+
+===== POL-FIN-021: Accounts Payable Policy v2.3, effective 2026-04-01 =====
+# Accounts Payable Policy (POL-FIN-021)
+
+## 1. Purpose
+This policy sets out how a supplier's invoice is entered, checked and paid, so that we pay the right supplier, the right amount, once, on the right day.
+
+## 2. Entering invoices
+2.1 Every supplier invoice is entered in Bahi on screen FIN-AP-01 within three working days of arrival.
+2.2 An invoice against a purchase order is a **PO invoice**. Any other invoice (repairs, services, small purchases) is a **non-PO invoice**.
+2.3 Run **Match** before **Save**. Bahi will not save an invoice whose match has not been run (ERR-SCR-0221).
+2.4 The supplier's invoice number is entered exactly as printed. Different suppliers may use the same number; always identify an invoice by supplier and number together.
+
+## 3. The match
+3.1 A PO invoice is matched three ways: the order (rate), the goods receipt (accepted quantity) and the invoice.
+3.2 A non-PO invoice is checked two ways: an open cost centre with budget, and the approval of the cost centre's owner.
+
+## 4. Holds
+4.1 **Price (H-PRC).** An invoice rate up to **2%** above the order rate passes. Above 2%, the invoice is held.
+4.2 **Quantity (H-QTY).** An invoice may not bill more than the accepted quantity not yet invoiced.
+4.3 **Who decides a price hold.** When the supplier's contract rate changed between the order and the delivery, the **purchase manager** decides which rate applies. If the new rate applies, the purchase manager releases the hold. If not, Accounts asks the supplier for a **credit note** for the difference, plus its GST, and the hold stays until it arrives.
+4.4 **Who may release which hold.** H-PRC: purchase manager or financial controller. H-QTY: stores or financial controller. H-GRN: accounts payable, once the receipt is posted. H-DUP: financial controller only.
+4.5 The integration service account never releases a hold.
+4.6 A person who cannot release a hold may **refer** it (FIN-AP-03, Refer) to someone who can.
+
+## 5. Posting
+5.1 An invoice with no hold is posted: the supplier's account is credited and the GST is recorded as input credit (POL-FIN-024).
+
+## 6. Payment
+6.1 Invoices are paid only in the weekly payment run (POL-FIN-022), on or after their due date.
+6.2 The due date is the invoice date plus the supplier's payment term (N30, N45, N60).
+6.3 An invoice on hold, or waiting for approval, cannot be proposed for payment.
+6.4 Paying before the due date is an **early payment** and follows POL-FIN-023.
+
+
+===== SOP-FIN-031: Duplicate Invoices v1.1, effective 2026-01-15 =====
+# Duplicate Invoices (SOP-FIN-031)
+
+1. Suppliers often send the same invoice twice: by mail and by courier, or again marked "R", "REV" or "COPY" when they chase payment.
+2. **Before entering any invoice, search the hold queue (FIN-AP-03) by supplier and by order.** If the same goods on the same order are already billed, do not enter it again.
+3. Bahi refuses an invoice number already entered for the same supplier (ERR-AP-0118). It does **not** refuse "4471-R" or "4471/R": it saves it and holds it as H-DUP, which only the controller can clear. Entering it is still a mistake.
+4. A **revised** invoice (new rate or quantity) replaces the old one only after the old one is cancelled by the controller.
+5. Tell the person who brought the invoice which document it duplicates (the AP number) and its status.
+
+
+===== POL-FIN-023: Early Payment Rule v1.2, effective 2026-04-01 =====
+# Early Payment Rule (POL-FIN-023)
+
+1. Paying a supplier before the invoice's due date costs the company interest. It is allowed only with the **financial controller's approval** (Vikram Nair).
+2. To ask, propose the payment on FIN-AP-05 with a reason in **EARLY PAY REASON** (for example, "supplier offers 1% discount" or "supplier request for festival wages"). The proposal then waits for the controller (status PA).
+3. **A proposal before the due date with no reason is parked (status PK).** Bahi says only "SCHEDULED". A parked proposal is in no run and nobody is notified. Check the status after every proposal.
+4. Purchase staff may not promise a supplier an early payment. They may say that Accounts will ask the controller.
+5. The controller does not approve an early payment for an invoice that is on hold.
+
+
+===== POL-FIN-024: GST on Supplier Invoices v2.0, effective 2026-04-01 =====
+# GST on Supplier Invoices (POL-FIN-024)
+
+1. A supplier in Maharashtra charges CGST + SGST: use a tax code ending **-INTRA**. A supplier in any other state charges IGST: use **-INTER**. Bahi's shared tax engine refuses a code that does not match the supplier's state (ERR-PO-0412).
+2. Deccan Polymers and Deccan Paints & Inks are in Gujarat (IGST). Sahyadri Valves, Om Sheet Metals and Shree Packaging are in Maharashtra.
+3. When an invoice is posted, its GST is recorded as **input credit** for that month. Input credit is claimed only for posted invoices; an invoice on hold carries no credit.
+4. A credit note from a supplier reduces both the amount and the GST. Ask for the GST on the difference too: on ₹9,000 at 18% IGST that is ₹1,620.
+
+
+===== POL-FIN-025: Paying MSME Suppliers v1.0, effective 2025-04-01 =====
+# Paying MSME Suppliers (POL-FIN-025)
+
+1. Suppliers registered as micro or small enterprises (with an Udyam registration) must be paid **within 45 days** of accepting the goods or the invoice, whichever is later, whatever the payment term says.
+2. Our MSME suppliers today: Deccan Polymers (Rajkot), Sahyadri Valves (Pune), Om Sheet Metals (Bhosari).
+3. **Bahi does not check this.** It raises no warning when an MSME invoice sits on hold past 45 days. Accounts must review the hold queue every Monday for MSME invoices older than 30 days.
+4. A late payment to an MSME supplier attracts interest at three times the bank rate and must be disclosed in the annual accounts.
+
+
+===== POL-FIN-022: Payment Run Calendar, October to November 2026 v1.0, effective 2026-10-01 =====
+# Payment Run Calendar (POL-FIN-022)
+
+Suppliers are paid once a week, by bank transfer, in the **Friday payment run**. The cut-off for proposing an invoice for a run is **Thursday, 6 PM**, the day before.
+
+| Run (Friday) | Cut-off (Thursday) |
+|---|---|
+| 23 Oct 2026 | 22 Oct (done) |
+| 30 Oct 2026 | 29 Oct |
+| 6 Nov 2026 | 5 Nov |
+| 13 Nov 2026 | 12 Nov |
+| 20 Nov 2026 | 19 Nov |
+| 27 Nov 2026 | 26 Nov |
+
+Notes
+1. A payment proposal must name a run date from this table (FIN-AP-05, PAY DT). Any other date is refused (ERR-AP-0412).
+2. A proposal is in the run only when its status is SC (scheduled). PK (parked) and PA (waiting for approval) are not paid.
+3. After the run, Bahi mails a remittance advice to the supplier.
+
+
+===== HR-SOP-014: Comp-off Rules v2.2, effective 2026-04-01 =====
+# Comp-off Rules (HR-SOP-014)
+
+1. An employee who works a full shift on a plant holiday, at the manager's written request, earns one **compensatory off (CO)**.
+2. HR records the credit in Bahi with the worked date. It shows under "open CO credits" on HR-LV-01.
+3. A CO must be taken within **30 days** of the worked date. After that it lapses and cannot be paid out.
+4. Apply for a CO on HR-LV-02 with leave type CO, and enter the **worked date** (WORKED DT). Without it Bahi refuses the application (ERR-LV-0620).
+5. A CO is for one full day. It cannot be split into half days and cannot be joined to earned leave in one application.
+6. Apply at least one day before. The approver is the normal leave approver.
+7. The Diwali-run restriction in the Leave Policy (§5.2) does not apply to purchase, HR or accounts staff.
+
+
+===== HR-CAL-2026: Plant Holiday Calendar 2026 v1.0, effective 2026-01-01 =====
+# Plant Holiday Calendar 2026 (HR-CAL-2026)
+
+The plant works Monday to Saturday. Sunday is the weekly off. These are the paid holidays for both units:
+
+| Date | Day | Holiday |
+|---|---|---|
+| 26 Jan | Mon | Republic Day |
+| 19 Mar | Thu | Gudi Padwa |
+| 1 May | Fri | Maharashtra Day |
+| 15 Aug | Sat | Independence Day |
+| 14 Sep | Mon | Ganesh Chaturthi |
+| 2 Oct | Fri | Gandhi Jayanti |
+| 20 Oct | Tue | Dussehra |
+| 10 Nov | Tue | Diwali (Bali Pratipada) |
+| 11 Nov | Wed | Bhau Beej |
+
+Notes
+1. A holiday inside a leave period is not counted as leave.
+2. Staff asked to work on a holiday earn one compensatory off (see HR-SOP-014).
+3. Lakshmi Puja falls on Sunday 8 November this year, so it is not a separate holiday.
+
+
+===== POL-HR-012: Leave Approval Matrix v1.4, effective 2026-07-01 =====
+# Leave Approval Matrix (POL-HR-012)
+
+| Who applies | Normal approver | Diwali run (2–14 Nov), production and stores | Held (HD) applications |
+|---|---|---|---|
+| Purchase staff | Purchase manager (RMEHTA) | not restricted | HR executive (MGOKHALE) clears, then the manager |
+| Stores staff | Purchase manager (RMEHTA) | Plant head (APATIL) | HR executive clears, then the approver |
+| Production staff | Plant head (APATIL) | Plant head (APATIL) | HR executive clears, then the plant head |
+| Managers | Plant head (APATIL) | Plant head (APATIL) | HR executive clears |
+
+Rules
+1. The approver decides on screen HR-LV-04 within two working days.
+2. Nobody approves their own leave, and the integration service account never approves leave for anyone.
+3. If the normal approver is on leave, the application waits; it is not re-routed automatically. Forward it (FWD TO) to the approver's manager.
+4. HR does not approve leave. HR only clears held applications: L = accept the unpaid days and send on, R = return to the employee.
+
+
+===== HR-FAQ-007: Leave FAQ (old) v1.0, effective 2024-02-01 =====
+# Leave FAQ (2024, superseded)
+
+**This FAQ was written for the 2024 rules. Where it disagrees with the Leave Policy (POL-HR-011), the policy wins.**
+
+Q. How much notice do I need for earned leave?
+A. Seven days. (Changed to 3 days from 1 January 2026.)
+
+Q. Can I carry casual leave into next year?
+A. No. Unused casual leave lapses on 31 December.
+
+Q. What happens if my casual leave runs out?
+A. Bahi will automatically use your earned leave. (No longer true in Bahi 7.2: the extra days become leave without pay.)
+
+Q. Who approves leave in stores?
+A. The stores in-charge. (Stores now reports to the purchase manager.)
+
+
+===== POL-HR-011: Leave Policy v3.0, effective 2026-01-01 =====
+# Leave Policy (POL-HR-011)
+
+## 1. Purpose
+This policy sets out the leave every employee of Rasoi Steel Works may take, how to apply for it in Bahi, and who approves it.
+
+## 2. Scope
+It applies to all permanent employees of the Pune plant (RSW-PUN-01) and the Chakan unit (RSW-CHK-01). Contract workers follow their contractor's rules.
+
+## 3. Kinds of leave
+3.1 **Casual leave (CL):** 8 days a calendar year, for short personal needs. At most 3 days at a stretch. No advance notice is needed.
+3.2 **Earned leave (EL):** 15 days a year (30 for staff with more than 20 years' service). Apply at least **3 calendar days** before the first day of leave.
+3.3 **Sick leave (SL):** 8 days a year. May be applied after the event. More than 2 days needs a doctor's certificate given to HR.
+3.4 **Compensatory off (CO):** one day off for each plant holiday worked, under the Comp-off Rules (HR-SOP-014).
+3.5 **Leave without pay (LWP):** only when no paid leave is left, and only with HR's agreement (§6).
+
+## 4. Balances
+4.1 Your balance is shown on screen HR-LV-01. Balance = opening − availed − pending.
+4.2 Days that are applied for but not yet approved count as pending and cannot be used twice.
+4.3 Sundays and plant holidays inside a leave period are not counted as leave (see the Holiday Calendar, HR-CAL-2026).
+4.4 Choose the leave type yourself. **Bahi does not switch you to another type when one runs out.**
+
+## 5. Applying and approval
+5.1 Apply on screen HR-LV-02 and send it to your leave approver (normally your reporting manager).
+5.2 **The Diwali production run, 2 to 14 November 2026.** Production and stores staff may not take earned leave or casual leave in this period without the **plant head's** approval. Send such applications to the plant head (FWD TO: APATIL). Bahi does not check this; the approver must.
+5.3 Nobody may approve their own leave.
+5.4 Leave is taken only after it is approved. An application that is pending or held is not approval.
+
+## 6. Leave without pay
+6.1 If a paid leave type does not have enough balance, Bahi saves the extra days as **leave without pay** and holds the application for HR (status HD). It does not reach your manager until HR clears it.
+6.2 Unpaid days are deducted from the next salary. An employee must be told, before applying, if any day will be unpaid.
+6.3 To avoid unpaid days, use another paid leave type that has a balance, or split the leave across two applications.
+
+## 7. Cancelling
+7.1 A pending, held or approved application can be cancelled from HR-LV-02 before the leave starts. Cancelling returns the days to the balance.
+
+
+===== FIN-NOTE-012: E-way Bills for Transfers v1.2, effective 2026-04-01 =====
+# E-way Bills for Transfers (FIN-NOTE-012)
+
+1. Goods moved by road between our units need an **e-way bill** when the consignment value is **above ₹50,000**, even though no sale takes place.
+2. The consignment value is the quantity at standard rate **plus GST at 18%**. Bahi computes it on the transfer note (for example 2,000 gaskets at ₹11.90 = ₹23,800 + GST = ₹28,084, no e-way bill; 5,000 = ₹70,210, e-way bill needed).
+3. Logistics (Ganesh Pawar at Chakan) generates the e-way bill on the government portal **before** the vehicle leaves and records the 12-digit number in Bahi.
+4. Bahi checks only that the number has 12 digits. It cannot tell a real number from a made-up one. **Never enter a number that was not generated on the portal.** A vehicle stopped with a false e-way bill is detained and fined.
+5. An e-way bill is valid for one day per 200 km. Chakan–Pune is 32 km: one day.
+
+
+===== POL-SEC-004: Gate Pass Policy v3.1, effective 2026-04-01 =====
+# Gate Pass Policy (POL-SEC-004)
+
+## 1. Kinds of gate pass
+1.1 **NRGP** (non-returnable): goods leaving for good, including transfers to the other unit.
+1.2 **RGP** (returnable): tools, dies or samples that must come back, with a return date.
+
+## 2. Who does what
+2.1 The issuing stores creates the gate pass in Bahi against an approved transfer note.
+2.2 Security checks the vehicle, counts the packages and checks the gate pass **out** in Bahi before the vehicle leaves.
+2.3 Only vehicles in the vehicle master may carry stores material. MH-14-GH-2209 is the scrap tempo and must not carry production material.
+
+## 3. Day and night
+3.1 Day movement is 07:00 to 20:00.
+3.2 Bahi asks for approval of any night move between units, but sends it to the requester's manager.
+
+## 4. Night movement
+4.1 Material leaving a gate between 20:00 and 07:00 is a night movement.
+4.2 **Every night movement needs the plant head's approval** (Anand Patil, APATIL), whatever its value. Send the transfer note to him (FWD TO: APATIL). An approval by anyone else does not count, and security will not check the vehicle out.
+4.3 Night movements carry a security escort slip signed by the shift supervisor.
+
+## 5. Records
+5.1 A gate pass that is created but not checked out within 24 hours is cancelled by security.
+
+
+===== QA-SOP-009: QC Hold Rules v1.6, effective 2026-05-15 =====
+# QC Hold Rules (QA-SOP-009)
+
+1. When a lot fails or awaits an inspection, Quality puts it on **QC hold** in Bahi with a lot number and a reason.
+2. **QC-held stock never moves**: not to the line, not to the other unit, not to a customer. It stays in its rack with a red tag until Quality releases it.
+3. QC hold is counted in "on hand" but not in "free" (screen INV-STK-07).
+4. Current holds (26 Oct 2026):
+   - GSK-SIL-05L at Chakan, lot **QC-2610, 4,000 pieces**, hardness out of spec, lab retest due 29 Oct.
+   - HDL-BKL-01 at Pune main stores, lot QC-2602, 1,500 pieces, flash on moulding.
+5. Only Quality may release a hold. Stores and production may not ask for a "partial release" on the phone.
+6. Food-contact parts (gaskets, lids) that fail a hardness or odour test are never reworked for food use without a fresh test.
+
+
+===== SOP-STR-021: Stock Transfer Procedure v2.0, effective 2026-07-01 =====
+# Stock Transfer Procedure (SOP-STR-021)
+
+## 1. Purpose
+How stock moves between the stores of the Pune plant (RSW-PUN-01) and the Chakan unit (RSW-CHK-01) in Bahi, so that the books always show where every piece is.
+
+## 2. Locations
+2.1 **WH-CHK-STR** Chakan stores. **WH-PUN-STR** Pune main stores. **WH-PUN-LN5** the 5-litre line-side store, which feeds the 5-litre assembly line.
+2.2 Material asked for "the line" or "the 5-litre line" goes to **WH-PUN-LN5**, not to main stores. Main stores is a different building; the line will not see it.
+
+## 3. Raising a transfer
+3.1 The receiving stores raises the transfer note on screen INV-TRN-04: Fetch, then Save.
+3.2 Check free stock first on INV-STK-07. **Free = on hand − allocated − QC hold.** Only free stock may be transferred (see QA-SOP-009).
+3.3 Bahi refuses a quantity above the stock on hand. If the quantity is above the free stock but within on hand, **Bahi saves the note as SH (short)**. An SH note waits for QC to release the held lot. It is never sent to the gate. Raise the note for the free quantity instead.
+3.4 Use the right item code. GSK-SIL-05L-R is a rework lot awaiting re-inspection and must not go to the line.
+
+## 4. Moves inside one unit (INT)
+4.1 A move inside one unit (for example WH-PUN-STR to WH-PUN-LN5) needs no gate pass. The receiving stores posts the receipt on INV-GTP-05 and both sides move at once.
+
+## 5. Moves between units (IUT)
+5.1 A move between Chakan and Pune needs a gate pass (Gate Pass Policy, POL-SEC-004), created by the **issuing** stores.
+5.2 Security checks the gate pass out at the issuing gate. From then until receipt the note is **in transit (IT)**.
+5.3 Above ₹50,000 consignment value including GST, an e-way bill is needed before the goods leave (FIN-NOTE-012).
+
+## 6. Receipt
+6.1 The receiving stores counts the goods **when they arrive** and posts the receipt (INV-GTP-05, Receive). Never post a receipt for goods that have not physically arrived.
+6.2 Until the receipt is posted the goods are not in the receiving store's stock, and the line cannot draw them.
+6.3 A short receipt is recorded as counted and reported to the issuing stores the same day.
+
+
+===== SOP-STR-011: Inter-unit Transfer Procedure (old) v1.3, effective 2019-04-01 =====
+# Inter-unit Transfer Procedure (2019, superseded)
+
+**Kept for reference. Where it disagrees with SOP-STR-021 or the Gate Pass Policy, those win.**
+
+1. All transfers from Chakan go to Pune main stores (WH-PUN-STR); the line collects from there. (The line-side store WH-PUN-LN5 was created in 2026.)
+2. Night movements need the stores in-charge's signature on the paper gate pass. (Now the plant head must approve: POL-SEC-004 §4.2.)
+3. An e-way bill is needed above ₹1,00,000. (Now ₹50,000 including GST: FIN-NOTE-012.)
+4. The receiving stores may post the receipt when the gate pass is checked out, to save time. (Not allowed now: receipt only after physical count, SOP-STR-021 §6.1.)
+
+
+===== POL-LEG-001: Contract Policy v2.1, effective 2026-04-01 =====
+# Contract Policy (POL-LEG-001)
+
+## 1. Purpose
+This policy sets out how Rasoi Steel Works raises, reviews, signs and records contracts, so that every contract is on terms we can live with and signed by someone allowed to sign it.
+
+## 2. Scope
+It applies to non-disclosure agreements (NDA), master supply agreements (MSA) and service agreements (SLA) for the Pune plant (RSW-PUN-01) and the Chakan unit (RSW-CHK-01), raised in Bahi on screen LEG-REQ-01.
+
+## 3. Our paper first
+3.1 Always start from our own template ("our paper"). The current mutual NDA is **NDA-MUT-v4**.
+3.2 A contract on our paper with no change to the playbook terms (NDA Playbook, LEG-PB-004) goes straight to the signatory. It does not need Legal.
+3.3 A contract on the other side's paper ("their paper") always goes to Legal for a full clause review, whatever it says.
+
+## 4. Counterparties
+4.1 Every contract is with a party on the **contract party register**. Register a new party on LEG-REQ-01 with its PAN and GSTIN (Counterparty KYC SOP, LEG-SOP-006).
+4.2 The contract party register is not the supplier master. **An NDA does not make anyone a supplier.** Do not create a supplier to raise a contract; supplier onboarding is a separate purchase process (Supplier Policy, POL-SUP-003).
+4.3 Check the register for the party before registering it. Names repeat: confirm the city and the GSTIN.
+
+## 5. Terms
+5.1 An NDA runs for at most **3 years** (36 months). A longer term needs Legal's clearance and is the exception.
+5.2 Disputes are heard by the courts at **Pune**. Any other place, in India or abroad, needs Legal's clearance.
+5.3 The term starts on the start date and ends the day before the same date in the last year (24 months from 26 Oct 2026 ends on 25 Oct 2028).
+
+## 6. Signature
+6.1 Contracts are signed only by the authorised signatory named in the Delegation of Authority (POL-DOA-002).
+6.2 Nobody signs or clears a contract they raised.
+
+## 7. Records
+7.1 An executed contract goes into the contract register (LEG-REG-03) with its expiry date, and a renewal reminder is set 60 days before it expires.
+7.2 Do not tell a counterparty that an agreement is in place until its status in Bahi is **Executed (EX)**. A request that is saved, parked, under review or waiting for a signature is not an agreement.
+
+
+===== LEG-SOP-006: Counterparty KYC v1.3, effective 2026-02-01 =====
+# Counterparty KYC (LEG-SOP-006)
+
+1. Before any contract, the party must be on the contract party register with **both** its PAN and its GSTIN.
+2. The PAN is characters 3 to 12 of the GSTIN. Bahi refuses a PAN that does not match (ERR-CT-0122).
+3. **Bahi lets you save a party without PAN or GSTIN**, and lets you raise a request against it. That request is saved as PK (pending KYC) and goes nowhere: it does not reach Legal or the signatory, and nobody is told. Ask the requester for the papers first.
+4. To complete KYC later, update the party (Party Save with the PARTY CD) and then Resubmit the request on LEG-REQ-01.
+5. Search the register by GSTIN before registering. If the GSTIN is already there, use that party; Bahi refuses a second party with the same GSTIN (ERR-CT-0118). It does not stop a second party with the same name and no GSTIN, so search by name and city as well.
+6. A blocked party (status BLOCKED) cannot be used. Shakti Seal Works, Vadodara, was dissolved in 2024; it is not Shakti Seals.
+
+
+===== POL-DOA-002: Delegation of Authority: Contracts v5.0, effective 2026-01-01 =====
+# Delegation of Authority: Contracts (POL-DOA-002)
+
+## 1. Who signs what
+
+| Contract | Authorised signatory | Notes |
+|---|---|---|
+| Non-disclosure agreement (NDA), any value | **Plant head (APATIL) only** | Confidential information is at stake whatever the value |
+| Service agreement up to ₹5,00,000 a year | Purchase manager (RMEHTA) | |
+| Service agreement above ₹5,00,000 a year | Plant head (APATIL) | |
+| Master supply agreement, any value | Plant head (APATIL) | Above ₹50,00,000 also needs Finance (VNAIR) |
+
+## 2. Rules
+2.1 The signatory must be the person named above, not "the next manager up".
+2.2 **Bahi routes signatures by value**, through the same approval engine as purchase orders. For an NDA, which has no value, that engine stops at the requester's own manager. Bahi does not know rule 1. When you raise an NDA, send it to the plant head yourself (FWD TO: APATIL).
+2.3 The integration service account (SVC_AGENT) never signs or clears anything.
+2.4 Nobody signs a contract they raised.
+
+
+===== LEG-PB-004: NDA Playbook v3.2, effective 2026-04-01 =====
+# NDA Playbook (LEG-PB-004)
+
+The playbook is what Legal accepts without discussion. Bahi compares every request against it (clause scan) and records each difference as a deviation on LEG-REV-02.
+
+| Clause | Our position | Bahi check |
+|---|---|---|
+| NDA-PAPER | Our template NDA-MUT-v4 (mutual) or NDA-ONE-v2 (one-way, we disclose) | paper = OURS |
+| NDA-TERM | Up to 36 months; 24 months is normal for a supplier evaluation | term ≤ 36 |
+| NDA-JURIS | Courts at Pune | juris = PUNE |
+
+## Choosing the template
+1. Both sides will share drawings, prices or process details: **NDA-MUT-v4 (mutual)**. This is the normal case with a new supplier.
+2. Only we share (for example, we send a drawing for a quotation): NDA-ONE-v2.
+3. NDA-MUT-v3 was withdrawn on 31 March 2025 and Bahi refuses it (ERR-CT-0212).
+
+## When the other side sends their own NDA
+1. Raise it as THEIRS with their document reference. It goes to Legal (Rekha Menon) for review.
+2. Typical problems: a term of five years or more, courts abroad or in another city, a one-way NDA that protects only them, a clause that stops us hiring their staff.
+3. Legal clears it, returns it, or asks them to sign ours instead. Tell the requester which deviations Legal must look at.
+
+
+===== LEG-NOTE-019: Note on NDA templates (old) v1.0, effective 2023-06-01 =====
+# Note on NDA templates (2023, superseded)
+
+**This note describes the 2023 practice. Where it disagrees with the NDA Playbook (LEG-PB-004) or the Delegation of Authority (POL-DOA-002), those win.**
+
+1. Use template NDA-MUT-v3 for every supplier. (Withdrawn 31 March 2025; use NDA-MUT-v4.)
+2. The standard NDA term is five years. (Now at most three years; two is normal.)
+3. Any manager may sign an NDA. (Now only the plant head.)
+4. Register the party in the supplier master first so Bahi can find it. (No longer: contracts have their own party register.)
+
+
+===== PUR-SOP-021: Delivery Schedule SOP v1.6, effective 2026-06-01 =====
+# Delivery Schedule SOP (PUR-SOP-021)
+
+1. Every released order carries a **delivery schedule**: one or more lines of date and quantity. Stores plan the gate and the line-side stock from it.
+2. On PUR-POM-08 the schedule grid (SCH 1, SCH 2) holds the **new** lines for the quantity not yet received. Received lines stay as they are.
+3. The schedule must add up: **received quantity + the new lines = the new order quantity**, and **the last line falls on the new need-by date**.
+4. If you leave the grid blank, Bahi keeps the old lines. If they no longer add up, Bahi **still says SAVED**, but holds the amendment (status HD, warning W-SCH-209). A held amendment is not sent for approval and the supplier is not told.
+5. To fix a held amendment, open it on PUR-POM-08 and use **Fix Schedule**. Bahi checks it again and sends it on for approval if needed.
+6. Check the amendment status on PUR-POA-09 or in the order's revision list after every save.
+7. Example: Kavita's order PO/2026/01182 is 20,000 gaskets: 10,000 on 30 Oct and 10,000 on 2 Nov. To make it 15,000 on 9 Nov, enter NEW QTY 15000, NEW NEED DT 09-11-2026 and SCH 1 = 09-11-2026 / 15000.
+
+
+===== POL-PUR-005: Purchase Order Amendment Policy v2.3, effective 2026-04-01 =====
+# Purchase Order Amendment Policy (POL-PUR-005)
+
+## 1. Purpose
+A released purchase order is a promise to a supplier. This policy says when and how such a promise may be changed, and who must agree before the supplier is told.
+
+## 2. Scope
+It covers changes to **released** orders (status RL) on screen PUR-POM-08. An order that is not yet released is changed on PUR-POM-06 under the Purchase Policy (POL-PUR-001).
+
+## 3. What may change
+3.1 The quantity, the need-by date and the delivery schedule may change. The supplier, the item and the rate may not; for those, cancel and raise a new order.
+3.2 The quantity may **never go below what has already been received**. To stop further deliveries, short-close the order (§6).
+3.3 A new delivery date may not be nearer than the supplier's lead time (Supplier Lead Times, PUR-REF-009).
+
+## 4. Re-approval
+4.1 A **cut of more than 20%** of the order quantity needs the order's original approver to approve again, because the supplier may have made the goods already.
+4.2 **Moving the need-by date by more than 5 days**, earlier or later, needs the original approver to approve again, because it changes the production plan.
+4.3 If the change raises the gross value above the raiser's own approval limit, it goes up the approval chain like a new order.
+4.4 If the original approver is the person raising the amendment, their manager approves instead. Nobody approves their own amendment.
+
+## 5. Delivery dates
+5.1 **No delivery may be scheduled on a Sunday or a plant holiday** (see the Holiday Calendar). The stores gate is closed and the truck waits outside. Bahi does not check this; the buyer must.
+5.2 The last delivery line is the need-by date of the order.
+
+## 6. Short-close
+6.1 A short-close (amendment type SCL) cancels everything not yet received. The order quantity becomes the received quantity and the date does not change.
+6.2 A short-close of more than 20% of the order needs re-approval like any other cut (§4.1).
+
+## 7. Telling the supplier
+7.1 **The supplier is told about a change only when the revision is released in Bahi** (status RL). Bahi sends the revision to the supplier on release.
+7.2 Do not tell the supplier, or the person who asked for the change, that it is done while the amendment is held (HD), pending (PA) or approved but not released (AP).
+7.3 Check the Supplier Terms (CLS-SUP-002, clause 11) before cutting an order the supplier may already have made.
+
+
+===== PUR-FAQ-004: PO Revision FAQ (old) v1.0, effective 2023-05-01 =====
+# PO Revision FAQ (2023, superseded)
+
+**Written for Bahi 6.x. Where it disagrees with the PO Amendment Policy (POL-PUR-005), the policy wins.**
+
+Q. Who approves a change to a released order?
+A. The plant head, always. (Now: the original approver, and only when the cut is over 20% or the date moves over 5 days.)
+
+Q. Can I reduce an order below what has been received?
+A. Yes, Bahi adjusts the receipt. (No longer possible: Bahi 7.2 refuses it with ERR-PA-0310; short-close instead.)
+
+Q. Do I need to change the delivery schedule when I change the quantity?
+A. No, Bahi spreads the new quantity over the old lines. (No longer true: you must enter the new lines, or the amendment is held.)
+
+Q. Can I phone the supplier with the new date?
+A. Yes, and amend the order later. (Not allowed: the supplier is told only by the released revision.)
+
+
+===== PUR-REF-009: Supplier Lead Times v2026.2, effective 2026-07-01 =====
+# Supplier Lead Times (PUR-REF-009)
+
+The lead time is the least number of days between today and a new delivery date that a supplier can meet. Bahi refuses a delivery date nearer than this (ERR-PA-0320).
+
+| Supplier | Code | Lead time (days) | Note |
+|---|---|---|---|
+| Deccan Polymers, Rajkot | DP-RJK-0042 | 5 | road transport takes 2 days |
+| Deccan Paints & Inks, Ahmedabad | DPI-AMD-0107 | 7 | not a gasket supplier |
+| Sahyadri Valves, Pune | SV-PUN-0017 | 2 | |
+| Om Sheet Metals, Bhosari | OSM-PUN-0031 | 3 | |
+| Mahalaxmi Steels, Mumbai | MS-MUM-0008 | 7 | mill schedule |
+| Shree Packaging, Pune | SP-PUN-0055 | 2 | |
+| Kaveri Rubber Products, Kolkata | KR-KOL-0063 | 10 | rail |
+
+From Monday 26 October 2026, the earliest new date for Deccan Polymers is Saturday 31 October.
+
+
+===== CLS-SUP-002: General Terms of Purchase (extract) v5.0, effective 2025-10-01 =====
+# General Terms of Purchase, extract (CLS-SUP-002)
+
+**Clause 10. Delivery.** The supplier delivers on the dates in the latest released revision of the order. Deliveries are accepted Monday to Saturday, 8 AM to 6 PM, except plant holidays.
+
+**Clause 11. Changes and cancellation.**
+11.1 Rasoi Steel Works may change the quantity or dates of an order by sending a revision.
+11.2 If a quantity is cut, or an order short-closed, **within the supplier's lead time before a scheduled delivery**, the supplier may claim the cost of goods already made for that delivery, up to 10% of the value cut.
+11.3 A revision is binding only when the supplier receives it from Bahi. Phone calls and emails from staff are not revisions.
+
+**Clause 12. Price.** The rate on the order holds for the whole order, including revisions. A rate change needs a new order.
+
+
+===== POL-FIN-031: Customer Credit Policy v3.1, effective 2026-04-01 =====
+# Customer Credit Policy (POL-FIN-031)
+
+## 1. Credit limit
+1.1 Every credit customer has a credit limit in the customer master.
+1.2 **Exposure** = unpaid invoices (outstanding) + orders open or released but not yet invoiced.
+
+## 2. Credit hold
+2.1 When a new order would take exposure above the limit, Bahi saves the order **on credit hold (CH)**. The order is saved, but it is not released, no stock is reserved and the warehouse never sees it.
+2.2 An order on credit hold must not be promised to the customer or reported as booked for dispatch.
+2.3 A credit hold is lifted only by (a) the customer paying enough of the outstanding, or (b) a temporary limit increase approved by the Finance Controller (Vikram Nair). Sales staff cannot lift it.
+2.4 Tell the customer the amount by which the order exceeds the limit, and the options in 2.3.
+
+## 3. Cash sales
+3.1 A direct cash sale from stock (order type CSH) needs no quotation and no credit check, up to ₹1,00,000 gross. Above that, raise a quotation.
+
+
+===== POL-SAL-022: Discount Authority Matrix v1.6, effective 2026-04-01 =====
+# Discount Authority Matrix (POL-SAL-022)
+
+| Role | Who | Discount on list price, without further approval |
+|---|---|---|
+| Sales executive (SAL-EXEC) | Arjun Rao | up to 2% |
+| Sales manager (SAL-MGR) | Sunita Iyer | up to 5% |
+| Plant head (PLANT-HEAD) | Anand Patil | up to 10% |
+
+Rules
+1. A discount above your own authority is entered in DISC % and the quotation is saved; Bahi holds it as PA and sends it to your manager. It must not be sent to the customer until it is issued (IS).
+2. A lower **rate** is a discount. Never type a lower or older rate to avoid an approval.
+3. Nobody approves a discount on their own quotation. The integration service account never approves discounts.
+4. Scheme discounts announced by circular count towards these limits.
+
+
+===== CIR-SAL-2026-14: Diwali Dealer Scheme 2026 v1.0, effective 2026-10-15 =====
+# Diwali Dealer Scheme 2026 (CIR-SAL-2026-14)
+
+1. From **15 October to 15 November 2026**, registered dealers (type DLR) get a scheme discount of **3%** on the 5-litre and 7.5-litre stainless steel cookers (PC-SS-05L, PC-SS-07L).
+2. The scheme applies to quotations issued in the scheme period for at least 200 pieces of one model.
+3. The scheme discount is entered in DISC %. It counts towards the discount authority (POL-SAL-022), so a 3% scheme quotation by a sales executive goes to the sales manager in Bahi.
+4. Distributors, retailers and the factory outlet are not covered.
+5. The scheme does not change the list price. Do not type a lower rate.
+
+
+===== TAX-NOTE-07: GST on Pressure Cookers (sandbox note) v1.2, effective 2026-04-01 =====
+# GST on pressure cookers (TAX-NOTE-07)
+
+1. In the Bahi sandbox, all Rasoi pressure cookers carry GST at **12%** (tax codes GST12-*).
+2. The place of supply is the customer's state:
+   - customer in **Maharashtra** (same state as the Pune plant): **GST12-INTRA** (CGST 6% + SGST 6%);
+   - customer in **any other state**: **GST12-INTER** (IGST 12%).
+3. The quotation screen's Price button always offers GST12-INTRA. For a customer outside Maharashtra, change it; otherwise Bahi refuses with ERR-SO-0412.
+4. Example: 500 × ₹1,450 = ₹7,25,000 basic; GST 12% = ₹87,000; gross ₹8,12,000.
+
+
+===== CIR-SAL-2026-03: Dealer Price Circular, April 2026 v1.0, effective 2026-04-01 =====
+# Dealer Price Circular, April 2026 (CIR-SAL-2026-03) — expired
+
+**This circular expired on 30 September 2026. Do not quote from it.**
+
+| Model | Dealer price (₹) |
+|---|---|
+| PC-SS-05L stainless steel 5 L | 1,395 |
+| PC-AL-05L aluminium 5 L | 980 |
+| PC-SS-03L stainless steel 3 L | 1,140 |
+
+Dealers may order in multiples of 10. Freight is extra beyond 300 km from Pune.
+
+
+===== POL-SAL-021: Price Policy v2.3, effective 2026-10-01 =====
+# Price Policy (POL-SAL-021)
+
+## 1. Purpose
+This policy says which price each customer pays for Rasoi pressure cookers, so that every quotation can be defended.
+
+## 2. Price lists
+2.1 There are four price lists: **DLR** (registered dealers), **DST** (distributors), **RTL** (retailers) and **MRP**. Each customer is assigned **one** list in the customer master. **Dealer price is only for customers registered as dealers (type DLR).** A retailer asking for dealer price is quoted the retail list, or the request goes to the sales manager.
+2.2 The list is fixed in Bahi. To move a customer to another list, raise a customer master change with the sales manager's approval; never type another list's price.
+
+## 3. Which price
+3.1 Quote the price valid **on the quotation date**. The current dealer price for the 5-litre stainless steel cooker (PC-SS-05L) is ₹1,450, valid from 1 October 2026.
+3.2 **Expired prices must not be used.** Bahi checks that a typed rate appears on the customer's price list but does **not** check its dates. Prices from older circulars and old quotations are for reference only.
+3.3 The aluminium 5-litre cooker (PC-AL-05L) is a different product at a different price. "Five-litre cooker" on its own means the stainless steel PC-SS-05L.
+
+## 4. Quantities
+4.1 The minimum quantity for a dealer quotation is 50 pieces of one model.
+4.2 A quotation is valid for 15 days unless the sales manager agrees otherwise in writing.
+
+## 5. Tax
+5.1 Prices are before GST. See the GST note (TAX-NOTE-07) for the tax code.
+
+
+===== POL-SVC-023: Goodwill Authority v1.1, effective 2026-07-01 =====
+# Goodwill Authority (POL-SVC-023)
+
+A goodwill waiver makes a chargeable repair free. It is a cost to the company and needs authority.
+
+| Who | May waive |
+|---|---|
+| Service desk (FSHAIKH) | Up to ₹5,000 per ticket, for out-of-warranty wear only |
+| Service manager (NBHOSALE) | Up to ₹1,00,000 per ticket, any cause |
+| Plant head (APATIL) | Above ₹1,00,000 |
+
+Rules
+1. **Any waiver on an excluded cause (physical damage, non-genuine parts, dry heating) needs the service manager, whatever the amount.** Request it with FWD TO: NBHOSALE. Bahi grants a waiver within the desk's limit at once if FWD TO is blank; that is not authority for an excluded cause.
+2. Nobody approves a waiver on a ticket they raised. The integration service account never approves waivers.
+3. The reason for the waiver is written on the ticket.
+4. Until a waiver is approved, the ticket stays chargeable and no part is issued.
+
+
+===== SOP-SVC-005: Service Desk Procedure v3.2, effective 2026-06-01 =====
+# Service Desk Procedure (SOP-SVC-005)
+
+When a dealer calls about a failed part:
+
+1. **Get the serial number.** It is stamped on the lid rim and printed on the box. Without it, nothing can be checked. Also ask for the dealer's invoice number and date of sale.
+2. **Find the serial** on SVC-SER-01. If it is not found, do not pick the nearest number. Read the close matches back to the dealer and ask them to check the cooker again. Serials differ by one digit and by model letter (RS = steel, RA = aluminium).
+3. **Check the dealer and model** match what the dealer says. A serial sold by a different dealer is a warning sign.
+4. **A blocked serial** (reported stolen) is never serviced. Tell the service manager.
+5. **Register the sale** if Bahi has no sale date, from the dealer's invoice.
+6. **Verify** the warranty on SVC-TKT-02 for that part. Note the basis (SALE or MFG) and the date it runs to.
+7. **Save the ticket** with the complaint and the real cause. For an excluded cause (POL-SVC-022) set CHARGEABLE = Y.
+8. **Issue the part** from Pune main stores. For a chargeable ticket, only after the dealer gives the customer's payment receipt.
+9. **Close the ticket.** Bahi emails the dealer and books the cost.
+10. Tell the dealer the ticket number and what happens next. "Replaced" means the part is issued.
+
+
+===== SVC-CARD-2022: Customer Warranty Card (2022 print) v2022, effective 2022-01-01 =====
+# Customer Warranty Card (2022 print, superseded)
+
+**This is the text of the old card still found in some boxes. Where it disagrees with the Warranty Policy (POL-SVC-021), the policy wins.**
+
+- Your cooker is guaranteed for 5 years from the date of manufacture. (Now: from the date of sale.)
+- Whistle and gasket are guaranteed for 12 months. (Now: 6 months.)
+- Any part will be replaced free within the guarantee period, whatever the cause. (Now: exclusions apply, see POL-SVC-022.)
+- Bring the card stamped by the dealer to any authorised dealer.
+
+
+===== POL-SVC-022: Warranty Exclusions v1.3, effective 2026-04-01 =====
+# Warranty Exclusions (POL-SVC-022)
+
+The warranty does not cover:
+
+1. **Wear parts used beyond their period**, even if the body is still in warranty.
+2. **Physical damage**: a cooker that was dropped, hit, or deformed, and any part cracked or broken as a result. A cracked lid after a fall is physical damage, whatever the lid's age.
+3. **Non-genuine parts**: damage after a gasket, whistle or valve not made by Rasoi Steel Works was fitted.
+4. **Dry heating or overheating**: damage from heating the cooker empty, or on a flame larger than the base.
+5. **Commercial use** in hotels and canteens, beyond 3 months.
+
+How to apply this
+- Record the real cause on the ticket (PHY, NGP, OVH). **Bahi does not apply these exclusions.** It decides free or chargeable from dates alone, so the desk must set CHARGEABLE = Y for an excluded cause.
+- A free replacement on an excluded cause is a goodwill waiver and follows the Goodwill Authority (POL-SVC-023).
+
+
+===== POL-SVC-021: Warranty Policy v2.0, effective 2026-04-01 =====
+# Warranty Policy (POL-SVC-021)
+
+## 1. Purpose
+This policy sets out what Rasoi Steel Works repairs or replaces free of charge, for how long, and how the warranty is checked in Bahi.
+
+## 2. Warranty periods
+| Part group | Parts | Warranty |
+|---|---|---|
+| Body | Body and base | 60 months |
+| Lid | Stainless steel lid | 24 months |
+| Handles | Long and short bakelite handles | 12 months |
+| Whistle | Whistle (weight valve) | 6 months |
+| Safety valve | Safety valve | 6 months |
+| Gasket | Silicone gasket | 6 months |
+
+## 3. When the warranty starts
+3.1 The warranty starts on the **date of sale to the customer**, as shown on the dealer's invoice.
+3.2 Dealers register each sale in Bahi (screen SVC-SER-01). If a sale is not registered, the service desk registers it from a copy of the dealer's invoice before checking the warranty.
+3.3 **If no sale is registered, Bahi counts the warranty from the date of manufacture.** A cooker that sat in a dealer's shop for months can then look out of warranty when it is not. Always check the basis Bahi used (SALE or MFG).
+
+## 4. What the customer gets
+4.1 A part that fails in warranty from a manufacturing defect or normal use is replaced free. The dealer fits it.
+4.2 A part out of warranty is replaced at the service price plus GST. The part is issued only after the customer has paid at the dealer and the receipt number is entered.
+4.3 A replaced part is never sent out against a different serial number from the one on the cooker.
+
+## 5. Records
+5.1 Every replacement has a service ticket in Bahi with the serial number, part, complaint and cause.
+5.2 Do not tell the dealer a part has been replaced or dispatched until the ticket shows the part issued (PI) or closed (CL).
+
+
+===== FIN-SOP-031: Travel Expense Claim Procedure v3.2, effective 2026-04-01 =====
+# Travel Expense Claim Procedure (FIN-SOP-031)
+
+1. Claim on screen TRV-CLM-03 against the trip number, after you are back.
+2. Claim within **30 days** of the return date. Bahi refuses later claims (ERR-TV-0703); they are not paid.
+3. One claim per trip. If you forgot something, ask finance to return the claim; do not raise a second one.
+4. Enter the hotel amount and the number of nights, local travel, and whether bills are attached (Y/N). Hand the bills to finance within 7 days.
+5. Bahi works out what is admissible: hotel up to the cap (POL-ADM-022), local travel without bills up to ₹300 a day, and the daily allowance. **Tell the traveller what will not be paid before submitting.**
+6. Finance (the finance controller) settles the claim. Settlement deducts any advance and posts the balance to the employee's account, or recovers it from salary if the advance was larger.
+7. Nobody settles their own claim. The integration service account never settles claims.
+
+
+===== POL-ADM-022: Hotel and Daily Allowance Schedule v2.1, effective 2026-04-01 =====
+# Hotel and Daily Allowance Schedule (POL-ADM-022)
+
+Hotel caps are per night, including taxes. The daily allowance (DA) covers food and small expenses and is paid for every day of the trip, counting the day out and the day back.
+
+| Grade | Hotel, class A city | Hotel, class B | Hotel, class C | DA, A | DA, B | DA, C |
+|---|---|---|---|---|---|---|
+| E2 | ₹4,000 | ₹3,000 | ₹2,000 | ₹800 | ₹600 | ₹500 |
+| E3 | ₹5,500 | ₹4,000 | ₹2,500 | ₹1,000 | ₹800 | ₹600 |
+| E4 | ₹6,500 | ₹5,000 | ₹3,000 | ₹1,200 | ₹1,000 | ₹700 |
+| M1 | ₹8,000 | ₹6,000 | ₹4,000 | ₹1,500 | ₹1,200 | ₹900 |
+| M2 | ₹9,000 | ₹7,000 | ₹4,500 | ₹1,800 | ₹1,500 | ₹1,000 |
+| M3 | ₹12,000 | ₹9,000 | ₹6,000 | ₹2,500 | ₹2,000 | ₹1,500 |
+
+City classes: **A** Mumbai, Pune, Ahmedabad, Kolkata. **B** Rajkot, Vadodara, Rajahmundry. **C** Chakan and other towns.
+
+Notes
+1. A hotel bill above the cap is paid **up to the cap**. The traveller bears the difference.
+2. Local travel (taxi, auto) is paid at actuals with bills. Without bills it is paid up to ₹300 a day, on the traveller's declaration.
+
+
+===== ADM-FAQ-009: Travel Desk FAQ v1.3, effective 2026-08-01 =====
+# Travel Desk FAQ (ADM-FAQ-009)
+
+**Q. My trip says WL. What does that mean?**
+A. Wait-listed for the next-day batch. You raised it less than 48 hours before departure without URGENT = Y, so it never went to your manager. If you still need to travel on that date, cancel it and raise it again with URGENT = Y. Call the desk on extension 2214 if it is for tomorrow morning.
+
+**Q. When is my trip booked?**
+A. Only when its status is **BK**. AP means approved and waiting for the desk. The desk sends the PNRs by email when both legs are booked.
+
+**Q. Which Rajkot?**
+A. Rajkot (RJK) is in Gujarat; Deccan Polymers is there. RJY is Rajahmundry, Andhra Pradesh. Check the city code; the desk books what the request says.
+
+**Q. The morning flight is full. Can I go business class?**
+A. Not unless you are grade M3. We book the next economy flight or a train (POL-ADM-021 §3.2).
+
+**Q. Can the desk book for me directly?**
+A. The desk can raise a request on your behalf (TRAVELLER field), but your manager must still approve it.
+
+
+===== POL-ADM-021: Travel Policy v5.0, effective 2026-04-01 =====
+# Travel Policy (POL-ADM-021)
+
+## 1. Purpose
+This policy sets out how staff of Rasoi Steel Works travel on company work: who may travel how, who approves, who books, and which cost centre pays.
+
+## 2. Scope
+It applies to all work travel by staff of the Pune plant (RSW-PUN-01) and the Chakan unit (RSW-CHK-01), booked through Bahi.
+
+## 3. Entitlements by grade
+3.1 Your grade decides how you travel. Bahi shows it on Fetch (screen TRV-REQ-01).
+
+| Grade | Who | May travel by | Flights allowed when the trip is over |
+|---|---|---|---|
+| E2 | Stores, travel desk | Train 2A/3A, bus | never |
+| E3 | Purchase and sales executives | Economy flight, train 2A/3A, bus | 500 km |
+| E4 | Senior buyers | Economy flight, train 1A/2A, bus | 300 km |
+| M1–M2 | Managers, finance controller | Economy flight, train 1A/2A | any distance |
+| M3 | Plant head | Business or economy flight, train 1A | any distance |
+
+3.2 **Business class is for grade M3 only.** No one may book above their grade because a flight is full or the meeting is important; take the next economy flight, or a train.
+3.3 An exception needs the plant head's written approval **before** booking. It is not raised in Bahi.
+
+## 4. Requests and the 48-hour rule
+4.1 Raise a trip request on TRV-REQ-01 at least **48 hours** before departure.
+4.2 A request raised less than 48 hours before departure must be marked **URGENT = Y**. It then goes to the approver at once and the desk books it the same day.
+4.3 A late request **not** marked urgent is saved by Bahi but waits for the desk's next-day batch (status WL). It is not sent for approval and it is not booked in time. Cancel it and raise it again as urgent.
+4.4 Ask the travel desk, not the airline. Tickets bought directly are not reimbursed.
+
+## 5. Cost centres
+5.1 **Supplier visits** (audits, rate negotiations, quality visits) are charged to the purchase cost centre for the current programme, **PRD-07** from 1 October 2026. Do not use your default cost centre without checking it: PRD-05 closed on 15 October and cannot carry new spend.
+5.2 Sales visits go to ADM-01. Training goes to ADM-01.
+
+## 6. Approval
+6.1 Every trip is approved by the traveller's reporting manager in Bahi before booking. Managers' trips are approved by the plant head.
+6.2 Nobody approves their own trip, and the integration service account never approves or books travel.
+6.3 Approval commits the estimated cost to the cost centre's budget.
+
+## 7. Advances
+7.1 A cash advance may cover hotel and daily allowance only, never tickets (the desk pays tickets).
+7.2 The advance is adjusted when the expense claim is settled (see FIN-SOP-031).
+
+
+===== ADM-CIR-014: Travel Rules (circular, 2023) v1.0, effective 2023-06-01 =====
+# Travel Rules circular (2023, superseded)
+
+**This circular is kept for reference. Where it disagrees with the Travel Policy (POL-ADM-021), the policy wins.**
+
+1. Executives (E3) travel by train 2A only. Flights need the plant head's approval. (Since April 2026, E3 may fly economy on trips over 500 km.)
+2. Trip requests need 7 days' notice. (Now 48 hours, or URGENT.)
+3. Supplier visits are charged to the traveller's own default cost centre. (Now PRD-07; see POL-ADM-021 §5.1.)
+4. Hotel cap for executives: ₹3,500 a night in any city. (Now by city class; see POL-ADM-022.)
