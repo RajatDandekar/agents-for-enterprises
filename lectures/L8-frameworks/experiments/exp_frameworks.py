@@ -110,6 +110,7 @@ def one(task):
     tool_ms = [c["ms"] for s in srvs.values() if s is not None for c in s.calls]
     r["mcp_calls"], r["tool_ms"] = len(tool_ms), round(sum(tool_ms), 1)
     r["request_shapes"] = shapes
+    r["first_request"] = meter.first.get(f"{a.fw}-{task.id}-KJOSHI") if task.id in ("T03", "T04") else None
     r["guard_log"] = [g for ag in local.agents for g in getattr(ag, "guard_log", [])]
     r["native"] = {getattr(ag, "tag", f"{a.fw}-{i}"): getattr(ag, "native", None) for i, ag in enumerate(local.agents)}
     return r

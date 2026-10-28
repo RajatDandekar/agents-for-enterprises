@@ -56,13 +56,15 @@ for who in ("KJOSHI", "NDESAI"):
     front, servers = desks(instructions(tb), srv.url, meter.base_url(f"desks-{who}"), MODEL)
     for s in servers:
         lt.run(s.connect())
-    fronts[who] = (front, SQLiteSession(f"{who}-thread", db if who == "KJOSHI" else ":memory:"))
+    fronts[who] = [front, SQLiteSession(f"{who}-thread", db if who == "KJOSHI" else ":memory:")]
 
 for i, (who, msg) in enumerate(SCRIPT):
     msg = msg.format(po=po_of(erp))
     front, session = fronts[who]
     n0 = len(RECORDER.spans.get(f"desks-{who}", []))
     r = lt.run(ask_desks(front, session, msg, f"desks-{who}"))
+    fronts[who][0] = r.pop("next")              # the next message starts with whoever answered this one
+    r["next_starts_at"] = fronts[who][0].name
     spans = RECORDER.spans.get(f"desks-{who}", [])[n0:]
     r.update({"who": who, "message": msg, "spans": spans,
               "orders": [(o["po_no"], o["status"]) for o in erp.orders() if o["po_no"].startswith("PO/2026/011")]})

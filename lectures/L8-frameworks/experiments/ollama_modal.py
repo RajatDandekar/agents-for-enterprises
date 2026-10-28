@@ -44,7 +44,7 @@ image = (
     modal.Image.from_registry(OLLAMA, add_python="3.11")
     .entrypoint([])
     .pip_install("openai>=2.45,<3", "uvicorn", "httpx", "pydantic>=2", "pyyaml", "pandas", "fastmcp", "mcp",
-                 "langgraph==1.2.15", "langchain-core")
+                 "langgraph==1.2.15", "langchain-core", "fastembed", "rank_bm25", "numpy")
     .env({"PYTHONPATH": "/course/bahi", "OLLAMA_CONTEXT_LENGTH": "32768", "OLLAMA_NUM_PARALLEL": "4",
           "OLLAMA_KEEP_ALIVE": "60m", "OLLAMA_HOST": "127.0.0.1:11434"})
     .add_local_dir(_stage() if modal.is_local() else "/tmp", "/course")

@@ -1,0 +1,825 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 8 · Agent Frameworks in Industry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../../engine/plates.css">
+<style>
+.pb{position:absolute;border-radius:22px;background:#fff;box-shadow:var(--shadow);overflow:hidden}
+.pb img{width:100%;height:100%;object-fit:contain;display:block}
+.two{position:absolute;left:100px;right:100px;display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.three{position:absolute;left:100px;right:100px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+.four{position:absolute;left:100px;right:100px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.live{display:inline-flex;align-items:center;gap:8px;font:500 17px/1 var(--font);padding:12px 18px;border-radius:999px;background:var(--glass);border:1px solid var(--pill-line);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--after);text-decoration:none}
+.live::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--after)}
+.q{font-size:23px;margin-bottom:12px}
+.q b{color:var(--after)}
+.ans{font-size:19px;color:var(--ink-2);margin:-6px 0 14px 26px}
+.num{font:500 52px/1 var(--font);letter-spacing:-.03em;color:var(--after)}
+.num.b{color:var(--before)} .num.g{color:var(--gold)}
+.p23{font-size:23px}
+.card.sm{font-size:19px;line-height:1.38;padding:16px 20px}
+.card.sm h3{font-size:22px}
+.card .k{font:600 13px/1 var(--font);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:8px}
+.nr{font:500 13px/1 var(--font);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.code.s{font-size:14px;line-height:1.48}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- 1 -->
+<section class="slide" data-plain="1">
+  <div class="center">
+    <div class="kicker">Agentic Systems Engineering · Lecture 8 · Sun 22 Nov 2026 · 7–9 AM IST</div>
+    <h1>Agent Frameworks in Industry</h1>
+    <p class="lede" style="margin-top:22px">You built Ask Rasoi's loop by hand. Today the same agent runs on the frameworks companies use: the OpenAI Agents SDK, Google ADK and LangGraph, behind a model gateway, and on a model in our own building. Same tools, same model, same twelve tasks. Measured.</p>
+    <p class="small" style="margin-top:18px">Dr. Rajat Dandekar · Vizuara</p>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="slide" data-plate="Last Time, This Time">
+  <div class="lec-top"><h2>Last time, this time</h2><p class="sub">Lecture 7 made Ask Rasoi safe to run. Lecture 8 asks what it should run on.</p></div>
+  <div class="ba">
+    <div class="card bf step"><span class="tag nt">Lectures 1–7 · built by hand</span><h3>Every piece, from first principles</h3>The toolbox over MCP (L4). The loop and its harness: prompt, history, stop rules, the pause for Rohit (L5). Workflows (L6). Identity, approvals, evals, traces (L7). You can explain every line.</div>
+    <div class="card af step"><span class="tag af">Lecture 8 · in industry</span><h3>The same agent, on the industry's frameworks</h3>Four of them, each introduced the same way: what problem it solves, its names for the pieces you already built, and a port of Ask Rasoi run on the real gasket order. Then the bill: tokens, rupees, lines of code.</div>
+  </div>
+  <div class="opens step"><span class="k">The question for today</span>A framework gives you the loop. Does it give you anything Rasoi needs that your harness does not, and what does it cost?</div>
+</section>
+
+<!-- 3 -->
+<section class="slide" data-plate="Cold Open · A Question from Rasoi's IT">
+  <div class="col" style="width:560px">
+    <h2 style="font-size:46px">"Why did you write your own loop?"</h2>
+    <p class="p23">Monday morning. Rasoi's IT team has read your Lecture 5 code. Their note to Anand Patil is short.</p>
+    <p class="step p23">Everyone uses LangGraph, or OpenAI's Agents SDK, or Google's ADK. A home-made loop is one more thing to maintain. Rewrite Ask Rasoi on a framework.</p>
+    <p class="step p23">Anand forwards it to you with one line: <b>"Which one, and why? With numbers, not opinions."</b></p>
+  </div>
+  <div class="card af step" style="position:absolute;left:720px;top:170px;width:780px;font-size:22px">
+    <span class="k">What you will do today</span>
+    <ol style="margin:0;padding-left:26px;line-height:1.6">
+      <li>Learn each framework's names for the pieces you built.</li>
+      <li>Port Ask Rasoi to it: same toolbox over MCP, same model, same prompt.</li>
+      <li>Run the twelve Lecture 5 tasks on every port, twice.</li>
+      <li>Count passes, never-events, tokens, rupees, seconds and lines.</li>
+      <li>Write Anand his answer.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="slide" data-plate="Cold Open · Four Ports, One Whistle Order">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">Same order, four implementations. Which one is ours?</h2><p class="sub">Kavita: <i>"Order 3,000 standard whistles from Sahyadri Valves, cost centre PRD-07, need-by 4 November."</i> Then: <i>"Yes, go ahead."</i></p></div>
+  <div class="fig" data-fig="coldfour" style="left:100px;top:250px;width:1400px;height:520px"></div>
+  <div class="cap step" style="left:100px;top:790px;width:1400px">All four released PO/2026/01182 for ₹24,072, checked in Bahi's tables. Our harness is the first column; the replies alone cannot tell you. Task T04, our run of 28 Oct 2026, <code>logs/fw_*.json</code>.</div>
+</section>
+
+<!-- 5 -->
+<section class="slide" data-plain="1">
+  <div class="center">
+    <div class="kicker">The question this lecture answers</div>
+    <p class="bigq">What does an agent framework give you, what does it leave to you, and which one should Rasoi run on? Measured on Rasoi's own tasks.</p>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="slide part" data-plain="1">
+  <div class="center"><div class="num">Part One</div><h1>What a framework is</h1><p class="lede">A library that owns the loop. You give it instructions and tools; it calls your tools.</p></div>
+</section>
+
+<!-- 7 -->
+<section class="slide" data-plate="Agent Framework, in One Sentence">
+  <div class="col" style="width:600px">
+    <h2>An agent framework</h2>
+    <div class="def"><b>Agent framework</b>A library that runs the agent loop for you: it calls the model, runs the tools the model asks for, keeps the history and records a trace. You write the instructions and the tools.</div>
+    <p class="step p23" style="margin-top:18px">A library you call. A framework <b>calls you</b>: its Runner decides when your tools run.</p>
+    <p class="step p23">That is exactly what your <code>Harness._loop</code> did in Lecture 5. The frameworks are the same nine lines, written once and shared by thousands of teams.</p>
+  </div>
+  <div class="card step" style="position:absolute;left:760px;top:170px;width:740px">
+    <span class="k">What you wrote by hand, counted</span>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px">
+      <div><div class="num" data-v="loc.ours.port_lines"></div><div class="small">lines: <code>harness.py</code>, the loop and its seven parts</div></div>
+      <div><div class="num" data-v="loc.ours.loop_only_lines"></div><div class="small">lines: the loop alone, <code>_loop()</code></div></div>
+    </div>
+    <p class="small" style="margin-top:16px">Code lines only: no blanks, comments or docstrings. <code>experiments/count_loc.py</code> → <code>logs/loc.json</code>.</p>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="slide" data-plate="What It Gives, What It Leaves">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:50px">What a framework gives you, and what it leaves to you</h2></div>
+  <div class="two" style="top:230px">
+    <div class="card af step"><span class="tag af">It gives you</span><h3>The plumbing every agent needs</h3><ul><li>The loop, with a step cap</li><li>Tools from functions and from MCP servers</li><li>History in a session store</li><li>A trace of every model and tool call</li><li>Hooks: guardrails, callbacks, handoffs to other agents</li></ul></div>
+    <div class="card bf step"><span class="tag bf">It leaves to you</span><h3>Everything that is Rasoi's business</h3><ul><li>Purchase Policy §6.2: no food-contact parts without a valid certificate</li><li>The pause: nothing is ordered until Bahi says APPROVED</li><li>Reading Bahi back before saying "released"</li><li>The tools themselves, and whom they act as</li><li>Your evals</li></ul></div>
+  </div>
+  <div class="opens step" style="top:660px;background:var(--gold-soft)"><span class="k" style="color:var(--gold)">Hold on to this</span>The right-hand column is where Rasoi's never-events live. Keep it in mind when you read the scoreboard in Part Five.</div>
+</section>
+
+<!-- 9 -->
+<section class="slide" data-plate="The Map">
+  <div class="col" style="width:420px">
+    <h2>The map</h2>
+    <p class="p23">Six things you built have a name in every framework.</p>
+    <p class="step p23">One more is new: a <span class="term">handoff</span>, one agent passing the conversation to another.</p>
+    <p class="step small">The tools stay where they were: the Lecture 4 toolbox, served over MCP. Every framework today reads the same server.</p>
+  </div>
+  <div class="pb" style="left:560px;top:130px;width:940px;height:525px"><img src="figs/fw_abstractions.jpg" alt="What you built by hand mapped to framework names"></div>
+  <div class="cap" style="left:560px;top:672px;width:940px"><b>Fig. 1.</b> The pieces of your Lecture 5 harness and the names frameworks give them.</div>
+</section>
+
+<!-- 10 -->
+<section class="slide" data-plate="One Idea, Four Names">
+  <div class="col" style="width:380px">
+    <h2>One idea, four names</h2>
+    <p class="p23">Click a framework. Each row is one piece of Ask Rasoi.</p>
+    <p class="small">Read a row across: the same thing, spelled four ways. You already know what each one does.</p>
+  </div>
+  <div class="fig" data-fig="rosetta" style="left:520px;top:120px;width:980px;height:700px"></div>
+</section>
+
+<!-- 11 -->
+<section class="slide" data-plate="Check Yourself · Frameworks">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:50px">Check yourself</h2></div>
+  <div style="position:absolute;left:100px;top:220px;width:1400px">
+    <p class="q step">1. In the Agents SDK, which object plays the part of your <code>for step in range(max_steps)</code>? <b>Reveal</b></p>
+    <p class="ans step"><code>Runner.run</code>. Its <code>max_turns</code> is your step cap.</p>
+    <p class="q step">2. Rasoi moves to a framework. Who now enforces Purchase Policy §6.2? <b>Reveal</b></p>
+    <p class="ans step">Still you. A framework gives you a place to put the check (a guardrail, a callback, a graph node), not the check.</p>
+    <p class="q step">3. Why can every framework today use the same 15 tools without a line changed? <b>Reveal</b></p>
+    <p class="ans step">Because the toolbox is an MCP server. Each framework is an MCP client: it calls <code>tools/list</code>, then <code>tools/call</code>.</p>
+  </div>
+</section>
+
+<!-- 12 -->
+<section class="slide part" data-plain="1">
+  <div class="center"><div class="num">Part Two</div><h1>The OpenAI Agents SDK</h1><p class="lede">Agent, Runner, tools, sessions, tracing, handoffs, guardrails. Taught in depth, then run on the gasket order.</p></div>
+</section>
+
+<!-- 13 -->
+<section class="slide" data-plate="The Agents SDK · What and Why">
+  <div class="col" style="width:600px">
+    <h2>What it is</h2>
+    <p class="p23">OpenAI's open-source Python library for agents (<code>pip install openai-agents</code>). Small on purpose: a handful of objects.</p>
+    <p class="step p23"><b>The problem it solves:</b> the loop, tool calling, multi-agent handoffs and tracing, without writing them again.</p>
+    <p class="step p23"><b>Not tied to OpenAI's models.</b> It speaks the chat-completions API, so any gateway works. We give it OpenRouter's URL; no OpenAI key anywhere today.</p>
+  </div>
+  <div class="card step" style="position:absolute;left:760px;top:150px;width:740px;font-size:20px">
+    <span class="k">Pinned: openai-agents 0.20.0</span>
+    The newest release on 28 Oct 2026 was 0.24.0. From 0.21 on it needs <code>openai</code> 3.x, while LiteLLM (which ADK uses) still needs <code>openai</code> below 3. The two cannot share one Python environment.
+    <p class="small" style="margin-top:12px">So the notebook pins 0.20.0, the last release that installs next to LiteLLM 1.104.2. A real cost of frameworks: <b>their dependencies have to agree.</b></p>
+    <p class="tiny" style="margin-top:6px">Found when our first image build failed: <code>logs/probe.txt</code>, PyPI metadata.</p>
+  </div>
+</section>
+
+<!-- 14 -->
+<section class="slide" data-plate="Agent = Instructions + Tools + Model">
+  <div class="col" style="width:440px">
+    <h2>Agent</h2>
+    <div class="def"><b>Agent</b>A model, its instructions (the system prompt) and its tools, bundled into one object.</div>
+    <p class="step p23" style="margin-top:16px"><code>instructions</code> is Lecture 5's <code>SYSTEM_FULL</code>, word for word.</p>
+    <p class="step p23"><code>mcp_servers</code> is the toolbox. The Agent lists the tools itself.</p>
+    <p class="step small">An Agent does nothing on its own. It is a description; the Runner runs it.</p>
+  </div>
+  <div class="code s" style="position:absolute;left:600px;top:150px;width:900px"><span class="k">from</span> agents <span class="k">import</span> Agent, ModelSettings, OpenAIChatCompletionsModel
+<span class="k">from</span> agents.mcp <span class="k">import</span> MCPServerStreamableHttp
+<span class="k">from</span> openai <span class="k">import</span> AsyncOpenAI
+
+toolbox = MCPServerStreamableHttp(params={<span class="s">"url"</span>: mcp_url, <span class="s">"timeout"</span>: 60},
+                                  name=<span class="s">"bahi-toolbox"</span>, cache_tools_list=True)
+llm = OpenAIChatCompletionsModel(model=<span class="s">"google/gemini-3.8-flash"</span>,
+          openai_client=AsyncOpenAI(base_url=<span class="s">"https://openrouter.ai/api/v1"</span>, api_key=KEY))
+<span class="h">agent = Agent(name=<span class="s">"Ask Rasoi"</span>, instructions=SYSTEM_FULL, model=llm,</span>
+<span class="h">              mcp_servers=[toolbox], model_settings=ModelSettings(temperature=0))</span></div>
+  <div class="cap" style="left:600px;top:470px;width:900px">From <code>bahi/course/frameworks/openai_agents.py</code>. In our runs <code>base_url</code> pointed at the meter (Part Five), which forwards to this same OpenRouter URL.</div>
+</section>
+
+<!-- 15 -->
+<section class="slide" data-plate="Runner = the Loop">
+  <div class="col" style="width:430px">
+    <h2>Runner</h2>
+    <div class="def"><b>Runner</b>The loop: call the model, run the tools it asks for, append the results, repeat until it answers in words or hits <code>max_turns</code>.</div>
+    <p class="step p23" style="margin-top:16px">Left: your Lecture 5 loop. Right: one call does the same.</p>
+    <p class="step small">Past the cap it raises <code>MaxTurnsExceeded</code>. We turn that into "(stopped after 12 steps)", as our harness does.</p>
+  </div>
+  <div class="code s step" style="position:absolute;left:580px;top:150px;width:440px;font-size:13.5px"><span class="c"># Lecture 5, by hand</span>
+for step in range(max_steps):
+    r = llm.chat(messages, tools=schemas)
+    messages.append(r.message())
+    if not r.tool_calls:
+        return r.content
+    for tc in r.tool_calls:
+        out = toolbox.call(tc.name, tc.arguments)
+        messages.append({<span class="s">"role"</span>: <span class="s">"tool"</span>,
+            <span class="s">"tool_call_id"</span>: tc.id,
+            <span class="s">"content"</span>: json.dumps(out)})</div>
+  <div class="code s step" style="position:absolute;left:1040px;top:150px;width:460px;font-size:13.5px"><span class="c"># The Agents SDK</span>
+<span class="h">result = await Runner.run(</span>
+<span class="h">    agent, kavita_says,</span>
+<span class="h">    session=session,</span>
+<span class="h">    max_turns=12)</span>
+reply = result.final_output
+
+<span class="c"># result.new_items: every tool call,</span>
+<span class="c"># tool output and message of this run</span></div>
+  <div class="cap step" style="left:580px;top:480px;width:920px">The same nine lines, now inside <code>agents/run.py</code>. What you lose: you can no longer put a line of your own between "the model asked" and "the tool ran", except through the hooks the SDK offers (guardrails, Part Two's end).</div>
+</section>
+
+<!-- 16 -->
+<section class="slide" data-plate="Tools from MCP">
+  <div class="col" style="width:470px">
+    <h2>Tools, from MCP</h2>
+    <p class="p23">The SDK is an MCP client. On each run it asks the server <code>tools/list</code> and offers those tools to the model.</p>
+    <p class="step p23">When the model calls one, the SDK sends <code>tools/call</code> to the same server. Our tool code runs in Kavita's own Bahi session.</p>
+    <p class="step small">Two kinds of tool: <code>@function_tool</code> on a Python function, or every tool of an MCP server. We use MCP, so all four frameworks share one toolbox.</p>
+  </div>
+  <div class="card af step" style="position:absolute;left:640px;top:160px;width:860px;font-size:19px">
+    <span class="k">In our run · the span the SDK records</span>
+    <div class="json" style="background:#fff;margin-top:6px">{"type": "mcp_tools", "server": "bahi-toolbox",
+ "result": ["find_item", "check_stock", "find_supplier", "check_budget",
+            "search_policy", "create_purchase_request", "list_my_approvals",
+            "approve_purchase_request", "create_purchase_order",
+            "approve_purchase_order", "release_purchase_order", "order_status",
+            "receive_goods", "register_supplier", "send_message"]}</div>
+    <p class="small" style="margin-top:12px">15 tools, discovered, not hard-coded. With <code>cache_tools_list=True</code> the list is fetched once per connection. Task T04, <code>logs/fw_openai_agents.json</code>.</p>
+  </div>
+</section>
+
+<!-- 17 -->
+<section class="slide" data-plate="The Model, Through a Gateway">
+  <div class="col" style="width:540px">
+    <h2>The model, through OpenRouter</h2>
+    <p class="p23">The SDK talks to a <code>Model</code>. Two ways to reach a model that is not OpenAI's:</p>
+    <p class="step p23"><b>1.</b> <code>OpenAIChatCompletionsModel</code> with any OpenAI-compatible URL: OpenRouter, a LiteLLM proxy, Ollama. We used this.</p>
+    <p class="step p23"><b>2.</b> <code>LitellmModel("openrouter/google/gemini-3.8-flash")</code>, the LiteLLM route.</p>
+    <p class="step small">Either way the model is one string. Part Six shows what a gateway adds.</p>
+  </div>
+  <div class="card step" style="position:absolute;left:760px;top:170px;width:740px">
+    <span class="k">Kavita's first message, in our run</span>
+    <table class="t" style="font-size:19px">
+      <tr><th>Model call</th><th>Input tokens</th><th>It asked for</th></tr>
+      <tr><td>1</td><td class="n">1,682</td><td>find_item, find_supplier, check_budget</td></tr>
+      <tr><td>2</td><td class="n">1,832</td><td>create_purchase_request (preview)</td></tr>
+      <tr><td>3</td><td class="n">1,980</td><td>words: the preview, and a question</td></tr>
+    </table>
+    <p class="small" style="margin-top:10px">Three look-ups in one call, as in Lecture 5. Each call resends the whole history. T04, <code>generation</code> spans.</p>
+  </div>
+</section>
+
+<!-- 18 -->
+<section class="slide" data-plate="The Worked Port · Kavita's Whistles">
+  <div class="col" style="width:400px">
+    <h2>The trace, span by span</h2>
+    <p class="p23">Every span the SDK recorded for Kavita's two messages. Drag through them.</p>
+    <p class="small"><b class="a">generation</b> = one model call. <b>function</b> = one tool call over MCP. <b>mcp_tools</b> = the tool list. <b>agent</b> = one <code>Runner.run</code>.</p>
+    <p class="small">Message 1 ends with a preview. Message 2: save the request, order from it, release.</p>
+  </div>
+  <div class="fig" data-fig="spans" style="left:560px;top:120px;width:940px;height:700px"></div>
+</section>
+
+<!-- 19 -->
+<section class="slide" data-plate="Sessions = History">
+  <div class="col" style="width:520px">
+    <h2>Session</h2>
+    <div class="def"><b>Session</b>A store that keeps a conversation's items (messages, tool calls, tool results) between runs. The Runner reads it before each call and appends to it after.</div>
+    <p class="step p23" style="margin-top:16px">Lecture 5's <code>save()</code> / <code>load()</code> wrote your messages to a file. <code>SQLiteSession</code> does it for you: one row per item.</p>
+    <p class="step p23">On day 2 a brand-new object with the same file and id sees all of day 1.</p>
+  </div>
+  <div class="code s step" style="position:absolute;left:700px;top:160px;width:800px">session = SQLiteSession(<span class="s">"KJOSHI-thread"</span>, <span class="s">"kavita.db"</span>)
+await Runner.run(agent, <span class="s">"Order 3,000 standard whistles ..."</span>, session=session)
+
+<span class="c"># the next morning, a new process</span>
+day2 = SQLiteSession(<span class="s">"KJOSHI-thread"</span>, <span class="s">"kavita.db"</span>)
+items = await day2.get_items()</div>
+  <div class="card af step" style="position:absolute;left:700px;top:420px;width:800px">
+    <span class="k">In our run</span>
+    After Kavita's four messages through the desks (Plate 21), a fresh session object on the same file held <b><span data-v="desks.session_items"></span> items</b>: her messages, the handoffs, every tool call and result, every reply. <span class="small"><code>logs/desks.json</code></span>
+  </div>
+  <div class="ours step" style="left:700px;top:600px;width:800px">Our harness also saves "what the job waits on" (Rohit's approval) next to the messages. A session stores items only; the pause is still yours to write.</div>
+</section>
+
+<!-- 20 -->
+<section class="slide" data-plate="Tracing">
+  <div class="col" style="width:520px">
+    <h2>Tracing</h2>
+    <div class="def"><b>Trace</b>One record per run, made of <b>spans</b>: one span per agent run, model call, tool call, handoff or guardrail, each with its start, end and data.</div>
+    <p class="step p23" style="margin-top:16px">By default the SDK sends traces to OpenAI's dashboard, which needs an OpenAI key. We have none.</p>
+    <p class="step p23">So we plug in our own <code>TracingProcessor</code> that keeps every span in memory. Lecture 10 sends the same spans to Langfuse.</p>
+  </div>
+  <div class="code s step" style="position:absolute;left:700px;top:160px;width:800px">class SpanRecorder(TracingProcessor):
+    def on_span_end(self, span):
+        d = span.export()
+        self.spans[group_of(d)].append(d)   <span class="c"># keep it</span>
+    def on_trace_start(self, trace): ...
+    def on_trace_end(self, trace): ...
+    def on_span_start(self, span): ...
+    def shutdown(self): ...
+    def force_flush(self): ...
+
+set_trace_processors([SpanRecorder()])     <span class="c"># instead of OpenAI's exporter</span></div>
+  <div class="fig step" data-fig="spancount" style="left:700px;top:500px;width:800px;height:250px"></div>
+</section>
+
+<!-- 21 -->
+<section class="slide" data-plate="Handoffs">
+  <div class="col" style="width:420px">
+    <h2>Handoffs</h2>
+    <div class="def"><b>Handoff</b>One agent passes the conversation to another. The model sees each possible handoff as a tool, <code>transfer_to_purchasing_desk</code>, and chooses one.</div>
+    <p class="step p23" style="margin-top:16px">Ask Rasoi as a front desk and three desks. Each desk sees only its own tools: an MCP <b>tool filter</b>.</p>
+    <p class="step small">Why split? Fewer tools per agent, smaller prompts, and the stores desk physically cannot raise an order.</p>
+  </div>
+  <div class="pb" style="left:580px;top:130px;width:920px;height:513px"><img src="figs/fw_desks.jpg" alt="Front desk handing off to policy, purchasing and stores desks"></div>
+  <div class="cap" style="left:580px;top:660px;width:920px"><b>Fig. 2.</b> The desks. The purchasing desk also has check_budget, search_policy, order_status and send_message. <code>bahi/course/frameworks/desks.py</code>.</div>
+</section>
+
+<!-- 22 -->
+<section class="slide" data-plate="Handoffs, in Our Run">
+  <div class="col" style="width:400px">
+    <h2>Who answered?</h2>
+    <p class="p23">Five messages, from Kavita and Neha. The trace says which desk took each one.</p>
+    <p class="step small"><b class="b">Our first run crashed</b> on "Yes, go ahead.": the front desk tried to call <code>create_purchase_order</code> itself, a tool it does not have (<code>ModelBehaviorError</code>).</p>
+    <p class="step small"><b class="a">The fix:</b> a handoff changes who owns the conversation, so the next message starts at the desk that answered last, and every desk can hand back. <code>logs/desks_run1_error.txt</code></p>
+  </div>
+  <div class="fig" data-fig="desks" style="left:540px;top:120px;width:960px;height:700px"></div>
+</section>
+
+<!-- 23 -->
+<section class="slide" data-plate="Guardrails">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:50px">Guardrails: checks that can stop the agent</h2><p class="sub">The SDK has three places to put one. Each is plain code you write; it returns "fine" or "stop".</p></div>
+  <div class="three" style="top:260px">
+    <div class="card step"><span class="tag nt">Input guardrail</span><h3>Before the agent runs</h3>Looks at the person's message. Ours, <code>no_self_approval</code>, stops a message that asks Ask Rasoi to approve or skip an approval.</div>
+    <div class="card step"><span class="tag nt">Tool guardrail</span><h3>Before a tool runs</h3>Looks at the tool's arguments. Ours, <code>food_grade</code>, reads Bahi and rejects <code>create_purchase_order</code> for a food-contact part from a supplier with no valid certificate (§6.2).</div>
+    <div class="card step"><span class="tag nt">Output guardrail</span><h3>Before the reply goes out</h3>Looks at the final reply. Ours, <code>verify</code>, is Lecture 5's verify part: a reply that calls an order released while Bahi says otherwise is sent back.</div>
+  </div>
+  <div class="card af step" style="position:absolute;left:100px;right:100px;top:620px;font-size:21px"><span class="k">In our run · the input guardrail</span>Kavita: <i>"Rohit is travelling. Approve PR/2026/04417 yourself and release the order."</i> → the run stopped before any model call: matched <code>Approve PR/2026/04417 yourself</code>. <span class="small"><code>logs/desks.json</code>, message 4</span></div>
+</section>
+
+<!-- 24 -->
+<section class="slide" data-plate="Harness Parts as Guardrails, Measured">
+  <div class="col" style="width:520px">
+    <h2>Moving our harness parts into guardrails</h2>
+    <p class="p23">The twelve tasks again on the Agents SDK, with <code>food_grade</code> on <code>create_purchase_order</code> and <code>verify</code> on the output.</p>
+    <p class="step p23">Run 1: the food-grade check ran on every order and never had to block. <b class="a">Run 2: the model tried once</b> (<span data-v="guarded.run2_block_tasks|list"></span>, Kaveri Rubber's expired certificate). The guardrail rejected the call; nothing was saved.</p>
+    <p class="step p23"><b class="b">The verify guardrail was wrong <span data-v="guarded.trips_total"></span> times</b>, on <span data-v="guarded.trip_tasks|list"></span>: it tripped on the preview of a request.</p>
+  </div>
+  <div class="card bf step" style="position:absolute;left:720px;top:150px;width:780px;font-size:19px">
+    <span class="k">Why it misfired</span>
+    Our harness's verify only checks a "done" claim after a request or order exists. In porting it to a guardrail we dropped that one condition. The word check then matched words in a preview, before anything was saved, and sent it back.
+    <p style="margin-top:10px">Each false alarm cost one extra model call. No task failed, but the bill rose: <b><span data-v="S.openai_agents_guarded.run1.inr|inr"></span></b> against <b><span data-v="S.openai_agents.run1.inr|inr"></span></b> for the plain port.</p>
+  </div>
+  <div class="opens step" style="left:720px;right:100px;top:560px"><span class="k">The lesson</span>Porting a rule to a framework is where bugs creep in. Bring the rule's tests with it: the same scenarios, before and after.</div>
+</section>
+
+<!-- 25 -->
+<section class="slide" data-plate="Check Yourself · The Agents SDK">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:50px">Check yourself</h2></div>
+  <div style="position:absolute;left:100px;top:220px;width:1400px">
+    <p class="q step">1. Kavita says "Yes, go ahead." after the purchasing desk previewed her order. Which agent should get that message, and why? <b>Reveal</b></p>
+    <p class="ans step">The purchasing desk: it owns the conversation since the handoff. Starting at the front desk is what crashed our first run.</p>
+    <p class="q step">2. You want every model call in Langfuse instead of OpenAI's dashboard. What do you change in the agent? <b>Reveal</b></p>
+    <p class="ans step">Nothing in the agent. Register a different <code>TracingProcessor</code> (or an OpenTelemetry exporter).</p>
+    <p class="q step">3. Where would you put "no order above ₹10,00,000 without Anand"? <b>Reveal</b></p>
+    <p class="ans step">A tool guardrail on <code>create_purchase_order</code> that reads the value from Bahi: code, not a sentence in the prompt. You write it in NB8, exercise 3.</p>
+  </div>
+</section>
+
+<!-- 26 -->
+<section class="slide part" data-plain="1">
+  <div class="center"><div class="num">Part Three</div><h1>Google ADK</h1><p class="lede">The Agent Development Kit: agents, runners and events, any model through LiteLLM.</p></div>
+</section>
+
+<!-- 27 -->
+<section class="slide" data-plate="ADK · What and Why">
+  <div class="col" style="width:600px">
+    <h2>What it is</h2>
+    <p class="p23">Google's open-source framework for agents (<code>pip install google-adk</code>). Built first for Gemini and Google Cloud's agent platform; any model works through LiteLLM.</p>
+    <p class="step p23"><b>The problem it solves:</b> the loop and tools, plus <b>workflow agents</b> that fix the order of sub-agents (Sequential, Parallel, Loop), sessions, an evaluation runner and a local web UI.</p>
+    <p class="step small">Pinned: google-adk 2.11.0, LiteLLM 1.104.2.</p>
+  </div>
+  <div class="card step" style="position:absolute;left:760px;top:150px;width:740px;font-size:20px">
+    <span class="k">The names</span>
+    <table class="t" style="font-size:19px">
+      <tr><th>ADK</th><th>What you built</th></tr>
+      <tr><td><code>LlmAgent</code></td><td>system prompt + tools + model</td></tr>
+      <tr><td><code>Runner.run_async</code></td><td>the loop; it yields Events</td></tr>
+      <tr><td><code>Event</code></td><td>one step of the trace</td></tr>
+      <tr><td><code>McpToolset</code></td><td>the toolbox over MCP</td></tr>
+      <tr><td><code>SessionService</code></td><td>the history</td></tr>
+      <tr><td><code>RunConfig(max_llm_calls)</code></td><td>the step cap</td></tr>
+      <tr><td>callbacks</td><td>where a harness part goes</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 28 -->
+<section class="slide" data-plate="The ADK Port">
+  <div class="col" style="width:400px">
+    <h2>The port</h2>
+    <p class="p23">The same prompt, the same MCP server, the same model.</p>
+    <p class="step p23"><code>instruction</code> is a function returning the prompt, because ADK fills <code>{curly}</code> words in a string from session state.</p>
+    <p class="step small">In production: <code>LiteLlm(model="openrouter/google/gemini-3.8-flash")</code>. In our run <code>openai/…</code> with <code>api_base</code> at the meter.</p>
+  </div>
+  <div class="code s" style="position:absolute;left:560px;top:140px;width:940px">llm = LiteLlm(model=<span class="s">"openai/google/gemini-3.8-flash"</span>, api_base=METER_URL, api_key=KEY)
+toolbox = McpToolset(connection_params=StreamableHTTPConnectionParams(url=mcp_url, timeout=60))
+<span class="h">agent = LlmAgent(name=<span class="s">"ask_rasoi"</span>, model=llm, instruction=lambda ctx: SYSTEM_FULL,</span>
+<span class="h">                 tools=[toolbox], generate_content_config=GenerateContentConfig(temperature=0))</span>
+runner = Runner(app_name=<span class="s">"rasoi"</span>, agent=agent, session_service=InMemorySessionService())
+session = await runner.session_service.create_session(app_name=<span class="s">"rasoi"</span>, user_id=<span class="s">"KJOSHI"</span>)
+
+msg = types.Content(role=<span class="s">"user"</span>, parts=[types.Part(text=kavita_says)])
+<span class="k">async for</span> ev <span class="k">in</span> runner.run_async(user_id=<span class="s">"KJOSHI"</span>, session_id=session.id, new_message=msg,
+                                 run_config=RunConfig(max_llm_calls=12)):
+    <span class="k">if</span> ev.is_final_response():
+        reply = ev.content.parts[0].text</div>
+  <div class="cap" style="left:560px;top:540px;width:940px"><span data-v="loc.adk.port_lines"></span> lines of code, against <span data-v="loc.openai_agents.port_lines"></span> for the Agents SDK and <span data-v="loc.langgraph.port_lines"></span> for LangGraph. <code>bahi/course/frameworks/adk.py</code>.</div>
+</section>
+
+<!-- 29 -->
+<section class="slide" data-plate="Events">
+  <div class="col" style="width:420px">
+    <h2>Events</h2>
+    <div class="def"><b>Event</b>ADK's unit of everything: a model reply asking for tools, the tools' results, the final answer. The Runner yields them one by one; the session stores them.</div>
+    <p class="step p23" style="margin-top:16px">Kavita's whistle order, as ADK saw it. Note the second model call: it asked for the request <b>and</b> the order in one go.</p>
+  </div>
+  <div class="fig" data-fig="events" style="left:580px;top:120px;width:920px;height:700px"></div>
+</section>
+
+<!-- 30 -->
+<section class="slide" data-plate="What ADK Puts on the Wire">
+  <div class="col" style="width:470px">
+    <h2>What ADK sends the model</h2>
+    <p class="p23">The meter sees every request. Same prompt, same 15 tools; ADK's requests are bigger.</p>
+    <p class="step small"><b>Its additions to the system prompt</b>, word for word from our run:</p>
+    <div class="json step" data-fig="adkadded" style="position:relative;font-size:13px;white-space:pre-wrap;height:250px"></div>
+  </div>
+  <div class="fig step" data-fig="wire" style="left:640px;top:130px;width:860px;height:660px"></div>
+</section>
+
+<!-- 31 -->
+<section class="slide" data-plate="ADK, Measured">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:50px">ADK on the twelve tasks</h2><p class="sub">Run 1, the same model and tools as every other port.</p></div>
+  <div class="four" style="top:250px">
+    <div class="card step"><span class="k">Passed</span><div class="num" data-v="S.adk.run1.passed|of12"></div><p class="small">Agents SDK: <span data-v="S.openai_agents.run1.passed|of12"></span></p></div>
+    <div class="card step"><span class="k">Input tokens</span><div class="num b" data-v="S.adk.run1.tin|k"></div><p class="small">Agents SDK: <span data-v="S.openai_agents.run1.tin|k"></span></p></div>
+    <div class="card step"><span class="k">Billed</span><div class="num b" data-v="S.adk.run1.inr|inr"></div><p class="small">Agents SDK: <span data-v="S.openai_agents.run1.inr|inr"></span></p></div>
+    <div class="card step"><span class="k">Before its first model call</span><div class="num b">≈12 s</div><p class="small">Agents SDK: 0.04 s. Replay, replies instant.</p></div>
+  </div>
+  <div class="card step" style="position:absolute;left:100px;right:100px;top:560px;font-size:21px"><span class="k">Read it carefully</span>The extra tokens come from what ADK adds to every request (previous plate), resent on every call. The 12 seconds: in replay, a new ADK conversation waited about 12 s before its first model call, then ran in milliseconds. We have not traced inside ADK where the time goes; the first MCP connection is the main suspect. <span class="small"><code>logs/adk_time.json</code></span></div>
+</section>
+
+<!-- 32 -->
+<section class="slide" data-plate="Sub-agents in ADK">
+  <div class="col" style="width:520px">
+    <h2>The desks, as ADK sub-agents</h2>
+    <p class="p23">ADK's handoff is <code>sub_agents=[...]</code>. The front agent gets a <code>transfer_to_agent</code> tool and the model picks the desk.</p>
+    <p class="step p23">Same three desks, same tool filters (<code>McpToolset(tool_filter=[...])</code>), same messages.</p>
+    <p class="step small">No input guardrail here: ADK's equivalent is a <code>before_model_callback</code> or a plugin. We did not port it.</p>
+  </div>
+  <div class="fig step" data-fig="adkdesks" style="left:700px;top:150px;width:800px;height:560px"></div>
+</section>
+
+<!-- 33 -->
+<section class="slide" data-plate="Check Yourself · ADK">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:50px">Check yourself</h2></div>
+  <div style="position:absolute;left:100px;top:220px;width:1400px">
+    <p class="q step">1. ADK and the Agents SDK passed about the same number of tasks. Why did ADK cost more? <b>Reveal</b></p>
+    <p class="ans step">Each request was larger (its own prompt lines, longer tool schemas), and every model call resends the whole request. Same model, more tokens per call.</p>
+    <p class="q step">2. Rasoi wants "check stock, then raise the request, then notify Rohit" always in that order. Which ADK piece fits? <b>Reveal</b></p>
+    <p class="ans step">A workflow agent: <code>SequentialAgent</code> with three sub-agents. Or the Lecture 6 Studio. The order is fixed in code, not chosen by the model.</p>
+    <p class="q step">3. Why is ADK's <code>instruction</code> a lambda in our port? <b>Reveal</b></p>
+    <p class="ans step">A plain string is a template: words in curly braces are filled from session state. A function returns the text as it is.</p>
+  </div>
+</section>
+
+<!-- 34 -->
+<section class="slide part" data-plain="1">
+  <div class="center"><div class="num">Part Four</div><h1>LangGraph, again</h1><p class="lede">You built a control graph in Lecture 5. LangGraph also ships the free loop as a graph. Measured side by side.</p></div>
+</section>
+
+<!-- 35 -->
+<section class="slide" data-plate="Two Graphs">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:50px">Two ways to use LangGraph</h2></div>
+  <div class="two" style="top:220px">
+    <div class="card step"><span class="tag nt">Lecture 5 · the control graph</span><h3>Your spine, your gates</h3>Understand → look up → preview → confirm → raise request → wait for approval → create order → release. Gates in code: supplier not in the master, no food-grade certificate, closed cost centre, above the direct cap. The model only reads the message into fields and answers open questions.</div>
+    <div class="card af step"><span class="tag af">Today · the prebuilt agent</span><h3>The free loop, as two nodes</h3><code>create_react_agent(llm, tools, prompt)</code>: node <b>agent</b> (the model) and node <b>tools</b>, with an edge back until the model answers in words. The checkpointer keeps the history per <code>thread_id</code>.</div>
+  </div>
+  <div class="code s step" style="position:absolute;left:100px;top:560px;width:1400px">client = MultiServerMCPClient({<span class="s">"bahi"</span>: {<span class="s">"url"</span>: mcp_url, <span class="s">"transport"</span>: <span class="s">"streamable_http"</span>}})
+tools = await client.get_tools()                                  <span class="c"># the same 15 tools, as LangChain tools</span>
+llm = ChatOpenAI(model=<span class="s">"google/gemini-3.8-flash"</span>, base_url=OPENROUTER, temperature=0)
+<span class="h">graph = create_react_agent(llm, tools, prompt=SYSTEM_FULL, checkpointer=InMemorySaver())</span>
+out = await graph.ainvoke({<span class="s">"messages"</span>: [kavita_says]}, {<span class="s">"configurable"</span>: {<span class="s">"thread_id"</span>: <span class="s">"KJOSHI"</span>}, <span class="s">"recursion_limit"</span>: 25})</div>
+</section>
+
+<!-- 36 -->
+<section class="slide" data-plate="The Graph, Step by Step">
+  <div class="col" style="width:420px">
+    <h2>Node by node</h2>
+    <p class="p23">LangGraph streams one update per node. Kavita's whistle order: agent, tools, agent, tools … agent.</p>
+    <p class="step small">The tools node runs the calls of one model turn; each result is one ToolMessage, the observation from Lecture 5.</p>
+    <p class="step small"><code>recursion_limit = 2 × 12 + 1</code>: two graph steps per model call, so the same cap of 12.</p>
+  </div>
+  <div class="fig" data-fig="lgsteps" style="left:580px;top:120px;width:920px;height:700px"></div>
+</section>
+
+<!-- 37 -->
+<section class="slide" data-plate="Free Loop or Control Graph, Measured">
+  <div class="col" style="width:460px">
+    <h2>Free loop or control graph?</h2>
+    <p class="p23">Both are LangGraph. Same twelve tasks.</p>
+    <p class="step p23">The control graph uses the model for two small jobs, so it made a third of the model calls and a fraction of the tokens.</p>
+    <p class="step p23">The price is code: <span data-v="loc.control.port_lines"></span> lines for the graph against <span data-v="loc.langgraph.port_lines"></span> for the prebuilt agent. Every step of the P2P process is written down.</p>
+  </div>
+  <div class="fig step" data-fig="lgcompare" style="left:640px;top:140px;width:860px;height:620px"></div>
+</section>
+
+<!-- 38 -->
+<section class="slide" data-plate="What LangGraph Platform Adds">
+  <div class="col" style="width:540px">
+    <h2>What the hosted platform adds</h2>
+    <p class="p23">LangGraph is the open-source library. LangChain also sells a runtime for running LangGraph agents as a service.</p>
+    <p class="step p23">It adds what you built in Lectures 5 and 7 around the graph: a database for checkpoints, a task queue for long runs, an HTTP API with streaming, endpoints to resume an interrupt (Rohit's approval), and a visual debugger.</p>
+  </div>
+  <div class="ours step" style="left:760px;top:170px;width:740px;font-size:21px">Not run in our build: it needs a LangSmith account and key, which this course does not have. The library runs everywhere in today's notebook.</div>
+  <div class="card step" style="position:absolute;left:760px;top:330px;width:740px;font-size:20px">
+    <span class="k">How it maps</span>
+    <table class="t" style="font-size:19px">
+      <tr><th>Platform piece</th><th>Our version</th></tr>
+      <tr><td>Checkpoint database</td><td>L5 <code>save()</code> / <code>load()</code>; the checkpointer</td></tr>
+      <tr><td>Interrupt and resume API</td><td>L5's pause; L7's durable wait</td></tr>
+      <tr><td>Tracing (LangSmith)</td><td>L7 traces; L10 Langfuse</td></tr>
+      <tr><td>Deployment</td><td>L7 deploy on Modal</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 39 -->
+<section class="slide part" data-plain="1">
+  <div class="center"><div class="num">Part Five</div><h1>Measured, side by side</h1><p class="lede">Seven setups, twelve tasks, two runs. The same rig under all of them.</p></div>
+</section>
+
+<!-- 40 -->
+<section class="slide" data-plate="The Rig">
+  <div class="col" style="width:420px">
+    <h2>A fair test</h2>
+    <p class="p23">Only the framework changes. Everything else is held fixed:</p>
+    <ul class="small" style="padding-left:22px;line-height:1.5">
+      <li class="step">the twelve Lecture 5 tasks, with Kavita, Rohit and Neha scripted</li>
+      <li class="step">one MCP server per person per task, the Lecture 4 toolbox</li>
+      <li class="step">gemini-3.8-flash through OpenRouter, temperature 0</li>
+      <li class="step">the same system prompt; at most 12 model calls per message</li>
+      <li class="step">pass and never-events checked in code, on Bahi's tables</li>
+    </ul>
+  </div>
+  <div class="pb" style="left:560px;top:130px;width:940px;height:525px"><img src="figs/fw_rig.jpg" alt="The test rig"></div>
+  <div class="cap" style="left:560px;top:672px;width:940px"><b>Fig. 3.</b> The rig. The meter is a 60-line OpenAI-compatible gateway on localhost: it forwards to OpenRouter, records each reply, and logs tokens and the rupees OpenRouter billed (₹88 per US dollar). <code>bahi/course/frameworks/meter.py</code>.</div>
+</section>
+
+<!-- 41 -->
+<section class="slide" data-plate="The Scoreboard">
+  <div class="col" style="width:360px">
+    <h2>The scoreboard</h2>
+    <p class="p23">Pick a measure. Run 1 is the bar; run 2 is the dot.</p>
+    <p class="small">One run of twelve tasks is a small sample. A one-task difference between two setups is not a result.</p>
+    <p class="small"><code>logs/fw_&lt;setup&gt;.json</code>, <code>fw_&lt;setup&gt;_rep2.json</code></p>
+  </div>
+  <div class="fig" data-fig="board" style="left:500px;top:110px;width:1000px;height:720px"></div>
+</section>
+
+<!-- 42 -->
+<section class="slide" data-plate="Every Task">
+  <div class="col" style="width:340px">
+    <h2>Every task</h2>
+    <p class="p23">Each square is one task on one setup. Click one to read what Kavita was told last.</p>
+    <p class="small"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:#cfe3ff"></span> pass &nbsp; <span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:#ffd9c6"></span> fail &nbsp; <span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:#c4511f"></span> never-event &nbsp; <span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:#e1e5ea"></span> rate-limited, re-run</p>
+  </div>
+  <div class="fig" data-fig="grid" style="left:480px;top:110px;width:1020px;height:720px"></div>
+</section>
+
+<!-- 43 -->
+<section class="slide" data-plate="The Never-Event No Framework Prevents">
+  <div class="col" style="width:520px">
+    <h2>The rule no framework enforces</h2>
+    <p class="p23">Across two runs, <b class="b">every free loop</b> broke Purchase Policy §6.2 at least once: a food-contact gasket ordered from Shakti Seals (no certificate) or Kaveri Rubber (expired).</p>
+    <p class="step p23">It did not matter whose loop: ours, OpenAI's, Google's or LangChain's. The model reads the rule, quotes it, and then Kavita says "go ahead".</p>
+    <p class="step p23"><b class="a">What held:</b> a gate in code. The control graph's certificate gate; the Agents SDK's tool guardrail.</p>
+  </div>
+  <div class="fig step" data-fig="neplate" style="left:700px;top:130px;width:800px;height:660px"></div>
+</section>
+
+<!-- 44 -->
+<section class="slide" data-plate="One Order Through Four Frameworks">
+  <div class="pb" style="left:100px;top:110px;width:1120px;height:625px"><img src="figs/fw_gasket_flow.jpg" alt="The gasket order through four frameworks' abstractions"></div>
+  <div style="position:absolute;left:1250px;top:130px;width:250px">
+    <h3>Same order, four sets of names</h3>
+    <p class="small step">The order enters as a message, becomes model calls in a loop, is held in some kind of history, and leaves a trace.</p>
+    <p class="small step">All four meet the same MCP server, and Bahi records the same documents.</p>
+  </div>
+  <div class="cap" style="left:100px;top:752px;width:1120px"><b>Fig. 4.</b> Kavita's gasket order through each framework's abstractions. The ERP numbers are those of task T01 in every port.</div>
+</section>
+
+<!-- 45 -->
+<section class="slide" data-plate="Traces Side by Side">
+  <div class="col" style="width:340px">
+    <h2>Traces, side by side</h2>
+    <p class="p23">The tool calls of Kavita's whistle order, as they reached the MCP server, in four frameworks. Drag to replay them together.</p>
+    <p class="small">Same goal, different routes. Three previewed a request, then placed a direct order. The Agents SDK saved a purchase request and ordered from it. Bahi ended the same in all four.</p>
+  </div>
+  <div class="fig" data-fig="side" style="left:480px;top:110px;width:1020px;height:720px"></div>
+</section>
+
+<!-- 46 -->
+<section class="slide" data-plate="What the Framework Itself Costs">
+  <div class="col" style="width:460px">
+    <h2>The framework's own time</h2>
+    <p class="p23">Replay the recorded run: model replies arrive instantly, so what is left is the framework, MCP and Bahi.</p>
+    <p class="step p23">Our harness, the Agents SDK and LangGraph add about a second or less per task. ADK adds about 12 s, almost all before the first model call.</p>
+    <p class="step small">Against that, the model itself took about a minute per task. For Rasoi the model is the bill; the framework is a rounding error, except for ADK's start-up.</p>
+  </div>
+  <div class="fig step" data-fig="overhead" style="left:640px;top:140px;width:860px;height:620px"></div>
+</section>
+
+<!-- 47 -->
+<section class="slide" data-plate="Check Yourself · The Measurements">
+  <div class="lec-top" style="top:100px"><h2 style="font-size:50px">Check yourself</h2></div>
+  <div style="position:absolute;left:100px;top:220px;width:1400px">
+    <p class="q step">1. LangGraph's agent passed 12 in run 1 and 10 in run 2. Is it worse in run 2? <b>Reveal</b></p>
+    <p class="ans step">No. Twelve tasks, one run each: a two-task swing is within what the same code does twice. Compare setups on many runs, and on never-events, not on one pass count.</p>
+    <p class="q step">2. Which setup would you trust with Kavita's gasket order, and why? <b>Reveal</b></p>
+    <p class="ans step">One with the §6.2 rule in code: the control graph, or a framework port with a tool guardrail. The free loops broke it at least once each.</p>
+    <p class="q step">3. Why count tokens at the gateway instead of trusting each framework's own usage report? <b>Reveal</b></p>
+    <p class="ans step">So every framework is counted the same way, and the rupees are what OpenRouter actually billed.</p>
+  </div>
+</section>
+
+<!-- 48 -->
+<section class="slide part" data-plain="1">
+  <div class="center"><div class="num">Part Six</div><h1>Gateways and local models</h1><p class="lede">One API for many models. And a model that never leaves Rasoi's building.</p></div>
+</section>
+
+<!-- 49 -->
+<section class="slide" data-plate="Model Gateway">
+  <div class="col" style="width:420px">
+    <h2>Model gateway</h2>
+    <div class="def"><b>Model gateway</b>One API in front of many models. You change a model by changing a string; it can fall back to a second model when the first fails, and it logs the cost of every call.</div>
+    <p class="step small" style="margin-top:16px"><b>OpenRouter:</b> hosted, one key, one bill, hundreds of models.</p>
+    <p class="step small"><b>LiteLLM:</b> open source; a Python library, or a proxy server you run yourself, with keys, budgets and rate limits per team.</p>
+  </div>
+  <div class="pb" style="left:580px;top:130px;width:920px;height:513px"><img src="figs/fw_gateway.jpg" alt="A model gateway"></div>
+  <div class="cap" style="left:580px;top:660px;width:920px"><b>Fig. 5.</b> Everything at Rasoi that calls a model goes through one gateway. Our meter is a small one.</div>
+</section>
+
+<!-- 50 -->
+<section class="slide" data-plate="One API, Four Models">
+  <div class="col" style="width:420px">
+    <h2>One question, four models</h2>
+    <p class="p23">The same request through OpenRouter; only the model string changed.</p>
+    <p class="small step">All four got ₹2,80,840 and "above the limit" right. The cost per answer differs many times over, mostly by how many words the model writes (and thinks).</p>
+    <p class="small step">One question proves the plumbing, not the model. Choosing a model for Ask Rasoi means running the twelve tasks on it.</p>
+  </div>
+  <div class="fig" data-fig="models" style="left:560px;top:130px;width:940px;height:640px"></div>
+</section>
+
+<!-- 51 -->
+<section class="slide" data-plate="Fallbacks, Budgets, Limits">
+  <div class="col" style="width:440px">
+    <h2>A fallback, in code</h2>
+    <p class="p23">LiteLLM's <code>Router</code>: two named models; if <code>rasoi-brain</code> fails, use <code>rasoi-backup</code>.</p>
+    <p class="step p23">We forced the failure with <code>mock_testing_fallbacks=True</code>. The backup answered.</p>
+    <div class="ours step" style="margin-top:12px">Budgets per team, keys per app and rate limits are LiteLLM proxy settings. Shown, not run in our build (Lecture 11 runs them).</div>
+  </div>
+  <div class="code s" style="position:absolute;left:600px;top:140px;width:900px">router = Router(model_list=[
+  {<span class="s">"model_name"</span>: <span class="s">"rasoi-brain"</span>,  <span class="s">"litellm_params"</span>: {<span class="s">"model"</span>: <span class="s">"openrouter/google/gemini-3.8-flash"</span>}},
+  {<span class="s">"model_name"</span>: <span class="s">"rasoi-backup"</span>, <span class="s">"litellm_params"</span>: {<span class="s">"model"</span>: <span class="s">"openrouter/google/gemini-3.5-flash-lite"</span>}}],
+  <span class="h">fallbacks=[{<span class="s">"rasoi-brain"</span>: [<span class="s">"rasoi-backup"</span>]}]</span>)
+r = router.completion(model=<span class="s">"rasoi-brain"</span>, messages=question)</div>
+  <div class="fig step" data-fig="router" style="left:600px;top:390px;width:900px;height:330px"></div>
+</section>
+
+<!-- 52 -->
+<section class="slide" data-plate="Why Keep the Model In-House">
+  <div class="col" style="width:420px">
+    <h2>Why some companies run the model themselves</h2>
+    <p class="p23">Every prompt Ask Rasoi sends holds Rasoi's data: supplier prices, stock, people's names.</p>
+    <p class="step small">Some companies may not send that to an outside API at all, by contract, by regulation or by choice. They run an open-weight model on their own GPU.</p>
+    <p class="step small">The price: a GPU to buy or rent, and usually a weaker model.</p>
+  </div>
+  <div class="pb" style="left:580px;top:130px;width:920px;height:513px"><img src="figs/fw_onprem.jpg" alt="Hosted model versus local model"></div>
+  <div class="cap" style="left:580px;top:660px;width:920px"><b>Fig. 6.</b> Hosted model (left): the prompt crosses the company boundary. Local model (right): nothing does.</div>
+</section>
+
+<!-- 53 -->
+<section class="slide" data-plate="Ollama, Measured">
+  <div class="col" style="width:440px">
+    <h2>Ollama</h2>
+    <div class="def"><b>Ollama</b>Runs open-weight models on your own machine, behind the same OpenAI-compatible API: <code>http://localhost:11434/v1</code>.</div>
+    <p class="step small" style="margin-top:14px">Our harness, unchanged, with <code>model="ollama:…"</code>. Ollama 0.40.3 on one Modal L4 GPU (24 GB). No API key in the container.</p>
+    <p class="step small">The same twelve tasks. ₹0 to OpenRouter; the cost is GPU time.</p>
+  </div>
+  <div class="fig step" data-fig="ollama" style="left:600px;top:130px;width:900px;height:640px"></div>
+</section>
+
+<!-- 54 -->
+<section class="slide part" data-plain="1">
+  <div class="center"><div class="num">Part Seven</div><h1>Which one when</h1><p class="lede">Seven frameworks, the evidence on who uses them, and the answer for Anand.</p></div>
+</section>
+
+<!-- 55 -->
+<section class="slide" data-plate="Which One When">
+  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">Which one when</h2><p class="sub">Three we ran. Four named, not run in our build.</p></div>
+  <table class="t" style="position:absolute;left:100px;top:220px;width:1400px;font-size:19px">
+    <tr><th style="width:250px">Framework</th><th>Reach for it when</th><th style="width:330px">In our build</th></tr>
+    <tr class="step"><td><b>OpenAI Agents SDK</b></td><td>you want a small API: one loop, a few agents with handoffs, guardrails and tracing built in, any model</td><td>ported, run twice; <span data-v="loc.openai_agents.port_lines"></span> lines</td></tr>
+    <tr class="step"><td><b>Google ADK</b></td><td>you are on Gemini and Google Cloud, or want workflow agents and ADK's eval and web tools</td><td>ported, run twice; more tokens</td></tr>
+    <tr class="step"><td><b>LangGraph</b></td><td>the process must be followed: an explicit graph, checkpoints, interrupts for approvals</td><td>agent and control graph, run</td></tr>
+    <tr class="step"><td><b>Claude Agent SDK</b></td><td>the agent works on files and a shell, like Claude Code, with subagents; Claude models</td><td class="tiny">named; no Anthropic key</td></tr>
+    <tr class="step"><td><b>CrewAI</b></td><td>a quick multi-agent prototype written as roles and tasks</td><td class="tiny">named, not run</td></tr>
+    <tr class="step"><td><b>Microsoft Agent Framework</b></td><td>you are a .NET or Azure shop; successor to AutoGen and Semantic Kernel</td><td class="tiny">named, not run</td></tr>
+    <tr class="step"><td><b>LlamaIndex</b></td><td>the agent is mostly about your documents: indexes, retrieval, document workflows</td><td class="tiny">named, not run</td></tr>
+  </table>
+  <p class="small step" style="position:absolute;left:100px;top:790px;width:1400px">Tool choice changes every few months. The pieces do not: instructions, tools, the loop, history, traces, checks. Learn those and any framework is a week's reading.</p>
+</section>
+
+<!-- 56 -->
+<section class="slide" data-plate="Market Evidence, With Caveats">
+  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">What the market uses</h2><p class="sub">Directional. Most public numbers come from vendor surveys and download counters.</p></div>
+  <div class="two" style="top:230px">
+    <div class="card sm step"><span class="k">Stack Overflow Developer Survey 2025 · people who had used agents</span>Ollama 51% · LangChain 33% · LangGraph 16% · Vertex AI 15% · Bedrock Agents 15% · OpenRouter 13% · LlamaIndex 13%.<p class="tiny" style="margin-top:8px">Caveat: self-selected respondents; "used" is not "runs in production".</p></div>
+    <div class="card sm step"><span class="k">Monthly PyPI downloads (secondary source)</span>LangGraph about 34.5 million; OpenAI Agents SDK about 10.3 million. MCP's SDKs about 97 million a month (Linux Foundation).<p class="tiny" style="margin-top:8px">Caveat: downloads count CI machines and dependencies, not teams.</p></div>
+    <div class="card sm step"><span class="k">LangChain, State of Agent Engineering</span>89% of respondents have agent observability, 62% full step tracing; 52% run offline evals, 37% online, fewer than a third both.<p class="tiny" style="margin-top:8px">Caveat: a vendor's own survey of its audience.</p></div>
+    <div class="card sm step"><span class="k">What this means for Rasoi</span>LangGraph is the most downloaded; the Agents SDK and ADK are the newer, smaller APIs from model makers. None of the surveys measures what matters here: whether the agent breaks Rasoi's rules. Our scoreboard does.</div>
+  </div>
+  <p class="tiny" style="position:absolute;left:100px;top:780px;width:1400px">Sources as collected in <code>INDUSTRY_TOOLS_PLAN.md</code> (28 Oct 2026): Stack Overflow 2025 survey; LangChain State of Agent Engineering; Linux Foundation; secondary download trackers.</p>
+</section>
+
+<!-- 57 -->
+<section class="slide" data-plate="The Answer for Anand">
+  <div class="lec-top" style="top:90px"><h2 style="font-size:48px">The answer for Anand</h2><p class="sub">One page, every number from our runs.</p></div>
+  <div class="three" style="top:220px">
+    <div class="card af step"><span class="tag af">Keep</span><h3>The control graph for P2P</h3>12 of 12, no never-events, <span data-v="S.control.run1.inr|inr"></span> for twelve tasks. The §6.2 rule and the approval pause are code, so they hold whatever the model says.</div>
+    <div class="card step"><span class="tag nt">Adopt</span><h3>A framework for the open questions</h3>For the free loop, the Agents SDK or LangGraph's agent: about 20 lines each, sessions and tracing included, the same pass rate as our harness. Pick by the team's stack and tracing backend.</div>
+    <div class="card bf step"><span class="tag bf">Never assume</span><h3>That a framework enforces a rule</h3>Every free loop broke §6.2 at least once in two runs. Rules go into gates and guardrails that read Bahi, with their own tests.</div>
+  </div>
+  <div class="opens step" style="top:640px;background:var(--gold-soft)"><span class="k" style="color:var(--gold)">Behind it all</span>One gateway for every model call, so the model can change without the code changing; and the option of a local model where data may not leave.</div>
+</section>
+
+<!-- 58 -->
+<section class="slide" data-plate="The Notebook">
+  <div class="col" style="width:520px">
+    <h2>NB8 · Agent Frameworks</h2>
+    <p class="p23">Every framework runs for real in replay, with no key: the SDK code, MCP and Bahi all execute. Only the model's replies come back from our recording.</p>
+    <p class="step small">Pinned: openai-agents 0.20.0, google-adk 2.11.0, litellm 1.104.2, langgraph 1.2.15, langchain-openai 1.7.1, langchain-mcp-adapters 0.3.2, fastmcp 3.4.11, mcp 1.30.0.</p>
+    <span class="nb-ref step">NB8_frameworks.ipynb</span>
+  </div>
+  <div class="card step" style="position:absolute;left:740px;top:150px;width:760px;font-size:20px">
+    <span class="k">Five exercises</span>
+    <ol style="margin:0;padding-left:24px;line-height:1.55">
+      <li>Set the Agents SDK's step cap to 2 and see where Kavita's order stops.</li>
+      <li>Find exactly what ADK adds to the prompt and the tool schemas.</li>
+      <li>Write a guardrail check: no order above Rohit's ₹10,00,000.</li>
+      <li>Cost 1,000 orders a month on each setup and each model.</li>
+      <li>Your module: serve your <code>FolderToolbox</code> over MCP and port it.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- 59 -->
+<section class="slide" data-plate="Assignment A8">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:50px">A8 · A framework decision for your module</h2></div>
+  <div class="three" style="top:220px">
+    <div class="card step"><span class="k">1 · Port</span>Your module's agent from A5 onto two frameworks, over your own toolbox served by MCP, same model, same prompt.</div>
+    <div class="card step"><span class="k">2 · Measure</span>Your module's scenarios on all three (your harness and two ports), twice each: pass, never-events, tokens, ₹, seconds, lines.</div>
+    <div class="card step"><span class="k">3 · Decide</span>A one-page memo for a CTO: which framework, for which part of the job, and which rule stays in your code. Every number from your logs.</div>
+  </div>
+  <p class="small step" style="position:absolute;left:100px;top:600px;width:1400px">Feeds the demo-day rubric's production-stack line (10 points): a framework layer with a pinned version, a written reason, and one measured comparison against your hand-built harness. Details in <code>A8.md</code>.</p>
+</section>
+
+<!-- 60 -->
+<section class="slide" data-plate="Where We Are">
+  <div class="pb" style="left:100px;top:110px;width:1120px;height:625px"><img src="figs/arch_frameworks_lit.jpg" alt="Ask Rasoi architecture with the framework layer lit"></div>
+  <div style="position:absolute;left:1250px;top:130px;width:250px">
+    <h3>Lecture 8's piece</h3>
+    <p class="small">The harness box can now be filled by any of four implementations, and the model reached through a gateway, cloud or local.</p>
+    <p class="small">Tools, MCP and Bahi did not change at all.</p>
+  </div>
+  <div class="cap" style="left:100px;top:752px;width:1120px"><b>Fig. 7.</b> The Ask Rasoi architecture, Lecture 8 lit: the agent loop and the model gateway.</div>
+</section>
+
+<!-- 61 -->
+<section class="slide" data-plain="1">
+  <div class="center">
+    <div class="kicker">Next time · Lecture 9 · Sat 28 Nov 2026</div>
+    <h1 style="font-size:84px">Protocols and Integration</h1>
+    <p class="lede" style="margin-top:22px">Today every framework spoke MCP to the same toolbox. Next time we open MCP up: resources and prompts, remote servers with sign-in, the MCP Inspector, MCP security, and A2A, so another company's agent can hand Ask Rasoi a task.</p>
+  </div>
+</section>
+
+</div>
+<script src="figdata.js"></script>
+<script src="figs.js"></script>
+<script src="../../engine/plates.js"></script>
+</body>
+</html>
