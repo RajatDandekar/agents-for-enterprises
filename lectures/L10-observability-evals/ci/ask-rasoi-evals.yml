@@ -1,0 +1,49 @@
+# The CI gate for Ask Rasoi. Copy to .github/workflows/ask-rasoi-evals.yml in your repository.
+# Runs the evaluation suite on every pull request that touches the agent; a failing test blocks the merge
+# (make "evals" a required status check in the branch protection rule).
+#
+# Model calls: the cassettes in bahi/bahi/cassettes replay what we recorded, so an unchanged agent needs no key.
+# A changed prompt or tool is a new request: with BAHI_LLM_MODE=auto it is sent to the model with the repository's
+# own OpenRouter key (a GitHub secret), and recorded. Never commit a key.
+name: ask-rasoi-evals
+
+on:
+  pull_request:
+    paths:
+      - "bahi/**"
+      - "lectures/L10-observability-evals/ci/**"
+  workflow_dispatch:
+
+concurrency:
+  group: evals-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  evals:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      BAHI_LLM_MODE: auto
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      ASK_RASOI_PROMPT: production
+      ASK_RASOI_BUDGET_INR: "12"
+      DEEPEVAL_TELEMETRY_OPT_OUT: "YES"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install
+        run: |
+          pip install -e "bahi[all]"
+          pip install deepeval==4.2.8 pytest==9.2.0
+      - name: Run the suite (the gate)
+        working-directory: lectures/L10-observability-evals/ci
+        run: pytest -q -p no:cacheprovider test_ask_rasoi.py --junitxml=evals.xml
+      - name: Keep the results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ask-rasoi-evals
+          path: lectures/L10-observability-evals/ci/evals.xml

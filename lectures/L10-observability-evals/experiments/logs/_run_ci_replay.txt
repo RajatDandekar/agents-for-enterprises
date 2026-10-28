@@ -1,0 +1,86 @@
+✓ Initialized. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-UYk5mYyOmgP3uJw6wkl4L2
+✓ Created objects.
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L10-observability-
+│   evals/experiments/l10_modal.py
+├── 🔨 Created mount /Users/raj/Claude_Brain/enterprise-agents-course
+└── 🔨 Created function run.
+production {'exit_code': 0, 'gate': 'merge allowed', 'passed': 10, 'failed': 0, 'wall_s': 31.0}
+....x......                                                              [100%]Running teardown with pytest sessionfinish...
+
+=============================== warnings summary ===============================
+test_ask_rasoi.py::test_scenario_bahi_state[1]
+test_ask_rasoi.py::test_scenario_bahi_state[1]
+  /usr/local/lib/python3.11/site-packages/huggingface_hub/file_download.py:1855: DeprecationWarning: hf_xet.download_files() is deprecated. Use XetSession().new_file_download_group().start_download_file() instead.
+    xet_get(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+10 passed, 1 xfailed, 2 warnings in 24.89s
+
+broken {'exit_code': 1, 'gate': 'merge blocked', 'passed': 6, 'failed': 4, 'wall_s': 10.5}
+_data.append(metric_data)
+                    except Exception:
+                        failed_metrics_data.append(metric_data)
+    
+            failed_classifications: List[Classification] = [
+                classification
+                for classification in test_result.classifications or []
+                if classification.success is False
+            ]
+    
+            failed_parts = [
+                f"{metrics_data.name} (score: {metrics_data.score}, threshold: {metrics_data.threshold}, strict: {metrics_data.strict_mode}, error: {metrics_data.error}, reason: {metrics_data.reason})"
+                for metrics_data in failed_metrics_data
+            ]
+            failed_parts += [
+                f"{classification.name} (label: {classification.label}, expected: {classification.expected_label}, error: {classification.error}, reason: {classification.reason})"
+                for classification in failed_classifications
+            ]
+            failed_metrics_str = ", ".join(failed_parts)
+    
+            if failed_metrics_data and failed_classifications:
+                subject = "Metrics and classifiers"
+            elif failed_classifications:
+                subject = "Classifiers"
+            else:
+                subject = "Metrics"
+    
+            if test_case is not None and test_case.flaky:
+                # Flaky test cases don't block CI: warn (shows up in pytest's
+                # warnings summary) but don't raise
+                warnings.warn(
+                    f"Flaky test case failed (no assertion raised): "
+                    f"{subject}: {failed_metrics_str} failed."
+                )
+            else:
+>               raise AssertionError(f"{subject}: {failed_metrics_str} failed.")
+E               AssertionError: Metrics: Tool Correctness (score: 0.3333333333333333, threshold: 1.0, strict: False, error: None, reason: [
+E               	 Tool Calling Reason: Incorrect tool usage: missing tools ['release_purchase_order', 'create_purchase_order'] and out-of-order tools ['release_purchase_order', 'create_purchase_order']; expected ['create_purchase_request', 'create_purchase_order', 'release_purchase_order'], called ['create_purchase_request']. See more details above.
+E               	 Tool Selection Reason: No available tools were provided to assess tool selection criteria
+E               ]
+E               ) failed.
+
+/usr/local/lib/python3.11/site-packages/deepeval/evaluate/evaluate.py:209: AssertionError
+----------------------------- Captured stderr call -----------------------------
+
+=========================== short test summary info ============================
+FAILED test_ask_rasoi.py::test_scenario_bahi_state[2] - AssertionError: Metri...
+FAILED test_ask_rasoi.py::test_scenario_bahi_state[3] - AssertionError: Metri...
+FAILED test_ask_rasoi.py::test_scenario_bahi_state[6] - AssertionError: Metri...
+FAILED test_ask_rasoi.py::test_gasket_order_tools_in_order - AssertionError: ...
+4 failed, 6 passed, 1 xfailed in 7.20s
+
+
+--- stderr ---
+
+
+OK · 4 files written back:
+   lectures/L10-observability-evals/experiments/logs/ci_broken_replay.json 7266c1
+   lectures/L10-observability-evals/experiments/logs/ci_broken_replay.xml f48f13
+   lectures/L10-observability-evals/experiments/logs/ci_production_replay.json c2339a
+   lectures/L10-observability-evals/experiments/logs/ci_production_replay.xml d777da
+Stopping app - local entrypoint completed.
+✓ App completed. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-UYk5mYyOmgP3uJw6wkl4L2
+EXIT 0

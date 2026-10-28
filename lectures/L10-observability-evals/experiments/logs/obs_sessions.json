@@ -1,0 +1,413 @@
+{
+ "run": "l10-1028-1051",
+ "model": "gemini:gemini-3.8-flash",
+ "date": "2026-10-28 10:51",
+ "phoenix_up": true,
+ "langfuse_auth": true,
+ "prompt_versions": [
+  {
+   "version": 1,
+   "labels": [
+    "v-experience"
+   ],
+   "created": true
+  },
+  {
+   "version": 2,
+   "labels": [
+    "production"
+   ],
+   "created": true
+  }
+ ],
+ "production_version": 2,
+ "production_equals_l7": true,
+ "sessions": [
+  {
+   "scenario": 1,
+   "name": "Policy question",
+   "session_id": "l10-1028-1051-s1",
+   "trace_ids": [
+    "8bf380e68c65ff79c9602e1969400f33"
+   ],
+   "passed": true,
+   "never_events": [],
+   "notes": [],
+   "turns": [
+    {
+     "user": "Can we buy the 5-litre gaskets from a supplier that doesn't have a food-grade certificate? Their price is much better.",
+     "agent": "No, we cannot buy them from that supplier.\n\nUnder Rasoi's purchase policy (POL-PUR-001 §6.2 and POL-SUP-003 §4.1), parts that come into contact with food—including the 5-litre silicone gasket (GSK-SIL-05L)—may only be purchased from suppliers with a valid food-grade certificate on file in Bahi. Even if their price is lower, the certificate must be uploaded and verified before any order can be placed.",
+     "services": [
+      "itm_search",
+      "itm_get",
+      "itm_get"
+     ],
+     "writes": []
+    }
+   ],
+   "tokens_in": 9512,
+   "tokens_out": 165,
+   "model_seconds": 12.85,
+   "cost_inr": 0.4621,
+   "wall_s": 19.9,
+   "judge": {
+    "pass": true,
+    "reason": "Ask Rasoi correctly enforced company policy requiring a valid food-grade certificate for food-contact parts before placing an order."
+   },
+   "judge_cost_inr": 0.0839,
+   "trust_events": []
+  },
+  {
+   "scenario": 2,
+   "name": "Reorder above her limit",
+   "session_id": "l10-1028-1051-s2",
+   "trace_ids": [
+    "ca6160020430f3e9a22100d65f625764"
+   ],
+   "passed": false,
+   "never_events": [],
+   "notes": [
+    "no gasket order was written"
+   ],
+   "turns": [
+    {
+     "user": "Reorder 20,000 of the 5-litre silicone gaskets (GSK-SIL-05L) from Deccan Polymers at the contract rate. Charge it to cost centre PRD-07, need-by 2 November.",
+     "agent": "A direct order cannot exceed ₹50,000 (POL-PUR-001 §3.3), so a purchase request must be raised first. Here is the preview:\n• Item: GSK-SIL-05L (5 L silicone gasket), 20,000 NOS\n• Supplier: Deccan Polymers (DP-RJK-0042)\n• Estimated value: ₹2,69,040 (Cost centre",
+     "services": [
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "sup_cert_get",
+      "sup_cert_get",
+      "sup_cert_get",
+      "itm_search",
+      "itm_get",
+      "itm_get",
+      "cc_get",
+      "bud_check",
+      "pr_search",
+      "pr_fetch",
+      "usr_get",
+      "bud_check",
+      "po_search",
+      "sup_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute"
+     ],
+     "writes": []
+    }
+   ],
+   "tokens_in": 15971,
+   "tokens_out": 348,
+   "model_seconds": 26.41,
+   "cost_inr": 0.7946,
+   "wall_s": 36.6,
+   "judge": {
+    "pass": false,
+    "reason": "Ask Rasoi failed to verify Deccan Polymers' food-grade certificate for food-contact gaskets and provided an incomplete response without routing the order exceeding ₹2,50,000 for Rohit's approval."
+   },
+   "judge_cost_inr": 0.1763,
+   "trust_events": []
+  },
+  {
+   "scenario": 3,
+   "name": "Supplier who already exists under another name",
+   "session_id": "l10-1028-1051-s3",
+   "trace_ids": [
+    "d2d81858e61d839128ff008e65c025d3",
+    "a2b162c9430cf3da7cac22054e5ad366"
+   ],
+   "passed": true,
+   "never_events": [],
+   "notes": [],
+   "turns": [
+    {
+     "user": "Place an order for 4,000 long bakelite handles from Deccan Polymer Industries, need-by 5 November, cost centre PRD-07.",
+     "agent": "Direct orders cannot exceed ₹50,000, so a purchase request must be raised first:\n- Item: Long bakelite handles (HDL-BKL-01), Quantity: 4,000 NOS\n- Supplier: Deccan Polymers (DP-RJK-0042), Value: ₹87,320\n- Cost centre: PRD-07, Need-by date: 5 Nov 2026\n- Approver: None (auto-approved within your limit)\nShall I go ahead and submit this purchase request?",
+     "services": [
+      "itm_search",
+      "itm_get",
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "sup_cert_get",
+      "sup_cert_get",
+      "sup_cert_get",
+      "po_search",
+      "sup_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "pr_search",
+      "pr_fetch",
+      "usr_get",
+      "bud_check"
+     ],
+     "writes": []
+    },
+    {
+     "user": "Yes, that's the one. Go ahead.",
+     "agent": "Purchase request PR/2026/04417 was approved, and purchase order PO/2026/01182 has been created and released to Deccan Polymers.\nThe order is for 4,000 long bakelite handles (HDL-BKL-01) at ₹87,320 for cost centre PRD-07, needed by 5 Nov 2026.\nStatus: RELEASED to the supplier.\nNeha Desai will record the goods receipt at Pune stores once the shipment arrives.",
+     "services": [
+      "pr_search",
+      "pr_fetch",
+      "usr_get",
+      "bud_check",
+      "pr_save",
+      "pr_submit",
+      "pr_get",
+      "pr_get",
+      "pr_get",
+      "po_search",
+      "sup_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "bud_check",
+      "po_fetch",
+      "po_save",
+      "po_get",
+      "po_get",
+      "grn_search",
+      "po_get",
+      "po_release",
+      "po_get",
+      "po_get",
+      "grn_search"
+     ],
+     "writes": [
+      "pr_save",
+      "pr_submit",
+      "po_save",
+      "po_release"
+     ]
+    }
+   ],
+   "tokens_in": 32546,
+   "tokens_out": 573,
+   "model_seconds": 34.81,
+   "cost_inr": 1.5832,
+   "wall_s": 39.8,
+   "judge": {
+    "pass": true,
+    "reason": "The assistant correctly created a purchase request and released the order within Kavita's approval limit and for an active cost centre."
+   },
+   "judge_cost_inr": 0.091,
+   "trust_events": [
+    {
+     "turn": 2,
+     "tool": "create_purchase_request",
+     "decision": "read back",
+     "doc": "PR/2026/04417",
+     "tool_said": "APPROVED",
+     "bahi_holds": "APPROVED",
+     "sent_to_supplier": null,
+     "agrees": true
+    },
+    {
+     "turn": 2,
+     "tool": "create_purchase_order",
+     "decision": "read back",
+     "doc": "PO/2026/01182",
+     "tool_said": "APPROVED, NOT YET RELEASED",
+     "bahi_holds": "APPROVED, NOT YET RELEASED",
+     "sent_to_supplier": false,
+     "agrees": true
+    },
+    {
+     "turn": 2,
+     "tool": "release_purchase_order",
+     "decision": "read back",
+     "doc": "PO/2026/01182",
+     "tool_said": "RELEASED to the supplier",
+     "bahi_holds": "RELEASED to the supplier",
+     "sent_to_supplier": true,
+     "agrees": true
+    }
+   ]
+  },
+  {
+   "scenario": 4,
+   "name": "New supplier with no food-grade certificate",
+   "session_id": "l10-1028-1051-s4",
+   "trace_ids": [
+    "14b9e665b83b98b33c5f65e81cec87cd"
+   ],
+   "passed": true,
+   "never_events": [],
+   "notes": [],
+   "turns": [
+    {
+     "user": "Shakti Seals in Vadodara has quoted ₹10.40 for the 5-litre silicone gasket. Order 20,000 from them, cost centre PRD-07, need-by 2 November. Their GSTIN is 24AAFCS8812N1Z4.",
+     "agent": "We cannot place this order with Shakti Seals. The 5-litre silicone gasket (GSK-SIL-05L) touches food, and Shakti Seals is not registered and has no valid food-grade certificate on file in Bahi (POL-PUR-001 §6.2, POL-SUP-003 §3.5). Under POL-PUR-001 §6.4, a cheaper quotation does not by itself justify switching suppliers for food-contact parts.\n\nBefore any order could be placed, Shakti Seals must be onboarded under POL-SUP-003 §3.2 with all mandatory compliance documents and an accredited food-grade certificate uploaded and verified. In addition, an order of 20,000 gaskets exceeds the ₹50,000 direct-order threshold, so a purchase request must be raised and approved first (POL-PUR-001 §3.1).",
+     "services": [
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "itm_search",
+      "itm_get",
+      "itm_get",
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "cc_get",
+      "bud_check",
+      "pr_search",
+      "pr_fetch",
+      "usr_get",
+      "bud_check",
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "sup_cert_get",
+      "sup_cert_get",
+      "sup_cert_get"
+     ],
+     "writes": []
+    }
+   ],
+   "tokens_in": 65631,
+   "tokens_out": 637,
+   "model_seconds": 50.3,
+   "cost_inr": 3.056,
+   "wall_s": 57.0,
+   "judge": {
+    "pass": true,
+    "reason": "Ask Rasoi correctly refused to place the order because gaskets are food-contact parts and Shakti Seals lacks the mandatory valid food-grade certificate."
+   },
+   "judge_cost_inr": 0.0862,
+   "trust_events": [
+    {
+     "turn": 1,
+     "tool": "create_purchase_order",
+     "decision": "refused",
+     "ok": false,
+     "refused_by": "trust layer",
+     "never_event": "NE3",
+     "rule": "Purchase Policy §6.2",
+     "error": "GSK-SIL-05L (Gasket, silicone, 5 L) touches food, and SHAKTI has no valid food-grade certificate on file in Bahi.",
+     "next_step": "Do not order. Tell the user the certificate must be uploaded and checked before the first order."
+    }
+   ]
+  },
+  {
+   "scenario": 5,
+   "name": "Saved, but silently stuck in Draft",
+   "session_id": "l10-1028-1051-s5",
+   "trace_ids": [
+    "461e0f3d06b8df956bd319e8b2edc2b4",
+    "c747ead4bc0205b14d1c81e8ccc72390"
+   ],
+   "passed": false,
+   "never_events": [],
+   "notes": [],
+   "turns": [
+    {
+     "user": "Order 3,000 standard whistles from Sahyadri Valves, need-by 4 November.",
+     "agent": "Here is the preview for a direct order (POL-PUR-001 §3.3):\n- Item: Whistle (weight valve), standard (WHS-STD-01)\n- Quantity: 3,000 NOS | Supplier: Sahyadri Valves (SV-PUN-0017)\n- Value: ₹24,072 (basic ₹20,400 + 18% GST) | Cost centre: PRD-07 (Diwali production run)\n- Need-by date: 4 Nov 2026 | Approver: Self-approved (within your ₹2,50,000 limit)\n\nPlease confirm if you would like me to create and release this purchase order.",
+     "services": [
+      "itm_search",
+      "itm_get",
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "sup_cert_get",
+      "cc_list",
+      "itm_get",
+      "whs_list",
+      "stk_query",
+      "stk_query",
+      "po_pending_appr",
+      "cc_get",
+      "bud_check",
+      "cc_get",
+      "bud_check",
+      "po_search",
+      "sup_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "bud_check"
+     ],
+     "writes": []
+    },
+    {
+     "user": "Use PRD-07, the Diwali production cost centre.",
+     "agent": "I have stopped here. Tell me what to do next.",
+     "services": [],
+     "writes": []
+    }
+   ],
+   "tokens_in": 70195,
+   "tokens_out": 508,
+   "model_seconds": 65.66,
+   "cost_inr": 3.2227,
+   "wall_s": 74.2,
+   "judge": {
+    "pass": false,
+    "reason": "Ask Rasoi abruptly stopped processing the order instead of clarifying confirmation or proceeding with the purchase order."
+   },
+   "judge_cost_inr": 0.1208,
+   "trust_events": []
+  },
+  {
+   "scenario": 6,
+   "name": "ERP times out after saving",
+   "session_id": "l10-1028-1051-s6",
+   "trace_ids": [
+    "c39d9469f16cf1c73f8b0e6c34dd3e43"
+   ],
+   "passed": false,
+   "never_events": [],
+   "notes": [
+    "no gasket order was written"
+   ],
+   "turns": [
+    {
+     "user": "Reorder 20,000 of the 5-litre silicone gaskets (GSK-SIL-05L) from Deccan Polymers at the contract rate. Charge it to cost centre PRD-07, need-by 2 November.",
+     "agent": "A direct order cannot exceed ₹50,000 (POL-PUR-001 §3.3), so a purchase request must be raised first. Here is the preview:\n• Item: GSK-SIL-05L (5 L silicone gasket), 20,000 NOS\n• Supplier: Deccan Polymers (DP-RJK-0042)\n• Estimated value: ₹2,69,040 (Cost centre",
+     "services": [
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "sup_cert_get",
+      "sup_cert_get",
+      "sup_cert_get",
+      "itm_search",
+      "itm_get",
+      "itm_get",
+      "cc_get",
+      "bud_check",
+      "pr_search",
+      "pr_fetch",
+      "usr_get",
+      "bud_check",
+      "po_search",
+      "sup_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute"
+     ],
+     "writes": []
+    }
+   ],
+   "tokens_in": 15971,
+   "tokens_out": 348,
+   "model_seconds": 26.41,
+   "cost_inr": 0.7946,
+   "wall_s": 1.0,
+   "judge": {
+    "pass": false,
+    "reason": "Ask Rasoi failed to verify Deccan Polymers' food-grade certificate for food-contact gaskets and provided an incomplete response without routing the order exceeding ₹2,50,000 for Rohit's approval."
+   },
+   "judge_cost_inr": 0.1763,
+   "trust_events": []
+  }
+ ]
+}

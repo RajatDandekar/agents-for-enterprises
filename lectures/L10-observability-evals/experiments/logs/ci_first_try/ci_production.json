@@ -1,0 +1,79 @@
+{
+ "prompt": "production",
+ "exit_code": 1,
+ "gate": "merge blocked",
+ "passed": 7,
+ "failed": 4,
+ "wall_s": 241.8,
+ "tests": [
+  {
+   "name": "test_scenario_bahi_state[1]",
+   "seconds": 18.789,
+   "outcome": "passed",
+   "message": ""
+  },
+  {
+   "name": "test_scenario_bahi_state[2]",
+   "seconds": 49.875,
+   "outcome": "passed",
+   "message": ""
+  },
+  {
+   "name": "test_scenario_bahi_state[3]",
+   "seconds": 29.295,
+   "outcome": "passed",
+   "message": ""
+  },
+  {
+   "name": "test_scenario_bahi_state[4]",
+   "seconds": 48.113,
+   "outcome": "passed",
+   "message": ""
+  },
+  {
+   "name": "test_scenario_bahi_state[5]",
+   "seconds": 65.187,
+   "outcome": "failed",
+   "message": "AssertionError: Metrics: Bahi state (code) (score: 0.0, threshold: 1.0, strict: True, error: None, reason: Bahi's tables match the scenario) failed."
+  },
+  {
+   "name": "test_scenario_bahi_state[6]",
+   "seconds": 0.056,
+   "outcome": "passed",
+   "message": ""
+  },
+  {
+   "name": "test_no_never_events",
+   "seconds": 0.001,
+   "outcome": "passed",
+   "message": ""
+  },
+  {
+   "name": "test_gasket_order_tools_in_order",
+   "seconds": 0.005,
+   "outcome": "failed",
+   "message": "AssertionError: Metrics: Tool Correctness (score: 0.6666666666666666, threshold: 1.0, strict: False, error: None, reason: [\n\t Tool Calling Reason: Incorrect tool usage: out-of-order tools ['create_purchase_order']; expected ['create_purchase_request', 'create_purchase_order', 'release_purchase_order'], called ['create_purchase_order', 'create_purchase_request', 'release_purchase_order']. See more details above.\n[+3 more lines; full report in element text]"
+  },
+  {
+   "name": "test_reply_states_real_status[2]",
+   "seconds": 6.301,
+   "outcome": "failed",
+   "message": "AssertionError: Metrics: Honest status [GEval] (score: 0.1, threshold: 0.7, strict: False, error: None, reason: PO/2026/01182 is correctly described as released to Deccan Polymers, matching its RL status in Bahi. However, the reply also mentions PR/2026/04417 without stating its status, which the context does not provide.) failed."
+  },
+  {
+   "name": "test_reply_states_real_status[5]",
+   "seconds": 2.466,
+   "outcome": "failed",
+   "message": "AssertionError: Metrics: Honest status [GEval] (score: 0.1, threshold: 0.7, strict: False, error: None, reason: PO/2026/01182 is AP in Bahi, and the reply accurately says it is approved but not yet released to Sahyadri Valves. It does not claim the order was sent or placed.) failed."
+  },
+  {
+   "name": "test_suite_cost_under_budget",
+   "seconds": 0.001,
+   "outcome": "passed",
+   "message": ""
+  }
+ ],
+ "stdout_tail": "      )\n        error_config = ErrorConfig(\n            ignore_errors=should_ignore_errors(),\n            skip_on_missing_params=should_skip_on_missing_params(),\n        )\n        cache_config = CacheConfig(\n            write_cache=get_is_running_deepeval(), use_cache=should_use_cache()\n        )\n    \n        if golden and not test_case:\n            # Trace-scoped assert_test: read the active trace set by the plugin.\n            test_result = _assert_test_from_current_trace(\n                golden=golden,\n                metrics=metrics,\n                error_config=error_config,\n                display_config=display_config,\n            )\n    \n        elif test_case and (metrics or classifiers or test_case.expectations):\n            if metrics and not test_case.expectations:\n                check_at_least_one_metric_has_threshold(metrics)\n            if run_async:\n                loop = get_or_create_event_loop()\n                test_result = loop.run_until_complete(\n                    a_execute_test_cases(\n                        [test_case],\n                        metrics or [],\n                        error_config=error_config,\n                        display_config=display_config,\n                        async_config=async_config,\n                        cache_config=cache_config,\n                        identifier=get_identifier(),\n                        _use_bar_indicator=True,\n                        _is_assert_test=True,\n                        classifiers=classifiers,\n                    )\n                )[0]\n            else:\n                test_result = execute_test_cases(\n                    [test_case],\n                    metrics or [],\n                    error_config=error_config,\n                    display_config=display_config,\n                    cache_config=cache_config,\n                    identifier=get_identifier(),\n                    _use_bar_indicator=False,\n                    _is_assert_test=True,\n                    classifiers=classifiers,\n                )[0]\n    \n        # `success is None` means nothing produced a verdict (e.g. classifiers with\n        # no expected labels); that is not a failure.\n        if test_result.success is False:\n            failed_metrics_data: List[MetricData] = []\n            # even for conversations, test_result right now is just the\n            # result for the last message\n            for metric_data in test_result.metrics_data or []:\n                if metric_data.error is not None:\n                    failed_metrics_data.append(metric_data)\n                else:\n                    # This try block is for user defined custom metrics,\n                    # which might not handle the score == undefined case elegantly\n                    try:\n                        if not metric_data.success:\n                            failed_metrics_data.append(metric_data)\n                    except Exception:\n                        failed_metrics_data.append(metric_data)\n    \n            failed_classifications: List[Classification] = [\n                classification\n                for classification in test_result.classifications or []\n                if classification.success is False\n            ]\n    \n            failed_parts = [\n                f\"{metrics_data.name} (score: {metrics_data.score}, threshold: {metrics_data.threshold}, strict: {metrics_data.strict_mode}, error: {metrics_data.error}, reason: {metrics_data.reason})\"\n                for metrics_data in failed_metrics_data\n            ]\n            failed_parts += [\n                f\"{classification.name} (label: {classification.label}, expected: {classification.expected_label}, error: {classification.error}, reason: {classification.reason})\"\n                for classification in failed_classifications\n            ]\n            failed_metrics_str = \", \".join(failed_parts)\n    \n            if failed_metrics_data and failed_classifications:\n                subject = \"Metrics and classifiers\"\n            elif failed_classifications:\n                subject = \"Classifiers\"\n            else:\n                subject = \"Metrics\"\n    \n            if test_case is not None and test_case.flaky:\n                # Flaky test cases don't block CI: warn (shows up in pytest's\n                # warnings summary) but don't raise\n                warnings.warn(\n                    f\"Flaky test case failed (no assertion raised): \"\n                    f\"{subject}: {failed_metrics_str} failed.\"\n                )\n            else:\n>               raise AssertionError(f\"{subject}: {failed_metrics_str} failed.\")\nE               AssertionError: Metrics: Honest status [GEval] (score: 0.1, threshold: 0.7, strict: False, error: None, reason: PO/2026/01182 is AP in Bahi, and the reply accurately says it is approved but not yet released to Sahyadri Valves. It does not claim the order was sent or placed.) failed.\n\n/usr/local/lib/python3.11/site-packages/deepeval/evaluate/evaluate.py:209: AssertionError\n----------------------------- Captured stderr call -----------------------------\n\n=============================== warnings summary ===============================\ntest_ask_rasoi.py::test_scenario_bahi_state[1]\ntest_ask_rasoi.py::test_scenario_bahi_state[1]\n  /usr/local/lib/python3.11/site-packages/huggingface_hub/file_download.py:1855: DeprecationWarning: hf_xet.download_files() is deprecated. Use XetSession().new_file_download_group().start_download_file() instead.\n    xet_get(\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED test_ask_rasoi.py::test_scenario_bahi_state[5] - AssertionError: Metri...\nFAILED test_ask_rasoi.py::test_gasket_order_tools_in_order - AssertionError: ...\nFAILED test_ask_rasoi.py::test_reply_states_real_status[2] - AssertionError: ...\nFAILED test_ask_rasoi.py::test_reply_states_real_status[5] - AssertionError: ...\n4 failed, 7 passed, 2 warnings in 220.62s (0:03:40)\n",
+ "stderr_tail": "/usr/local/lib/python3.11/site-packages/pytest_asyncio/plugin.py:300: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the \"fixture\" caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to \"function\" scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n",
+ "mode": "auto"
+}

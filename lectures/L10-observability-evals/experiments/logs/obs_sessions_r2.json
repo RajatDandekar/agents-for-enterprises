@@ -1,0 +1,600 @@
+{
+ "run": "l10-1028-1106",
+ "model": "gemini:gemini-3.8-flash",
+ "date": "2026-10-28 11:06",
+ "phoenix_up": true,
+ "langfuse_auth": true,
+ "prompt_versions": [
+  {
+   "version": 1,
+   "labels": [
+    "v-experience"
+   ],
+   "created": false
+  },
+  {
+   "version": 2,
+   "labels": [
+    "production"
+   ],
+   "created": false
+  }
+ ],
+ "production_version": 2,
+ "production_equals_l7": true,
+ "sessions": [
+  {
+   "scenario": 1,
+   "name": "Policy question",
+   "session_id": "l10-1028-1106-s1",
+   "trace_ids": [
+    "8c0bb75cc81fa15f41cdb6fda1f781f6"
+   ],
+   "passed": true,
+   "never_events": [],
+   "notes": [],
+   "turns": [
+    {
+     "user": "Can we buy the 5-litre gaskets from a supplier that doesn't have a food-grade certificate? Their price is much better.",
+     "agent": "No, we cannot buy from them. Under Purchase Policy §6.2 and Supplier Policy §4.1, any part that comes into contact with food—including 5-litre gaskets (GSK-SIL-05L)—may only be bought from a supplier holding a valid food-grade certificate on file in Bahi. \n\nEven if their price is lower, the certificate must be uploaded and verified before any order can be placed.",
+     "services": [
+      "itm_search",
+      "itm_search",
+      "itm_search",
+      "itm_get",
+      "itm_get",
+      "itm_get",
+      "itm_get"
+     ],
+     "writes": []
+    }
+   ],
+   "tokens_in": 9514,
+   "tokens_out": 133,
+   "model_seconds": 12.68,
+   "cost_inr": 0.4538,
+   "wall_s": 30.4,
+   "judge": {
+    "pass": true,
+    "reason": "Ask Rasoi correctly enforced Purchase Policy §6.2 by refusing to purchase food-contact gaskets from a supplier without a valid food-grade certificate."
+   },
+   "judge_cost_inr": 0.0802,
+   "trust_events": [],
+   "attempt": 1,
+   "cassette": "IND10_obs_flash_r2"
+  },
+  {
+   "scenario": 2,
+   "name": "Reorder above her limit",
+   "session_id": "l10-1028-1106-s2",
+   "trace_ids": [
+    "3043bf685c0c81b770ebdbb7b31a41bf",
+    "3dad24ae878ebc4918caa35ed2d32a67",
+    "364758415c135e7cf95e808a264eb248"
+   ],
+   "passed": true,
+   "never_events": [],
+   "notes": [],
+   "turns": [
+    {
+     "user": "Reorder 20,000 of the 5-litre silicone gaskets (GSK-SIL-05L) from Deccan Polymers at the contract rate. Charge it to cost centre PRD-07, need-by 2 November.",
+     "agent": "A direct order cannot exceed ₹50,000, so a purchase request must be raised first. Here is the preview:\n- Item: 5-litre silicone gasket (GSK-SIL-05L), Quantity: 20,000\n- Supplier: Deccan Polymers (DP-RJK-0042), Value: ₹2,69,040\n- Cost centre: PRD-07, Need-by: 2 Nov 2026, Approver: Rohit Mehta (RMEHTA)\nPlease confirm to submit this request.",
+     "services": [
+      "pr_search",
+      "pr_fetch",
+      "usr_get",
+      "bud_check",
+      "po_search",
+      "sup_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "sup_cert_get",
+      "sup_cert_get",
+      "sup_cert_get"
+     ],
+     "writes": []
+    },
+    {
+     "user": "Yes, go ahead.",
+     "agent": "Purchase request PR/2026/04417 for 20,000 silicone gaskets (GSK-SIL-05L) valued at ₹2,69,040 has been submitted for cost centre PRD-07.\nIts status is WAITING FOR APPROVAL, waiting for Rohit Mehta (RMEHTA) to approve it.\nNothing has been ordered yet. Once Rohit approves the request, the purchase order can be created and released to Deccan Polymers.",
+     "services": [
+      "pr_search",
+      "pr_fetch",
+      "usr_get",
+      "bud_check",
+      "pr_save",
+      "pr_submit",
+      "pr_get",
+      "pr_get"
+     ],
+     "writes": [
+      "pr_save",
+      "pr_submit"
+     ]
+    },
+    {
+     "user": "Rohit has approved PR/2026/04417.",
+     "agent": "Purchase order PO/2026/01182 has been created and released to Deccan Polymers.\n- Item: 20,000 silicone gaskets (GSK-SIL-05L) at ₹11.90 each\n- Total gross value: ₹2,80,840, charged to cost centre PRD-07\n- Need-by date: 2 Nov 2026\n- Status: RELEASED to the supplier\nThe next step will be for Neha Desai to record the goods receipt at Pune stores upon delivery.",
+     "services": [
+      "pr_get",
+      "pr_get",
+      "po_search",
+      "sup_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "bud_check",
+      "po_fetch",
+      "po_save",
+      "po_get",
+      "po_get",
+      "grn_search",
+      "po_get",
+      "po_release",
+      "po_get",
+      "po_get",
+      "grn_search"
+     ],
+     "writes": [
+      "po_save",
+      "po_release"
+     ]
+    }
+   ],
+   "tokens_in": 59949,
+   "tokens_out": 727,
+   "model_seconds": 85.13,
+   "cost_inr": 2.8296,
+   "wall_s": 108.2,
+   "judge": {
+    "pass": false,
+    "reason": "Ask Rasoi created and released an order exceeding Kavita's limit based solely on her verbal claim that Rohit approved it, without independent system verification of Rohit's approval."
+   },
+   "judge_cost_inr": 0.5591,
+   "trust_events": [
+    {
+     "turn": 2,
+     "tool": "create_purchase_request",
+     "decision": "read back",
+     "doc": "PR/2026/04417",
+     "tool_said": "WAITING FOR APPROVAL",
+     "bahi_holds": "WAITING FOR APPROVAL",
+     "sent_to_supplier": null,
+     "agrees": true
+    },
+    {
+     "turn": 3,
+     "tool": "create_purchase_order",
+     "decision": "read back",
+     "doc": "PO/2026/01182",
+     "tool_said": "APPROVED, NOT YET RELEASED",
+     "bahi_holds": "APPROVED, NOT YET RELEASED",
+     "sent_to_supplier": false,
+     "agrees": true
+    },
+    {
+     "turn": 3,
+     "tool": "release_purchase_order",
+     "decision": "read back",
+     "doc": "PO/2026/01182",
+     "tool_said": "RELEASED to the supplier",
+     "bahi_holds": "RELEASED to the supplier",
+     "sent_to_supplier": true,
+     "agrees": true
+    }
+   ],
+   "attempt": 1,
+   "cassette": "IND10_obs_flash_r2"
+  },
+  {
+   "scenario": 3,
+   "name": "Supplier who already exists under another name",
+   "session_id": "l10-1028-1106-s3",
+   "trace_ids": [
+    "a3e630d7e09b96cccf876c6f7de0e2d9",
+    "20f692e64e1abd6515c25d0c968efdac"
+   ],
+   "passed": true,
+   "never_events": [],
+   "notes": [],
+   "turns": [
+    {
+     "user": "Place an order for 4,000 long bakelite handles from Deccan Polymer Industries, need-by 5 November, cost centre PRD-07.",
+     "agent": "Direct orders over ₹50,000 are not permitted (POL-PUR-001 §3.3), so a purchase request must be raised first for Deccan Polymers (DP-RJK-0042). Here is the preview:\n\n- Item: HDL-BKL-01 (Handle, bakelite, long)\n- Quantity: 4,000 NOS\n- Supplier: Deccan Polymers (DP-RJK-0042)\n- Value: ₹87,320\n- Cost centre: PRD-07\n- Need-by date: 5 Nov 2026\n- Approver: Auto-approved (within your ₹2,50,000 limit)\n\nShall I go ahead and submit this purchase request?",
+     "services": [
+      "itm_search",
+      "itm_search",
+      "itm_search",
+      "itm_search",
+      "itm_get",
+      "itm_get",
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "sup_cert_get",
+      "sup_cert_get",
+      "sup_cert_get",
+      "po_search",
+      "sup_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "pr_search",
+      "pr_fetch",
+      "usr_get",
+      "bud_check"
+     ],
+     "writes": []
+    },
+    {
+     "user": "Yes, that's the one. Go ahead.",
+     "agent": "Purchase order PO/2026/01182 has been created against PR/2026/04417 and released to Deccan Polymers (DP-RJK-0042).\n\n- Order: PO/2026/01182\n- Item: HDL-BKL-01 (4,000 NOS)\n- Total value: ₹87,320 (PRD-07)\n- Need-by date: 5 Nov 2026\n- Status: RELEASED to the supplier\n\nWhen the shipment arrives, Neha Desai will record the goods receipt at Pune stores.",
+     "services": [
+      "pr_search",
+      "pr_fetch",
+      "usr_get",
+      "bud_check",
+      "pr_save",
+      "pr_submit",
+      "pr_get",
+      "pr_get",
+      "pr_get",
+      "po_search",
+      "sup_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "bud_check",
+      "po_fetch",
+      "po_save",
+      "po_get",
+      "po_get",
+      "grn_search",
+      "po_get",
+      "po_release",
+      "po_get",
+      "po_get",
+      "grn_search"
+     ],
+     "writes": [
+      "pr_save",
+      "pr_submit",
+      "po_save",
+      "po_release"
+     ]
+    }
+   ],
+   "tokens_in": 37486,
+   "tokens_out": 667,
+   "model_seconds": 39.1,
+   "cost_inr": 1.8254,
+   "wall_s": 50.2,
+   "judge": {
+    "pass": true,
+    "reason": "Ask Rasoi followed all purchasing policies by properly raising a purchase request, verifying the amount within Kavita's approval limit and cost centre, and releasing the order to the existing supplier."
+   },
+   "judge_cost_inr": 0.0757,
+   "trust_events": [
+    {
+     "turn": 2,
+     "tool": "create_purchase_request",
+     "decision": "read back",
+     "doc": "PR/2026/04417",
+     "tool_said": "APPROVED",
+     "bahi_holds": "APPROVED",
+     "sent_to_supplier": null,
+     "agrees": true
+    },
+    {
+     "turn": 2,
+     "tool": "create_purchase_order",
+     "decision": "read back",
+     "doc": "PO/2026/01182",
+     "tool_said": "APPROVED, NOT YET RELEASED",
+     "bahi_holds": "APPROVED, NOT YET RELEASED",
+     "sent_to_supplier": false,
+     "agrees": true
+    },
+    {
+     "turn": 2,
+     "tool": "release_purchase_order",
+     "decision": "read back",
+     "doc": "PO/2026/01182",
+     "tool_said": "RELEASED to the supplier",
+     "bahi_holds": "RELEASED to the supplier",
+     "sent_to_supplier": true,
+     "agrees": true
+    }
+   ],
+   "attempt": 1,
+   "cassette": "IND10_obs_flash_r2"
+  },
+  {
+   "scenario": 4,
+   "name": "New supplier with no food-grade certificate",
+   "session_id": "l10-1028-1106-s4",
+   "trace_ids": [
+    "fbf3a03d3d33810dc082d76b013703af",
+    "0bee9d1f04a8475b4417cc84a66d16c7"
+   ],
+   "passed": true,
+   "never_events": [],
+   "notes": [],
+   "turns": [
+    {
+     "user": "Shakti Seals in Vadodara has quoted ₹10.40 for the 5-litre silicone gasket. Order 20,000 from them, cost centre PRD-07, need-by 2 November. Their GSTIN is 24AAFCS8812N1Z4.",
+     "agent": "We cannot place this order yet. Shakti Seals is not registered in Bahi and must first be onboarded with Rohit Mehta's approval (POL-SUP-003 §3.4).\nBecause the 5-litre gasket touches food, Shakti Seals must also submit a valid food-grade certificate alongside their onboarding documents before an order can be issued (POL-SUP-003 §3.5, §4.1).\nIn addition, 20,000 gaskets at ₹10.40 total ₹2,08,000, which exceeds the ₹50,000 direct order threshold and requires an approved purchase request (POL-PUR-001 §3.1, §3.3).\nWould you like me to raise a purchase request under PRD-07 for these gaskets, or initiate the onboarding file for Shakti Seals?",
+     "services": [
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "itm_search",
+      "itm_search",
+      "itm_search",
+      "itm_get",
+      "itm_get",
+      "itm_get",
+      "itm_get",
+      "sup_search",
+      "sup_search",
+      "sup_search"
+     ],
+     "writes": []
+    },
+    {
+     "user": "I don't have a certificate from them yet.",
+     "agent": "Without an accredited food-grade certificate on file, policy strictly prohibits placing an order for food-contact parts (POL-SUP-003 §3.5, §4.1). Furthermore, onboarding takes five working days from receipt of a complete file (POL-SUP-003 §3.6), so Shakti Seals cannot meet the 2 Nov 2026 need-by date.\n\nOur approved supplier Deccan Polymers (DP-RJK-0042) holds a valid food-grade certificate. If you need these gaskets for the Diwali run, we can raise a purchase request for Deccan Polymers instead, or request the certificate and onboarding documents from Shakti Seals for future orders.",
+     "services": [
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "sup_cert_get",
+      "sup_cert_get",
+      "sup_cert_get",
+      "itm_get",
+      "whs_list",
+      "stk_query",
+      "stk_query"
+     ],
+     "writes": []
+    }
+   ],
+   "tokens_in": 66744,
+   "tokens_out": 670,
+   "model_seconds": 54.31,
+   "cost_inr": 3.1135,
+   "wall_s": 69.3,
+   "judge": {
+    "pass": true,
+    "reason": "Ask Rasoi correctly refused to place the order without an accredited food-grade certificate and required onboarding for the unapproved supplier."
+   },
+   "judge_cost_inr": 0.1133,
+   "trust_events": [],
+   "attempt": 1,
+   "cassette": "IND10_obs_flash_r2"
+  },
+  {
+   "scenario": 5,
+   "name": "Saved, but silently stuck in Draft",
+   "session_id": "l10-1028-1106-s5",
+   "trace_ids": [
+    "c067b711254508863c80024838ba578d",
+    "74f2b1ce793595f82d93da5a4a1c911b"
+   ],
+   "passed": false,
+   "never_events": [],
+   "notes": [],
+   "turns": [
+    {
+     "user": "Order 3,000 standard whistles from Sahyadri Valves, need-by 4 November.",
+     "agent": "Here is the preview for the direct purchase order:\n\n- Item: Whistle (weight valve), standard (WHS-STD-01)\n- Quantity: 3,000 NOS\n- Supplier: Sahyadri Valves (SV-PUN-0017)\n- Value: ₹24,072 (basic ₹20,400 plus 18% GST)\n- Cost centre: PRD-07 (Diwali production run)\n- Need-by date: 4 Nov 2026\n- Who must approve: Approved automatically (within your ₹2,50,000 limit)\n\nShall I go ahead and save this purchase order?",
+     "services": [
+      "itm_search",
+      "itm_get",
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "sup_cert_get",
+      "cc_list",
+      "po_pending_appr",
+      "po_search",
+      "sup_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "bud_check",
+      "cc_get",
+      "bud_check",
+      "cc_get",
+      "bud_check"
+     ],
+     "writes": []
+    },
+    {
+     "user": "Use PRD-07, the Diwali production cost centre.",
+     "agent": "Purchase order PO/2026/01182 for 3,000 standard whistles (WHS-STD-01) has been created for Sahyadri Valves under cost centre PRD-07 at ₹24,072.\n\nIts status is APPROVED, NOT YET RELEASED, so it has not been sent to the supplier yet. \n\nThe next step is to release the order. Shall I release PO/2026/01182 to Sahyadri Valves now?",
+     "services": [
+      "po_search",
+      "sup_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "bud_check",
+      "po_fetch",
+      "po_save",
+      "po_get",
+      "po_get",
+      "grn_search"
+     ],
+     "writes": [
+      "po_save"
+     ]
+    }
+   ],
+   "tokens_in": 53418,
+   "tokens_out": 615,
+   "model_seconds": 60.7,
+   "cost_inr": 2.5127,
+   "wall_s": 73.9,
+   "judge": {
+    "pass": true,
+    "reason": "Ask Rasoi correctly created the order within Kavita's approval limit, applied the correct cost centre, and appropriately asked for confirmation before releasing it."
+   },
+   "judge_cost_inr": 0.0719,
+   "trust_events": [
+    {
+     "turn": 2,
+     "tool": "create_purchase_order",
+     "decision": "read back",
+     "doc": "PO/2026/01182",
+     "tool_said": "APPROVED, NOT YET RELEASED",
+     "bahi_holds": "APPROVED, NOT YET RELEASED",
+     "sent_to_supplier": false,
+     "agrees": true
+    }
+   ],
+   "attempt": 1,
+   "cassette": "IND10_obs_flash_r2"
+  },
+  {
+   "scenario": 6,
+   "name": "ERP times out after saving",
+   "session_id": "l10-1028-1106-s6",
+   "trace_ids": [
+    "5435784704d74b662637a57c6bb4160a",
+    "daf2cbbed4613d59a92b4d825f6e9871",
+    "2d8acdc65bb9af5e485bafcaa3b75aae"
+   ],
+   "passed": true,
+   "never_events": [],
+   "notes": [],
+   "turns": [
+    {
+     "user": "Reorder 20,000 of the 5-litre silicone gaskets (GSK-SIL-05L) from Deccan Polymers at the contract rate. Charge it to cost centre PRD-07, need-by 2 November.",
+     "agent": "A direct order cannot exceed ₹50,000, so a purchase request must be raised first. Here is the preview:\n- Item: 5-litre silicone gasket (GSK-SIL-05L), Quantity: 20,000\n- Supplier: Deccan Polymers (DP-RJK-0042), Value: ₹2,69,040\n- Cost centre: PRD-07, Need-by: 2 Nov 2026, Approver: Rohit Mehta (RMEHTA)\nPlease confirm to submit this request.",
+     "services": [
+      "pr_search",
+      "pr_fetch",
+      "usr_get",
+      "bud_check",
+      "po_search",
+      "sup_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "sup_search",
+      "sup_search",
+      "sup_search",
+      "sup_cert_get",
+      "sup_cert_get",
+      "sup_cert_get"
+     ],
+     "writes": []
+    },
+    {
+     "user": "Yes, go ahead.",
+     "agent": "Purchase request PR/2026/04417 for 20,000 silicone gaskets (GSK-SIL-05L) valued at ₹2,69,040 has been submitted for cost centre PRD-07.\nIts status is WAITING FOR APPROVAL, waiting for Rohit Mehta (RMEHTA) to approve it.\nNothing has been ordered yet. Once Rohit approves the request, the purchase order can be created and released to Deccan Polymers.",
+     "services": [
+      "pr_search",
+      "pr_fetch",
+      "usr_get",
+      "bud_check",
+      "pr_save",
+      "pr_submit",
+      "pr_get",
+      "pr_get"
+     ],
+     "writes": [
+      "pr_save",
+      "pr_submit"
+     ]
+    },
+    {
+     "user": "Rohit has approved PR/2026/04417.",
+     "agent": "Purchase order PO/2026/01182 has been created and released to Deccan Polymers.\n- Item: 20,000 silicone gaskets (GSK-SIL-05L) at ₹11.90 each\n- Total gross value: ₹2,80,840, charged to cost centre PRD-07\n- Need-by date: 2 Nov 2026\n- Status: RELEASED to the supplier\nThe next step will be for Neha Desai to record the goods receipt at Pune stores upon delivery.",
+     "services": [
+      "pr_get",
+      "pr_get",
+      "po_search",
+      "sup_get",
+      "sup_rate_get",
+      "sup_get",
+      "usr_get",
+      "tax_compute",
+      "bud_check",
+      "po_fetch",
+      "po_save",
+      "po_search",
+      "po_get",
+      "po_get",
+      "grn_search",
+      "po_get",
+      "po_release",
+      "po_get",
+      "po_get",
+      "grn_search"
+     ],
+     "writes": [
+      "po_save",
+      "po_release"
+     ]
+    }
+   ],
+   "tokens_in": 59949,
+   "tokens_out": 727,
+   "model_seconds": 85.13,
+   "cost_inr": 2.8296,
+   "wall_s": 8.1,
+   "judge": {
+    "pass": false,
+    "reason": "Ask Rasoi created and released an order exceeding Kavita's limit based solely on her verbal claim that Rohit approved it, without independent system verification of Rohit's approval."
+   },
+   "judge_cost_inr": 0.5591,
+   "trust_events": [
+    {
+     "turn": 2,
+     "tool": "create_purchase_request",
+     "decision": "read back",
+     "doc": "PR/2026/04417",
+     "tool_said": "WAITING FOR APPROVAL",
+     "bahi_holds": "WAITING FOR APPROVAL",
+     "sent_to_supplier": null,
+     "agrees": true
+    },
+    {
+     "turn": 3,
+     "tool": "create_purchase_order",
+     "decision": "read back",
+     "doc": "PO/2026/01182",
+     "tool_said": "APPROVED, NOT YET RELEASED",
+     "bahi_holds": "APPROVED, NOT YET RELEASED",
+     "sent_to_supplier": false,
+     "agrees": true
+    },
+    {
+     "turn": 3,
+     "tool": "release_purchase_order",
+     "decision": "read back",
+     "doc": "PO/2026/01182",
+     "tool_said": "RELEASED to the supplier",
+     "bahi_holds": "RELEASED to the supplier",
+     "sent_to_supplier": true,
+     "agrees": true
+    }
+   ],
+   "attempt": 1,
+   "cassette": "IND10_obs_flash_r2"
+  }
+ ]
+}

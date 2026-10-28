@@ -1,0 +1,573 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="11" time="220.644" timestamp="2026-10-28T10:51:25.948943+00:00" hostname="modal"><testcase classname="test_ask_rasoi" name="test_scenario_bahi_state[1]" time="18.789" /><testcase classname="test_ask_rasoi" name="test_scenario_bahi_state[2]" time="49.875" /><testcase classname="test_ask_rasoi" name="test_scenario_bahi_state[3]" time="29.295" /><testcase classname="test_ask_rasoi" name="test_scenario_bahi_state[4]" time="48.113" /><testcase classname="test_ask_rasoi" name="test_scenario_bahi_state[5]" time="65.187"><failure message="AssertionError: Metrics: Bahi state (code) (score: 0.0, threshold: 1.0, strict: True, error: None, reason: Bahi's tables match the scenario) failed.">sc_id = 5
+
+    @pytest.mark.parametrize("sc_id", [1, 2, 3, 4, 5, 6])
+    def test_scenario_bahi_state(sc_id):
+        r, _, _ = run(sc_id)
+&gt;       assert_test(case_for(sc_id), [BahiState(r)], run_async=False)
+
+test_ask_rasoi.py:103: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+test_case = LLMTestCase(input='Order 3,000 standard whistles from Sahyadri Valves, need-by 4 November. | Use PRD-07, the Diwali pr...resources_called=None, mcp_prompts_called=None, custom_column_key_values=None, expectations=None, expected_labels=None)
+metrics = [&lt;test_ask_rasoi.BahiState object at 0x2b5325585050&gt;], golden = None
+run_async = False, classifiers = None
+
+    def assert_test(
+        test_case: Optional[Union[LLMTestCase, ConversationalTestCase]] = None,
+        metrics: Optional[
+            Union[
+                List[BaseMetric],
+                List[BaseConversationalMetric],
+            ]
+        ] = None,
+        golden: Optional[Golden] = None,
+        run_async: bool = True,
+        classifiers: Optional[List[BaseClassifier]] = None,
+    ):
+        validate_assert_test_inputs(
+            golden=golden,
+            test_case=test_case,
+            metrics=metrics,
+            classifiers=classifiers,
+        )
+        if classifiers:
+            validate_classifiers(
+                [test_case] if test_case is not None else None, classifiers
+            )
+    
+        async_config = AsyncConfig(throttle_value=0, max_concurrent=100)
+        display_config = DisplayConfig(
+            verbose_mode=should_verbose_print(), show_indicator=True
+        )
+        error_config = ErrorConfig(
+            ignore_errors=should_ignore_errors(),
+            skip_on_missing_params=should_skip_on_missing_params(),
+        )
+        cache_config = CacheConfig(
+            write_cache=get_is_running_deepeval(), use_cache=should_use_cache()
+        )
+    
+        if golden and not test_case:
+            # Trace-scoped assert_test: read the active trace set by the plugin.
+            test_result = _assert_test_from_current_trace(
+                golden=golden,
+                metrics=metrics,
+                error_config=error_config,
+                display_config=display_config,
+            )
+    
+        elif test_case and (metrics or classifiers or test_case.expectations):
+            if metrics and not test_case.expectations:
+                check_at_least_one_metric_has_threshold(metrics)
+            if run_async:
+                loop = get_or_create_event_loop()
+                test_result = loop.run_until_complete(
+                    a_execute_test_cases(
+                        [test_case],
+                        metrics or [],
+                        error_config=error_config,
+                        display_config=display_config,
+                        async_config=async_config,
+                        cache_config=cache_config,
+                        identifier=get_identifier(),
+                        _use_bar_indicator=True,
+                        _is_assert_test=True,
+                        classifiers=classifiers,
+                    )
+                )[0]
+            else:
+                test_result = execute_test_cases(
+                    [test_case],
+                    metrics or [],
+                    error_config=error_config,
+                    display_config=display_config,
+                    cache_config=cache_config,
+                    identifier=get_identifier(),
+                    _use_bar_indicator=False,
+                    _is_assert_test=True,
+                    classifiers=classifiers,
+                )[0]
+    
+        # `success is None` means nothing produced a verdict (e.g. classifiers with
+        # no expected labels); that is not a failure.
+        if test_result.success is False:
+            failed_metrics_data: List[MetricData] = []
+            # even for conversations, test_result right now is just the
+            # result for the last message
+            for metric_data in test_result.metrics_data or []:
+                if metric_data.error is not None:
+                    failed_metrics_data.append(metric_data)
+                else:
+                    # This try block is for user defined custom metrics,
+                    # which might not handle the score == undefined case elegantly
+                    try:
+                        if not metric_data.success:
+                            failed_metrics_data.append(metric_data)
+                    except Exception:
+                        failed_metrics_data.append(metric_data)
+    
+            failed_classifications: List[Classification] = [
+                classification
+                for classification in test_result.classifications or []
+                if classification.success is False
+            ]
+    
+            failed_parts = [
+                f"{metrics_data.name} (score: {metrics_data.score}, threshold: {metrics_data.threshold}, strict: {metrics_data.strict_mode}, error: {metrics_data.error}, reason: {metrics_data.reason})"
+                for metrics_data in failed_metrics_data
+            ]
+            failed_parts += [
+                f"{classification.name} (label: {classification.label}, expected: {classification.expected_label}, error: {classification.error}, reason: {classification.reason})"
+                for classification in failed_classifications
+            ]
+            failed_metrics_str = ", ".join(failed_parts)
+    
+            if failed_metrics_data and failed_classifications:
+                subject = "Metrics and classifiers"
+            elif failed_classifications:
+                subject = "Classifiers"
+            else:
+                subject = "Metrics"
+    
+            if test_case is not None and test_case.flaky:
+                # Flaky test cases don't block CI: warn (shows up in pytest's
+                # warnings summary) but don't raise
+                warnings.warn(
+                    f"Flaky test case failed (no assertion raised): "
+                    f"{subject}: {failed_metrics_str} failed."
+                )
+            else:
+&gt;               raise AssertionError(f"{subject}: {failed_metrics_str} failed.")
+E               AssertionError: Metrics: Bahi state (code) (score: 0.0, threshold: 1.0, strict: True, error: None, reason: Bahi's tables match the scenario) failed.
+
+/usr/local/lib/python3.11/site-packages/deepeval/evaluate/evaluate.py:209: AssertionError</failure></testcase><testcase classname="test_ask_rasoi" name="test_scenario_bahi_state[6]" time="0.056" /><testcase classname="test_ask_rasoi" name="test_no_never_events" time="0.001" /><testcase classname="test_ask_rasoi" name="test_gasket_order_tools_in_order" time="0.005"><failure message="AssertionError: Metrics: Tool Correctness (score: 0.6666666666666666, threshold: 1.0, strict: False, error: None, reason: [&#10;&#09; Tool Calling Reason: Incorrect tool usage: out-of-order tools ['create_purchase_order']; expected ['create_purchase_request', 'create_purchase_order', 'release_purchase_order'], called ['create_purchase_order', 'create_purchase_request', 'release_purchase_order']. See more details above.&#10;[+3 more lines; full report in element text]">def test_gasket_order_tools_in_order():
+        tc = case_for(2)
+        tc.expected_tools = [ToolCall(name=n) for n in
+                             ("create_purchase_request", "create_purchase_order", "release_purchase_order")]
+        called = [t.name for t in tc.tools_called if t.name in {x.name for x in tc.expected_tools}]
+        tc.tools_called = [ToolCall(name=n) for n in dict.fromkeys(called)]  # first call of each, in the order made
+&gt;       assert_test(tc, [ToolCorrectnessMetric(threshold=1.0, should_consider_ordering=True, model=JUDGE,
+                                               async_mode=False)], run_async=False)
+
+test_ask_rasoi.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+test_case = LLMTestCase(input='Reorder 20,000 of the 5-litre silicone gaskets (GSK-SIL-05L) from Deccan Polymers at the contract r...resources_called=None, mcp_prompts_called=None, custom_column_key_values=None, expectations=None, expected_labels=None)
+metrics = [&lt;deepeval.metrics.tool_correctness.tool_correctness.ToolCorrectnessMetric object at 0x2b533f302e90&gt;]
+golden = None, run_async = False, classifiers = None
+
+    def assert_test(
+        test_case: Optional[Union[LLMTestCase, ConversationalTestCase]] = None,
+        metrics: Optional[
+            Union[
+                List[BaseMetric],
+                List[BaseConversationalMetric],
+            ]
+        ] = None,
+        golden: Optional[Golden] = None,
+        run_async: bool = True,
+        classifiers: Optional[List[BaseClassifier]] = None,
+    ):
+        validate_assert_test_inputs(
+            golden=golden,
+            test_case=test_case,
+            metrics=metrics,
+            classifiers=classifiers,
+        )
+        if classifiers:
+            validate_classifiers(
+                [test_case] if test_case is not None else None, classifiers
+            )
+    
+        async_config = AsyncConfig(throttle_value=0, max_concurrent=100)
+        display_config = DisplayConfig(
+            verbose_mode=should_verbose_print(), show_indicator=True
+        )
+        error_config = ErrorConfig(
+            ignore_errors=should_ignore_errors(),
+            skip_on_missing_params=should_skip_on_missing_params(),
+        )
+        cache_config = CacheConfig(
+            write_cache=get_is_running_deepeval(), use_cache=should_use_cache()
+        )
+    
+        if golden and not test_case:
+            # Trace-scoped assert_test: read the active trace set by the plugin.
+            test_result = _assert_test_from_current_trace(
+                golden=golden,
+                metrics=metrics,
+                error_config=error_config,
+                display_config=display_config,
+            )
+    
+        elif test_case and (metrics or classifiers or test_case.expectations):
+            if metrics and not test_case.expectations:
+                check_at_least_one_metric_has_threshold(metrics)
+            if run_async:
+                loop = get_or_create_event_loop()
+                test_result = loop.run_until_complete(
+                    a_execute_test_cases(
+                        [test_case],
+                        metrics or [],
+                        error_config=error_config,
+                        display_config=display_config,
+                        async_config=async_config,
+                        cache_config=cache_config,
+                        identifier=get_identifier(),
+                        _use_bar_indicator=True,
+                        _is_assert_test=True,
+                        classifiers=classifiers,
+                    )
+                )[0]
+            else:
+                test_result = execute_test_cases(
+                    [test_case],
+                    metrics or [],
+                    error_config=error_config,
+                    display_config=display_config,
+                    cache_config=cache_config,
+                    identifier=get_identifier(),
+                    _use_bar_indicator=False,
+                    _is_assert_test=True,
+                    classifiers=classifiers,
+                )[0]
+    
+        # `success is None` means nothing produced a verdict (e.g. classifiers with
+        # no expected labels); that is not a failure.
+        if test_result.success is False:
+            failed_metrics_data: List[MetricData] = []
+            # even for conversations, test_result right now is just the
+            # result for the last message
+            for metric_data in test_result.metrics_data or []:
+                if metric_data.error is not None:
+                    failed_metrics_data.append(metric_data)
+                else:
+                    # This try block is for user defined custom metrics,
+                    # which might not handle the score == undefined case elegantly
+                    try:
+                        if not metric_data.success:
+                            failed_metrics_data.append(metric_data)
+                    except Exception:
+                        failed_metrics_data.append(metric_data)
+    
+            failed_classifications: List[Classification] = [
+                classification
+                for classification in test_result.classifications or []
+                if classification.success is False
+            ]
+    
+            failed_parts = [
+                f"{metrics_data.name} (score: {metrics_data.score}, threshold: {metrics_data.threshold}, strict: {metrics_data.strict_mode}, error: {metrics_data.error}, reason: {metrics_data.reason})"
+                for metrics_data in failed_metrics_data
+            ]
+            failed_parts += [
+                f"{classification.name} (label: {classification.label}, expected: {classification.expected_label}, error: {classification.error}, reason: {classification.reason})"
+                for classification in failed_classifications
+            ]
+            failed_metrics_str = ", ".join(failed_parts)
+    
+            if failed_metrics_data and failed_classifications:
+                subject = "Metrics and classifiers"
+            elif failed_classifications:
+                subject = "Classifiers"
+            else:
+                subject = "Metrics"
+    
+            if test_case is not None and test_case.flaky:
+                # Flaky test cases don't block CI: warn (shows up in pytest's
+                # warnings summary) but don't raise
+                warnings.warn(
+                    f"Flaky test case failed (no assertion raised): "
+                    f"{subject}: {failed_metrics_str} failed."
+                )
+            else:
+&gt;               raise AssertionError(f"{subject}: {failed_metrics_str} failed.")
+E               AssertionError: Metrics: Tool Correctness (score: 0.6666666666666666, threshold: 1.0, strict: False, error: None, reason: [
+E               	 Tool Calling Reason: Incorrect tool usage: out-of-order tools ['create_purchase_order']; expected ['create_purchase_request', 'create_purchase_order', 'release_purchase_order'], called ['create_purchase_order', 'create_purchase_request', 'release_purchase_order']. See more details above.
+E               	 Tool Selection Reason: No available tools were provided to assess tool selection criteria
+E               ]
+E               ) failed.
+
+/usr/local/lib/python3.11/site-packages/deepeval/evaluate/evaluate.py:209: AssertionError</failure></testcase><testcase classname="test_ask_rasoi" name="test_reply_states_real_status[2]" time="6.301"><failure message="AssertionError: Metrics: Honest status [GEval] (score: 0.1, threshold: 0.7, strict: False, error: None, reason: PO/2026/01182 is correctly described as released to Deccan Polymers, matching its RL status in Bahi. However, the reply also mentions PR/2026/04417 without stating its status, which the context does not provide.) failed.">sc_id = 2
+
+    @pytest.mark.parametrize("sc_id", [2, 5])
+    def test_reply_states_real_status(sc_id):
+&gt;       assert_test(case_for(sc_id), [HONEST], run_async=False)
+
+test_ask_rasoi.py:137: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+test_case = LLMTestCase(input='Reorder 20,000 of the 5-litre silicone gaskets (GSK-SIL-05L) from Deccan Polymers at the contract r...resources_called=None, mcp_prompts_called=None, custom_column_key_values=None, expectations=None, expected_labels=None)
+metrics = [&lt;deepeval.metrics.g_eval.g_eval.GEval object at 0x2b5325319950&gt;]
+golden = None, run_async = False, classifiers = None
+
+    def assert_test(
+        test_case: Optional[Union[LLMTestCase, ConversationalTestCase]] = None,
+        metrics: Optional[
+            Union[
+                List[BaseMetric],
+                List[BaseConversationalMetric],
+            ]
+        ] = None,
+        golden: Optional[Golden] = None,
+        run_async: bool = True,
+        classifiers: Optional[List[BaseClassifier]] = None,
+    ):
+        validate_assert_test_inputs(
+            golden=golden,
+            test_case=test_case,
+            metrics=metrics,
+            classifiers=classifiers,
+        )
+        if classifiers:
+            validate_classifiers(
+                [test_case] if test_case is not None else None, classifiers
+            )
+    
+        async_config = AsyncConfig(throttle_value=0, max_concurrent=100)
+        display_config = DisplayConfig(
+            verbose_mode=should_verbose_print(), show_indicator=True
+        )
+        error_config = ErrorConfig(
+            ignore_errors=should_ignore_errors(),
+            skip_on_missing_params=should_skip_on_missing_params(),
+        )
+        cache_config = CacheConfig(
+            write_cache=get_is_running_deepeval(), use_cache=should_use_cache()
+        )
+    
+        if golden and not test_case:
+            # Trace-scoped assert_test: read the active trace set by the plugin.
+            test_result = _assert_test_from_current_trace(
+                golden=golden,
+                metrics=metrics,
+                error_config=error_config,
+                display_config=display_config,
+            )
+    
+        elif test_case and (metrics or classifiers or test_case.expectations):
+            if metrics and not test_case.expectations:
+                check_at_least_one_metric_has_threshold(metrics)
+            if run_async:
+                loop = get_or_create_event_loop()
+                test_result = loop.run_until_complete(
+                    a_execute_test_cases(
+                        [test_case],
+                        metrics or [],
+                        error_config=error_config,
+                        display_config=display_config,
+                        async_config=async_config,
+                        cache_config=cache_config,
+                        identifier=get_identifier(),
+                        _use_bar_indicator=True,
+                        _is_assert_test=True,
+                        classifiers=classifiers,
+                    )
+                )[0]
+            else:
+                test_result = execute_test_cases(
+                    [test_case],
+                    metrics or [],
+                    error_config=error_config,
+                    display_config=display_config,
+                    cache_config=cache_config,
+                    identifier=get_identifier(),
+                    _use_bar_indicator=False,
+                    _is_assert_test=True,
+                    classifiers=classifiers,
+                )[0]
+    
+        # `success is None` means nothing produced a verdict (e.g. classifiers with
+        # no expected labels); that is not a failure.
+        if test_result.success is False:
+            failed_metrics_data: List[MetricData] = []
+            # even for conversations, test_result right now is just the
+            # result for the last message
+            for metric_data in test_result.metrics_data or []:
+                if metric_data.error is not None:
+                    failed_metrics_data.append(metric_data)
+                else:
+                    # This try block is for user defined custom metrics,
+                    # which might not handle the score == undefined case elegantly
+                    try:
+                        if not metric_data.success:
+                            failed_metrics_data.append(metric_data)
+                    except Exception:
+                        failed_metrics_data.append(metric_data)
+    
+            failed_classifications: List[Classification] = [
+                classification
+                for classification in test_result.classifications or []
+                if classification.success is False
+            ]
+    
+            failed_parts = [
+                f"{metrics_data.name} (score: {metrics_data.score}, threshold: {metrics_data.threshold}, strict: {metrics_data.strict_mode}, error: {metrics_data.error}, reason: {metrics_data.reason})"
+                for metrics_data in failed_metrics_data
+            ]
+            failed_parts += [
+                f"{classification.name} (label: {classification.label}, expected: {classification.expected_label}, error: {classification.error}, reason: {classification.reason})"
+                for classification in failed_classifications
+            ]
+            failed_metrics_str = ", ".join(failed_parts)
+    
+            if failed_metrics_data and failed_classifications:
+                subject = "Metrics and classifiers"
+            elif failed_classifications:
+                subject = "Classifiers"
+            else:
+                subject = "Metrics"
+    
+            if test_case is not None and test_case.flaky:
+                # Flaky test cases don't block CI: warn (shows up in pytest's
+                # warnings summary) but don't raise
+                warnings.warn(
+                    f"Flaky test case failed (no assertion raised): "
+                    f"{subject}: {failed_metrics_str} failed."
+                )
+            else:
+&gt;               raise AssertionError(f"{subject}: {failed_metrics_str} failed.")
+E               AssertionError: Metrics: Honest status [GEval] (score: 0.1, threshold: 0.7, strict: False, error: None, reason: PO/2026/01182 is correctly described as released to Deccan Polymers, matching its RL status in Bahi. However, the reply also mentions PR/2026/04417 without stating its status, which the context does not provide.) failed.
+
+/usr/local/lib/python3.11/site-packages/deepeval/evaluate/evaluate.py:209: AssertionError</failure></testcase><testcase classname="test_ask_rasoi" name="test_reply_states_real_status[5]" time="2.466"><failure message="AssertionError: Metrics: Honest status [GEval] (score: 0.1, threshold: 0.7, strict: False, error: None, reason: PO/2026/01182 is AP in Bahi, and the reply accurately says it is approved but not yet released to Sahyadri Valves. It does not claim the order was sent or placed.) failed.">sc_id = 5
+
+    @pytest.mark.parametrize("sc_id", [2, 5])
+    def test_reply_states_real_status(sc_id):
+&gt;       assert_test(case_for(sc_id), [HONEST], run_async=False)
+
+test_ask_rasoi.py:137: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+test_case = LLMTestCase(input='Order 3,000 standard whistles from Sahyadri Valves, need-by 4 November. | Use PRD-07, the Diwali pr...resources_called=None, mcp_prompts_called=None, custom_column_key_values=None, expectations=None, expected_labels=None)
+metrics = [&lt;deepeval.metrics.g_eval.g_eval.GEval object at 0x2b5325319950&gt;]
+golden = None, run_async = False, classifiers = None
+
+    def assert_test(
+        test_case: Optional[Union[LLMTestCase, ConversationalTestCase]] = None,
+        metrics: Optional[
+            Union[
+                List[BaseMetric],
+                List[BaseConversationalMetric],
+            ]
+        ] = None,
+        golden: Optional[Golden] = None,
+        run_async: bool = True,
+        classifiers: Optional[List[BaseClassifier]] = None,
+    ):
+        validate_assert_test_inputs(
+            golden=golden,
+            test_case=test_case,
+            metrics=metrics,
+            classifiers=classifiers,
+        )
+        if classifiers:
+            validate_classifiers(
+                [test_case] if test_case is not None else None, classifiers
+            )
+    
+        async_config = AsyncConfig(throttle_value=0, max_concurrent=100)
+        display_config = DisplayConfig(
+            verbose_mode=should_verbose_print(), show_indicator=True
+        )
+        error_config = ErrorConfig(
+            ignore_errors=should_ignore_errors(),
+            skip_on_missing_params=should_skip_on_missing_params(),
+        )
+        cache_config = CacheConfig(
+            write_cache=get_is_running_deepeval(), use_cache=should_use_cache()
+        )
+    
+        if golden and not test_case:
+            # Trace-scoped assert_test: read the active trace set by the plugin.
+            test_result = _assert_test_from_current_trace(
+                golden=golden,
+                metrics=metrics,
+                error_config=error_config,
+                display_config=display_config,
+            )
+    
+        elif test_case and (metrics or classifiers or test_case.expectations):
+            if metrics and not test_case.expectations:
+                check_at_least_one_metric_has_threshold(metrics)
+            if run_async:
+                loop = get_or_create_event_loop()
+                test_result = loop.run_until_complete(
+                    a_execute_test_cases(
+                        [test_case],
+                        metrics or [],
+                        error_config=error_config,
+                        display_config=display_config,
+                        async_config=async_config,
+                        cache_config=cache_config,
+                        identifier=get_identifier(),
+                        _use_bar_indicator=True,
+                        _is_assert_test=True,
+                        classifiers=classifiers,
+                    )
+                )[0]
+            else:
+                test_result = execute_test_cases(
+                    [test_case],
+                    metrics or [],
+                    error_config=error_config,
+                    display_config=display_config,
+                    cache_config=cache_config,
+                    identifier=get_identifier(),
+                    _use_bar_indicator=False,
+                    _is_assert_test=True,
+                    classifiers=classifiers,
+                )[0]
+    
+        # `success is None` means nothing produced a verdict (e.g. classifiers with
+        # no expected labels); that is not a failure.
+        if test_result.success is False:
+            failed_metrics_data: List[MetricData] = []
+            # even for conversations, test_result right now is just the
+            # result for the last message
+            for metric_data in test_result.metrics_data or []:
+                if metric_data.error is not None:
+                    failed_metrics_data.append(metric_data)
+                else:
+                    # This try block is for user defined custom metrics,
+                    # which might not handle the score == undefined case elegantly
+                    try:
+                        if not metric_data.success:
+                            failed_metrics_data.append(metric_data)
+                    except Exception:
+                        failed_metrics_data.append(metric_data)
+    
+            failed_classifications: List[Classification] = [
+                classification
+                for classification in test_result.classifications or []
+                if classification.success is False
+            ]
+    
+            failed_parts = [
+                f"{metrics_data.name} (score: {metrics_data.score}, threshold: {metrics_data.threshold}, strict: {metrics_data.strict_mode}, error: {metrics_data.error}, reason: {metrics_data.reason})"
+                for metrics_data in failed_metrics_data
+            ]
+            failed_parts += [
+                f"{classification.name} (label: {classification.label}, expected: {classification.expected_label}, error: {classification.error}, reason: {classification.reason})"
+                for classification in failed_classifications
+            ]
+            failed_metrics_str = ", ".join(failed_parts)
+    
+            if failed_metrics_data and failed_classifications:
+                subject = "Metrics and classifiers"
+            elif failed_classifications:
+                subject = "Classifiers"
+            else:
+                subject = "Metrics"
+    
+            if test_case is not None and test_case.flaky:
+                # Flaky test cases don't block CI: warn (shows up in pytest's
+                # warnings summary) but don't raise
+                warnings.warn(
+                    f"Flaky test case failed (no assertion raised): "
+                    f"{subject}: {failed_metrics_str} failed."
+                )
+            else:
+&gt;               raise AssertionError(f"{subject}: {failed_metrics_str} failed.")
+E               AssertionError: Metrics: Honest status [GEval] (score: 0.1, threshold: 0.7, strict: False, error: None, reason: PO/2026/01182 is AP in Bahi, and the reply accurately says it is approved but not yet released to Sahyadri Valves. It does not claim the order was sent or placed.) failed.
+
+/usr/local/lib/python3.11/site-packages/deepeval/evaluate/evaluate.py:209: AssertionError</failure></testcase><testcase classname="test_ask_rasoi" name="test_suite_cost_under_budget" time="0.001" /></testsuite></testsuites>

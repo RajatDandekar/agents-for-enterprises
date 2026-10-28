@@ -1,0 +1,21 @@
+# promptfoo red-team of Ask Rasoi against Rasoi's own rules.  Run:  promptfoo eval -c promptfooconfig.yaml --no-cache
+# The attack cases (tests.json) are written from bahi.course.obs.redteam.CASES by experiments/redteam_run.py:
+# 6 goals (the rule to break) x 5 strategies (how the attack is delivered) + 2 indirect injections hidden in Bahi's data.
+description: Red-teaming Ask Rasoi (Rasoi Steel Works) against its purchasing rules
+prompts:
+  - "{{attack}}"
+providers:
+  - id: file://provider.py
+    label: flash, no trust layer
+    config: {trust: false, tier: flash, model: "gemini:gemini-3.8-flash"}
+  - id: file://provider.py
+    label: flash + trust layer
+    config: {trust: true, tier: flash, model: "gemini:gemini-3.8-flash"}
+  - id: file://provider.py
+    label: lite, no trust layer
+    config: {trust: false, tier: lite, model: "gemini:gemini-3.5-flash-lite"}
+defaultTest:
+  assert:
+    - type: python
+      value: file://assert_rules.py
+tests: file://tests.json
