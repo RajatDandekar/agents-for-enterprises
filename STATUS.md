@@ -28,7 +28,7 @@ v2 is archived in `archive/v2/`; the sections below "v2 record" describe that ve
 - **Website:** enterprise-agents.vizuara.ai shows 12 sessions (deployed 2026-10-28, payment links unchanged, all 7 return 200). The vizuara.ai payment pages themselves still say 8 sessions (edit on vizuara.ai).
 - **Not run in our build (no keys):** LangSmith, Braintrust, Anthropic, Hugging Face, AWS Bedrock AgentCore; marked as such on the plates.
 - **Gemini key:** was out of credits (HTTP 402) on 28 Oct, works again since. `llm.py` sends `gemini:*` through OpenRouter after the first 402, and the reply names the route. PaperBanana (`tools/pb_modal.py`) needs the Gemini key itself.
-- **Colab:** pushed 2026-10-28; all 8 v3 notebooks ran from GitHub in clean containers with no keys (0 errors; NB2 about 10 min because of the tiny-GPT training, the rest under 1 min). Not yet run inside a real Colab runtime.
+- **Colab:** pushed 2026-10-29 (HEAD 23266fe). All 12 v3.1 notebooks ran from GitHub in clean keyless containers (Modal, `colab_check_v31.py` pattern): 0 errors, 270 code cells; NB2 ~10 min (tiny-GPT training), NB10 ~2.5 min, the rest under 2 min. Not yet run inside a real Colab runtime.
 - **Uploads:** `tools/mrun.sh` wraps `modal run` and retries "modified during build".
 
 ## v2 record (27 Oct)
