@@ -368,3 +368,8 @@ def pull(tag: str = "v1", poster_sec: float = 154.0):
     for ext in ("mp4", "webm"):
         open(os.path.join(films, f"l1_how_it_works.{ext}"), "wb").write(fetch.remote(f"{VOL}/out/l1_how_it_works_{tag}.{ext}"))
         print("saved", ext)
+
+
+@app.local_entrypoint()
+def poster(tag: str = "v2", sec: float = 159.4):
+    open(os.path.join(FILMS, "poster.jpg"), "wb").write(grab.remote(f"{VOL}/out/l1_how_it_works_{tag}.mp4", [sec], 1920)[0])
