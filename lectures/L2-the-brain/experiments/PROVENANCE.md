@@ -11,14 +11,15 @@ replay files and `rec_attention.json`, `rec_next_token.json`, `rec_tokens.json` 
 |---|---|---|
 | `logs/cold_open.json` | `cold_open.py`, recorded (`--mode auto`): 25 Gemini calls in cassettes `L2v4_coldopen_r1`…`r8`, `L2v4_coldopen_t1_r1`…`r8`, `L2v4_facts_r1`…`r3`, `L2v4_toolpreview`, `L2v4_tokens`, `L2v4_cutoff`, plus one direct API call for the usage record | `sh tools/mrun.sh tools/modal_run.py --script lectures/L2-the-brain/experiments/cold_open.py --mode auto` |
 | `logs/cold_open_replay.json` | the same script with `--mode replay`: every reply, figure and token count is identical to the recorded run | `... --script .../cold_open.py --mode replay` |
-| `logs/model_card.json`, `tokens.json`, `bpe.json`, `cutoff.json`, `hand_attention.json`, `nb_qwen.json` | `models_modal.py`, job `qwen` (Qwen/Qwen2.5-0.5B-Instruct and the GPT-2 tokenizer, float32, 4 CPUs) | `/Users/raj/.venv/bin/modal run lectures/L2-the-brain/experiments/models_modal.py --only qwen` |
+| `logs/model_card.json`, `tokens.json`, `bpe.json`, `cutoff.json`, `nb_qwen.json` | `models_modal.py`, job `qwen` (Qwen/Qwen2.5-0.5B-Instruct and the GPT-2 tokenizer, float32, 4 CPUs) | `/Users/raj/.venv/bin/modal run lectures/L2-the-brain/experiments/models_modal.py --only qwen` |
 | `logs/tinygpt.json` | `models_modal.py`, job `tiny` (2 CPUs, the free-Colab budget) | `... models_modal.py --only tiny` |
 | `ledgerline/ledgerline/course/l2/northbridge_corpus.md` | `course/l2/corpus.py` (stdlib, seed 7) | `python3 ledgerline/ledgerline/course/l2/corpus.py` |
 | `ledgerline/ledgerline/course/l2/rec_qwen.json` | `gen_figdata.py`, from `nb_qwen.json` (+ the usage record, the cut-off probe, the token tables and the tiny-GPT curve) | `python3 lectures/L2-the-brain/gen_figdata.py` |
 
-Model cost of everything recorded: 25 Gemini calls, 2,215 tokens in and 1,020 out, £0.0033 at `llm.PRICES` list
-prices (gemini-3.8-flash $0.50 / $3.00 per million, £ = $ × 0.79), not counting thinking tokens (see "Tokens and
-cost"). Even with thinking at the rate measured below, the whole run is well under £0.05. A replay costs nothing.
+Model costs are in US dollars, at the provider's list prices (`llm.PRICES`: gemini-3.8-flash $0.50 in / $3.00 out
+per million tokens); Northbridge's own money stays in pounds. Everything recorded: 25 Gemini calls, 2,215 tokens in
+and 1,020 out, $0.0042 without thinking tokens (see "Tokens and cost"); with thinking at the rate measured below,
+well under $0.05. A replay costs nothing.
 
 ## The cold open (`cold_open.json`, figdata `cold`)
 Ask Northbridge at `?stage=brain` is the app's own class, `ledgerline.experience.harness.AskNorthbridge(stage="brain")`:
@@ -55,9 +56,9 @@ Manchester main stores: 5,400 on hand" (the same line as `brain3d/capture_trace.
 | Gemini's count, app prompt + question | 90 tokens in | `tokens.with_system.tokens_in` |
 | Gemini's count, question alone | 16 tokens in, so the system prompt costs 74 | `tokens.question_only.tokens_in`, `tokens.system_prompt_tokens` |
 | Visible answer | 33–60 tokens out, mean 44.8 over the eight runs | `runs[i].tokens_out`, `runs_summary.mean_tokens_out` |
-| Cost of one question, visible tokens only | £0.000114–£0.000178 (mean £0.000142) | `runs[i].cost_gbp`; figdata `cost.per_question_gbp` |
+| Cost of one question, visible tokens only | $0.000144–$0.000225 over the eight runs; **$0.000179** at the mean (90 in, 44.8 out) | figdata `cold.runs[i].cost_usd`, `cost.per_question_usd` (computed from the token counts by `gen_figdata.py`) |
 | The provider's whole usage record (one more call of the same request) | prompt 90, completion 43, total 523: **390 thinking tokens** that the reply does not show, billed as output | `tokens.usage_record.usage`; figdata `cost.thinking_tokens` |
-| Cost with thinking | £0.001062 a question; £1.06 per 1,000 questions (£0.14 without thinking) | figdata `cost.per_question_with_thinking_gbp`, `cost.per_1000_*` |
+| Cost with thinking | **$0.001344** a question (90 in, 43 + 390 out); $1.34 per 1,000 questions ($0.18 without thinking) | figdata `cost.per_question_with_thinking_usd`, `cost.per_1000_*_usd` |
 | Qwen's count of the same chat | 100 tokens: 72 system, 15 Emma, 13 chat template | `tokens.json` `n_tokens`, `counts` |
 | Emma's question | 67 characters, 12 words, 15 Qwen tokens: How · many · city · e · -b · ike · battery · packs · do · we · have · in · Manchester · stores · ? | `question_tokens` |
 | How words are cut (Qwen / GPT-2) | " Manchester" 1 / 1; " Northbridge" 2 (North·bridge); " Ledgerline" 2 / 3; " BAT-500" 5 (BAT·-·5·0·0) / 3; "5,400" 5 (5·,·4·0·0) / 3 (5·,·400); " £285,600" 8 / 4; " Gdańsk" 1 / 5 | `cuts` |
@@ -111,9 +112,16 @@ validation. NB2 section 8 builds the same model cell by cell, with the same seed
 | An e-mail from Emma to Daniel (T = 0.8) | the subject "Re: Battery packs for the spring launch run" and "Approved. Please raise the order on PRD-01, …": real phrases, an invented cost centre | `samples[e-mail prompt]["0.8"]` |
 | Its training cut-off | the corpus runs from 3 Aug to 23 Oct 2026 | `corpus_first_day`, `corpus_last_day` |
 
-## Attention by hand (`hand_attention.json`, figdata `hand`)
-Four tokens, "Emma needs 2,000 packs", two numbers each (Q, K, V as in NB2 section 4). Scores, scaled scores,
-weights and outputs are computed by the job; NB2 computes the same matrix live.
+## Attention by hand (figdata `hand`, `rec_qwen.json` `hand`)
+The deck's slide inputs (figs.js `QKV`, "chosen by hand to show the steps"): four real tokens of Emma's question seen
+from the last position, two numbers each, axis 1 = "is a place", axis 2 = "is the item". Query q = [2, 1]; keys
+battery [0, 2], packs [0, 1], Manchester [2, 0], stores [1, 0.5]; values [0, 4], [0, 2], [4, 0], [2, 1].
+`gen_figdata.py` does the arithmetic (stdlib): q·k = 2, 1, 4, 2.5; ÷ √2 = 1.41, 0.71, 2.83, 1.77; weights
+**0.14 / 0.07 / 0.59 / 0.20**; the new vector [2.75, 0.91]. It leads into the real head, read from Qwen's recorded
+attention at the last prompt position (`nb_qwen.json` `att_last`, blocks 3–24): **block 24, head 2, 0.65 on
+" Manchester"** (`hand.real_head`). NB2 section 4 loads the same inputs from `rec_qwen.json` and computes the same
+numbers; its exercise 4 turns the query to [0, 2] ("the item"). The v3 example and its log `hand_attention.json` are
+gone.
 
 ## NB2 (`NB2_the_brain.ipynb`)
 Built with `python3 tools/nbbuild.py lectures/L2-the-brain/NB2_the_brain.py`; its setup cell installs
@@ -121,7 +129,7 @@ Built with `python3 tools/nbbuild.py lectures/L2-the-brain/NB2_the_brain.py`; it
 (main, not the `v3.1` tag). Proved on Modal with
 `sh tools/mrun.sh tools/modal_run.py --nb lectures/L2-the-brain/NB2_the_brain.ipynb --mode replay`:
 **32 code cells, 0 errors** (log `logs/nb2_replay_run.txt`). Nine sections, one per section of the deck, six
-`TODO (exercise N)` exercises with guarded solutions (softmax, a BPE merge, the price in pounds, an attention row,
+`TODO (exercise N)` exercises with guarded solutions (softmax, a BPE merge, the price of a question in dollars, turning the attention query,
 the loss before training, the fact in the prompt).
 
 - The Gemini cells replay the `L2v4_*` cassettes: the eight runs give 42, 48, 48, 42, 42, 42, 54, 142 (0 of 8 right),

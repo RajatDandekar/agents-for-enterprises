@@ -4,7 +4,7 @@
 
 Every number comes from these logs (see experiments/PROVENANCE.md):
   logs/cold_open.json     gemini-3.8-flash as Ask Northbridge at ?stage=brain (experiments/cold_open.py)
-  logs/model_card.json, tokens.json, bpe.json, cutoff.json, hand_attention.json, nb_qwen.json
+  logs/model_card.json, tokens.json, bpe.json, cutoff.json, nb_qwen.json
                           Qwen2.5-0.5B-Instruct and its tokenizer (experiments/models_modal.py, job qwen)
   logs/tinygpt.json       the tiny GPT on northbridge_corpus.md (experiments/models_modal.py, job tiny)
 The forward pass the 3D scene plays is brain3d/trace.json (the 3D builder's); it is not copied here.
@@ -19,28 +19,47 @@ PKG = HERE.parents[1] / "ledgerline" / "ledgerline" / "course" / "l2"
 J = lambda n: json.loads((LOGS / n).read_text())
 
 cold, card, tk, bpe = J("cold_open.json"), J("model_card.json"), J("tokens.json"), J("bpe.json")
-cut, hand, tiny, nbq = J("cutoff.json"), J("hand_attention.json"), J("tinygpt.json"), J("nb_qwen.json")
+cut, tiny, nbq = J("cutoff.json"), J("tinygpt.json"), J("nb_qwen.json")
 
-USD_GBP = cold["usd_gbp"]
 P_IN, P_OUT = cold["price_usd_per_million"]
-gbp = lambda tin, tout: (tin * P_IN + tout * P_OUT) / 1e6 * USD_GBP
-keep = lambda r, ks: {k: r[k] for k in ks if k in r}
-RUN = ("run", "reply", "stock_figure", "tokens_in", "tokens_out", "seconds", "cost_gbp")
+usd = lambda tin, tout: (tin * P_IN + tout * P_OUT) / 1e6   # model costs in US dollars, at the provider's prices
+keep = lambda r, ks: dict({k: r[k] for k in ks if k in r}, cost_usd=round(usd(r["tokens_in"], r["tokens_out"]), 6))
+RUN = ("run", "reply", "stock_figure", "tokens_in", "tokens_out", "seconds")
 
 # what Gemini counted and billed for one cold-open question
 u = (cold["tokens"].get("usage_record") or {}).get("usage") or {}
 thinking = (u.get("total_tokens", 0) - u.get("prompt_tokens", 0) - u.get("completion_tokens", 0)) if u else None
 tin = cold["runs_summary"]["tokens_in"]
 tout = cold["runs_summary"]["mean_tokens_out"]
-cost = {"price_usd_per_million": {"in": P_IN, "out": P_OUT}, "usd_gbp": USD_GBP,
+cost = {"price_usd_per_million": {"in": P_IN, "out": P_OUT},
         "tokens_in": tin, "tokens_out_mean": tout,
-        "per_question_gbp": round(gbp(tin, tout), 6),
+        "per_question_usd": round(usd(tin, tout), 6),
         "usage_record": u, "thinking_tokens": thinking,
-        "per_question_with_thinking_gbp": round(gbp(u["prompt_tokens"], u["total_tokens"] - u["prompt_tokens"]), 6) if u else None,
-        "per_1000_questions_gbp": round(1000 * gbp(tin, tout), 3),
-        "per_1000_with_thinking_gbp": round(1000 * gbp(u["prompt_tokens"], u["total_tokens"] - u["prompt_tokens"]), 3) if u else None,
+        "per_question_with_thinking_usd": round(usd(u["prompt_tokens"], u["total_tokens"] - u["prompt_tokens"]), 6) if u else None,
+        "per_1000_questions_usd": round(1000 * usd(tin, tout), 3),
+        "per_1000_with_thinking_usd": round(1000 * usd(u["prompt_tokens"], u["total_tokens"] - u["prompt_tokens"]), 3) if u else None,
         "note": "tokens_out is the API's completion_tokens (the visible answer); usage_record is one more call of the same "
                 "request with the provider's whole usage: total_tokens - prompt - completion = thinking tokens, billed as output"}
+
+# Attention worked by hand on Emma's tokens, seen from the last position: the same inputs as the deck's slide
+# (figs.js, QKV: "chosen by hand to show the steps"); the arithmetic is done here. Then the real head it leads into,
+# read from Qwen's recorded attention at the last prompt position (nb_qwen.json att_last).
+import math
+HAND_IN = {"tokens": [" battery", " packs", " Manchester", " stores"], "axes": ["is a place", "is the item"],
+           "q": [2, 1], "K": [[0, 2], [0, 1], [2, 0], [1, 0.5]], "V": [[0, 4], [0, 2], [4, 0], [2, 1]]}
+_sc = [sum(a * b for a, b in zip(HAND_IN["q"], k)) for k in HAND_IN["K"]]
+_ss = [x / math.sqrt(len(HAND_IN["q"])) for x in _sc]
+_ex = [math.exp(x) for x in _ss]
+_w = [e / sum(_ex) for e in _ex]
+_o = [sum(w * v[c] for w, v in zip(_w, HAND_IN["V"])) for c in range(2)]
+_A, _pc = nbq["att_last"], nbq["pieces"]
+_man = next(i for i, p in enumerate(_pc) if p[2] == "user" and p[0].strip() == "Manchester")
+_best = max((_A[l][h][_man], l, h) for l in range(2, len(_A)) for h in range(len(_A[0])))
+hand = dict(HAND_IN, d=2, note="numbers chosen by hand to show the steps", scores=_sc, scaled=[round(x, 4) for x in _ss],
+            exp=[round(x, 4) for x in _ex], exp_sum=round(sum(_ex), 4), weights=[round(x, 4) for x in _w],
+            output=[round(x, 4) for x in _o],
+            real_head={"block": _best[1] + 1, "head": _best[2], "weight_on_manchester": round(_best[0], 4),
+                       "from": "nb_qwen.json att_last (last prompt position), blocks 3-24; the rule brain3d/capture_trace.py uses for its Manchester head"})
 
 man = next(w for w in cold["truth"]["warehouses"] if w["warehouse"] == "WH-MAN-STR")
 L2 = {
@@ -49,7 +68,9 @@ L2 = {
              "truth": {"manchester": man["on_hand"], "all_warehouses": cold["truth"]["free_total"],
                        "warehouses": cold["truth"]["warehouses"], "cover_days_all": cold["truth"]["cover_days"],
                        "item": cold["truth"]["item_code"], "description": cold["truth"]["description"]},
-             "runs": [keep(r, RUN) for r in cold["runs"]], "summary": cold["runs_summary"],
+             "runs": [keep(r, RUN) for r in cold["runs"]],
+             "summary": dict({k: v for k, v in cold["runs_summary"].items() if k != "cost_gbp_each"},
+                             cost_usd_each=[round(usd(r["tokens_in"], r["tokens_out"]), 6) for r in cold["runs"]]),
              "follow_up": keep(cold["follow_up"], ("question", "reply", "tokens_in", "tokens_out")),
              "runs_t1": [keep(r, RUN) for r in cold["runs_t1"]], "summary_t1": cold["runs_t1_summary"],
              "no_system": {"reply": cold["tokens"]["question_only"]["reply"],
@@ -81,7 +102,7 @@ L2 = {
                                  "window.L2 = " + json.dumps(L2, ensure_ascii=False, separators=(",", ":")) + ";\n")
 
 # NB2's replay fallback for its Qwen cells, and the Gemini usage record its cost exercise uses
-rec = dict(nbq, usage_record=u, cutoff_qwen=cut, why_tokens=tk["why_tokens"], languages=tk["languages"], cuts=tk["cuts"],
+rec = dict(nbq, hand=hand, usage_record=u, cutoff_qwen=cut, why_tokens=tk["why_tokens"], languages=tk["languages"], cuts=tk["cuts"],
            tiny_curve=tiny["curve"])
 (PKG / "rec_qwen.json").write_text(json.dumps(rec, ensure_ascii=False))
 for old in ("rec_attention.json", "rec_next_token.json", "rec_tokens.json"):  # the v3 replay files

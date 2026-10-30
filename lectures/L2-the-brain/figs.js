@@ -59,7 +59,7 @@ FIGS.b3d = (el) => {
     el.insertAdjacentHTML('afterend', '<div class="ctl" style="position:absolute;right:100px;top:30px;margin:0;z-index:3"><a class="live" href="brain3d/index.html?autoplay" target="_blank" rel="noopener">Play the whole trace <code>brain3d/index.html</code></a></div>');
     return { step() { inner.step(3, true); } };
   }
-  if (typeof FIGS.brain3d === 'function') return FIGS.brain3d(el);
+  if (typeof FIGS.brain3d === 'function') return FIGS.brain3d(el);  // brain3d keeps drags and tile clicks to itself; empty-canvas clicks step the deck
   const s = el.dataset.section, n = s === 'all' ? 10 : +s, [title, sub, clicks] = SECT[s];
   el.innerHTML = `<div class="b3d"></div><div class="b3d-side"><h2>${title}</h2><p class="sub">${sub}</p><ol class="b3d-clk">${clicks.map((c) => `<li>${c}</li>`).join('')}</ol></div>
     <div class="b3d-badge"><b>TODO(brain3d)</b>The 3D scene mounts here; this flat map is a stand-in.</div>`;
@@ -183,13 +183,17 @@ FIGS.bpe = (el) => {
 /* What one call costs, in tokens and pounds (experiments builder). */
 FIGS.tokcost = (el) => {
   const L = L2(); if (!L || !L.cost) return NEEDFD(el, 'One Ask Northbridge reply, counted.', 'experiments/logs/cold_open.json');
-  const c = L.cost, g = (x) => '£' + x.toFixed(6), langs = L.tokens.languages;
+  const c = L.cost, pr = c.price_usd_per_million, u = c.usage_record, langs = L.tokens.languages;
+  const usd = (tin, tout) => (tin * pr.in + tout * pr.out) / 1e6;
+  const vis1 = usd(c.tokens_in, c.tokens_out_mean), think1 = usd(u.prompt_tokens, u.completion_tokens + c.thinking_tokens);
+  const d = (x) => '$' + (x < 0.01 ? x.toFixed(6) : x.toFixed(2));
   const order = Object.keys(langs).sort((a, b) => langs[a].qwen - langs[b].qwen), mx = Math.max(...order.map((k) => langs[k].qwen));
-  el.innerHTML = `<div class="counts"><div class="cnt a"><b>${c.tokens_in}</b>tokens in</div><div class="cnt a"><b>${Math.round(c.tokens_out_mean)}</b>tokens out (mean)</div><div class="cnt"><b>${g(c.per_question_gbp)}</b>per question</div></div>
-   <div class="card bf r1 tr" style="margin-top:12px;font-size:19px"><b>Plus ${c.thinking_tokens} hidden “thinking” tokens</b>, billed as output, that the reply never shows. Counted in: <b>${g(c.per_question_with_thinking_gbp)}</b> a question, <b>£${c.per_1000_with_thinking_gbp.toFixed(2)}</b> per 1,000 questions (£${c.per_1000_questions_gbp.toFixed(2)} without).</div>
+  el.innerHTML = `<div class="counts"><div class="cnt a"><b>${c.tokens_in}</b>tokens in</div><div class="cnt a"><b>${Math.round(c.tokens_out_mean)}</b>tokens out (mean)</div><div class="cnt"><b>${d(vis1)}</b>per question, as shown</div><div class="cnt"><b>${d(vis1 * 1000)}</b>per 1,000 questions</div></div>
+   <div class="ftiny">${c.tokens_in} × $${pr.in} + ${c.tokens_out_mean} × $${pr.out}, per million tokens in / out.</div>
+   <div class="card bf r1 tr" style="margin-top:12px;font-size:19px"><b>Plus ${c.thinking_tokens} hidden “thinking” tokens</b>, billed as output, that the reply never shows. The provider’s usage record: ${u.prompt_tokens} in, ${u.completion_tokens} visible out, ${c.thinking_tokens} thinking. Counted in: <b>${d(think1)}</b> a question, <b>${d(think1 * 1000)}</b> per 1,000 questions.</div>
    <div class="r2 tr" style="margin-top:14px"><div class="tag nt">Emma’s question in six languages · Qwen tokens</div>
    ${order.map((k) => `<div class="pb" style="margin:4px 0"><span class="pt" style="width:110px;font-family:var(--font)">${k}</span><span class="pr" style="width:420px"><i style="width:${420 * langs[k].qwen / mx}px;background:var(--after)"></i></span><span class="pbv">${langs[k].qwen}</span></div>`).join('')}</div>
-   <div class="ftiny">${esc(L.cold.model)} at $${c.price_usd_per_million.in} / $${c.price_usd_per_million.out} per million tokens in / out, £ = $ × ${c.usd_gbp}.</div>`;
+   <div class="ftiny">${esc(L.cold.model)} list prices in US dollars: $${pr.in} per million tokens in, $${pr.out} per million out.</div>`;
   return { step(k) { el.querySelector('.r1').classList.toggle('fade-hide', k < 1); el.querySelector('.r2').classList.toggle('fade-hide', k < 2); } };
 };
 
@@ -257,7 +261,7 @@ FIGS.handattn = (el) => {
 /* Real attention, three heads picked by a rule in capture_trace.py, from the last prompt position. */
 FIGS.heads = (el) => {
   const T = TR(); if (!T) return NEEDTR(el, 'The real attention weights of three heads from the last position: where it looks (“battery”, “Manchester”, or resting on the first token), and how the attention splits between the system prompt, Emma’s words and the template.');
-  const H = T.attention.heads, toks = T.tokens;
+  const H = [...T.attention.heads].sort((a, b) => (a.looks_at === 'Manchester' ? -1 : b.looks_at === 'Manchester' ? 1 : 0)), toks = T.tokens;
   let hi = 0;
   btns(el, H.map((h) => `block ${h.layer}, head ${h.head}`), 0, (i) => { hi = i; draw(); });
   const why = div(el, 'ftiny'), list = div(el, ''), share = div(el, 'ftiny');
@@ -422,6 +426,175 @@ FIGS.facts = (el) => {
    <div class="card r3 tr" style="margin-top:12px;font-size:19px"><span class="tag nt">same line · five more tries at temperature 0.7</span><div class="chips">${F.samples_t07.map((x) => `<span class="tchip ${x.numbers.includes(F.truth) ? 'c1' : 'dg'}">${x.numbers.length ? x.numbers.map(fmt).join(', ') : 'no number'}</span>`).join('')}</div>
    <div class="ftiny">${F.samples_t07.filter((x) => x.numbers.includes(F.truth)).length} of ${F.samples_t07.length} said ${fmt(F.truth)}. The fact was in the context; the dial still picked other digits.</div></div>`;
   return { step(k) { el.querySelector('.r1').classList.toggle('fade-hide', k < 1); el.querySelector('.r2').classList.toggle('fade-hide', k < 2); el.querySelector('.r3').classList.toggle('fade-hide', k < 3); } };
+};
+
+
+/* =============================== the opening chat: a replay of the recorded cold open ===============================
+   Emma's question types itself; Ask Northbridge's recorded reply (L2.cold.runs[0], gemini-3.8-flash at the app's
+   settings) streams in small pieces, as a chat UI shows it; then the follow-up; then Ledgerline's figure. */
+FIGS.chatreplay = (el) => {
+  const L = L2(); if (!L || !L.cold) return NEEDFD(el, 'The recorded cold-open chat.', 'experiments/logs/cold_open.json');
+  const C = L.cold, R = C.runs[0], tr = C.truth;
+  const md = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n- /g, '\n• ').replace(/\n/g, '<br>');
+  el.innerHTML = `<div class="cr">
+    <div class="cr-top"><span class="cr-av">AN</span><div><b>Ask Northbridge</b><span>as Emma Clarke · purchase executive · brain only, no tools</span></div></div>
+    <div class="cr-body"><div class="msg ag cr-hi">Hello Emma. I am Ask Northbridge. How can I help with purchasing today?</div>
+      <div class="msg u cr-q fade-hide"></div><div class="msg ag cr-a fade-hide"></div><div class="msg u cr-q2 fade-hide"></div><div class="msg ag cr-a2 fade-hide"></div></div>
+    <div class="cr-in"><span class="cr-typed"></span><span class="cursor">▍</span><span class="cr-send">→</span></div></div>
+   <div class="win truthwin cr-truth tr fade-hide" style="left:0;bottom:0;width:100%">
+     <div class="tb">Ledgerline ERP 7.2 — Stock enquiry<span class="sp"></span><span class="bx">_</span><span class="bx">□</span><span class="bx">×</span></div>
+     <div class="tw-body"><span class="k"><b>${esc(tr.item)}</b> · ${esc(tr.description)}</span><span class="v">${fmt(tr.manchester)}</span><span class="k">Manchester main stores · on hand</span><span class="k">(all stores: ${fmt(tr.all_warehouses)})</span></div></div>`;
+  const $ = (c) => el.querySelector(c), timers = [];
+  const clear = () => { while (timers.length) clearTimeout(timers.pop()); };
+  const type = (box, text, msgEl, done) => { let i = 0; box.textContent = ''; const t = () => { box.textContent = text.slice(0, ++i); if (i < text.length) timers.push(setTimeout(t, 38)); else timers.push(setTimeout(() => { box.textContent = ''; msgEl.textContent = text; msgEl.classList.remove('fade-hide'); done && done(); }, 350)); }; t(); };
+  const stream = (msgEl, text) => { const parts = text.match(/\s*\S+/g) || [text]; let i = 0; msgEl.innerHTML = ''; msgEl.classList.remove('fade-hide'); const t = () => { msgEl.innerHTML = md(parts.slice(0, ++i).join('')) + (i < parts.length ? '<span class="cursor">▍</span>' : ''); if (i < parts.length) timers.push(setTimeout(t, 70)); }; timers.push(setTimeout(t, 500)); };
+  const end = (k) => {
+    $('.cr-q').textContent = C.question; $('.cr-a').innerHTML = md(R.reply); $('.cr-q2').textContent = C.follow_up.question; $('.cr-a2').innerHTML = md(C.follow_up.reply);
+    [['.cr-q', 1], ['.cr-a', 1], ['.cr-q2', 2], ['.cr-a2', 2]].forEach(([c, n]) => $(c).classList.toggle('fade-hide', k < n));
+    $('.cr-truth').classList.toggle('fade-hide', k < 3); $('.cr-typed').textContent = '';
+    $('.cr-hi').classList.toggle('hide', k >= 2);
+  };
+  let last = 0;
+  return { step(k, instant) {
+    clear();
+    if (instant || k < last || k === 0 || k === 3) { end(k); last = k; return; }
+    end(k - 1);
+    if (k === 1) type($('.cr-typed'), C.question, $('.cr-q'), () => stream($('.cr-a'), R.reply));
+    if (k === 2) type($('.cr-typed'), C.follow_up.question, $('.cr-q2'), () => stream($('.cr-a2'), C.follow_up.reply));
+    last = k;
+  } };
+};
+
+/* =============================== where 151,936 comes from ===============================
+   From the data: 151,665 = len(tokenizer) and 151,936 = embedding rows (experiments/logs/model_card.json, config.json);
+   bos_token_id 151,643 = <|endoftext|> is the first special token (config.json), so ids 0..151,642 are learned pieces. */
+FIGS.vocabrows = (el) => {
+  const L = L2(), T = TR(), cd = (L && L.card) || (T && T.model_card); if (!cd) return NEEDFD(el, 'The vocabulary sizes.', 'experiments/logs/model_card.json');
+  const rows = cd.vocab, tok = cd.tokenizer_len, learned = 151643, special = tok - learned, pad = rows - tok;
+  const idOf = (t) => (T ? (T.tokens.find((x) => x.text === t) || {}).id : null);
+  const W = 1400, wS = 44, wP = 52;
+  el.innerHTML = `<div class="vr-bar"><span class="vr-a" style="width:${W - wS - wP}px">learned pieces · ids 0 – ${fmt(learned - 1)}</span><span class="vr-b r1 tr" style="width:${wS}px"></span><span class="vr-c r2 tr" style="width:${wP}px"></span></div><div class="ftiny" style="text-align:right">the two segments on the right are drawn wider than to scale</div>
+   <div class="vr-legend">
+     <div class="card"><b class="a">${fmt(learned)}</b><span class="lb">learned pieces</span><span>Byte-pair encoding, learnt from text (Section 2). Ids 0 to ${fmt(learned - 1)}.</span></div>
+     <div class="card r1 tr"><b style="color:var(--gold)">+ ${special}</b><span class="lb">special tokens</span><span>Markers, not text: &lt;|endoftext|&gt; ${fmt(learned)}, &lt;|im_start|&gt; ${fmt(idOf('<|im_start|>') || 151644)}, &lt;|im_end|&gt; ${fmt(idOf('<|im_end|>') || 151645)}, and ${special - 3} more for tools and images.</span></div>
+     <div class="card r1 tr"><b>= ${fmt(tok)}</b><span class="lb">in the tokenizer</span><span>Every id the tokenizer can ever produce.</span></div>
+     <div class="card r2 tr"><b style="color:var(--before)">+ ${pad}</b><span class="lb">unused rows</span><span>Never produced, never trained on. They pad the table to ${fmt(rows)} = ${fmt(rows / 128)} × 128.</span></div>
+   </div>
+   <div class="card af r3 tr" style="margin-top:14px;font-size:20px"><b>${fmt(rows)} rows × ${fmt(cd.d_model)} numbers = ${fmt(rows * cd.d_model)} numbers</b> in the embedding table, ${pct(rows * cd.d_model / cd.params)} of the whole model. Why a multiple of 128? GPU matrix units run fastest on sizes in blocks of 64 or 128, so model makers round the table up. Qwen does not say which reason it had.</div>`;
+  return { step(k) { el.querySelectorAll('.r1').forEach((x) => x.classList.toggle('fade-hide', k < 1)); el.querySelectorAll('.r2').forEach((x) => x.classList.toggle('fade-hide', k < 2)); el.querySelectorAll('.r3').forEach((x) => x.classList.toggle('fade-hide', k < 3)); } };
+};
+
+/* =============================== attention, from first principles ===============================*/
+/* Why a token must look at others: Emma's real tokens; each needs another token to mean what it means here. */
+FIGS.whylook = (el) => {
+  const T = TR(); if (!T) return NEEDTR(el, 'Emma’s tokens.');
+  const U = userToks(), i = (w) => U.findIndex((t) => t.text.trim() === w);
+  const links = [['packs', 'battery', 'which packs? battery packs'], ['stores', 'Manchester', 'which stores? the Manchester ones'], ['ike', 'e', '“ike” is only a word with “e” and “-b”']];
+  el.innerHTML = `<div class="chips wl-row">${U.map((t, j) => `<span class="tchip c${j % 4}" data-j="${j}">${vis(t.text)}</span>`).join('')}<span class="tchip tpl">… ↵ answer starts here</span></div>
+   <svg class="wl-svg" viewBox="0 0 1200 170" width="1200" height="170"></svg>
+   <div class="grid3" style="margin-top:6px">${links.map((l, n) => `<div class="card r${n + 1} tr" style="font-size:19px"><b>“${l[0]}”</b> needs <b>“${l[1]}”</b><br><span class="small">${l[2]}</span></div>`).join('')}</div>
+   <div class="card af r4 tr" style="margin-top:12px;font-size:20px">And the position where the answer starts must gather the most: <b>an amount</b> of <b>battery packs</b> in <b>Manchester</b>. Section 3 gave each token a vector on its own; nothing has mixed them yet.</div>`;
+  const svg = el.querySelector('svg'), chips = [...el.querySelectorAll('.wl-row .tchip')];
+  const draw = (k) => {
+    svg.innerHTML = ''; const base = el.querySelector('.wl-row').getBoundingClientRect(), sc = base.width / el.querySelector('.wl-row').offsetWidth || 1;
+    links.forEach((l, n) => { if (k < n + 1) return; const a = chips[i(l[0])], b = chips[i(l[1])]; if (!a || !b) return;
+      const xa = (a.getBoundingClientRect().left - base.left) / sc + a.offsetWidth / 2, xb = (b.getBoundingClientRect().left - base.left) / sc + b.offsetWidth / 2, h = 40 + 30 * n;
+      P().svgEl('path', { d: `M${xa},4 C${xa},${h + 20} ${xb},${h + 20} ${xb},4`, style: 'fill:none;stroke:var(--after-2);stroke-width:3' }, svg);
+      P().svgEl('circle', { cx: xb, cy: 6, r: 5, style: 'fill:var(--after)' }, svg); });
+  };
+  return { step(k) { for (let n = 1; n <= 4; n++) el.querySelectorAll('.r' + n).forEach((x) => x.classList.toggle('fade-hide', k < n)); requestAnimationFrame(() => draw(k)); } };
+};
+
+/* The maths, built up term by term. */
+FIGS.qkvmath = (el) => {
+  el.innerHTML = `<div class="qm">
+    <div class="qm-row m0"><span class="qm-n">1</span><span class="qm-f">score<sub>j</sub> = <b class="qc">q</b> · <b class="kc">k<sub>j</sub></b></span><span class="qm-t">How well does what I look for match what token j is about? Multiply the two lists number by number and add up.</span></div>
+    <div class="qm-row m1 tr"><span class="qm-n">2</span><span class="qm-f">÷ √d</span><span class="qm-t">With d = 64 numbers per head, raw scores grow large; dividing by √64 = 8 keeps softmax from picking only one token.</span></div>
+    <div class="qm-row m2 tr"><span class="qm-n">3</span><span class="qm-f">w<sub>j</sub> = softmax(scores)<sub>j</sub></span><span class="qm-t">eˣ, then divide by the total: positive weights that add up to 1 (Section 6 uses the same step for the next token).</span></div>
+    <div class="qm-row m3 tr"><span class="qm-n">4</span><span class="qm-f">out = Σ<sub>j</sub> w<sub>j</sub> <b class="vc">v<sub>j</sub></b></span><span class="qm-t">The new vector: every earlier token’s value, mixed by its weight.</span></div>
+    <div class="card r4 tr" style="margin-top:14px;font-size:19px">Where q, k and v come from: three tables of learnt numbers, the same for every token. <b class="qc">q = x·W<sub>Q</sub></b>, <b class="kc">k = x·W<sub>K</sub></b>, <b class="vc">v = x·W<sub>V</sub></b>, where x is the token’s vector. Training (Section 8) sets the tables.</div></div>`;
+  return { step(k) { for (let n = 1; n <= 4; n++) el.querySelectorAll(n < 4 ? '.m' + n : '.r4').forEach((x) => x.classList.toggle('fade-hide', k < n)); } };
+};
+
+/* Attention worked by hand on Emma's tokens: two numbers per token so it fits on a plane.
+   Axis 1 = "is a place", axis 2 = "is the item". Numbers chosen by hand to show the steps; the real head follows. */
+const QKV = { toks: [' battery', ' packs', ' Manchester', ' stores'], K: [[0, 2], [0, 1], [2, 0], [1, 0.5]], V: [[0, 4], [0, 2], [4, 0], [2, 1]], q: [2, 1] };
+FIGS.qkvplane = (el) => {
+  const H = QKV, sq = Math.sqrt(2);
+  el.innerHTML = `<svg class="qp" viewBox="0 0 470 470" width="470" height="470"></svg><div class="qp-side"></div>`;
+  const svg = el.querySelector('svg'), side = el.querySelector('.qp-side');
+  const ctl = document.createElement('div'); ctl.className = 'ctl qp-ctl';
+  ctl.innerHTML = `<span>turn the query</span><input type="range" min="0" max="90" step="1" value="${Math.round(Math.atan2(H.q[1], H.q[0]) * 180 / Math.PI)}"><output></output>`;
+  el.appendChild(ctl);
+  const rng = ctl.querySelector('input'), out = ctl.querySelector('output');
+  rng.onclick = stop; let q = H.q.slice(), K = 0;
+  rng.oninput = (e) => { stop(e); const a = +rng.value * Math.PI / 180, r = Math.hypot(...H.q); q = [r * Math.cos(a), r * Math.sin(a)]; draw(); };
+  const X = (v) => 50 + v * 95, Y = (v) => 420 - v * 95, col = ['#8a4fd6', '#b8860b', '#c4511f', '#138a60'];
+  const arrow = (v, c, w, lab, dy = 0) => { const g = P().svgEl('g', {}, svg); P().svgEl('line', { x1: X(0), y1: Y(0), x2: X(v[0]), y2: Y(v[1]), style: `stroke:${c};stroke-width:${w};stroke-linecap:round` }, g); P().svgEl('circle', { cx: X(v[0]), cy: Y(v[1]), r: w + 2, style: `fill:${c}` }, g); if (lab) P().txt(g, X(v[0]) + 8, Y(v[1]) - 8 + dy, lab, `font:500 15px var(--font);fill:${c}`); return g; };
+  const draw = () => {
+    svg.innerHTML = '';
+    for (let i = 0; i <= 4; i++) { P().svgEl('rect', { x: X(0), y: Y(i), width: 380, height: 1, style: 'fill:var(--rule)' }, svg); P().svgEl('rect', { x: X(i), y: Y(4), width: 1, height: 380, style: 'fill:var(--rule)' }, svg); }
+    P().txt(svg, X(4), Y(0) + 30, 'is a place →', 'font:500 14px var(--font);fill:var(--ink-3)', 'end');
+    const ty = P().txt(svg, 0, 0, 'is the item →', 'font:500 14px var(--font);fill:var(--ink-3)'); ty.setAttribute('transform', `translate(${X(0) - 18},${Y(2.6)}) rotate(-90)`);
+    const sc = H.K.map((k) => k[0] * q[0] + k[1] * q[1]), ss = sc.map((x) => x / sq), ex = ss.map(Math.exp), sm = ex.reduce((a, b) => a + b, 0), w = ex.map((e) => e / sm);
+    const o = [0, 1].map((c) => H.V.reduce((a, v, j) => a + w[j] * v[c], 0));
+    if (K >= 1) arrow(q, '#0b57d0', 6, 'query · the last position', -6);
+    H.K.forEach((k, j) => arrow(k, col[j], 2.5, j === 3 ? '' : `key ${H.toks[j].trim()}`));
+    if (K >= 4) arrow(o, '#121317', 3, 'new vector', 22);
+    { const t = P().txt(svg, X(1) + 14, Y(0.5) + 20, 'key stores', 'font:500 13px var(--font);fill:#138a60'); }
+    side.innerHTML = `<table class="t"><tr><th>token</th><th class="n">key k</th><th class="n s1">1 · q·k</th><th class="n s2">2 · ÷ √2</th><th class="n s3">3 · weight</th><th class="n s4">value v</th></tr>
+      ${H.toks.map((t, j) => `<tr><td style="color:${col[j]}"><b>${vis(t)}</b></td><td class="n">${vec(H.K[j])}</td><td class="n s1">${sc[j].toFixed(2)}</td><td class="n s2">${ss[j].toFixed(2)}</td><td class="n s3"><span class="wbar" style="width:${Math.round(90 * w[j])}px;background:${col[j]}"></span>${w[j].toFixed(2)}</td><td class="n s4">${vec(H.V[j])}</td></tr>`).join('')}</table>
+      <div class="card af s4" style="margin-top:12px;font-size:18px"><b>4 · weighted sum of values</b> = <span class="mono">${H.toks.map((t, j) => `${w[j].toFixed(2)}·${vec(H.V[j])}`).join(' + ')}</span> = <b class="mono a">${vec(o)}</b>: mostly the value of “${H.toks[w.indexOf(Math.max(...w))].trim()}”.</div>`;
+    out.textContent = `q = ${vec(q)}`;
+    for (let n = 1; n <= 4; n++) side.querySelectorAll('.s' + n).forEach((x) => { x.classList.add('tr'); x.classList.toggle('fade-hide', K < n); });
+    ctl.classList.toggle('fade-hide', K < 3);
+  };
+  return { step(k) { K = k; draw(); } };
+};
+
+/* The causal mask on Emma's question: who may look at whom. */
+FIGS.causal = (el) => {
+  const T = TR(); if (!T) return NEEDTR(el, 'Emma’s tokens.');
+  const U = userToks().map((t) => t.text), n = U.length, cs = 30, x0 = 130, y0 = 110;
+  const svg = P().svgEl('svg', { viewBox: `0 0 ${x0 + n * cs + 20} ${y0 + n * cs + 10}`, width: x0 + n * cs + 20, height: y0 + n * cs + 10 }, el);
+  const cells = [];
+  U.forEach((t, i) => {
+    P().txt(svg, x0 - 8, y0 + i * cs + cs * 0.68, vis(t), 'font:450 14px var(--mono);fill:var(--ink-2)', 'end');
+    const tt = P().txt(svg, 0, 0, vis(t), 'font:450 14px var(--mono);fill:var(--ink-2)'); tt.setAttribute('transform', `translate(${x0 + i * cs + cs * 0.6},${y0 - 8}) rotate(-60)`);
+    U.forEach((_, j) => cells.push([i, j, P().svgEl('rect', { x: x0 + j * cs, y: y0 + i * cs, width: cs - 2, height: cs - 2, rx: 4, style: 'fill:#eef1f5' }, svg)]));
+  });
+  return { step(k) { cells.forEach(([i, j, r]) => { r.style.transition = 'fill .4s'; r.style.fill = k < 1 ? (j === i ? '#8dbcff' : '#eef1f5') : j > i ? '#f6e4da' : '#8dbcff'; }); } };
+};
+
+/* =============================== 5 · where the 494 million numbers live ===============================
+   Counted from the config (model_card.json): attention q, k, v, o (+ biases on q, k, v), the MLP's three tables, two
+   norms per block, the embedding table (tied with the output), the final norm. The sum is checked against params. */
+FIGS.params = (el) => {
+  const L = L2(), cd = L && L.card; if (!cd) return NEEDFD(el, 'The parameter count.', 'experiments/logs/model_card.json');
+  const d = cd.d_model, kv = cd.kv_heads * cd.head_dim, m = cd.mlp_hidden, Lb = cd.layers;
+  const att = d * d + d + 2 * (d * kv + kv) + d * d, mlp = 3 * d * m, nrm = 2 * d, block = att + mlp + nrm, emb = cd.vocab * d;
+  const total = emb + Lb * block + d, ok = total === cd.params;
+  const parts = [['MLPs', Lb * mlp, 'var(--gold)', `3 tables of ${fmt(d)} × ${fmt(m)} per block, × ${Lb}`], ['Embedding table', emb, '#8a4fd6', `${fmt(cd.vocab)} rows × ${fmt(d)}; the same table turns the top vector back into scores`], ['Attention', Lb * att, 'var(--after)', `queries, keys, values and output, × ${Lb}`], ['Normalising', Lb * nrm + d, '#9aa0aa', 'two per block, one at the top']];
+  el.innerHTML = `<div class="pm-bar">${parts.map((p) => `<span style="width:${(100 * p[1] / total).toFixed(2)}%;background:${p[2]}"></span>`).join('')}</div>
+   <div class="pm-list">${parts.map((p, i) => `<div class="pm-r r${Math.min(i, 2)} tr"><i style="background:${p[2]}"></i><b>${fmt(p[1])}</b><span class="pm-p">${pct(p[1] / total)}</span><span>${p[0]}: ${p[3]}</span></div>`).join('')}</div>
+   <div class="card af r2 tr" style="margin-top:14px;font-size:20px">Total <b>${fmt(total)}</b> ${ok ? '= the model’s own count' : '(check)'}. One block holds ${fmt(block)} numbers, ${pct(mlp / block)} of them in its MLP: most of what the model “knows” sits in the MLPs.</div>`;
+  return { step(k) { el.querySelectorAll('.r1').forEach((x) => x.classList.toggle('fade-hide', k < 1)); el.querySelectorAll('.r2').forEach((x) => x.classList.toggle('fade-hide', k < 2)); } };
+};
+
+/* =============================== films ===============================
+   films/<name>.mp4 + .webm + .jpg from the L2 film builder (films/FILMS.md). Never autoplay. Present = full screen. */
+FIGS.film = (el) => {
+  const n = el.dataset.name, base = 'films/' + n;
+  const todo = () => { el.innerHTML = `<div class="todo-card f3"><span class="todo-k">TODO(film)</span><div>The narrated film <b>${esc(n)}</b> plays here: ${esc(el.dataset.what || '')}</div><div class="todo-s">Lands as films/${esc(n)}.mp4, .webm and .jpg (films/FILMS.md).</div></div>`; };
+  /* Show the player straight away (poster first); fall back to the placeholder only if no source can load. */
+  el.innerHTML = `<video class="film" controls preload="metadata" playsinline poster="${base}.jpg"><source src="${base}.mp4" type="video/mp4"><source src="${base}.webm" type="video/webm"></video>
+    <div class="ctl film-ctl"><button>Present (full screen)</button></div>`;
+  const v = el.querySelector('video'), srcs = [...v.querySelectorAll('source')];
+  let failed = 0;
+  srcs.forEach((sc) => sc.addEventListener('error', () => { if (++failed === srcs.length) todo(); }));
+  ['click', 'keydown', 'touchstart', 'touchend'].forEach((ev) => v.addEventListener(ev, stop));
+  el.querySelector('.film-ctl button').onclick = (e) => { stop(e); (v.requestFullscreen || v.webkitRequestFullscreen || (() => {})).call(v); v.play(); };
+  return { step() {} };
 };
 
 /* Text spans filled from the trace: <span data-tr="generation.numbers.0" data-f="n"></span>. */

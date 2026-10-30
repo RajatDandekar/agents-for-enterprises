@@ -16,7 +16,6 @@ Job "qwen" (Qwen/Qwen2.5-0.5B-Instruct and the GPT-2 tokenizer, float32, 4 CPUs)
   bpe.json          byte-pair encoding by hand on a tiny Northbridge text, then 300 merges learnt on the corpus
   cutoff.json       where the model's "now" is: the probability of each year after "The current year is", and its
                     own answers to "what year is it?" and "what does your training data cover?"
-  hand_attention.json  the four-token attention example worked by hand
   nb_qwen.json      what NB2 computes live with Qwen, recorded for its replay fallback (gen_figdata.py copies it to
                     ledgerline/course/l2/rec_qwen.json): the same functions, prompts and settings as the notebook
 Job "tiny" (2 CPUs, the free-Colab budget): ledgerline.course.l2.tinygpt trained on northbridge_corpus.md, to
@@ -276,22 +275,6 @@ def qwen(system: str) -> dict:
             "date_with_app_prompt": chat_greedy([{"role": "system", "content": system},
                                                  {"role": "user", "content": "What is today's date? Answer with the date only."}])},
         "note": "p_among = the probability of each year renormalised over 2015-2030; each year is 4 digit tokens, so p_raw is the product of 4 next-token probabilities"}
-
-    # ---------------- the four-token attention example, by hand
-    names = ["Emma", "needs", "2,000", "packs"]
-    Q = np.array([[1, 0], [1, 1], [0, 1], [0, 2]], float)
-    K = np.array([[2, 0], [0, 1], [1, 3], [1, 1]], float)
-    V = np.array([[4, 0], [0, 1], [0, 8], [2, 2]], float)
-    S = Q @ K.T
-    Ss = S / np.sqrt(2)
-    M = np.where(np.tril(np.ones((4, 4))) > 0, Ss, -np.inf)
-    W = np.exp(M - M.max(1, keepdims=True)); W = W / W.sum(1, keepdims=True)
-    ex = np.exp(Ss[3])
-    out["hand_attention.json"] = {"tokens": names, "Q": Q.tolist(), "K": K.tolist(), "V": V.tolist(),
-                                  "scores": S.tolist(), "scaled": np.round(Ss, 3).tolist(),
-                                  "exp_last": np.round(ex, 3).tolist(), "exp_sum_last": round(float(ex.sum()), 3),
-                                  "weights": np.round(W, 3).tolist(), "outputs": np.round(W @ V, 3).tolist(),
-                                  "sqrt_d": round(float(np.sqrt(2)), 4)}
 
     # ---------------- what NB2 computes live, recorded for its replay fallback (the notebook's own functions)
     def next_token(id_list, k=10):

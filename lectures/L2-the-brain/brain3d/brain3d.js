@@ -15,6 +15,7 @@ import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const HERE = new URL('./', import.meta.url);
 const C = { sky: 0x3c90ff, skyDeep: 0x0b57d0, ember: 0xc4511f, green: 0x1e8e5a, ink: 0x121317, slate: 0x5d6b85 };
@@ -169,6 +170,30 @@ const CSS = `
 .brain3d.deck .b3d-rail{top:calc(92px*var(--u));bottom:calc(60px*var(--u))}
 .brain3d.deck .b3d-foot{bottom:calc(60px*var(--u))}
 .b3d-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.brain3d canvas{cursor:grab;touch-action:none}.brain3d canvas.pt{cursor:pointer}.brain3d canvas:active{cursor:grabbing}
+.b3d-hint{font:500 calc(14px*var(--u))/1.2 var(--f);color:#45474d;background:rgba(255,255,255,.86);border:1px solid rgba(18,19,23,.10);border-radius:999px;
+  padding:calc(7px*var(--u)) calc(13px*var(--u));box-shadow:0 6px 18px rgba(18,19,23,.07);transition:opacity .8s;white-space:nowrap}
+.b3d-hint.off{opacity:0}
+.b3d-btns button.b-reset{display:none}.b3d-btns button.b-reset.on{display:inline-flex}
+.b3d-info{position:absolute;left:calc(430px*var(--u));bottom:calc(108px*var(--u));z-index:6;display:none;pointer-events:auto;margin:0;
+  background:#fff;border-radius:calc(16px*var(--u));padding:calc(13px*var(--u)) calc(16px*var(--u)) calc(14px*var(--u));width:calc(430px*var(--u));
+  box-shadow:0 16px 40px rgba(18,19,23,.16),0 1px 2px rgba(18,19,23,.06);border:1px solid rgba(18,19,23,.08);border-left:calc(4px*var(--u)) solid #0b57d0;
+  font:420 calc(15.5px*var(--u))/1.42 var(--f);color:#121317;flex-direction:column;align-items:stretch;gap:0}
+.b3d-info.on{display:flex}
+.b3d-info .hd{display:flex;align-items:baseline;gap:calc(10px*var(--u));margin-bottom:calc(6px*var(--u))}
+.b3d-info .hd .b3d-tq{font-size:calc(22px*var(--u));color:#0b57d0}
+.b3d-info .hd small{font:500 calc(14px*var(--u))/1.3 var(--f);color:#6b6e76}
+.b3d-info .hd button{all:unset;cursor:pointer;margin-left:auto;font:500 calc(20px*var(--u))/1 var(--f);color:#6b6e76;padding:0 calc(4px*var(--u))}
+.b3d-info .sec{font:650 calc(13px*var(--u))/1.2 var(--f);letter-spacing:.08em;text-transform:uppercase;color:#6b6e76;margin:calc(8px*var(--u)) 0 calc(4px*var(--u))}
+.b3d-info .lk{display:grid;grid-template-columns:1fr auto;gap:calc(2px*var(--u)) calc(14px*var(--u));font:450 calc(15px*var(--u))/1.35 var(--f)}
+.b3d-info .lk .p{font-weight:620;color:#0b57d0;text-align:right}
+.b3d-tip{position:absolute;z-index:7;display:none;pointer-events:none;background:#fff;border-radius:calc(12px*var(--u));padding:calc(9px*var(--u)) calc(12px*var(--u));
+  box-shadow:0 12px 30px rgba(18,19,23,.16);border:1px solid rgba(18,19,23,.08);font:420 calc(14.5px*var(--u))/1.4 var(--f);color:#121317;width:max-content;max-width:calc(320px*var(--u))}
+.b3d-tip.on{display:block}
+.b3d-tip .k{font:650 calc(13px*var(--u))/1.2 var(--f);letter-spacing:.06em;text-transform:uppercase;color:#0b57d0;margin-bottom:calc(4px*var(--u))}
+.b3d-tip .lk{display:grid;grid-template-columns:1fr auto;gap:calc(1px*var(--u)) calc(12px*var(--u))}.b3d-tip .lk .p{font-weight:620;color:#0b57d0;text-align:right}
+.b3d-tip .lk .j{color:#8a8f99}
+.brain3d.deck .b3d-info{bottom:calc(150px*var(--u))}
 `;
 function injectCSS() {
   if (document.getElementById('brain3d-css')) return;
@@ -179,6 +204,7 @@ const ICON = {
   next: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 3 5 5-5 5"/></svg>',
   play: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2.8v10.4L13 8z"/></svg>',
   pause: '<svg viewBox="0 0 16 16" fill="currentColor"><rect x="3.5" y="2.8" width="3" height="10.4" rx="1"/><rect x="9.5" y="2.8" width="3" height="10.4" rx="1"/></svg>',
+  view: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5.2"/><path d="M8 1.5v3M8 11.5v3M1.5 8h3M11.5 8h3"/></svg>',
   replay: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 8a5.2 5.2 0 1 0 1.6-3.8"/><path d="M2.6 2.6v3h3"/></svg>',
 };
 
@@ -194,7 +220,7 @@ export const SECTION_TITLES = [
   'Where the weights came from',
   'Why it made the number up, and what fixes it',
 ];
-export const SECTION_STATES = [3, 4, 4, 5, 4, 5, 5, 4, 4];
+export const SECTION_STATES = [3, 4, 4, 8, 4, 5, 5, 4, 4];
 const SHORT = ['The game', 'Tokens', 'Vectors', 'Attention', 'The blocks', 'The choice', 'The loop', 'Training', 'Why, and the fix'];
 
 /* ------------------------------------------------------------------ the numbers, read from the trace */
@@ -246,12 +272,14 @@ export function mountBrain3D(host, opts = {}) {
     <div class="b3d-hud"><div class="b3d-kick"><span class="b3d-pill"></span><span class="b3d-sec"></span></div><h2></h2><p></p></div>
     <div class="b3d-foot"><div class="b3d-prov"><div class="b3d-leg"><span><i></i>the model and its numbers</span><span><i style="background:#c4511f"></i>invented by the model</span><span><i style="background:#1e8e5a"></i>a fact from Ledgerline</span><span><i style="background:#c9ced8"></i>template markers</span></div>
       <b>Recorded run.</b> ${esc(M.model)} (rev ${esc(String(M.revision).slice(0, 7))}), ${esc(M.dtype)}, on CPU on Modal · ${esc(M.recorded_at)} · transformers ${esc(M.transformers)} · numbers from <code>brain3d/trace.json</code></div>
-      <div class="b3d-ctl ctl"><label class="b3d-temp">Temperature <input type="range" min="0" max="2" step="0.05" value="1"><b>1.00</b></label><div class="b3d-btns">
+      <div class="b3d-ctl ctl"><div class="b3d-hint">Drag to look around · scroll to zoom · click a token</div><label class="b3d-temp">Temperature <input type="range" min="0" max="2" step="0.05" value="1"><b>1.00</b></label><div class="b3d-btns">
         <button class="b-prev" aria-label="Previous step">${ICON.prev}</button>
         <button class="b-auto" aria-label="Autoplay">${ICON.play}<span>Autoplay</span></button>
         <button class="b-replay" aria-label="Replay this step">${ICON.replay}<span>Replay</span></button>
+        <button class="b-reset" aria-label="Reset the view">${ICON.view}<span>Reset view</span></button>
         <button class="b-next" aria-label="Next step">${ICON.next}</button></div>
         <div class="b3d-prog">${SECTION_STATES.map((n, s) => `<span>${Array.from({ length: n }, (_, k) => `<i data-s="${s + 1}" data-k="${k}"></i>`).join('')}</span>`).join('')}</div></div></div>`;
+  root.insertAdjacentHTML('beforeend', '<div class="b3d-info ctl" role="dialog"></div><div class="b3d-tip"></div>');
   const $ = (q) => root.querySelector(q);
   const hud = { pill: $('.b3d-pill'), sec: $('.b3d-sec'), h2: $('.b3d-hud h2'), p: $('.b3d-hud p') };
   const railEl = $('.b3d-rail'), hudEl = $('.b3d-hud'), footEl = $('.b3d-foot'), botEl = $('.b3d-b.bot');
@@ -408,7 +436,7 @@ export function mountBrain3D(host, opts = {}) {
     const face = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.98, TD * 0.98), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
     face.rotation.x = -Math.PI / 2; face.position.y = TH + 0.004; g.add(face);
     const tile = { t, w, g, mat, face, digitAns, home, x: home.x, z: home.z, op: 0, glow: 0, lift: 0, kind: t.kind, col: 1 };
-    tiles.push(tile); return tile;
+    m.userData.tile = tile; tile.body = m; tiles.push(tile); return tile;
   }
   const tB = baseList.map((t, i) => makeTile(t, LB.pos[i].w, { x: LB.pos[i].x, z: zOf(LB.pos[i].row, LB.rows) }));
   tB.forEach((x) => (x.base = true));
@@ -487,7 +515,7 @@ export function mountBrain3D(host, opts = {}) {
       }`,
   });
   const slabs = Array.from({ length: NL }, (_, l) => {
-    const m = new THREE.Mesh(slabGeo, slabShader(l)); m.position.set(PCX, slabY(l), PCZ); m.renderOrder = 2; scene.add(m); return m;
+    const m = new THREE.Mesh(slabGeo, slabShader(l)); m.position.set(PCX, slabY(l), PCZ); m.renderOrder = 2; m.userData.layer = l; scene.add(m); return m;
   });
   // the residual streams: one vertical line per token, from its column up through the blocks
   const strGeo = new THREE.BufferGeometry(); strGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(tiles.length * 6), 3));
@@ -544,6 +572,73 @@ export function mountBrain3D(host, opts = {}) {
   const qDig = T.attention.digit.query_pos;
   arcSet('digit', qDig, T.attention.digit.avg[0].map((_, j) => T.attention.digit.avg.reduce((s, r) => s + r[j], 0) / NL), { n: 22 });
   arcSet('fact', D.fa.query_pos, D.fa.best_head.row, { n: 8, color: C.green, from: 'facts' });
+
+  /* ---------- query, key, value of block 24, head 2 (section 4) ---------- */
+  const QK = T.attention.qkv || null;
+  const qkTop = QK ? QK.weights.map((w, j) => [w, j]).sort((a, b) => b[0] - a[0]).map((x) => x[1]) : [];
+  const sMin = QK ? Math.min(...QK.scores) : 0, sMax = QK ? Math.max(...QK.scores) : 1;
+  const scoreH = (j) => 0.12 + 2.2 * (QK.scores[j] - sMin) / (sMax - sMin);
+  const weightH = (j) => 0.04 + 3.4 * QK.weights[j];
+  const KTOP = COL0 + NC * CELL, QB = KTOP + 0.55, QN = 16, QC = 0.14, QTOP = QB + QN * QC;
+  const scaleOf = (arrs) => { const a = arrs.flat().map(Math.abs).sort((x, y) => x - y); return a[Math.floor(a.length * 0.85)] || 1; };
+  const qS = QK ? scaleOf([QK.q.slice(0, QN)]) : 1, kS = QK ? scaleOf(QK.k.map((r) => r.slice(0, NC))) : 1, vS = QK ? scaleOf(QK.v.map((r) => r.slice(0, NC))) : 1;
+  const hueQ = new THREE.Color(0x3c90ff), hueK = new THREE.Color(0x7c5cf0), hueV = new THREE.Color(0xd08a12), lite = new THREE.Color(0xf4f6fb), neg = new THREE.Color(0x4b5873);
+  const cellCol = (x, sc, hue) => { const a = clamp01(Math.abs(x) / sc); return x >= 0 ? _c.copy(lite).lerp(hue, a) : _c.copy(lite).lerp(neg, a); };
+  const mkIM = (geo, n, hex = 0xffffff) => { const m = new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial({ color: hex, roughness: 0.35, transparent: true, opacity: 1 }), n); m.frustumCulled = false; m.castShadow = true; m.visible = false; scene.add(m); return m; };
+  const qIM = mkIM(RB(0.36, QC * 0.8, 0.36, 0.05, 2), QN), kIM = mkIM(cellGeo, nP * NC), vIM = mkIM(cellGeo, 5 * NC);
+  const barGeo = RB(0.34, 1, 0.34, 0.08, 2); barGeo.translate(0, 0.5, 0);
+  const sIM = mkIM(barGeo, nP);
+  if (QK) {
+    for (let c = 0; c < QN; c++) qIM.setColorAt(c, cellCol(QK.q[c], qS, hueQ));
+    for (let i = 0; i <= QK.query_pos; i++) for (let c = 0; c < NC; c++) kIM.setColorAt(i * NC + c, cellCol(QK.k[i][c], kS, hueK));
+    qkTop.slice(0, 4).forEach((j, r) => { for (let c = 0; c < NC; c++) vIM.setColorAt(r * NC + c, cellCol(QK.v[j][c], vS, hueV)); });
+    for (let c = 0; c < NC; c++) vIM.setColorAt(4 * NC + c, cellCol(QK.out[c], vS * 0.6, hueV));
+    for (let i = 0; i < nP; i++) sIM.setColorAt(i, _c.setHex(i === qkTop[0] ? 0x0b57d0 : 0x7fb2ff));
+    [qIM, kIM, vIM, sIM].forEach((m) => { if (m.instanceColor) m.instanceColor.needsUpdate = true; });
+  }
+  function applyQKV() {
+    [qIM, kIM, vIM, sIM].forEach((m) => (m.visible = false));
+    const Q = F.qkv; if (!Q || !QK) return;
+    const { k, t } = Q; const lt = tB[qLast].g.position; const NQ = QK.query_pos;
+    // the query column above the last position
+    const qOn = k === 0 ? seg(t, 0.2, 1.4) : 1;
+    for (let c = 0; c < QN; c++) { const on = clamp01(qOn * QN - c); _p.set(lt.x, QB + c * QC + QC / 2, lt.z); _s.set(on, on > 0 ? 1 : 0.001, on); _m4.compose(_p, _q.identity(), _s); qIM.setMatrixAt(c, _m4); }
+    qIM.instanceMatrix.needsUpdate = true; qIM.visible = true;
+    // the keys, one column per token
+    const kA = k === 0 ? 1 : k === 1 ? 1 - seg(t, 0, 0.7) : 0;
+    if (kA > 0.01) {
+      const kOn = k === 0 ? seg(t, 0.8, 2.8) : 1;
+      for (let i = 0; i <= NQ; i++) {
+        const tp = tB[i].g.position, r = seg(kOn, (i / (NQ + 1)) * 0.6, (i / (NQ + 1)) * 0.6 + 0.4);
+        for (let c = 0; c < NC; c++) { const on = clamp01(r * NC - c); _p.set(tp.x, tp.y + COL0 + c * CELL + CELL / 2, tp.z); _s.set(on, on > 0 ? 1 : 0.001, on); _m4.compose(_p, _q.identity(), _s); kIM.setMatrixAt(i * NC + c, _m4); }
+      }
+      kIM.instanceMatrix.needsUpdate = true; kIM.visible = true; kIM.material.opacity = kA; kIM.material.depthWrite = kA > 0.98;
+    }
+    // the scores, then the weights, as bars on the tiles
+    if (k >= 1) {
+      for (let i = 0; i <= NQ; i++) {
+        const h = k === 1 ? lerp(0.02, scoreH(i), eo(seg(t, 0.4, 2.0))) : k === 2 ? lerp(scoreH(i), weightH(i), eo(seg(t, 0.3, 1.8))) : weightH(i);
+        const tp = tB[i].g.position; _p.set(tp.x, tp.y + TH, tp.z); _s.set(1, Math.max(0.001, h), 1); _m4.compose(_p, _q.identity(), _s); sIM.setMatrixAt(i, _m4);
+      }
+      sIM.count = NQ + 1; sIM.instanceMatrix.needsUpdate = true; sIM.visible = true; sIM.material.opacity = k === 3 ? 0.4 : 1; sIM.material.depthWrite = k !== 3;
+    }
+    // the values of the top four tokens fly to the last position and add up to the output
+    if (k === 3) {
+      const out0 = V(lt.x + 0.55, QB, lt.z);
+      qkTop.slice(0, 4).forEach((j, r) => {
+        const tp = tB[j].g.position, w = QK.weights[j];
+        const u = eio(seg(t, 0.5 + r * 0.3, 2.3 + r * 0.3));
+        const sc = lerp(1, Math.max(0.25, Math.sqrt(w)), u) * (u >= 1 ? 0 : 1);
+        for (let c = 0; c < NC; c++) {
+          _p.set(lerp(tp.x, out0.x, u), lerp(tp.y + TH + weightH(j) + 0.08 + c * CELL, out0.y + c * QC, u) + Math.sin(u * Math.PI) * 1.2, lerp(tp.z, out0.z, u));
+          _s.set(sc, sc > 0 ? 1 : 0.001, sc); _m4.compose(_p, _q.identity(), _s); vIM.setMatrixAt(r * NC + c, _m4);
+        }
+      });
+      const oOn = seg(t, 2.4, 3.4);
+      for (let c = 0; c < NC; c++) { const on = clamp01(oOn * NC - c); _p.set(out0.x, out0.y + c * QC + QC / 2, out0.z); _s.set(on * 1.3, on > 0 ? 1 : 0.001, on * 1.3); _m4.compose(_p, _q.identity(), _s); vIM.setMatrixAt(4 * NC + c, _m4); }
+      vIM.instanceMatrix.needsUpdate = true; vIM.visible = true;
+    }
+  }
 
   /* ---------- section 1: the sealed box, the text card, the output board ---------- */
   const BOX = { x0: PAGE.x0 - 0.6, x1: PAGE.x1 + 0.6, y1: STOP + 0.7, z0: PAGE.z0 - 0.5, z1: PAGE.z1 + 0.5 };
@@ -755,8 +850,11 @@ export function mountBrain3D(host, opts = {}) {
       ['Nearest neighbours', `The closest vectors in the whole vocabulary: ${nm(' battery')} → ${wordList(T.embeddings.neighbours.battery)}. ${nm(' Manchester')} → ${wordList(T.embeddings.neighbours.Manchester)}.`],
     ],
     4: [
-      ['The last token looks back at every earlier one', `<em>Attention</em> arcs from the last position, thickness = the real weight, averaged over 14 heads and 24 blocks. A third (${pct(T.attention.last.avg.reduce((s, r) => s + r[0], 0) / NL)}) rests on the very first token.`],
-      [`One head finds ${nm(' Manchester')}`, `Block ${H.Manchester.layer}, head ${H.Manchester.head} puts <b>${pct(H.Manchester.weight_last)}</b> of its weight on Emma's ${nm(' Manchester')}.`],
+      ['Three vectors per token: query, key, value', `In block ${QK.layer}, head ${QK.head}, every token's vector is multiplied by three learned matrices: a <em>query</em> (what this position is looking for), a <em>key</em> (what each token offers) and a <em>value</em> (what it passes on). ${QK.head_dim} numbers each; 12 are drawn.`],
+      ['Score: how well each key matches the query', `score = query · key ÷ √${QK.head_dim}, one number per earlier token. Emma's ${nm(' Manchester')} scores highest, <b>${QK.scores[qkTop[0]].toFixed(2)}</b>; next is ${nm(tB[qkTop[1]].t.text)} at ${QK.scores[qkTop[1]].toFixed(2)}.`],
+      ['Softmax turns scores into weights', `Each weight = e<sup>score</sup> ÷ the sum over all ${QK.query_pos + 1} tokens. A lead of ${(QK.scores[qkTop[0]] - QK.scores[qkTop[1]]).toFixed(1)} points becomes <b>${pct(QK.weights[qkTop[0]])}</b> on ${nm(' Manchester')}; the runner-up gets ${pct(QK.weights[qkTop[1]])}.`],
+      ['The output: a weighted sum of values', `The head's output for the last position = Σ weight × value: ${qkTop.slice(0, 3).map((j) => `${pct(QK.weights[j])} · v(${nm(tB[j].t.text)})`).join(' + ')} + … ${QK.head_dim} numbers, sent on up the stack.`],
+      ['All heads, all blocks, averaged', `The same look-back in all 14 heads of all 24 blocks, averaged: thickness = the real weight. A third (${pct(T.attention.last.avg.reduce((s, r) => s + r[0], 0) / NL)}) rests on the very first token.`],
       [`Another head mixes ${nm(' battery')} in`, `Block ${H.battery.layer}, head ${H.battery.head}: ${pct(H.battery.weight_last)} on ${nm(' battery')}, the rest on ${nm(' Manchester')}, ${nm(' packs')} and the markers. One head usually mixes several words.`],
       ['Some heads just rest', `Block ${H.start.layer}, head ${H.start.head} puts ${pct(H.start.weight_last)} on the first token: a head with nothing to add parks its weight there.`],
       ['Only backwards, never forward', `A token sees itself and earlier tokens only. When the model read ${nm(' battery')}, the words after it did not exist for it yet. That is what lets it write left to right.`],
@@ -806,7 +904,7 @@ export function mountBrain3D(host, opts = {}) {
     9: `with the fact: <b class="gr">${esc(D.numStrF)}</b>`,
   };
   const DUR = {
-    1: [5.2, 4.6, 5.0], 2: [6.4, 3.6, 4.2, 3.4], 3: [5.6, 3.8, 4.6, 4.0], 4: [5.6, 3.6, 3.6, 3.4, 4.0],
+    1: [5.2, 4.6, 5.0], 2: [6.4, 3.6, 4.2, 3.4], 3: [5.6, 3.8, 4.6, 4.0], 4: [4.6, 4.0, 4.0, 4.6, 5.0, 3.6, 3.4, 4.0],
     5: [4.8, 6.4, 5.6, 4.6], 6: [5.0, 2.8, 2.8, 2.8, 3.4], 7: [5.0, 5.0, 5.4, 8.0, 4.2], 8: [3.6, 5.6, 4.0, 4.2], 9: [3.6, 5.6, 6.8, 4.6],
   };
   const stages = []; const secStart = {};
@@ -822,7 +920,8 @@ export function mountBrain3D(host, opts = {}) {
     1: [orbit(PCX + 1.5, 5.0, PCZ, 56, 13, 3), orbit(PCX + 2.5, 4.8, PCZ, 52, 13, 5), orbit(PCX + 3.0, 4.6, PCZ, 50, 13, 6)],
     2: [orbit(PCX, 0.4, PCZ + 0.8, 29, 50, 0), orbit(PCX + 1.0, 0.3, userRow, 19, 52, 0), orbit(PCX + 2.0, 0.3, userRow - 0.6, 21, 52, 0), orbit(PCX + 1.0, 0.4, PCZ + 0.6, 28, 50, 0)],
     3: [orbit(PCX, 1.4, PCZ + 0.4, 29, 44, 0), orbit(tB[D.kp.battery].home.x + 2.4, 1.3, userRow, 15, 30, -6), orbit(MAPC.x + 3.8, MAPC.y - 0.9, MAPC.z, 22, 14, 8), orbit(MAPC.x + 4.2, MAPC.y - 0.9, MAPC.z, 22, 14, 8)],
-    4: [orbit(PCX + 0.5, 0.8, PCZ + 0.6, 28, 50, 0), orbit(PCX + 0.5, 0.8, PCZ + 0.8, 26, 52, 0), orbit(PCX + 0.5, 0.8, PCZ + 0.8, 26, 52, 0), orbit(PCX - 1.0, 0.8, PCZ + 0.4, 27, 52, 0), orbit(PCX + 0.5, 0.6, userRow - 1, 24, 52, 0)],
+    4: [orbit(PCX + 1.0, 1.4, PCZ + 0.9, 26, 36, 0), orbit(PCX + 1.0, 1.2, PCZ + 0.9, 26, 38, 0), orbit(PCX + 1.0, 1.2, PCZ + 0.9, 26, 40, 0), orbit(PCX + 0.5, 1.6, PCZ + 1.2, 25, 34, 0),
+        orbit(PCX + 0.5, 0.8, PCZ + 0.6, 28, 50, 0), orbit(PCX + 0.5, 0.8, PCZ + 0.8, 26, 52, 0), orbit(PCX - 1.0, 0.8, PCZ + 0.4, 27, 52, 0), orbit(PCX + 0.5, 0.6, userRow - 1, 24, 52, 0)],
     5: [orbit(PCX + 1.0, S0 - 0.2, PCZ, 31, 24, 0), orbit(PCX + 1.0, STOP * 0.52, PCZ, 45, 12, 0), orbit(PCX - 2.0, STOP * 0.56, PCZ, 43, 8, -12), orbit(PCX - 3.6, slabY(17), PCZ, 31, 5, -16)],
     6: [orbit(OB.x - 5.5, 6.0, OB.z, 37, 12, -6), orbit(OB.x - 2.4, 4.4, OB.z + 1.2, 29, 12, -14), orbit(OB.x - 2.4, 4.4, OB.z + 1.2, 29, 12, -14), orbit(OB.x - 2.4, 4.4, OB.z + 1.2, 29, 12, -14), orbit(OB.x - 2.4, 4.4, OB.z + 1.2, 29, 12, -14)],
     7: [orbit(PCX + 5.0, 3.6, PCZ + 1, 46, 22, 4), orbit(PCX + 5.0, 3.6, PCZ + 1, 46, 22, 4), orbit(PCX + 5.0, 3.6, PCZ + 1, 46, 22, 4), orbit(PCX + 1.5, 0.4, ansZ - 1.5, 25, 48, 0), orbit(PCX + 1.5, 0.4, ansZ - 1.5, 26, 48, 0)],
@@ -840,7 +939,7 @@ export function mountBrain3D(host, opts = {}) {
     F = { box: 0, seam: 0, shell: 0, input: 0, packet: -1, board: 0, bars: null, barsOp: 0, vocab: 0, beam: 0, beamHead: -1, dial: 0, dialT: 1,
       plinth: 0, tileOp: 0, tileGlow: new Map(), tileOpMap: new Map(), tileLift: new Map(), dropU: 1, ansN: 0, ansOp: 0, mix: 0, factOp: 0, ansFN: 0, ansFOp: 0, baseAnsOp: 1,
       col: 0, colRise: 1, colHi: new Map(), colAns: 0, map: 0, nb: 0, arcs: {}, slabs: 0, slabOp: 0, slabMode: 0, slabFill: 0, slabWave: -1, ex: 0, exSplit: 0,
-      streams: 0, hot: 0, pulse: -1, lens: null, lensOp: 0, tl: 0, tlSeg: [0, 0, 0], tlStop: 0, tlAsk: 0, sock: 0, mask: -1, bot: { n: 0, facts: false, cursor: false } };
+      qkv: null, streams: 0, hot: 0, pulse: -1, lens: null, lensOp: 0, tl: 0, tlSeg: [0, 0, 0], tlStop: 0, tlAsk: 0, sock: 0, mask: -1, bot: { n: 0, facts: false, cursor: false } };
     for (const L of labelList) L.op = 0;
   }
   const show = (L, a) => L && L.show(a);
@@ -919,9 +1018,10 @@ export function mountBrain3D(host, opts = {}) {
   }
   /* section 4: attention */
   function sec4(k, t, a) {
-    const set = ['avg', 'man', 'bat', 'start', null][k];
     if (a < 1) { F.arcs.avg = Math.max(F.arcs.avg || 0, 0.1); return; }
     F.tileGlow.set(tB[qLast], 1); F.colHi.set(tB[qLast], 1);
+    if (k <= 3 && QK) { secQKV(k, t); return; }
+    const set = ['avg', 'bat', 'start', null][k - 4];
     if (set) {
       const grow = eo(seg(t, 0.2, 2.2));
       F.arcs[set] = { op: 1, grow };
@@ -938,6 +1038,32 @@ export function mountBrain3D(host, opts = {}) {
       F.tileGlow.set(tB[b], 1); F.colHi.set(tB[b], 1); F.mask = b;
       chipAt(0, tB[b], `<span class="b3d-chip"><b>${nm(' battery')}</b> sees these ${b + 1} tokens</span>`, eo(seg(t, 0.5, 1.4)), 2.5);
       chipAt(1, tB[Math.min(nP - 1, b + 5)], `<span class="b3d-chip dim"><b>not yet</b> written when ${nm(' battery')} was read</span>`, eo(seg(t, 1.2, 2.0)), 1.1);
+    }
+  }
+  /* section 4, first four states: query, key, value of block 24, head 2 (the head that finds Manchester) */
+  function secQKV(k, t) {
+    F.col = 0; F.qkv = { k, t };
+    const who = `block ${QK.layer} · head ${QK.head}`;
+    const v6 = (arr) => `<div class="b3d-vals">${arr.slice(0, 8).map((x) => `<span class="${x < 0 ? 'n' : ''}">${x >= 0 ? '+' : '−'}${Math.abs(x).toFixed(2)}</span>`).join('')}</div>`;
+    const jm = qkTop[0];
+    if (k === 0) {
+      noteAt(0, V(PAGE.x1 + 0.4, 3.2, PCZ), `<div class="b3d-note sky"><div class="k">Query <b>· ${nm(tB[qLast].t.text)}, the last position · ${who}</b></div>${v6(QK.q)}<div class="k" style="margin-top:8px;color:#7c5cf0">Key <b>· ${nm(tB[jm].t.text)}</b></div>${v6(QK.k[jm])}<div class="k" style="margin-top:8px;color:#b7791f">Value <b>· ${nm(tB[jm].t.text)}</b></div>${v6(QK.v[jm])}<div class="t" style="margin-top:6px">First 8 of ${QK.head_dim} numbers each.</div></div>`, eo(seg(t, 1.6, 2.6)), [0, 0.5]);
+      chipAt(5, tB[qLast], `<span class="b3d-chip"><b>query</b> ${nm(tB[qLast].t.text)} · ${who}</span>`, eo(seg(t, 0.8, 1.6)), QTOP + 0.35, [0.5, 1]);
+      chipAt(0, tB[jm], `<span class="b3d-chip" style="border-color:rgba(124,92,240,.45)"><b style="color:#7c5cf0">key</b> ${nm(tB[jm].t.text)}</span>`, eo(seg(t, 1.2, 2.0)), KTOP + 0.35);
+    }
+    if (k === 1 || k === 2) {
+      const rows = qkTop.slice(0, 5).map((j) => `<span>${tq(tB[j].t.text)} <span style="color:#6b6e76;font-size:.85em">#${j}</span></span><span class="p">${QK.scores[j].toFixed(2)}</span><span class="p" style="color:${k === 2 ? '#0b57d0' : '#c3c8d2'}">${pct(QK.weights[j])}</span>`).join('');
+      const lo = QK.scores.reduce((m, x) => Math.min(m, x), 99);
+      noteAt(0, V(PAGE.x1 + 0.4, 2.8, PCZ), `<div class="b3d-note sky"><div class="k">${k === 1 ? 'q · k ÷ √64' : 'softmax'} <b>· ${who}</b></div><div class="b3d-tbl"><span class="r">token</span><span class="r" style="text-align:right">score</span><span class="r" style="text-align:right">weight</span>${rows}</div><div class="t" style="margin-top:6px">${QK.query_pos + 1} scores in all, the lowest ${lo.toFixed(2)}. ${k === 2 ? 'The weights add up to 100%.' : ''}</div></div>`, eo(seg(t, 1.2, 2.2)), [0, 0.5]);
+      qkTop.slice(0, 3).forEach((j, i) => chipAt(i, tB[j], `<span class="b3d-chip"><b>${k === 1 ? QK.scores[j].toFixed(2) : pct(QK.weights[j])}</b> ${nm(tB[j].t.text)}</span>`, eo(seg(t, 1.0 + i * 0.25, 1.8 + i * 0.25)), 0.5 + (k === 1 ? scoreH(j) : weightH(j))));
+      if (k === 2) F.arcs.man = { op: 1, grow: eo(seg(t, 0.8, 2.6)) };
+      chipAt(5, tB[qLast], `<span class="b3d-chip"><b>query</b> ${nm(tB[qLast].t.text)} · ${who}</span>`, 1, QTOP + 0.35, [0.5, 1]);
+    }
+    if (k === 3) {
+      F.arcs.man = { op: 0.35, grow: 1 };
+      const terms = qkTop.slice(0, 4).map((j) => `<span>${pct(QK.weights[j])} ×</span><span>v(${tq(tB[j].t.text)})</span><span></span>`).join('');
+      noteAt(0, V(PAGE.x1 + 0.4, 3.0, PCZ), `<div class="b3d-note" style="border-left:calc(4px*var(--u)) solid #d08a12"><div class="k" style="color:#b7791f">Output <b>· Σ weight × value</b></div><div class="b3d-tbl">${terms}</div><div class="t" style="margin-top:4px">+ ${QK.query_pos + 1 - 4} more, each tiny. The result, first 8 of ${QK.head_dim}:</div>${v6(QK.out)}</div>`, eo(seg(t, 2.6, 3.4)), [0, 0.5]);
+      chipAt(5, tB[qLast], `<span class="b3d-chip" style="border-color:rgba(208,138,18,.5)"><b style="color:#b7791f">output</b> for ${nm(tB[qLast].t.text)}</span>`, eo(seg(t, 2.8, 3.6)), QTOP + 0.35, [0.5, 1]);
     }
   }
   /* section 5: the blocks and the logit lens */
@@ -1163,7 +1289,7 @@ export function mountBrain3D(host, opts = {}) {
     slabs.forEach((m, l) => {
       const u = m.material.uniforms; const vis1 = l < F.slabs && F.slabOp > 0.01;
       m.visible = vis1; u.uOp.value = F.slabOp * (F.ex > 0.01 && l === 0 ? 1 - F.exSplit : 1); u.uMode.value = F.slabMode; u.uFill.value = F.slabFill;
-      u.uHi.value = F.slabWave >= 0 ? Math.exp(-Math.pow(l / (NL - 1) - F.slabWave, 2) / 0.004) : 0;
+      u.uHi.value = (F.slabWave >= 0 ? Math.exp(-Math.pow(l / (NL - 1) - F.slabWave, 2) / 0.004) : 0) + (l === hoverLayer ? 0.9 : 0);
     });
     exAtt.visible = exMlp.visible = F.ex > 0.01;
     exAtt.position.y = S0 - 0.05 - F.exSplit * 0.3; exMlp.position.y = S0 + 0.05 + F.exSplit * 0.6;
@@ -1237,6 +1363,7 @@ export function mountBrain3D(host, opts = {}) {
     }
     lensDots.count = nd; lensDots.instanceMatrix.needsUpdate = true; if (lensDots.instanceColor) lensDots.instanceColor.needsUpdate = true; lensDots.visible = nd > 0;
     leadGeo.attributes.position.needsUpdate = true; leaders.visible = nd > 0; leaders.material.opacity = 0.55 * F.lensOp;
+    applyQKV();
     // the scan (section 9): a sweep line across the input
     scanMesh.visible = F.scan > 0 && F.scan < 1;
     if (scanMesh.visible) { scanMesh.position.set(PCX, TH + 0.05, lerp(PAGE.z0, PAGE.z1, F.scan)); }
@@ -1315,6 +1442,96 @@ export function mountBrain3D(host, opts = {}) {
     }
   }
 
+  /* ---------- interaction: orbit and zoom, click a token, hover a block ---------- */
+  const controls = new OrbitControls(camera, renderer.domElement);
+  Object.assign(controls, { enableDamping: false, rotateSpeed: 0.55, zoomSpeed: 0.9, panSpeed: 0.9, minDistance: 5, maxDistance: 150, screenSpacePanning: true, maxPolarAngle: Math.PI * 0.49 });
+  let userCam = false, sel = null, hoverLayer = -1, lastHover = 0;
+  const hintEl = $('.b3d-hint'), resetEl = $('.b-reset'), infoEl = $('.b3d-info'), tipEl = $('.b3d-tip');
+  controls.addEventListener('start', () => { if (!userCam) { userCam = true; resetEl.classList.add('on'); } hintEl.classList.add('off'); dirty = true; });
+  controls.addEventListener('change', () => { dirty = true; });
+  function giveBackCamera() { // the authored shot takes over again, gliding from wherever the user left the camera
+    if (!userCam) return; userCam = false; resetEl.classList.remove('on');
+    cam.pos.copy(camera.position); cam.tgt.copy(controls.target); dirty = true;
+  }
+  resetEl.addEventListener('click', (e) => { e.stopPropagation(); giveBackCamera(); select(null); });
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  function pick(e, list) {
+    const r = renderer.domElement.getBoundingClientRect(); if (!r.width) return null;
+    ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera); return ray.intersectObjects(list, false)[0] || null;
+  }
+  const tileBodies = () => tiles.filter((x) => x.g.visible && x.op > 0.3).map((x) => x.body);
+  const slabBodies = () => slabs.filter((m) => m.visible && m.material.uniforms.uOp.value > 0.2);
+  const rowsAvg = (T.attention.rows || {}).avg, avgLastTo = (i) => T.attention.last.avg.reduce((s2, r) => s2 + (r[i] || 0), 0) / NL;
+  const ROLE = { system: 'system prompt', user: "Emma's question", template: 'chat template marker', fact: 'the added Ledgerline line', answer: 'the reply', answerF: 'the reply, with the fact' };
+  // arcs from the selected token to where it looks
+  const selArcs = Array.from({ length: 6 }, () => { const mat = new THREE.MeshBasicMaterial({ color: 0x0b57d0, transparent: true, opacity: 0.8, depthWrite: false }); const m = new THREE.Mesh(new THREE.BufferGeometry(), mat); m.visible = false; m.renderOrder = 3; scene.add(m); return m; });
+  function select(tile) {
+    sel = tile; dirty = true; selArcs.forEach((m) => (m.visible = false));
+    if (!tile) { infoEl.classList.remove('on'); return; }
+    const t0 = tile.t, isAns = tile.kind === 'answer' || tile.kind === 'answerF';
+    const v = tile.v || idVals[t0.id];
+    const vec = v ? `<div class="sec">Its vector · first 8 of ${M.d_model}</div><div class="b3d-vals">${v.slice(0, 8).map((x) => `<span class="${x < 0 ? 'n' : ''}">${x >= 0 ? '+' : '−'}${Math.abs(x).toFixed(4)}</span>`).join('')}</div>` : '';
+    let body = '';
+    if (isAns) {
+      const st = (tile.kind === 'answer' ? D.ans : D.ansF)[t0.j];
+      body = `<div class="sec">Picked at ${pct(st.p)} · the other guesses</div><div class="lk">${st.alts.slice(0, 5).map((x) => `<span>${tq(x.text)}</span><span class="p">${pct(x.p)}</span>`).join('')}</div>`;
+    } else if (tile.base && rowsAvg && rowsAvg[t0.i]) {
+      const row = rowsAvg[t0.i].filter(([j]) => j !== t0.i).slice(0, 4);
+      body = `<div class="sec">Where it looks · all heads, all blocks</div><div class="lk">${row.map(([j, w]) => `<span>${tq(tB[j].t.text)} <span style="color:#8a8f99;font-size:.85em">#${j}</span></span><span class="p">${pct(w)}</span>`).join('')}</div>`
+        + `<div class="sec">The last token's look at it</div><div class="lk"><span>all heads, all blocks</span><span class="p">${pct(avgLastTo(t0.i))}</span>${QK && t0.i <= QK.query_pos ? `<span>block ${QK.layer}, head ${QK.head}</span><span class="p">${pct(QK.weights[t0.i])}</span>` : ''}</div>`;
+      row.slice(0, 4).forEach(([j, w], r) => {
+        const a2 = tilePos(tile, 0), b2 = tilePos(tB[j], 0); a2.y = b2.y = TH + 0.06;
+        const d = a2.distanceTo(b2), mid = a2.clone().add(b2).multiplyScalar(0.5); mid.y += 0.7 + 0.42 * Math.pow(d, 0.85);
+        const m = selArcs[r]; m.geometry.dispose(); m.geometry = new THREE.TubeGeometry(new THREE.QuadraticBezierCurve3(a2, mid, b2), 48, 0.03 + 0.12 * Math.sqrt(w / (row[0][1] || 1)), 8, false); m.visible = true;
+      });
+    }
+    const where = isAns ? `reply token ${t0.j + 1}` : `position ${t0.i}`;
+    infoEl.innerHTML = `<div class="hd">${tq(t0.text, 18)}<small>id ${t0.id} · ${where} · ${ROLE[tile.kind] || ''}</small><button aria-label="Close">×</button></div>${vec}${body}`;
+    infoEl.querySelector('button').addEventListener('click', (e) => { e.stopPropagation(); select(null); });
+    infoEl.classList.add('on');
+  }
+  function applySelection() {
+    if (sel) { F.tileGlow.set(sel, 1); F.colHi.set(sel, 1); }
+    selArcs.forEach((m) => { if (m.visible && F.mix > 0.01) m.visible = false; });
+  }
+  let down = null, swallow = false;
+  const cv = renderer.domElement;
+  cv.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY }; tipEl.classList.remove('on'); });
+  cv.addEventListener('pointerup', (e) => {
+    if (!down) return; const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y) > 5; down = null;
+    if (moved) { swallow = true; return; }
+    const hit = pick(e, tileBodies());
+    if (hit) { select(hit.object.userData.tile); hintEl.classList.add('off'); swallow = true; }
+    else if (sel) { select(null); swallow = true; }
+    else swallow = false; // a plain click on empty space still steps the deck
+  });
+  // a drag, a token click or closing the card never reaches the deck's click-to-step; nor do touch drags reach its swipe
+  root.addEventListener('click', (e) => { if (swallow || e.target.closest('.b3d-info')) { e.stopPropagation(); swallow = false; } });
+  ['touchstart', 'touchend'].forEach((n) => cv.addEventListener(n, (e) => e.stopPropagation(), { passive: true }));
+  cv.addEventListener('pointerleave', () => { tipEl.classList.remove('on'); if (hoverLayer >= 0) { hoverLayer = -1; dirty = true; } });
+  cv.addEventListener('pointermove', (e) => {
+    if (e.buttons) return;
+    const now = performance.now(); if (now - lastHover < 60) return; lastHover = now;
+    const ht = pick(e, tileBodies()); cv.classList.toggle('pt', !!ht);
+    const hs = ht ? null : pick(e, slabBodies());
+    const l = hs ? hs.object.userData.layer : -1;
+    if (l !== hoverLayer) { hoverLayer = l; dirty = true; }
+    if (l < 0) { tipEl.classList.remove('on'); return; }
+    const dig = section === 7 && api.step >= 2;
+    const rows = dig ? LDIG[0].lens : LENS;
+    const r = rows[l];
+    tipEl.innerHTML = `<div class="k">Block ${l + 1} · the logit lens</div><div style="color:#6b6e76;font-size:.92em;margin-bottom:4px">What ${dig ? 'the first digit' : 'the last position'} would say if the model stopped here</div><div class="lk">${r.top.slice(0, 5).map((x) => `<span class="${isWordish(x.text) ? '' : 'j'}">${tq(x.text, 14)}</span><span class="p">${pct(x.p)}</span>`).join('')}</div>`;
+    const rr = root.getBoundingClientRect(), zz = rr.width / W;
+    tipEl.classList.add('on');
+    const tw = tipEl.offsetWidth * zz, th = tipEl.offsetHeight * zz;
+    let x = e.clientX - rr.left + 18 * zz, y = e.clientY - rr.top + 14 * zz;
+    if (x + tw > rr.width - 24 * zz) x = e.clientX - rr.left - tw - 18 * zz;
+    if (y + th > rr.height - 24 * zz) y = rr.height - 24 * zz - th;
+    tipEl.style.left = (x / zz) + 'px'; tipEl.style.top = (Math.max(24 * zz, y) / zz) + 'px';
+  });
+
+  function toScreen(p) { const r = renderer.domElement.getBoundingClientRect(); p.project(camera); return [r.left + (p.x + 1) / 2 * r.width, r.top + (1 - p.y) / 2 * r.height]; }
   /* ---------- layout ---------- */
   let W = 0, Hh = 0;
   function resize() {
@@ -1347,6 +1564,7 @@ export function mountBrain3D(host, opts = {}) {
     if (!F.bars && st.s > 1) setBars(fin['1.0'], DIM, { n: 5 });
     if (st.s > 1 && F.board < DIM) F.board = DIM;
     if (st.s > 1) F.shell = 1;
+    applySelection();
     applyFrame(clk, st.s, st.k);
     // camera
     const sh = SHOT[st.s][st.k];
@@ -1355,12 +1573,14 @@ export function mountBrain3D(host, opts = {}) {
     if (mode === 'deck' && DECKY[st.s]) { cam.want[0].y += DECKY[st.s]; cam.want[1].y += DECKY[st.s]; }
     if (zm !== 1) cam.want[0].sub(cam.want[1]).multiplyScalar(zm).add(cam.want[1]);
     if (cam.snap || still) { cam.pos.copy(cam.want[0]); cam.tgt.copy(cam.want[1]); cam.snap = false; }
-    camera.position.copy(cam.pos);
-    if (!still && mode === 'standalone') { camera.position.x += Math.sin(clk * 0.21) * 0.3; camera.position.y += Math.sin(clk * 0.17) * 0.15; }
-    // labels wait for the camera: hidden while it glides, back in as it arrives
-    const glide = cam.pos.distanceTo(cam.want[0]) + cam.tgt.distanceTo(cam.want[1]);
+    if (!userCam) {
+      camera.position.copy(cam.pos);
+      if (!still && mode === 'standalone') { camera.position.x += Math.sin(clk * 0.21) * 0.3; camera.position.y += Math.sin(clk * 0.17) * 0.15; }
+      camera.lookAt(cam.tgt); controls.target.copy(cam.tgt);
+    }
+    // labels wait for the camera: hidden while it glides, back in as it arrives (the user's own orbit never hides them)
+    const glide = userCam ? 0 : cam.pos.distanceTo(cam.want[0]) + cam.tgt.distanceTo(cam.want[1]);
     settle = clamp01((1.0 - glide) / 0.8);
-    camera.lookAt(cam.tgt);
     renderHUD(gi); renderRail(st.s);
     renderer.render(scene, camera);
     scaleLabels();
@@ -1373,7 +1593,7 @@ export function mountBrain3D(host, opts = {}) {
     clk += dt;
     // the camera glides to the wanted shot (in real time, so a slow machine still arrives in about 2 s)
     const kf = 1 - Math.exp(-Math.min(0.25, real) * 2.6);
-    const moving = cam.pos.distanceTo(cam.want[0]) + cam.tgt.distanceTo(cam.want[1]) > 0.003;
+    const moving = !userCam && cam.pos.distanceTo(cam.want[0]) + cam.tgt.distanceTo(cam.want[1]) > 0.003;
     cam.pos.lerp(cam.want[0], kf); cam.tgt.lerp(cam.want[1], kf);
     if (!moving) { cam.pos.copy(cam.want[0]); cam.tgt.copy(cam.want[1]); }
     if (playing) {
@@ -1398,7 +1618,8 @@ export function mountBrain3D(host, opts = {}) {
     go(k, instant = false) {
       const ng = secStart[section] + clampK(k);
       if (ng < gi && secOf(gi) === section) instant = true; // stepping back shows the end state
-      if (ng !== gi) userT = null;
+      if (ng !== gi) { userT = null; select(null); }
+      giveBackCamera();
       gi = ng; t = instant ? stages[gi].dur : 0; playing = !instant; hold = 0; dirty = true; draw();
     },
     setSection(n, k = 0, instant = true) { section = Math.max(1, Math.min(9, n)); api.go(k, instant); },
@@ -1406,10 +1627,12 @@ export function mountBrain3D(host, opts = {}) {
     prev() { const k = api.step; if (k > 0) api.go(k - 1, true); else if (mode === 'standalone' && section > 1) { section--; api.go(SECTION_STATES[section - 1] - 1, true); } },
     replay() { api.go(api.step, false); },
     autoplay(on = !auto) { auto = on; const b = root.querySelector('.b-auto'); b.classList.toggle('on', auto); b.innerHTML = `${auto ? ICON.pause : ICON.play}<span>${auto ? 'Pause' : 'Autoplay'}</span>`; if (auto) { playing = true; if (t >= stages[gi].dur) api.next(); } else playing = false; },
-    seek(n, k, sec) { section = Math.max(1, Math.min(9, n)); gi = secStart[section] + clampK(k); t = sec === 'end' || sec === undefined ? stages[gi].dur : Math.min(+sec, stages[gi].dur); playing = false; cam.snap = true; draw(); },
+    seek(n, k, sec) { userCam = false; select(null); section = Math.max(1, Math.min(9, n)); gi = secStart[section] + clampK(k); t = sec === 'end' || sec === undefined ? stages[gi].dur : Math.min(+sec, stages[gi].dur); playing = false; cam.snap = true; draw(); },
     setTemperature(Tm) { userT = Tm === null ? null : Math.max(0, Math.min(2, +Tm)); if (tempIn) { tempIn.value = userT ?? 1; tempOut.textContent = (userT ?? 1).toFixed(2); } draw(); },
     attach(el) { if (root.parentNode !== el) { if (getComputedStyle(el).position === 'static') el.style.position = 'relative'; el.appendChild(root); } resize(); cam.snap = false; },
     render() { draw(); }, resize() { resize(); draw(); },
+    _tilePoint(i) { const p = tB[i].g.position.clone(); p.y += TH; return toScreen(p); },          // QA: where a tile is on screen
+    _slabPoint(l) { return toScreen(V(PAGE.x1 - 2.5, slabY(l), PCZ + PD * 0.3)); },
     destroy() { dead = true; cancelAnimationFrame(raf); ro.disconnect(); renderer.dispose(); root.remove(); },
   };
   root.querySelector('.b-prev').addEventListener('click', (e) => { e.stopPropagation(); api.prev(); });

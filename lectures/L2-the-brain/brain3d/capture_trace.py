@@ -2,6 +2,7 @@
 
     /Users/raj/.venv/bin/modal run lectures/L2-the-brain/brain3d/capture_trace.py            # run the model, write trace.json + trace.js
     /Users/raj/.venv/bin/modal run lectures/L2-the-brain/brain3d/capture_trace.py --pack 1   # no model: re-pack trace.js only
+    /Users/raj/.venv/bin/modal run lectures/L2-the-brain/brain3d/capture_trace.py --qkv 1    # add q, k, v of block 24 head 2 + per-token attention rows
                                                                                                # (e.g. after experiments/logs/tinygpt.json is re-run)
 
 Model: Qwen/Qwen2.5-0.5B-Instruct, float32, eager attention (so the attention weights can be read), 4 CPUs.
@@ -416,6 +417,131 @@ def capture(system: str, fact_line: str) -> dict:
     return res
 
 
+@app.function(cpu=4, memory=12288, timeout=1800)
+def capture_qkv(system: str, revision: str, layer: int = 24, head: int = 2) -> dict:
+    """Query, key and value of one head (block `layer`, head `head`, 1-based block) at the last prompt position, recomputed
+    from the block's own projections and rotary embedding, and checked against the attention weights the model returns.
+    Also: for every prompt position, where it looks (top 6 weights), averaged over all heads and blocks, and for this head."""
+    import torch
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    from transformers.models.qwen2.modeling_qwen2 import apply_rotary_pos_emb
+
+    torch.set_grad_enabled(False)
+    tok = AutoTokenizer.from_pretrained(MODEL, revision=revision)
+    model = AutoModelForCausalLM.from_pretrained(MODEL, revision=revision, torch_dtype=torch.float32, attn_implementation="eager").eval()
+    cfg = model.config
+    msgs = [{"role": "system", "content": system}, {"role": "user", "content": QUESTION}]
+    ids = tok.apply_chat_template(msgs, tokenize=True, add_generation_prompt=True)
+    x = torch.tensor([ids]); N = len(ids)
+    out = model(x, output_hidden_states=True, output_attentions=True, use_cache=False)
+    H, KV, D = cfg.num_attention_heads, cfg.num_key_value_heads, cfg.hidden_size // cfg.num_attention_heads
+    blk = model.model.layers[layer - 1]
+    h = blk.input_layernorm(out.hidden_states[layer - 1])
+    a = blk.self_attn
+    q = a.q_proj(h).view(1, N, H, D).transpose(1, 2)
+    k = a.k_proj(h).view(1, N, KV, D).transpose(1, 2)
+    v = a.v_proj(h).view(1, N, KV, D).transpose(1, 2)
+    pos = torch.arange(N)[None]
+    rot = getattr(model.model, "rotary_emb", None) or a.rotary_emb
+    cos, sin = rot(v, pos)
+    q, k = apply_rotary_pos_emb(q, k, cos, sin)
+    kvh = head // (H // KV)
+    last = N - 1
+    qh, kh, vh = q[0, head, last], k[0, kvh, : last + 1], v[0, kvh, : last + 1]
+    scores = (kh @ qh) / (D ** 0.5)
+    w = torch.softmax(scores, -1)
+    ref = out.attentions[layer - 1][0, head, last, : last + 1]
+    R = lambda t, n=4: [round(float(z), n) for z in t.tolist()]
+    A = torch.stack([at[0].mean(0) for at in out.attentions]).mean(0)  # [N, N], all heads and blocks
+    Ah = out.attentions[layer - 1][0, head]
+    def rows(M):
+        res = []
+        for i in range(N):
+            vals, ix = M[i, : i + 1].topk(min(6, i + 1))
+            res.append([[int(j), round(float(z), 4)] for z, j in zip(vals, ix)])
+        return res
+    return {
+        "qkv": {"layer": layer, "head": head, "kv_head": int(kvh), "head_dim": D, "query_pos": last, "scale": f"1/sqrt({D})",
+                "q": R(qh, 3), "k": [R(r, 3) for r in kh], "v": [R(r, 3) for r in vh],
+                "scores": R(scores, 3), "weights": R(w, 5), "out": R(w @ vh, 4),
+                "check_max_abs_diff": float((w - ref).abs().max()),
+                "how": "h = block.input_layernorm(hidden state into block); q,k,v = q_proj,k_proj,v_proj(h); rotary embedding on q,k; "
+                       "score_j = q . k_j / sqrt(64); weights = softmax(scores); out = sum_j weight_j v_j (before o_proj). "
+                       f"Qwen2.5 shares each key/value head among {H // KV} query heads (grouped-query attention)."},
+        "rows": {"avg": rows(A), f"l{layer}h{head}": rows(Ah), "note": "for each prompt position i: its top 6 attention weights [j, w]; avg = mean over 14 heads and 24 blocks"},
+    }
+
+
+@app.function(cpu=4, memory=12288, timeout=1800)
+def capture_film_qkv(system: str, revision: str, layer: int = 24, head: int = 2) -> dict:
+    """For the Lecture 2 films (films/qkv_data.json; trace.json is not touched): query, key and value of block `layer`,
+    head `head` at the last prompt position (recomputed from the block's projections and rotary embedding and checked
+    against the model's own attention), the full 896-number vectors the films draw as slabs, and the vocabulary sizes."""
+    import torch
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    from transformers.models.qwen2.modeling_qwen2 import apply_rotary_pos_emb
+
+    torch.set_grad_enabled(False)
+    tok = AutoTokenizer.from_pretrained(MODEL, revision=revision)
+    model = AutoModelForCausalLM.from_pretrained(MODEL, revision=revision, torch_dtype=torch.float32, attn_implementation="eager").eval()
+    cfg = model.config
+    msgs = [{"role": "system", "content": system}, {"role": "user", "content": QUESTION}]
+    ids = tok.apply_chat_template(msgs, tokenize=True, add_generation_prompt=True)
+    N = len(ids)
+    out = model(torch.tensor([ids]), output_hidden_states=True, output_attentions=True, use_cache=False)
+    H, KV, D = cfg.num_attention_heads, cfg.num_key_value_heads, cfg.hidden_size // cfg.num_attention_heads
+    blk = model.model.layers[layer - 1]
+    h = blk.input_layernorm(out.hidden_states[layer - 1])
+    a = blk.self_attn
+    q = a.q_proj(h).view(1, N, H, D).transpose(1, 2)
+    k = a.k_proj(h).view(1, N, KV, D).transpose(1, 2)
+    v = a.v_proj(h).view(1, N, KV, D).transpose(1, 2)
+    q_pre, k_pre = q.clone(), k.clone()
+    rot = getattr(model.model, "rotary_emb", None) or a.rotary_emb
+    cos, sin = rot(v, torch.arange(N)[None])
+    q, k = apply_rotary_pos_emb(q, k, cos, sin)
+    kvh = head // (H // KV)
+    last = N - 1
+    qh, kh, vh = q[0, head, last], k[0, kvh, : last + 1], v[0, kvh, : last + 1]
+    dots = kh @ qh
+    scores = dots / (D ** 0.5)
+    w = torch.softmax(scores, -1)
+    ref = out.attentions[layer - 1][0, head, last, : last + 1]
+    R = lambda t, n=4: [round(float(z), n) for z in t.reshape(-1).tolist()]
+    E = model.get_input_embeddings().weight
+    added = tok.added_tokens_decoder
+    special = sorted(str(t) for t in added.values())
+    vocab = {"bpe_pieces": int(tok.vocab_size), "special_tokens": len(added), "special_list": special,
+             "tokenizer_len": len(tok), "embedding_rows": int(cfg.vocab_size), "embedding_rows_div_128": cfg.vocab_size / 128,
+             "padding_rows": int(cfg.vocab_size - len(tok)),
+             "note": "bpe_pieces = tokenizer.vocab_size (the BPE vocabulary without added tokens); special_tokens = added_tokens_decoder; "
+                     "embedding_rows = config.vocab_size (rows of the embedding table and of the output layer)"}
+    # the final RMSNorm applied to the residual stream after every block, at the last position (what the logit lens reads)
+    lens_vecs = [R(model.model.norm(out.hidden_states[l][0, last]) if l < cfg.num_hidden_layers else out.hidden_states[l][0, last], 3)
+                 for l in range(1, cfg.num_hidden_layers + 1)]
+    toks = [{"i": i, "id": int(t), "text": tok.decode([int(t)])} for i, t in enumerate(ids)]
+    return {
+        "model": MODEL, "revision": revision, "prompt_tokens": N, "tokens": toks,
+        "qkv": {"layer": layer, "head": head, "kv_head": int(kvh), "head_dim": D, "query_pos": last,
+                "q": R(qh, 4), "k": [R(r, 4) for r in kh], "v": [R(r, 4) for r in vh],
+                "q_all": [R(r, 4) for r in q[0, head, : last + 1]],
+                "q_before_rotary": R(q_pre[0, head, last], 4), "k_before_rotary": [R(r, 4) for r in k_pre[0, kvh, : last + 1]],
+                "dots": R(dots, 4), "scores": R(scores, 4), "weights": R(w, 6), "out": R(w @ vh, 4),
+                "model_weights": R(ref, 6), "check_max_abs_diff": float((w - ref).abs().max()),
+                "how": "h = block.input_layernorm(hidden state into the block); q, k, v = q_proj, k_proj, v_proj(h); rotary position "
+                       "embedding on q and k; dot_j = q . k_j; score_j = dot_j / sqrt(64) = dot_j / 8; weights = softmax(scores) over "
+                       "positions 0..99 (the causal mask: no later position exists); out = sum_j weight_j v_j (64 numbers, before o_proj). "
+                       f"Grouped-query attention: query head {head} shares key/value head {int(kvh)} with query heads "
+                       f"{(H // KV) * int(kvh)}-{(H // KV) * int(kvh) + H // KV - 1}."},
+        "vectors": {"input_norm_layer24": {str(i): R(h[0, i], 4) for i in (21, 80, 82, 86, 87, 92, 93, last)},
+                    "embedding": {str(i): R(E[ids[i]], 4) for i in range(80, N)},
+                    "lens_last": lens_vecs,
+                    "note": "input_norm_layer24 = the normed vector that block 24's q/k/v projections read; embedding = the input-embedding "
+                            "row of each user/template token (positions 80-99); lens_last = final-norm(residual after block l) at the last position"},
+        "vocab": vocab,
+    }
+
+
 def world_ok(obj) -> bool:
     """True when a log uses only the v4 world: none of tools/world_v4.py's OLD_WORDS appears in it."""
     import sys
@@ -460,9 +586,34 @@ def pack_trace(trace: dict):
 
 
 @app.local_entrypoint()
-def main(pack: int = 0):
+def main(pack: int = 0, qkv: int = 0, film_qkv: int = 0):
+    if film_qkv:  # for the films only: films/qkv_data.json (trace.json and trace.js are left as they are)
+        trace = json.loads((HERE / "trace.json").read_text())
+        res = capture_film_qkv.remote(trace["prompt"]["system"], trace["meta"]["revision"])
+        assert [t["id"] for t in res["tokens"]] == [t["id"] for t in trace["tokens"]], "prompt tokens differ from trace.json"
+        res["recorded_at"] = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+        dst = HERE.parent / "films" / "qkv_data.json"
+        dst.parent.mkdir(exist_ok=True)
+        dst.write_text(json.dumps(res, ensure_ascii=False, separators=(",", ":")))
+        qv = res["qkv"]
+        top = sorted(range(len(qv["weights"])), key=lambda j: -qv["weights"][j])[:6]
+        print("wrote", dst, round(dst.stat().st_size / 1e6, 2), "MB; check max |softmax(q.k/8) - model|:", qv["check_max_abs_diff"])
+        print("top:", [(res["tokens"][j]["text"], qv["dots"][j], qv["scores"][j], qv["weights"][j]) for j in top])
+        print("vocab:", {k: v for k, v in res["vocab"].items() if k != "special_list"})
+        return
     if pack:
         pack_trace(json.loads((HERE / "trace.json").read_text()))
+        return
+    if qkv:  # add query/key/value of block 24, head 2 (and per-token attention rows) to the existing trace, same model revision
+        trace = json.loads((HERE / "trace.json").read_text())
+        res = capture_qkv.remote(trace["prompt"]["system"], trace["meta"]["revision"])
+        trace["attention"]["qkv"] = res["qkv"]
+        trace["attention"]["rows"] = res["rows"]
+        pack_trace(trace)
+        qv = res["qkv"]
+        top = sorted(range(len(qv["weights"])), key=lambda j: -qv["weights"][j])[:5]
+        print("qkv check (max |softmax(q.k) - model attention|):", qv["check_max_abs_diff"])
+        print("top weights:", [(trace["tokens"][j]["text"], qv["scores"][j], qv["weights"][j]) for j in top])
         return
     bp = brain_prompt()
     trace = capture.remote(bp["system"], FACT)

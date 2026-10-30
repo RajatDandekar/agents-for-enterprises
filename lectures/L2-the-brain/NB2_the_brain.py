@@ -272,12 +272,15 @@ r1 = a1.respond(QUESTION)
 print("Ask Northbridge:", r1["reply"])
 print(f"\ntokens in {r1['tokens_in']} (system prompt + question + chat format), tokens out {r1['tokens_out']}, model {r1['model']}")
 from ledgerline.llm import PRICES
-print("list price, US dollars per million tokens (in, out):", PRICES["gemini-3.8-flash"], "| £ = $ x", brain.USD_GBP)
+print("the provider's list price, US dollars per million tokens (in, out):", PRICES["gemini-3.8-flash"])
+OUTS = [BrainOnly(f"L2v4_coldopen_r{i}").respond(QUESTION)["tokens_out"] for i in range(1, 9)]   # the eight recorded runs
+print("tokens out in the eight recorded runs:", OUTS, "| mean", sum(OUTS) / len(OUTS))
 print("the provider's whole usage record for the same request:", REC["usage_record"])
 
 # %% [markdown]
-# ### TODO (exercise 3): the price in pounds
-# 1. Compute the cost of this one question in pounds from `r1["tokens_in"]`, `r1["tokens_out"]` and the prices above.
+# ### TODO (exercise 3): the price of a question
+# Model prices are set in US dollars, so we count in dollars here (Northbridge's own money stays in pounds).
+# 1. Compute the cost of one question from `r1["tokens_in"]`, the mean of `OUTS` and the prices above.
 # 2. Gemini 3 also **thinks** before it answers, and thinking tokens are billed as output. In the usage record,
 #    `total_tokens - prompt_tokens - completion_tokens` is the thinking. Compute the cost with the thinking included.
 # 3. What would 1,000 such questions a day cost for a year?
@@ -286,12 +289,12 @@ print("the provider's whole usage record for the same request:", REC["usage_reco
 SOLUTION = True
 if SOLUTION:
     p_in, p_out = PRICES["gemini-3.8-flash"]
-    visible = (r1["tokens_in"] * p_in + r1["tokens_out"] * p_out) / 1e6 * brain.USD_GBP
+    visible = (r1["tokens_in"] * p_in + sum(OUTS) / len(OUTS) * p_out) / 1e6
     u = REC["usage_record"]
     thinking = u["total_tokens"] - u["prompt_tokens"] - u["completion_tokens"]
-    billed = (u["prompt_tokens"] * p_in + (u["completion_tokens"] + thinking) * p_out) / 1e6 * brain.USD_GBP
-    print(f"visible answer only: £{visible:.6f} a question")
-    print(f"with {thinking} thinking tokens:  £{billed:.6f} a question, £{billed * 1000 * 365:,.2f} for 1,000 a day for a year")
+    billed = (u["prompt_tokens"] * p_in + (u["completion_tokens"] + thinking) * p_out) / 1e6
+    print(f"visible answer only: ${visible:.6f} a question")
+    print(f"with {thinking} thinking tokens:  ${billed:.6f} a question, ${billed * 1000 * 365:,.2f} for 1,000 a day for a year")
 
 # %% [markdown]
 # ## 3 · Each token becomes a vector
@@ -336,46 +339,65 @@ print("cosine:", COS)
 
 # %% [markdown]
 # ## 4 · Attention: tokens look back
-# Last section every token got a vector, on its own. But "packs" after "battery" is not "packs" after "six".
-# **Attention** lets each token mix in information from the tokens before it. Each token makes three vectors:
-# a **query** (what am I looking for?), a **key** (what do I contain?) and a **value** (what do I pass on?).
-# Its new vector is a weighted sum of the earlier values, weighted by how well its query matches their keys.
-# Four tokens with two numbers each, small enough to do with a pencil:
+# Last section every token got a vector, on its own. But "stores" after "Manchester" is not "stores" after "app".
+# **Attention** lets each token mix in information from the tokens before it. The intuition, in three roles:
+# - a **query** q: what this position is looking for. At the end of Emma's question, where the answer starts, it is
+#   roughly "which place, which item?";
+# - a **key** k: what each earlier token offers, the label it can be found by;
+# - a **value** v: what that token passes on if it is chosen.
+#
+# The position compares its query with every earlier key: the dot product q·k is large when they point the same way.
+# Divide by √d (d = the number of values in a vector) so the scores stay in a sensible range, then softmax turns the
+# scores into **weights** that add up to 1. The position's new vector is the **weighted sum of the values**.
+#
+# We work it by hand on four real tokens of Emma's question, seen from the last position. Each token gets two numbers,
+# **chosen by hand to show the steps** (the real model learns 64 per head, Section 8): axis 1 = "is a place",
+# axis 2 = "is the item". They are the same numbers as on the lecture slide.
 
 # %%
-tokens = ["Emma", "needs", "2,000", "packs"]
-Q = np.array([[1, 0], [1, 1], [0, 1], [0, 2]], float)
-K = np.array([[2, 0], [0, 1], [1, 3], [1, 1]], float)
-V = np.array([[4, 0], [0, 1], [0, 8], [2, 2]], float)
+H = brain.load("rec_qwen")["hand"]          # the slide's inputs (also in figdata.js, window.L2.hand)
+toks4, q, K, V = H["tokens"], np.array(H["q"], float), np.array(H["K"], float), np.array(H["V"], float)
+print("axes:", H["axes"])
+print("query of the last position q =", q)
+for t, k, v in zip(toks4, K, V):
+    print(f"{t!r:14} key k = {k}   value v = {v}")
 
 
 def softmax(x):
     e = np.exp(x - x.max(-1, keepdims=True)); return e / e.sum(-1, keepdims=True)
 
 
-scores = Q @ K.T / np.sqrt(2)                        # 1. match every query with every key, scale by sqrt(d)
-mask = np.tril(np.ones((4, 4))) > 0                  # 2. causal mask: a token sees only itself and earlier tokens
-weights = softmax(np.where(mask, scores, -np.inf))   # 3. softmax per row: the weights add up to 1
-out = weights @ V                                    # 4. weighted sum of the values
-print("weights (row = the token that looks, column = the token looked at)\n", np.round(weights, 3))
-print("new vector for 'packs':", np.round(out[3], 3))
+d = len(q)
+scores = K @ q                      # 1. q·k for every earlier token
+scaled = scores / np.sqrt(d)        # 2. divide by sqrt(d) = sqrt(2)
+weights = softmax(scaled)           # 3. softmax: the weights add up to 1
+new_vec = weights @ V               # 4. the weighted sum of the values
+for t, s_, sc, w in zip(toks4, scores, scaled, weights):
+    print(f"{t!r:14} q·k = {s_:4.1f}   / sqrt(2) = {sc:.2f}   weight {w:.2f}  " + "#" * int(40 * w))
+print("new vector:", np.round(new_vec, 2), "- mostly the value of", repr(toks4[int(weights.argmax())]))
 
 # %% [markdown]
-# ### TODO (exercise 4): one row by hand
-# Compute the weights of "needs" (row 2) yourself: its two scores (it may see only "Emma" and "needs"), divide by √2,
-# softmax, then the weighted sum of those two values. Check against the matrix above.
+# A causal mask is part of the rule too: a position may look only at itself and earlier tokens, never forward. Here the
+# last position looks back at everything, so nothing is hidden.
+#
+# ### TODO (exercise 4): turn the query
+# Do the four steps yourself for a query that asks only for the item, `q_item = [0, 2]`: the four scores, ÷ √2,
+# softmax, then the weighted sum of the values. Which token wins now, and why?
 
 # %%
 SOLUTION = True
 if SOLUTION:
-    s = np.array([Q[1] @ K[0], Q[1] @ K[1]]) / np.sqrt(2)
-    weights_needs = np.exp(s) / np.exp(s).sum()
-    print(np.round(weights_needs, 3), np.round(weights_needs @ V[:2], 3))
+    q_item = np.array([0, 2.0])
+    s_item = K @ q_item / np.sqrt(2)
+    w_item = np.exp(s_item) / np.exp(s_item).sum()
+    for t, w in zip(toks4, w_item):
+        print(f"{t!r:14} weight {w:.2f}")
+    print("new vector:", np.round(w_item @ V, 2), "- the item tokens win: their keys point along axis 2, like the query")
 
 # %% [markdown]
-# Now the real thing: Qwen has 24 blocks with 14 attention heads each. We read the weights with which the **last
-# position of the prompt** (where the answer starts) looks back at every earlier token, averaged over all heads and
-# blocks, then find the single head that looks hardest at "Manchester".
+# Now the real thing. Qwen has 24 blocks with 14 attention heads each, and learns its own queries, keys and values.
+# We read the weights with which the **last position of the prompt** (where the answer starts) looks back at every
+# earlier token, averaged over all heads and blocks, then find the single head that looks hardest at "Manchester".
 
 # %%
 if LIVE:
@@ -392,6 +414,7 @@ for i in np.argsort(-avg)[:8]:
 man = [i for i, p in enumerate(PIECES) if p[2] == "user" and p[0].strip() == "Manchester"][0]
 l, h = np.unravel_index(np.argmax(A[2:, :, man]), A[2:, :, man].shape)
 print(f"\nthe head that looks hardest at ' Manchester' (blocks 3-24): block {l + 3}, head {h}, weight {A[l + 2, h, man]:.2f}")
+print(f"(by hand, our made-up numbers put {weights[toks4.index(' Manchester')]:.2f} on ' Manchester'; this real head learnt its own)")
 print("no weight goes forward: the last position is the last token, and the mask hides nothing after it")
 
 # %% [markdown]
@@ -759,4 +782,4 @@ if LIVE:
     p_in, p_out = PRICES["gemini-3.8-flash"]
     print(f"{len(MY_TEXT)} characters, {len(words_)} words -> {len(my_ids)} Qwen tokens ({len(MY_TEXT) / len(my_ids):.1f} characters a token)")
     print("words cut into 3 or more tokens:", split)
-    print(f"sending it as input once: about £{len(my_ids) * p_in / 1e6 * brain.USD_GBP:.6f} (Gemini counts its own tokens, so this is an estimate)")
+    print(f"sending it as input once: about ${len(my_ids) * p_in / 1e6:.6f} (Gemini counts its own tokens, so this is an estimate)")

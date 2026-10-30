@@ -25,11 +25,14 @@ image = (
     .add_local_dir(ENGINE, "/engine")
 )
 L2DIR = HERE.parent
-deck_image = image.add_local_dir(L2DIR, "/course/lectures/L2-the-brain", ignore=lambda p: "qa" in pathlib.Path(p).parts
+deck_image = image.add_local_dir(L2DIR, "/course/lectures/L2-the-brain", ignore=lambda p: "qa" in pathlib.Path(p).parts or "build" in pathlib.Path(p).parts or "music" in pathlib.Path(p).parts
+                                  or str(p).endswith((".mp3", ".wav", ".mov"))
                                   or str(p).endswith((".ipynb", ".py", ".jsonl", ".mp4"))).add_local_dir(ENGINE, "/course/engine")
+if len(HERE.parents) > 2 and (HERE.parents[2] / "tools" / "deck_qa.js").exists():  # local side only
+    deck_image = deck_image.add_local_file(HERE.parents[2] / "tools" / "deck_qa.js", "/course/tools/deck_qa.js")
 app = modal.App("brain3d-qa", image=image)
 ARGS = ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--enable-webgl"]
-STATES = [3, 4, 4, 5, 4, 5, 5, 4, 4]
+STATES = [3, 4, 4, 8, 4, 5, 5, 4, 4]
 TITLES = ["The game", "Tokens", "Vectors", "Attention", "Blocks", "Choice", "The loop", "Training", "Why, and the fix"]
 
 DECK_PAGE = """<!doctype html><html><head><meta charset="utf-8">
@@ -234,6 +237,79 @@ def realdeck(settle_ms: int = 4500, only: str = "") -> dict:
     return out
 
 
+@app.function(timeout=1800, cpu=8, memory=12288, image=deck_image)
+def interact() -> dict:
+    """In the real deck: drag on the 3D slide, click a token tile, hover a block, then click empty space.
+    The drag and the tile click must not advance the deck; the empty click must."""
+    from playwright.sync_api import sync_playwright
+    srv = serve("/course", 8095)
+    out, logs = {}, []
+    with sync_playwright() as p:
+        b = p.chromium.launch(args=ARGS)
+        pg = b.new_page(viewport={"width": 1600, "height": 940})
+        pg.on("pageerror", lambda e: logs.append(f"pageerror: {e}"))
+        pg.goto("http://127.0.0.1:8095/lectures/L2-the-brain/index.html", wait_until="networkidle")
+        wait_fonts(pg); pg.wait_for_timeout(1200)
+        i = pg.evaluate("[...document.querySelectorAll('#deck .slide')].findIndex(s => (s.querySelector('[data-section]')||{dataset:{}}).dataset.section === '4')")
+        pg.evaluate(f"deckApi.show({i})"); pg.wait_for_timeout(7000)
+        st0 = pg.evaluate("[deckApi.cur, brain3d.step]")
+        cv = pg.evaluate("(() => { const c = document.querySelector('#deck .slide.active canvas'); const r = c.getBoundingClientRect(); return [r.left, r.top, r.width, r.height]; })()")
+        x0, y0 = cv[0] + cv[2] * 0.62, cv[1] + cv[3] * 0.55
+        pg.mouse.move(x0, y0); pg.mouse.down(); pg.mouse.move(x0 + 160, y0 + 40, steps=12); pg.mouse.up(); pg.wait_for_timeout(1500)
+        st1 = pg.evaluate("[deckApi.cur, brain3d.step]")
+        out["qa/interact-1-dragged.png"] = pg.screenshot()
+        # click the tile of " Manchester" in the user's question: find its screen point from the scene
+        pt = pg.evaluate("brain3d._tilePoint(92)")
+        pg.mouse.click(pt[0], pt[1]); pg.wait_for_timeout(1500)
+        st2 = pg.evaluate("[deckApi.cur, brain3d.step]")
+        card = pg.evaluate("(document.querySelector('.b3d-info.on')||{}).innerText || ''")
+        out["qa/interact-2-tile.png"] = pg.screenshot()
+        # hover a block: go to section 5's slide, last step
+        j = pg.evaluate("[...document.querySelectorAll('#deck .slide')].findIndex(s => (s.querySelector('[data-section]')||{dataset:{}}).dataset.section === '5')")
+        pg.evaluate(f"deckApi.show({j}, true)"); pg.wait_for_timeout(8000)
+        hp = pg.evaluate("brain3d._slabPoint(20)")
+        pg.mouse.move(hp[0], hp[1]); pg.wait_for_timeout(600); pg.mouse.move(hp[0] + 3, hp[1] + 1); pg.wait_for_timeout(900)
+        tip = pg.evaluate("(document.querySelector('.b3d-tip.on')||{}).innerText || ''")
+        out["qa/interact-3-hover.png"] = pg.screenshot()
+        # reset view, then a click on empty space advances the deck as before
+        pg.evaluate(f"deckApi.show({i})"); pg.wait_for_timeout(5000)
+        pg.evaluate("window.__clk = []; document.getElementById('deck').addEventListener('click', (e) => __clk.push('deck:' + e.target.tagName + '.' + (e.target.className||'')), true); document.addEventListener('click', (e) => __clk.push('doc-bubble'), false); document.getElementById('deck').addEventListener('click', (e) => __clk.push('deck-bubble'), false)")
+        ex, ey = cv[0] + cv[2] * 0.60, cv[1] + cv[3] * 0.20
+        logs.append("hit at empty point: " + str(pg.evaluate(f"(() => {{ const e = document.elementFromPoint({ex}, {ey}); return e.tagName + '.' + e.className; }})()")))
+        pg.mouse.click(ex, ey); pg.wait_for_timeout(1500)
+        logs.append("clicks: " + str(pg.evaluate("__clk")))
+        # the arrow key still steps the deck (and the 3D scene with it)
+        pg.keyboard.press("ArrowRight"); pg.wait_for_timeout(1500)
+        logs.append("after ArrowRight: " + str(pg.evaluate("[deckApi.cur, brain3d.step]")))
+        st3 = pg.evaluate("[deckApi.cur, brain3d.step]")
+        b.close()
+    srv.terminate()
+    rep = {"start": st0, "after_drag": st1, "after_tile_click": st2, "card": card[:400], "hover_tip": tip[:300], "after_empty_click": st3, "log": logs}
+    out["qa/interact.json"] = json.dumps(rep, indent=1, ensure_ascii=False).encode()
+    return out
+
+
+@app.function(timeout=900, cpu=2, memory=4096, image=deck_image)
+def deckqa() -> dict:
+    """tools/deck_qa_modal.py's exact check (tools/deck_qa.js on every slide, 1600x940, plain Chromium), but with only
+    the L2 folder and the engine mounted, so other builders writing files elsewhere in the course cannot break the mount."""
+    from playwright.sync_api import sync_playwright
+    srv = serve("/course", 8094)
+    errors = []
+    with sync_playwright() as p:
+        b = p.chromium.launch()
+        pg = b.new_page(viewport={"width": 1600, "height": 940})
+        pg.on("pageerror", lambda e: errors.append(str(e)))
+        pg.goto("http://127.0.0.1:8094/lectures/L2-the-brain/index.html", wait_until="networkidle")
+        pg.wait_for_timeout(1500)
+        pg.add_script_tag(path="/course/tools/deck_qa.js")
+        report = pg.evaluate("window.__deckQA()")
+        count = pg.evaluate("deckApi.count")
+        b.close()
+    srv.terminate()
+    return {"slides": count, "page_errors": errors, "issues": report}
+
+
 CHECK_REAL = """(() => { const s = document.querySelector('#deck .slide.active'); const sr = s.getBoundingClientRect(), sc = sr.width / 1600;
   const lim = { l: sr.left + 20 * sc, r: sr.right - 20 * sc, t: sr.top + 20 * sc, b: sr.bottom - 20 * sc }; const issues = [];
   s.querySelectorAll('*').forEach((e) => { if (e.closest('.frame') || e.classList.contains('folio') || e.classList.contains('plate-head')) return;
@@ -247,7 +323,22 @@ CHECK_REAL = """(() => { const s = document.querySelector('#deck .slide.active')
 
 
 @app.local_entrypoint()
-def main(shots: str = "", deck: int = 0, plates: int = 0, check: int = 0, posters: int = 0, real: int = 0, only: str = ""):
+def main(shots: str = "", deck: int = 0, plates: int = 0, check: int = 0, posters: int = 0, real: int = 0, only: str = "", inter: int = 0, dqa: int = 0):
+    if dqa:
+        r = deckqa.remote()
+        print(f"lectures/L2-the-brain: {r['slides']} slides, {len(r['issues'])} with issues, {len(r['page_errors'])} page errors")
+        for x in r["issues"]:
+            print("  slide", x["slide"], x["plate"][:40], " | ".join(x["issues"])[:300])
+        for e in r["page_errors"]:
+            print("  ERROR", e[:200])
+        return
+    if inter:
+        files = interact.remote()
+        for rel, data in files.items():
+            (HERE / rel).parent.mkdir(parents=True, exist_ok=True)
+            (HERE / rel).write_bytes(data)
+        print(files["qa/interact.json"].decode())
+        return
     if real:
         files = realdeck.remote(4500, only)
         for rel, data in files.items():
