@@ -2,7 +2,13 @@
 
 ## v4 (2026-10-30): the Northbridge world; Lecture 1 rebuilt. Read WORLD_V4.md first.
 - **World:** Northbridge Cycles (e-bikes, Manchester) on Ledgerline ERP 7.2; package `ledgerline` (was `bahi`). Map in `tools/world_v4.py`; `--check` flags leftovers (food, rupee, litre, GST ...).
-- **Rollout:** L1 is done in v4. L2–L12 notebooks install the frozen tag `v3.1` (Rasoi world) until each is rebuilt; L2 is next (Sun 1 Nov).
+- **Rollout:** L1 and L2 are done in v4. L3–L12 notebooks install the frozen tag `v3.1` (Rasoi world) until each is rebuilt; L3 (Sat 7 Nov) is next.
+- **L2 (2026-10-30):** 65 slides, QA 0. Nine sections follow one question through Qwen2.5-0.5B-Instruct, with one persistent 3D scene (`brain3d/`, 29 steps, real trace). NB2: 32 cells, replay 0 errors.
+- **L1 additions (2026-10-30):**
+  - generic failure modes across domains;
+  - a button-to-service slide;
+  - five mission videos (`figs/missions/`, H.264 and WebM);
+  - the 3D slide as a 2:24 film in Present mode, narrated by Daniel (ElevenLabs) over Envision by Amaranth Cove (Epidemic Sound). The music is gitignored, so it is not redistributed.
 - **L1:** 103 slides, deck QA 0 issues (also on the built site). NB1 replays 25 cells with 0 errors. The After was re-recorded (`L1v4_after`): 6/6 missions, 12 messages, 20 tool calls, 113 s.
   - The 3D request flow (`flow3d/`, 20 steps) is on a real recorded run (`L1v4_flow3d`).
   - In production (`experiments/production/`): our harness, the Agents SDK and LangGraph each passed 15/15 with 0 never-events. Ablation: 5 of 6 models passed 15/15, Llama 4 Maverick 4/15 (2× NE5). Langfuse screenshots and public traces are listed in PRODUCTION.md. About $4.3 of OpenRouter credit used.
