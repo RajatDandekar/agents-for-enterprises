@@ -1,5 +1,19 @@
 # Agentic Systems Engineering (formerly AI Agents for Enterprises): status
 
+## v4 (2026-10-30): the Northbridge world; Lecture 1 rebuilt. Read WORLD_V4.md first.
+- **World:** Northbridge Cycles (e-bikes, Manchester) on Ledgerline ERP 7.2; package `ledgerline` (was `bahi`). Map in `tools/world_v4.py`; `--check` flags leftovers (food, rupee, litre, GST ...).
+- **Rollout:** L1 is done in v4. L2–L12 notebooks install the frozen tag `v3.1` (Rasoi world) until each is rebuilt; L2 is next (Sun 1 Nov).
+- **L1:** 103 slides, deck QA 0 issues (also on the built site). NB1 replays 25 cells with 0 errors. The After was re-recorded (`L1v4_after`): 6/6 missions, 12 messages, 20 tool calls, 113 s.
+  - The 3D request flow (`flow3d/`, 20 steps) is on a real recorded run (`L1v4_flow3d`).
+  - In production (`experiments/production/`): our harness, the Agents SDK and LangGraph each passed 15/15 with 0 never-events. Ablation: 5 of 6 models passed 15/15, Llama 4 Maverick 4/15 (2× NE5). Langfuse screenshots and public traces are listed in PRODUCTION.md. About $4.3 of OpenRouter credit used.
+- **App:** `northbridge-experience` is live, with broad brief questions. It passes 66/66 checks, e2e 23/23 and Studio 82/82 + UI 27/27. It keeps the Modal secret `rasoi-experience`.
+- **Fixed in v4:** `receive_goods` refuses an unknown warehouse code (found by the GPT-6 Luna ablation).
+- **Open:**
+  - Rajat to `git push` (NB1 installs `ledgerline` from main) and push tag v3.1 (`git push origin v3.1`).
+  - The marketing site update is prepared in agents-site/site, but the deploy needs Rajat's OK.
+  - Frame rate of flow3d on the class laptop is not measured (SwiftShader only).
+
+
 ## v3.1 (2026-10-28): twelve lectures. Four industry lectures added (L8–L11); demo day moved to L12, Sun 6 Dec.
 
 ## v3 (2026-10-28): story-first rebuild of every lecture. Read COURSE_V3.md first.
