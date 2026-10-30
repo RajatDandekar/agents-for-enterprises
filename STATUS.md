@@ -4,6 +4,12 @@
 - **World:** Northbridge Cycles (e-bikes, Manchester) on Ledgerline ERP 7.2; package `ledgerline` (was `bahi`). Map in `tools/world_v4.py`; `--check` flags leftovers (food, rupee, litre, GST ...).
 - **Rollout:** L1 and L2 are done in v4. L3–L12 notebooks install the frozen tag `v3.1` (Rasoi world) until each is rebuilt; L3 (Sat 7 Nov) is next.
 - **L2 (2026-10-30):** 65 slides, QA 0. Nine sections follow one question through Qwen2.5-0.5B-Instruct, with one persistent 3D scene (`brain3d/`, 29 steps, real trace). NB2: 32 cells, replay 0 errors.
+- **Films (2026-10-30, quality bar = Vizuara "Inside Rubin", see FILM_STYLE.md):** narrated Blender Cycles films rendered on Modal. Narration is Daniel (ElevenLabs), music from Epidemic Sound.
+  - L1: `films/l1_how_it_works` (2:45) on slide 73, about $31 of Modal.
+  - L2: 11 films in `films/` (overture; s1_game … s9_fix; qkv at 2:26), one at the end of each section, all checked loading on the live site.
+  - Films, music and renders are gitignored and served only from the slides site. The build code is committed.
+  - Kit fix: a scene's first camera gets a frame-0 marker (l2kit.Cam).
+  - Rough: L1's audio was checked by meter only; on some L2 films the token words are small labels, not on the tile faces.
 - **L1 additions (2026-10-30):**
   - generic failure modes across domains;
   - a button-to-service slide;
