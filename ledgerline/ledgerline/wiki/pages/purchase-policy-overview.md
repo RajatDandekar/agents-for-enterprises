@@ -6,7 +6,7 @@ compiled_by: gemini:gemini-3.8-flash
 ---
 
 # General Purchasing Policy
-This policy sets out how Northbridge Cycles buys materials, components, and services. It ensures every rupee is spent with proper approval, from a qualified supplier, and against an open budget. All rules apply starting 2026-04-01 across applicable company units through Ledgerline ERP.
+This policy sets out how Northbridge Cycles buys materials, components, and services. It ensures every pound is spent with proper approval, from a qualified supplier, and against an open budget. All rules apply starting 2026-04-01 across applicable company units through Ledgerline ERP.
 
 ## Rules
 - Buy all materials, components, and services with proper approval, from a qualified supplier, and against an open budget [POL-PUR-001 §1].

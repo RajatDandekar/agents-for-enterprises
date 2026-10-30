@@ -182,7 +182,7 @@ def _gate_case(i: int, combo: dict) -> Case:
         exp = released(item="BAT-500", qty=qty, new_name="Brightcell", approved_by="DOKAFOR" if ol else None)
         cert_given, exists = True, False
         name = f"Brightcell Energy, {qty:,} battery packs, certificate given"
-    elif sn:               # a new supplier for a part that does not touch food
+    elif sn:               # a new supplier for a part that is not a lithium-cell part
         if ol:
             ask, exp = BRIGHTCELL_H.format(cc=ccode), released(item="MNT-RCK-02", qty=2000, new_name="Brightcell", approved_by="DOKAFOR")
             name = "Brightcell Energy, 2,000 short handles"

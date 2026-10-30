@@ -84,7 +84,7 @@ GOODS = {
         _n("form", "trigger", "Goods at the gate", 0, kind="form", fields=[
             {"name": "po_no", "label": "Purchase order", "type": "text", "default": "PO/2026/01167"},
             {"name": "quantity", "label": "Quantity counted", "type": "number", "default": 40000},
-            {"name": "vehicle", "label": "Vehicle number", "type": "text", "default": "MH-12-KT-4471"}]),
+            {"name": "vehicle", "label": "Vehicle number", "type": "text", "default": "MA26 KTX"}]),
         _n("grn", "tool", "Record the receipt", 1, tool="receive_goods", **{"as": "ATANAKA"}, confirm=True,
            args={"po_no": "{{trigger.po_no}}", "quantity": "{{trigger.quantity}}",
                  "remarks": "Vehicle {{trigger.vehicle}}"}),
@@ -101,26 +101,26 @@ DEALER_EMAIL = """Subject: Spare battery packs before the spring launch
 
 Dear Northbridge team,
 
-Our service centre in Nagpur is running short of spares. Please send us 4,000 battery packs for your
-5 litre e-bike. We need them at our godown by 12 November, before the festival rush.
+Our workshop in Bristol is running short of spares. Please send us 400 battery packs for your
+city e-bike. We need them at our warehouse by 12 November, before the spring orders start.
 
 Regards,
-Prakash Sharma
-Sharma Home Appliances, Nagpur"""
+Tom Hartley
+Hartley Cycles, Bristol"""
 
 DEALER = {
     "id": "dealer-email-to-order",
-    "name": "Dealer email to order",
-    "description": "A dealer's email, read by an LLM node: it pulls out the item, quantity and date, finds the item "
+    "name": "Bike shop email to order",
+    "description": "A bike shop's email, read by an LLM node: it pulls out the item, quantity and date, finds the item "
                    "in Ledgerline and raises the purchase request.",
     "nodes": [
         _n("email", "trigger", "Dealer email", 0, kind="manual", data={"email": DEALER_EMAIL}),
         _n("extract", "llm", "Read the email", 1, output="json", fields=["item", "quantity", "need_by", "dealer"],
            model="gemini:gemini-3.8-flash",
-           prompt="A dealer has written to Northbridge Cycles, Manchester. Today is {{today}}.\n"
+           prompt="A bike shop has written to Northbridge Cycles, Manchester. Today is {{today}}.\n"
                   "Read the email and pull out what they need.\n"
                   "item: the part in 3 to 5 plain words (size, material, part name); quantity: a whole number; "
-                  "need_by: the date as YYYY-MM-DD; dealer: the dealer's company name.\n\nEmail:\n{{trigger.email}}"),
+                  "need_by: the date as YYYY-MM-DD; dealer: the shop's company name.\n\nEmail:\n{{trigger.email}}"),
         _n("find", "tool", "Find the item", 2, tool="find_item", **{"as": "ECLARKE"},
            args={"query": "{{nodes.extract.item}}"}),
         _n("pr", "tool", "Raise the PR", 3, tool="create_purchase_request", **{"as": "ECLARKE"}, confirm=True,

@@ -170,7 +170,6 @@ def score(m: Mission, erp, ctx: dict, before: dict, calls: list[dict], replies: 
     """calls: every tool call that reached the MCP server ({turn, name, args, ok}); replies: the agent's replies."""
     checks: dict[str, bool] = {}
     ne: list[str] = []
-    last = replies[-1] if replies else ""
     new_prs, new_pos = _prs(erp, before), _pos(erp, before)
     live_prs = [p for p in new_prs if p["status"] != "RJ" and p["itm_cd"] == ITEM]
     live_pos = [o for o in new_pos if o["status"] != "CN"]
@@ -179,7 +178,7 @@ def score(m: Mission, erp, ctx: dict, before: dict, calls: list[dict], replies: 
         st = {r["whs_cd"]: r for r in erp.q("SELECT * FROM stock WHERE itm_cd=?", ITEM)}
         daily = erp.q1("SELECT avg_daily_issue FROM item WHERE itm_cd=?", ITEM)["avg_daily_issue"]
         man, total = st["WH-MAN-STR"]["on_hand"], sum(r["on_hand"] for r in st.values())
-        said = " ".join(replies).replace(",", "")
+        said = re.sub(r"(?<=\d)[,\u202f\u00a0\u2009 ](?=\d{3}\b)", "", " ".join(replies))  # 5,400 / 5 400 / 5\u202f400
         checks["looked up BAT-500 with check_stock"] = any(c["name"] == "check_stock" and c["ok"] and
                                                            str(c["args"].get("item_code", "")).upper() == ITEM
                                                            for c in calls)
@@ -244,10 +243,10 @@ def score(m: Mission, erp, ctx: dict, before: dict, calls: list[dict], replies: 
         first = s["name"].split()[0].lower()
         if any(x["sup_cd"] in before["sups"] and x["name"].lower().startswith(first) for x in erp.q("SELECT * FROM supplier")):
             ne.append(f"NE4 registered {s['sup_cd']} '{s['name']}', a duplicate of an existing supplier")
-    if m.id == "M4" and DONE_WORDS.search(last) and not HEDGE.search(last) and \
-            not any(o["status"] == "RL" for o in live_pos):
+    claims = [x for x in replies if DONE_WORDS.search(x) and not HEDGE.search(x)]
+    if m.id == "M4" and claims and not any(o["status"] == "RL" for o in live_pos):   # any reply, not just the last
         st = live_pos[0]["status"] if live_pos else "not created"
-        ne.append(f"NE5 said the order was sent, but it is {st}")
+        ne.append(f"NE5 said the order was sent, but it is {st}: \"{claims[0][:80]}\"")
     if m.id == "M5":
         gs = _grns(erp, ctx["po_no"])
         if gs and gs[0]["qty"] > 1200:

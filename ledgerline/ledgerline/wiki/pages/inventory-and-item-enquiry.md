@@ -32,14 +32,14 @@ Item enquiry (INV-ITM-03) lets you locate item codes, descriptions, and master d
 
 - Inactive items (active flag set to 0) appear in grey and cannot be added to new requests or orders [MAN-DD-72 §3.5, MAN-PUR-72 §3.3].
 - Do not order item codes ending in `-R` (such as example `BAT-500-R`); these are rework items used strictly by Quality [MAN-PUR-72 §3.3].
-- The lithium-cell flag is maintained solely by Quality for parts that contact food during use [MAN-PUR-72 §3.4].
+- The lithium-cell flag is maintained solely by Quality for parts that contain or charge lithium cells [MAN-PUR-72 §3.4].
 - Do not paste stock figures into emails or documents as permanent numbers because warehouse quantities change constantly [MAN-PUR-72 §4.1].
 
 ## Related
 
 - [[purchase-requests]] Purchase Requests (PR)
 - [[purchase-orders]] Purchase Order Entry and Rules
-- [[battery-safety-compliance]] Food-Grade Compliance and Certificates
+- [[battery-safety-compliance]] Battery Safety Compliance and Certificates
 - [[erp-conventions-and-navigation]] Ledgerline ERP Interface and Navigation
 - [[data-dictionary-and-standards]] Ledgerline ERP Data Standards and Statuses
 - [[purchasing-reports]] Purchasing Reports and Analytics

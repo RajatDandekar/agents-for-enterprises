@@ -9,6 +9,7 @@
     ours.py             stack (a): our own loop, by hand
     agents_sdk.py       stack (b): the OpenAI Agents SDK (openai-agents 0.20.0)
     langgraph_agent.py  stack (c): LangGraph's prebuilt agent (langgraph 1.2.15 + langchain-mcp-adapters 0.3.2)
+    retrieval_cache.py  search_policy's scores cached in _index/ (first write wins), so a replay matches the recording
     runner.py           Rig: run a mission or the suite on one stack and model
 
     from ledgerline.course.l1.production.runner import Rig

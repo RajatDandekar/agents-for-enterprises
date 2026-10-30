@@ -80,7 +80,7 @@ class GuardError(Exception):
 
 
 def inr(x) -> str:
-    """£ with Indian digit grouping: 285600 -> £285,600; 11.9 -> £119.00."""
+    """£ with digit grouping: 285600 -> £285,600."""
     if x is None:
         return "—"
     neg, x = x < 0, abs(float(x))
@@ -126,7 +126,7 @@ EXTRACT = {
     "item_description": "the item in her words, e.g. 'city e-bike battery packs'",
     "item_code": "a Ledgerline item code if she gave one, e.g. BAT-500",
     "quantity": "number of pieces, digits only, no commas",
-    "rate": "price per piece in rupees if she gave one, digits only",
+    "rate": "price per piece in pounds if she gave one, digits only",
     "cost_centre": "cost centre code, e.g. PRD-07",
     "need_by": "need-by date as YYYY-MM-DD",
     "certificate_ref": "UN 38.3 certificate reference number, if she gave one",
@@ -696,11 +696,11 @@ class GraphAgent:
             f.get("supplier_cert") or "none", "no valid UN 38.3 certificate")
         if f.get("supplier_status") == "new":
             status = "no certificate (not in Ledgerline yet)"
-        out = self._say({"situation": f"{f.get('item_label')} touches food. {f.get('supplier_label')} has {status} "
+        out = self._say({"situation": f"{f.get('item_label')} is a lithium-cell part. {f.get('supplier_label')} has {status} "
                          "in Ledgerline. Without a valid certificate we cannot order from them.",
                          "rule": rule.get("text"), "rule_cite": rule.get("cite"),
                          "ask": "Do you have their UN 38.3 certificate? Send its reference number and expiry date.",
-                         "fallback": "This part touches food, and this supplier has no valid UN 38.3 certificate in "
+                         "fallback": "This is a lithium-cell part, and this supplier has no valid UN 38.3 certificate in "
                                      "Ledgerline. Do you have their certificate? Send its reference number and expiry date."},
                         block=f"{rule.get('cite', 'Purchase Policy §6.2')}: {rule.get('text', '')}".strip())
         return {"path": ["ask_certificate"], **self._reply(out, goto="ask", awaiting="cert", asked=out)}

@@ -125,7 +125,7 @@ GATES: list[Gate] = [
          pred=lambda s: bool(_d(s).get("cost_centre")) and _f(s).get("cc_open") is False,
          tools=("check_cost_centre", "amend_purchase_order")),
     Gate("cell_safety_no_cert", "Ask for certificate", "ask_certificate", after="check", rejoin="check",
-         description="The item touches food and the supplier has no valid UN 38.3 certificate in Ledgerline, and Emma "
+         description="The item is a lithium-cell part and the supplier has no valid UN 38.3 certificate in Ledgerline, and Emma "
                      "has not given one. Ask for it; without it the route stops here and nothing is written. An "
                      "expired certificate counts as none.",
          policy="Purchase Policy §6.2",

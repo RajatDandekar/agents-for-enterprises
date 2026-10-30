@@ -47,6 +47,8 @@ def cassette_name(stack: str, model: str, run: int) -> str:
 
 class Rig:
     def __init__(self, langfuse: bool = True, budget_usd: float = 3.0, mode: str | None = None):
+        from .retrieval_cache import use_own_caches
+        use_own_caches()   # search_policy scores from a cache this package owns, so replays match the recording
         self.tp, self.spans = T.provider(langfuse=langfuse)
         self.tracer = self.tp.get_tracer("ask-northbridge", "l1-production")
         self.gw = Gateway(self.tracer, mode=mode, budget_usd=budget_usd).start()

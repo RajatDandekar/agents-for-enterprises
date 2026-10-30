@@ -265,7 +265,7 @@ _, pid_d, eng_d = fresh()
 rd = eng_d.run_until_pause(eng_d.start(template("dealer-email-to-order")))
 show(rd)
 ex = rd["nodes"]["extract"]
-check("(d) the LLM node extracts quantity and date", ex["status"] == "done" and ex["output"].get("quantity") == 4000
+check("(d) the LLM node extracts quantity and date", ex["status"] == "done" and ex["output"].get("quantity") == 400
       and ex["output"].get("need_by") == "2026-11-12", ex.get("output") or ex.get("error"))
 check("(d) finds BAT-500 and raises the PR", rd["status"] == "done"
       and rd["nodes"]["pr"]["output"].get("item_code") == "BAT-500" and rd["nodes"]["pr"]["output"].get("request_no"),
@@ -277,7 +277,7 @@ print("\n8. (e) Build your own agent (agent node, chat)")
 _, pid_a, eng_a = fresh()
 wa = template("build-your-own-agent")
 eng_a.store.save_workflow(pid_a, wa)
-turns = ["How many days of cover do we have for the 5 litre battery pack?",
+turns = ["How many days of cover do we have for the city e-bike battery pack?",
          "Raise a purchase request for 2,000 of them on cost centre PRD-07, needed by 9 November 2026.",
          "Yes, go ahead and raise it."]
 replies = []

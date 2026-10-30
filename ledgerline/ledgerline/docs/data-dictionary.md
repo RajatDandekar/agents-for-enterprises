@@ -12,11 +12,11 @@ audience: all Ledgerline users
 ## 1. About the data dictionary
 1.1 This dictionary lists the fields that Ledgerline's purchasing services send and return, with the legacy field names used in service payloads. Screen labels are given in brackets.
 1.2 Service responses come in an envelope with four fields: rc (return code: S for success, E for error), err_cd (the error code when rc is E), msg (a short message in capitals) and data (the result).
-1.3 Dates in payloads are YYYY-MM-DD. Amounts are in rupees with two decimals. Codes are capitals.
+1.3 Dates in payloads are YYYY-MM-DD. Amounts are in pounds sterling with two decimals. Codes are capitals.
 
 ## 2. Common codes
-2.1 ou_cd (Organisation unit): NBC-MAN-01 is the Manchester plant; NBC-LDS-01 is the Leeds unit. Both are in England (state code MH).
-2.2 state: two-letter state code of a supplier or organisation unit, for example MH (England), GJ (the Netherlands), WB (West Bengal).
+2.1 ou_cd (Organisation unit): NBC-MAN-01 is the Manchester plant; NBC-LDS-01 is the Leeds unit. Both are in the United Kingdom (country code GB).
+2.2 state: two-letter country code of a supplier or organisation unit, for example GB (United Kingdom), NL (Netherlands), PL (Poland). The column keeps its 1998 name.
 2.3 status (documents): DR, PA, AP, RL, RJ, CN, CL, as listed in the user manual (MAN-PUR-72 §16.1).
 2.4 status (suppliers): ACTIVE or BLOCKED.
 2.5 uom_cd (UOM): NOS for numbers (pieces), KG for kilograms.
@@ -24,7 +24,7 @@ audience: all Ledgerline users
 ## 3. Item master (itm_*)
 3.1 itm_cd (Item code): the item's code, for example BAT-500 for the city e-bike battery pack.
 3.2 descr (Description): the item's description.
-3.3 cell_safety (Food contact): 1 if the part touches food in use, else 0. Set by Quality.
+3.3 cell_safety (Lithium cell): 1 if the part contains or charges lithium cells, else 0. Set by Quality.
 3.4 category: RAW, COMPONENTS, SPARES or PACKING.
 3.5 active: 1 if the item may be used on new documents.
 3.6 reorder_lvl (Reorder level) and avg_daily_issue (Average daily issue): used by the reorder report and for days of cover.
@@ -54,9 +54,9 @@ audience: all Ledgerline users
 6.8 fetch_tok: a token returned by the Fetch service (po_fetch) and required by Save (po_save). It is valid once, for one supplier and item.
 
 ## 7. Tax codes
-7.1 VAT20-UK: CGST 9% + SGST 9%, for a supplier in the same state as the organisation unit.
-7.2 VAT20-RC: IGST 18%, for a supplier in another state.
-7.3 VAT5-UK and VAT5-RC: the same at 12%.
+7.1 VAT20-UK: VAT 20%, for a supplier in the same country as the organisation unit (the UK).
+7.2 VAT20-RC: VAT 20% by reverse charge, for a supplier in another country.
+7.3 VAT5-UK and VAT5-RC: the same two rules at the reduced rate of 5%.
 
 ## 8. Payment terms
 8.1 N30, N45, N60: net 30, 45 or 60 days from the invoice. ADV: advance payment.

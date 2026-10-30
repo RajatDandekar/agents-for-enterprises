@@ -18,14 +18,14 @@ This policy says how a supplier enters the supplier master in Ledgerline, what p
 
 ## 3. Onboarding a new supplier
 3.1 A new supplier is proposed by a purchase executive or senior buyer, with at least one written quotation and the reason an existing supplier cannot meet the need.
-3.2 Before the supplier is created in Ledgerline (screen PUR-SUP-01), the proposer must collect: the VAT registration certificate (VAT number), the PAN, a cancelled cheque or bank letter, the MSME certificate if the supplier claims MSME status, and the signed Supplier Code of Conduct.
+3.2 Before the supplier is created in Ledgerline (screen PUR-SUP-01), the proposer must collect: the VAT registration certificate (VAT number), the company registration number, a bank letter confirming the account, proof of insurance, and the signed Supplier Code of Conduct.
 3.3 The proposer must search the supplier master first (screen PUR-SUP-03) by name, by city and by VAT number, and attach the search result to the onboarding file. See §6 on duplicates.
 3.4 The purchase manager approves the onboarding file. Only after that approval may the supplier be created in Ledgerline.
 3.5 A supplier created in Ledgerline is ACTIVE from the day it is created, but no order may be placed with it until every document in §3.2 and, for lithium-cell parts, the certificate in §4 is on file.
 3.6 Onboarding normally takes five working days from a complete file. Urgency is not a reason to skip any step in this section.
 
 ## 4. UN 38.3 certificates
-4.1 A supplier of any part that comes into contact with food (battery packs, lids, body blanks, and any item marked lithium-cell in the item master) must hold a UN 38.3 certificate. This is the certificate referred to in Purchase Policy §6.2.
+4.1 A supplier of any lithium-cell part (battery packs, hub motors, chargers, and any item marked lithium-cell in the item master) must hold a UN 38.3 certificate. This is the certificate referred to in Purchase Policy §6.2.
 4.2 The certificate must be a test report from a laboratory accredited for lithium-cell materials (for example an UN 38.3-notified laboratory), or a BIS conformity certificate for stainless steel grade 304 or better.
 4.3 The certificate is uploaded in Ledgerline against the supplier (certificate type UN38.3) with its document reference and its valid-to date, and checked by the senior buyer before the first order.
 4.4 A UN 38.3 certificate is accepted if it was issued within the last 24 months and its valid-to date has not passed.

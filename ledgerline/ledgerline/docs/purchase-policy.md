@@ -10,7 +10,7 @@ audience: all purchase staff
 # Purchase Policy (POL-PUR-001)
 
 ## 1. Purpose
-This policy sets out how Northbridge Cycles buys materials, components and services, so that every rupee is spent with the right approval, from a qualified supplier, against an open budget.
+This policy sets out how Northbridge Cycles buys materials, components and services, so that every pound is spent with the right approval, from a qualified supplier, against an open budget.
 
 ## 2. Scope
 It applies to every purchase made for the Manchester plant (NBC-MAN-01) and the Leeds unit (NBC-LDS-01), through Ledgerline ERP.
@@ -34,7 +34,7 @@ It applies to every purchase made for the Manchester plant (NBC-MAN-01) and the 
 
 ## 6. Supplier qualification
 6.1 Orders may be placed only with suppliers that are **active** in the supplier master.
-6.2 **Parts that come into contact with food** (battery packs, lids, body blanks and any other item marked lithium-cell in the item master) may be bought only from a supplier holding a **valid UN 38.3 certificate** on file in Ledgerline. The certificate must be uploaded and checked **before the first order** is placed. An expired certificate counts as no certificate.
+6.2 **Lithium-cell parts** (battery packs, hub motors, chargers and any other item marked lithium-cell in the item master) may be bought only from a supplier holding a **valid UN 38.3 certificate** on file in Ledgerline. The certificate must be uploaded and checked **before the first order** is placed. An expired certificate counts as no certificate.
 6.3 A new supplier is onboarded under the Supplier Policy (POL-SUP-003) before any order is placed with them.
 6.4 Prefer the supplier with a current rate contract. A cheaper quotation from a new supplier does not by itself justify a change of supplier for a lithium-cell part.
 
@@ -43,7 +43,7 @@ It applies to every purchase made for the Manchester plant (NBC-MAN-01) and the 
 7.2 Any order at a rate more than 2% above the contract rate needs the manager's written reason in the remarks.
 
 ## 8. Tax
-8.1 A supplier in England is charged CGST + SGST (tax codes ending -INTRA). A supplier in any other state is charged IGST (tax codes ending -INTER).
+8.1 A supplier in the UK is charged UK VAT (tax codes ending -UK). A supplier in any other country is charged VAT by reverse charge (tax codes ending -RC).
 
 ## 9. Records
 9.1 Every order must carry the document number Ledgerline gives it and must be in status Released before the supplier is told to deliver.

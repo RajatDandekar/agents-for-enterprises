@@ -28,7 +28,7 @@ Ledgerline ERP provides reports to track purchasing operations, pending workflow
 - [[document-approval-workflow]] Document Approval Workflows
 - [[po-release-and-lifecycle]] PO Release, Amendments, and History
 - [[supplier-onboarding-and-master]] Supplier Onboarding and Management
-- [[battery-safety-compliance]] Food-Grade Compliance and Certificates
+- [[battery-safety-compliance]] Battery Safety Compliance and Certificates
 - [[rate-contracts-and-pricing]] Rate Contracts and Pricing Policies
 - [[cost-centres-and-budgets]] Cost Centres and Budget Checks
 - [[erp-conventions-and-navigation]] Ledgerline ERP Interface and Navigation

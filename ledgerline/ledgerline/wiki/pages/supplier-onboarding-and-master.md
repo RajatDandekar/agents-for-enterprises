@@ -14,14 +14,14 @@ Suppliers must be fully qualified, approved, and active in the ERP system before
 - New suppliers must be fully onboarded under POL-SUP-003 before placing any purchase order [POL-PUR-001 §6.3].
 - The policy covers all suppliers of materials, components, packing, and services to the Manchester plant (NBC-MAN-01) and Leeds unit (NBC-LDS-01) [POL-SUP-003 §2.1].
 - A purchase executive or senior buyer proposes a new supplier using at least one written quotation and an explanation of why existing suppliers cannot meet the requirement [POL-SUP-003 §3.1].
-- Before creating the supplier in Ledgerline (screen PUR-SUP-01), the proposer must collect the VAT registration certificate (VAT number), PAN, cancelled cheque or bank letter, MSME certificate (if claiming MSME status), and the signed Supplier Code of Conduct [POL-SUP-003 §3.2].
+- Before creating the supplier in Ledgerline (screen PUR-SUP-01), the proposer must collect the VAT registration certificate (VAT number), company registration number, a bank letter, proof of insurance, and the signed Supplier Code of Conduct [POL-SUP-003 §3.2].
 - Proposers must search screen PUR-SUP-03 by name, city, and VAT number, and attach the search result to the onboarding file [POL-SUP-003 §3.3].
 - Always search before creating a supplier; screen PUR-SUP-03 matches any part of the name ignoring case, so search by a short distinctive word and review the entire list [MAN-PUR-72 §5.1, MAN-PUR-72 §5.2].
 - The purchase manager must approve the onboarding file before the supplier can be created in Ledgerline [POL-SUP-003 §3.4].
 - Onboarding typically requires five working days from receipt of a complete file [POL-SUP-003 §3.6].
-- Supplier master entry (screen PUR-SUP-01) requires Supplier name*, City*, State code* (two letters, e.g., MH, GJ), VAT number, and Payment terms (F2 lookup; default N30) [MAN-PUR-72 §6.2].
+- Supplier master entry (screen PUR-SUP-01) requires Supplier name*, City*, Country code* (two letters, e.g., GB, NL), VAT number, and Payment terms (F2 lookup; default N30) [MAN-PUR-72 §6.2].
 - On Save, Ledgerline automatically generates the supplier code from the name's initials, the first three letters of the city, and a running sequence number (e.g., VC-EIN-0042) [POL-SUP-003 §5.4, MAN-DD-72 §4.1, MAN-PUR-72 §6.2].
-- The master record stores supplier code (`sup_cd`), name, city, state, VAT number (`vat_no`), payment terms (`pt_cd`), status, `created_by`, and `created_on` (migrated suppliers display `MIGRATION`) [MAN-DD-72 §4.1, MAN-DD-72 §4.2, MAN-DD-72 §4.3].
+- The master record stores supplier code (`sup_cd`), name, city, country, VAT number (`vat_no`), payment terms (`pt_cd`), status, `created_by`, and `created_on` (migrated suppliers display `MIGRATION`) [MAN-DD-72 §4.1, MAN-DD-72 §4.2, MAN-DD-72 §4.3].
 - Double-clicking a supplier in PUR-SUP-03 opens the master view containing VAT number, address, payment terms, certificates (type, document reference, valid-to date), and rate contracts [MAN-PUR-72 §5.4].
 - A supplier is created with ACTIVE status, but no order may be placed until all mandatory onboarding documents—and lithium-cell certificates where applicable—are on file [POL-SUP-003 §3.5, MAN-PUR-72 §6.4].
 - One legal entity must have exactly one active code, and two records with identical VAT numbers are treated as the same supplier [POL-SUP-003 §6.1].
@@ -44,7 +44,7 @@ Suppliers must be fully qualified, approved, and active in the ERP system before
 ## Related
 - [[purchase-policy-overview]] General Purchasing Policy
 - [[purchase-orders]] Purchase Order Entry and Rules
-- [[battery-safety-compliance]] Food-Grade Compliance and Certificates
+- [[battery-safety-compliance]] Battery Safety Compliance and Certificates
 - [[rate-contracts-and-pricing]] Rate Contracts and Pricing Policies
 - [[taxation-and-payment-terms]] Tax Codes and Payment Terms
 - [[inventory-and-item-enquiry]] Items and Inventory Enquiry

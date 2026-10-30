@@ -9,10 +9,10 @@ compiled_by: gemini:gemini-3.8-flash
 This page sets the confidential pay bands and rules for the purchase department for 2026-27. It outlines fixed pay ranges, variable pay targets, and increment limits. These rules take effect on 2026-04-01.
 
 ## Rules
-- Annual fixed pay for a purchase executive (PUR-EXEC, Band M2) ranges from £640,000 to £890,000 [HR-CONF-007 §2.1].
-- Annual fixed pay for a senior buyer (PUR-SR, Band M3) ranges from £920,000 to £1,260,000 [HR-CONF-007 §2.1].
-- Annual fixed pay for a purchase manager (PUR-MGR, Band M4) ranges from £1,450,000 to £1,980,000 [HR-CONF-007 §2.1].
-- Annual fixed pay for a plant head (PLANT-HEAD, Band L1) ranges from £3,800,000 to £5,200,000 [HR-CONF-007 §2.1].
+- Annual fixed pay for a purchase executive (PUR-EXEC, Band M2) ranges from £34,000 to £42,000 [HR-CONF-007 §2.1].
+- Annual fixed pay for a senior buyer (PUR-SR, Band M3) ranges from £43,000 to £55,000 [HR-CONF-007 §2.1].
+- Annual fixed pay for a purchase manager (PUR-MGR, Band M4) ranges from £58,000 to £75,000 [HR-CONF-007 §2.1].
+- Annual fixed pay for a plant head (PLANT-HEAD, Band L1) ranges from £110,000 to £145,000 [HR-CONF-007 §2.1].
 - Variable pay reaches up to 12% of fixed pay, paid in May based on annual savings against rate contracts [HR-CONF-007 §2.2].
 - The 2026-27 increment pool is set at 9.5% of fixed pay [HR-CONF-007 §3.1].
 - All rules apply starting 2026-04-01 [HR-CONF-007 §1.1].

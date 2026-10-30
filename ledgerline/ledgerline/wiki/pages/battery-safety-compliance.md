@@ -1,17 +1,17 @@
 ---
-title: Food-Grade Compliance and Certificates
+title: Battery Safety Compliance and Certificates
 audience: all purchase staff
 sources: POL-PUR-001 §6.2, POL-SUP-003 §4.1, POL-SUP-003 §4.2, POL-SUP-003 §4.3, POL-SUP-003 §4.4, POL-SUP-003 §4.5, POL-SUP-003 §4.6, POL-SUP-003 §4.7, MAN-DD-72 §3.3, MAN-DD-72 §4.4, MAN-PUR-72 §6.5, MAN-PUR-72 §6.6, AMD-SUP-2026-02 §1.1, AMD-SUP-2026-02 §1.2, AMD-SUP-2026-02 §2.1, AMD-SUP-2026-02 §3.1, AMD-SUP-2026-02 §3.2, AMD-SUP-2026-02 §3.3
 compiled_by: gemini:gemini-3.8-flash
 ---
 
-# Food-Grade Compliance and Certificates
+# Battery Safety Compliance and Certificates
 
-Parts that touch food may only be purchased from suppliers with an approved, valid UN 38.3 certificate on file in Ledgerline ERP. Buyers must verify the certificate before placing an order because the system does not automatically block non-compliant purchases. Quality sets the lithium-cell flag on items, and certificates must be kept up to date to prevent supply disruptions.
+Lithium-cell parts may only be purchased from suppliers with an approved, valid UN 38.3 certificate on file in Ledgerline ERP. Buyers must verify the certificate before placing an order because the system does not automatically block non-compliant purchases. Quality sets the lithium-cell flag on items, and certificates must be kept up to date to prevent supply disruptions.
 
 ## Rules
-- Lithium-cell parts (such as battery packs, lids, body blanks, or any item flagged as lithium-cell in the item master) can only be purchased from a supplier holding a valid UN 38.3 certificate uploaded in Ledgerline [POL-PUR-001 §6.2].
-- Quality sets the `cell_safety` flag to 1 in the item master if the part touches food in use [MAN-DD-72 §3.3].
+- Lithium-cell parts (such as battery packs, hub motors, chargers, or any item flagged as lithium-cell in the item master) can only be purchased from a supplier holding a valid UN 38.3 certificate uploaded in Ledgerline [POL-PUR-001 §6.2].
+- Quality sets the `cell_safety` flag to 1 in the item master if the part contains or charges lithium cells [MAN-DD-72 §3.3].
 - A supplier of any lithium-cell item must hold a UN 38.3 certificate [POL-SUP-003 §4.1].
 - The certificate must be an accredited laboratory test report for lithium-cell materials (such as an UN 38.3-notified lab) or a BIS conformity certificate for stainless steel grade 304 or higher [POL-SUP-003 §4.2].
 - Certificates are uploaded against the supplier under certificate type `UN38.3` with document reference and valid-to date, and must be checked by the senior buyer before the first order [POL-SUP-003 §4.3].

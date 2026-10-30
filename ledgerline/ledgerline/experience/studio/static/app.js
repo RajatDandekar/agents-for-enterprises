@@ -1122,7 +1122,7 @@ async function chatView(body) {
   const draw = () => {
     msgs.innerHTML = "";
     if (!S.chat.length) msgs.append(h("div", {class: "suggest"}, h("div", {class: "note"}, "Try:"),
-      ...["How many days of cover do we have for the 5 litre battery pack?", "Is cost centre PRD-05 open?",
+      ...["How many days of cover do we have for the city e-bike battery pack?", "Is cost centre PRD-05 open?",
           "Can we buy battery packs from a supplier without a UN 38.3 certificate?"].map(q => h("button", {onclick: () => { ta.value = q; send(); }}, q))));
     for (const m of S.chat) {
       const el = h("div", {class: "msg " + m.role}, m.content);

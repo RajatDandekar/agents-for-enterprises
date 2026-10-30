@@ -1,8 +1,24 @@
 {
- "what": "Ask Rasoi (gemini-3.8-flash orchestrator + toolbox over MCP) doing the Before's missions",
+ "what": "Ask Northbridge (gemini-3.8-flash orchestrator + toolbox over MCP) doing the Before's missions",
  "model": "gemini:gemini-3.8-flash",
- "cassette": "L1v3_after",
- "wall_seconds": 100.4,
+ "cassette": "L1v4_after",
+ "llm_mode": "auto",
+ "wall_seconds": 131.2,
+ "summary": {
+  "missions": 6,
+  "all_done": true,
+  "messages": 12,
+  "taps": 6,
+  "typed_messages": 6,
+  "chars_typed": 453,
+  "words_typed": 77,
+  "tool_calls": 20,
+  "tool_errors": 1,
+  "seconds": 113.1,
+  "screens_opened": 0,
+  "codes_typed": 1,
+  "note": "the five missions of the Before (stock, request, approve, order, two receipts); the Brightcell question is extra"
+ },
  "tools_discovered_over_mcp": [
   "find_item",
   "check_stock",
@@ -24,121 +40,173 @@
   {
    "id": "stock",
    "title": "Check the stock",
-   "user": "KJOSHI",
-   "who": "Kavita",
+   "user": "ECLARKE",
+   "who": "Emma",
    "turns": [
     {
-     "user": "How many 5-litre silicone gaskets do we have, and how many days will they last?",
-     "reply": "We have **66,000** 5-litre silicone gaskets (`GSK-SIL-05L`) in stock across warehouses:\n* **Pune main stores:** 54,000 NOS\n* **Chakan stores:** 12,000 NOS\n\nAt current consumption, this gives **11 days of cover** (reorder level is 30,000 NOS).",
+     "user": "How many city e-bike battery packs do we have, and how many days will they last?",
+     "reply": "We have **6,600** city e-bike battery packs (**BAT-500**, 36 V 500 Wh) in stock:\n\n* **Manchester main stores:** 5,400\n* **Leeds stores:** 1,200\n\nNone are currently allocated, and this stock will last for **11 days** of cover.",
      "tools": [
       "find_item",
+      "search_policy",
+      "check_stock",
       "check_stock"
      ],
-     "seconds": 7.82
+     "seconds": 22.18
     }
    ],
    "cards": [
     {
      "tool": "find_item",
      "args": {
-      "query": "5 litre silicone gasket"
+      "query": "city e-bike battery pack"
      },
      "result": {
       "ok": true,
       "items": [
        {
-        "item_code": "GSK-SIL-05L",
-        "description": "Gasket, silicone, 5 L",
+        "item_code": "BAT-500",
+        "description": "Battery pack, 36 V 500 Wh",
         "unit": "NOS",
-        "food_contact": true
+        "cell_safety": true
        },
        {
-        "item_code": "GSK-SIL-05L-R",
-        "description": "Gasket, silicone, 5 L (rework)",
+        "item_code": "BAT-500-R",
+        "description": "Battery pack, 36 V 500 Wh (refurbished)",
         "unit": "NOS",
-        "food_contact": true
+        "cell_safety": true
        },
        {
-        "item_code": "GSK-SIL-03L",
-        "description": "Gasket, silicone, 3 L",
+        "item_code": "BAT-375",
+        "description": "Battery pack, 36 V 375 Wh",
         "unit": "NOS",
-        "food_contact": true
+        "cell_safety": true
        },
        {
-        "item_code": "GSK-SIL-07L",
-        "description": "Gasket, silicone, 7.5 L",
+        "item_code": "BAT-750",
+        "description": "Battery pack, 48 V 750 Wh",
         "unit": "NOS",
-        "food_contact": true
+        "cell_safety": true
+       },
+       {
+        "item_code": "BOX-BIKE-01",
+        "description": "Carton, bike shipping",
+        "unit": "NOS",
+        "cell_safety": false
+       },
+       {
+        "item_code": "MNT-FRM-01",
+        "description": "Battery mount, down-tube, long",
+        "unit": "NOS",
+        "cell_safety": false
        }
       ],
-      "note": "Inactive (cannot be ordered): GSK-RUB-05L."
+      "note": "Inactive (cannot be ordered): BAT-400-OLD."
+     }
+    },
+    {
+     "tool": "search_policy",
+     "args": {
+      "question": "city e-bike battery pack"
+     },
+     "result": {
+      "ok": true,
+      "answer_in_documents": true,
+      "clauses": [
+       {
+        "cite": "MAN-DD-72 §3.1",
+        "document": "Ledgerline ERP 7.2 Data Dictionary, Purchasing v7.2.3",
+        "effective": "2025-01-15",
+        "status": "in force",
+        "heading": "3. Item master (itm_*)",
+        "text": "3.1 itm_cd (Item code): the item's code, for example BAT-500 for the city e-bike battery pack.",
+        "score": 5.99
+       }
+      ],
+      "note": "Quote the rule with its citation, e.g. (POL-PUR-001 §6.2). If a clause's status says it is replaced or not yet in force, follow the status. Stock, budgets and statuses come from Ledgerline."
      }
     },
     {
      "tool": "check_stock",
      "args": {
-      "item_code": "GSK-SIL-05L"
+      "item_code": "BAT-500"
      },
      "result": {
       "ok": true,
-      "item_code": "GSK-SIL-05L",
-      "description": "Gasket, silicone, 5 L",
+      "item_code": "BAT-500",
+      "description": "Battery pack, 36 V 500 Wh",
       "unit": "NOS",
       "warehouses": [
        {
-        "warehouse": "WH-PUN-STR",
-        "name": "Pune main stores",
-        "on_hand": 54000,
+        "warehouse": "WH-MAN-STR",
+        "name": "Manchester main stores",
+        "on_hand": 5400,
         "allocated": 0,
         "on_order": 0,
-        "free": 54000
+        "free": 5400
        },
        {
-        "warehouse": "WH-CHK-STR",
-        "name": "Chakan stores",
-        "on_hand": 12000,
+        "warehouse": "WH-LDS-STR",
+        "name": "Leeds stores",
+        "on_hand": 1200,
         "allocated": 0,
         "on_order": 0,
-        "free": 12000
+        "free": 1200
        }
       ],
-      "free_total": 66000,
+      "free_total": 6600,
       "on_order_total": 0,
-      "reorder_level": 30000,
+      "reorder_level": 3000,
       "cover_days": 11,
       "below_reorder": false
+     }
+    },
+    {
+     "tool": "check_stock",
+     "args": {
+      "item_code": "BAT-500-R"
+     },
+     "result": {
+      "ok": false,
+      "error": "Ledgerline has no stock record for BAT-500-R.",
+      "next_step": "Check the item code with find_item.",
+      "ledgerline_code": ""
      }
     }
    ],
    "done": true,
    "user_turns": 1,
-   "words_typed": 15,
-   "chars_typed": 79,
-   "tool_calls": 2,
-   "seconds": 7.8
+   "taps": 0,
+   "typed_messages": 1,
+   "words_typed": 16,
+   "chars_typed": 80,
+   "tool_calls": 4,
+   "tool_errors": 1,
+   "seconds": 22.2
   },
   {
    "id": "request",
    "title": "Raise the purchase request",
-   "user": "KJOSHI",
-   "who": "Kavita",
+   "user": "ECLARKE",
+   "who": "Emma",
    "turns": [
     {
-     "user": "Raise a purchase request for 20,000 of them for the Diwali run, needed by 9 November.",
-     "reply": "Here is the preview for the purchase request:\n\n* **Item:** 20,000 NOS of 5 L silicone gaskets (`GSK-SIL-05L`)\n* **Cost Centre & Need By:** PRD-07 (Diwali production run), needed by 09-Nov-2026\n* **Estimated Value:** Rs 2,69,040 (exceeds your Rs 2,50,000 limit; will go to RMEHTA for approval)\n\nShall I submit this purchase request?",
+     "user": "Raise a purchase request for 2,000 of them for the spring-launch run, needed by 9 November.",
+     "reply": "Here is the preview for your purchase request:\n\n* **Item & Quantity:** 2,000 × BAT-500 (Battery pack, 36 V 500 Wh)\n* **Cost Centre & Need By:** PRD-07 (Spring launch run), needed by 09/11/2026\n* **Estimated Value:** £273,600 (routes to D. Okafor for approval as it exceeds your £250,000 limit)\n\nWould you like me to submit this request?",
      "tools": [
+      "check_budget",
       "check_budget",
       "create_purchase_request"
      ],
-     "seconds": 7.45
+     "seconds": 12.05
     },
     {
      "user": "Yes, go ahead.",
-     "reply": "Purchase request **PR/2026/04417** for 20,000 NOS of 5 L silicone gaskets (estimated at Rs 2,69,040) has been submitted. \n\nIts current status is **Waiting for approval** from RMEHTA. Once approved, we can raise the purchase order.",
+     "reply": "Purchase request **PR/2026/04417** for 2,000 battery packs (£273,600) has been submitted. \n\nIts status is **WAITING FOR APPROVAL** from D. Okafor. Once approved, the purchase order can be created.",
      "tools": [
       "create_purchase_request"
      ],
-     "seconds": 4.1
+     "seconds": 8.07
     }
    ],
    "cards": [
@@ -150,11 +218,11 @@
       "open": [
        {
         "code": "PRD-07",
-        "name": "Diwali production run"
+        "name": "Spring launch run"
        },
        {
         "code": "PRD-03",
-        "name": "3-litre line"
+        "name": "Cargo e-bike line"
        },
        {
         "code": "MNT-01",
@@ -168,27 +236,41 @@
      }
     },
     {
-     "tool": "create_purchase_request",
+     "tool": "check_budget",
      "args": {
-      "item_code": "GSK-SIL-05L",
-      "confirm": false,
-      "quantity": 20000,
-      "need_by": "2026-11-09",
       "cost_centre": "PRD-07"
      },
      "result": {
       "ok": true,
+      "code": "PRD-07",
+      "name": "Spring launch run",
+      "open": true,
+      "closed_on": null,
+      "budget_left": 1190000.0
+     }
+    },
+    {
+     "tool": "create_purchase_request",
+     "args": {
+      "need_by": "2026-11-09",
+      "quantity": 2000,
+      "confirm": false,
+      "cost_centre": "PRD-07",
+      "item_code": "BAT-500"
+     },
+     "result": {
+      "ok": true,
       "preview": {
-       "item_code": "GSK-SIL-05L",
-       "quantity": 20000,
-       "estimated_rate": 11.4,
-       "estimated_value": 269040.0,
+       "item_code": "BAT-500",
+       "quantity": 2000,
+       "estimated_rate": 114.0,
+       "estimated_value": 273600.0,
        "cost_centre": "PRD-07",
        "cost_centre_state": "OK",
        "need_by": "2026-11-09",
        "needs_approval": true,
        "your_limit": 250000.0,
-       "approver": "RMEHTA"
+       "approver": "DOKAFOR"
       },
       "warnings": [],
       "note": "Nothing has been saved. Show this to the user and ask to confirm."
@@ -197,57 +279,60 @@
     {
      "tool": "create_purchase_request",
      "args": {
-      "item_code": "GSK-SIL-05L",
-      "cost_centre": "PRD-07",
       "need_by": "2026-11-09",
+      "cost_centre": "PRD-07",
+      "quantity": 2000,
       "confirm": true,
-      "quantity": 20000
+      "item_code": "BAT-500"
      },
      "result": {
       "ok": true,
       "request_no": "PR/2026/04417",
       "status": "WAITING FOR APPROVAL",
       "status_code": "PA",
-      "item_code": "GSK-SIL-05L",
-      "quantity": 20000,
-      "estimated_value": 269040.0,
+      "item_code": "BAT-500",
+      "quantity": 2000,
+      "estimated_value": 273600.0,
       "cost_centre": "PRD-07",
       "need_by": "2026-11-09",
-      "approver": "RMEHTA",
+      "approver": "DOKAFOR",
       "approved_by": null,
-      "next_step": "Waiting for RMEHTA. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+      "next_step": "Waiting for DOKAFOR. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
      }
     }
    ],
    "done": true,
    "user_turns": 2,
-   "words_typed": 19,
-   "chars_typed": 99,
-   "tool_calls": 3,
-   "seconds": 11.6
+   "taps": 1,
+   "typed_messages": 1,
+   "words_typed": 16,
+   "chars_typed": 91,
+   "tool_calls": 4,
+   "tool_errors": 0,
+   "seconds": 20.1
   },
   {
    "id": "approve",
-   "title": "Approve it, as Rohit",
-   "user": "RMEHTA",
-   "who": "Rohit",
+   "title": "Approve it, as Daniel",
+   "user": "DOKAFOR",
+   "who": "Daniel",
    "turns": [
     {
-     "user": "Approve Kavita's gasket request.",
-     "reply": "Here is the preview for Kavita's request:\n\n* **Request:** PR/2026/04417\n* **Item:** GSK-SIL-05L (20,000 units for PRD-07, needed by 09 Nov 2026)\n* **Estimated Value:** Rs 2,69,040\n\nShall I go ahead and approve this?",
+     "user": "Approve Emma's battery pack request.",
+     "reply": "Purchase request **PR/2026/04417** from Emma Clarke is waiting for your approval:\n- **Item:** 2,000 × BAT-500 (500 Wh battery pack)\n- **Cost centre:** PRD-07 | **Need by:** 09/11/2026\n- **Estimated value:** £273,600\n\nShall I go ahead and approve this?",
      "tools": [
       "list_my_approvals",
       "order_status"
      ],
-     "seconds": 9.86
+     "seconds": 16.55
     },
     {
      "user": "Yes, go ahead.",
-     "reply": "Purchase Request **PR/2026/04417** has been approved. \n\nThe status is now **APPROVED**. A purchase order can now be raised against this request.",
+     "reply": "Purchase request **PR/2026/04417** has been approved. \n\nThe status is now **APPROVED**. Emma can now create the purchase order against this request.",
      "tools": [
       "approve_purchase_request"
      ],
-     "seconds": 10.11
+     "seconds": 4.55
     }
    ],
    "cards": [
@@ -260,20 +345,20 @@
        {
         "doc_type": "PO",
         "doc_no": "PO/2026/01179",
-        "requested_by": "KJOSHI",
+        "requested_by": "ECLARKE",
         "requested_on": "2026-10-23",
-        "value": 453120.0,
-        "item_code": "LID-SS-05L",
+        "value": 460800.0,
+        "item_code": "CHG-4A-01",
         "quantity": 4000
        },
        {
         "doc_type": "PR",
         "doc_no": "PR/2026/04417",
-        "requested_by": "KJOSHI",
-        "requested_on": "2026-10-26T09:02:48+05:30",
-        "value": 269040.0,
-        "item_code": "GSK-SIL-05L",
-        "quantity": 20000
+        "requested_by": "ECLARKE",
+        "requested_on": "2026-10-26T09:03:58+00:00",
+        "value": 273600.0,
+        "item_code": "BAT-500",
+        "quantity": 2000
        }
       ],
       "count": 2
@@ -289,14 +374,14 @@
       "request_no": "PR/2026/04417",
       "status": "WAITING FOR APPROVAL",
       "status_code": "PA",
-      "item_code": "GSK-SIL-05L",
-      "quantity": 20000,
-      "estimated_value": 269040.0,
+      "item_code": "BAT-500",
+      "quantity": 2000,
+      "estimated_value": 273600.0,
       "cost_centre": "PRD-07",
       "need_by": "2026-11-09",
-      "approver": "RMEHTA",
+      "approver": "DOKAFOR",
       "approved_by": null,
-      "next_step": "Waiting for RMEHTA. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+      "next_step": "Waiting for DOKAFOR. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
      }
     },
     {
@@ -310,49 +395,52 @@
       "request_no": "PR/2026/04417",
       "status": "APPROVED",
       "status_code": "AP",
-      "decided_by": "RMEHTA",
+      "decided_by": "DOKAFOR",
       "next_step": "The requester can now create_purchase_order with request_no=PR/2026/04417."
      }
     }
    ],
    "done": true,
    "user_turns": 2,
-   "words_typed": 7,
-   "chars_typed": 46,
+   "taps": 1,
+   "typed_messages": 1,
+   "words_typed": 5,
+   "chars_typed": 36,
    "tool_calls": 3,
-   "seconds": 20.0
+   "tool_errors": 0,
+   "seconds": 21.1
   },
   {
    "id": "order",
    "title": "Make and release the order",
-   "user": "KJOSHI",
-   "who": "Kavita",
+   "user": "ECLARKE",
+   "who": "Emma",
    "turns": [
     {
-     "user": "Rohit has approved it. Order the gaskets from Deccan Polymers and send the order to them.",
-     "reply": "Here is the preview for the purchase order:\n\n* **Supplier:** Deccan Polymers (`DP-RJK-0042`)\n* **Item & Quantity:** 20,000 NOS of 5 L silicone gaskets (`GSK-SIL-05L`) against PR/2026/04417\n* **Total Value:** Rs 2,80,840 (basic Rs 2,38,000 + 18% IGST Rs 42,840)\n\nShall I create this purchase order?",
+     "user": "Daniel has approved it. Order the battery packs from Voltway Cells and send the order to them.",
+     "reply": "Here is the preview for the purchase order:\n\n* **Supplier:** Voltway Cells (VC-EIN-0042)\n* **Item & Quantity:** 2,000 × BAT-500 against PR/2026/04417 (PRD-07)\n* **Total Value:** £238,000 net (£285,600 gross incl. VAT)\n\nShall I create this purchase order?",
      "tools": [
       "order_status",
       "find_supplier",
       "create_purchase_order"
      ],
-     "seconds": 8.59
+     "seconds": 10.86
     },
     {
      "user": "Yes, go ahead.",
-     "reply": "Purchase order **PO/2026/01182** for Rs 2,80,840 has been created. \n\nIts current status is **Approved, not yet released**. It has not been sent to the supplier yet.\n\nShall I release PO/2026/01182 to Deccan Polymers?",
+     "reply": "Purchase order **PO/2026/01182** for 2,000 battery packs (£285,600 gross) has been created. \n\nIts status is **APPROVED, NOT YET RELEASED** (it has not yet been sent to Voltway Cells).\n\nShall I release this purchase order to the supplier now?",
      "tools": [
       "create_purchase_order"
      ],
-     "seconds": 6.44
+     "seconds": 6.35
     },
     {
      "user": "Yes, go ahead.",
-     "reply": "Purchase order **PO/2026/01182** for Rs 2,80,840 has been **released to the supplier**. \n\nThe order is now officially placed with Deccan Polymers.",
+     "reply": "Purchase order **PO/2026/01182** has been **RELEASED to the supplier**. \n\nThe order for 2,000 battery packs (£285,600) is now placed and has been sent to Voltway Cells.",
      "tools": [
       "release_purchase_order"
      ],
-     "seconds": 5.62
+     "seconds": 5.92
     }
    ],
    "cards": [
@@ -366,72 +454,72 @@
       "request_no": "PR/2026/04417",
       "status": "APPROVED",
       "status_code": "AP",
-      "item_code": "GSK-SIL-05L",
-      "quantity": 20000,
-      "estimated_value": 269040.0,
+      "item_code": "BAT-500",
+      "quantity": 2000,
+      "estimated_value": 273600.0,
       "cost_centre": "PRD-07",
       "need_by": "2026-11-09",
       "approver": null,
-      "approved_by": "RMEHTA",
+      "approved_by": "DOKAFOR",
       "next_step": "Approved. Next: create_purchase_order with request_no=PR/2026/04417 and a supplier."
      }
     },
     {
      "tool": "find_supplier",
      "args": {
-      "name": "Deccan Polymers"
+      "name": "Voltway Cells"
      },
      "result": {
       "ok": true,
       "matches": [
        {
-        "supplier_code": "DP-RJK-0042",
-        "name": "Deccan Polymers",
-        "city": "Rajkot",
-        "state": "GJ",
+        "supplier_code": "VC-EIN-0042",
+        "name": "Voltway Cells",
+        "city": "Eindhoven",
+        "state": "NL",
         "status": "ACTIVE",
         "match": 1.0,
-        "food_grade_certificate": "valid"
+        "cell_safety_certificate": "valid"
        },
        {
-        "supplier_code": "DPI-AMD-0107",
-        "name": "Deccan Paints & Inks",
-        "city": "Ahmedabad",
-        "state": "GJ",
+        "supplier_code": "VPC-ROT-0107",
+        "name": "Voltway Paints & Coatings",
+        "city": "Rotterdam",
+        "state": "NL",
         "status": "ACTIVE",
-        "match": 0.52,
-        "food_grade_certificate": "none"
+        "match": 0.55,
+        "cell_safety_certificate": "none"
        },
        {
-        "supplier_code": "DP-RJK-0009",
-        "name": "Deccan Polymers (old code, do not use)",
-        "city": "Rajkot",
-        "state": "GJ",
+        "supplier_code": "VC-EIN-0009",
+        "name": "Voltway Cells (old code, do not use)",
+        "city": "Eindhoven",
+        "state": "NL",
         "status": "BLOCKED",
         "match": 1.0,
-        "food_grade_certificate": "none"
+        "cell_safety_certificate": "none"
        }
       ],
-      "hint": "Blocked codes, never use: DP-RJK-0009."
+      "hint": "Blocked codes, never use: VC-EIN-0009."
      }
     },
     {
      "tool": "create_purchase_order",
      "args": {
-      "confirm": false,
       "request_no": "PR/2026/04417",
-      "supplier_code": "DP-RJK-0042"
+      "confirm": false,
+      "supplier_code": "VC-EIN-0042"
      },
      "result": {
       "ok": true,
       "preview": {
-       "supplier": "Deccan Polymers (DP-RJK-0042)",
-       "item_code": "GSK-SIL-05L",
-       "quantity": 20000,
-       "rate": 11.9,
-       "tax_code": "GST18-INTER",
+       "supplier": "Voltway Cells (VC-EIN-0042)",
+       "item_code": "BAT-500",
+       "quantity": 2000,
+       "rate": 119.0,
+       "tax_code": "VAT20-RC",
        "basic_value": 238000.0,
-       "gross_value": 280840.0,
+       "gross_value": 285600.0,
        "cost_centre": "PRD-07",
        "cost_centre_state": "OK",
        "need_by": "2026-11-09",
@@ -444,32 +532,32 @@
     {
      "tool": "create_purchase_order",
      "args": {
-      "confirm": true,
-      "supplier_code": "DP-RJK-0042",
-      "request_no": "PR/2026/04417"
+      "request_no": "PR/2026/04417",
+      "supplier_code": "VC-EIN-0042",
+      "confirm": true
      },
      "result": {
       "ok": true,
       "po_no": "PO/2026/01182",
       "status": "APPROVED, NOT YET RELEASED",
       "status_code": "AP",
-      "supplier_code": "DP-RJK-0042",
-      "item_code": "GSK-SIL-05L",
-      "quantity": 20000,
-      "rate": 11.9,
-      "gross_value": 280840.0,
+      "supplier_code": "VC-EIN-0042",
+      "item_code": "BAT-500",
+      "quantity": 2000,
+      "rate": 119.0,
+      "gross_value": 285600.0,
       "cost_centre": "PRD-07",
       "need_by": "2026-11-09",
       "request_no": "PR/2026/04417",
-      "created_by": "KJOSHI",
-      "approved_by": "RMEHTA",
+      "created_by": "ECLARKE",
+      "approved_by": "DOKAFOR",
       "approval": {
        "doc_no": "PR/2026/04417",
-       "approver": "RMEHTA",
+       "approver": "DOKAFOR",
        "status": "APPROVED"
       },
       "warning": null,
-      "idempotency_key": "K8A0FEC59B989",
+      "idempotency_key": "K089EA6157478",
       "sent_to_supplier": false,
       "tool": "create_purchase_order",
       "tool_version": "1.0",
@@ -486,23 +574,23 @@
       "po_no": "PO/2026/01182",
       "status": "RELEASED to the supplier",
       "status_code": "RL",
-      "supplier_code": "DP-RJK-0042",
-      "item_code": "GSK-SIL-05L",
-      "quantity": 20000,
-      "rate": 11.9,
-      "gross_value": 280840.0,
+      "supplier_code": "VC-EIN-0042",
+      "item_code": "BAT-500",
+      "quantity": 2000,
+      "rate": 119.0,
+      "gross_value": 285600.0,
       "cost_centre": "PRD-07",
       "need_by": "2026-11-09",
       "request_no": "PR/2026/04417",
-      "created_by": "KJOSHI",
-      "approved_by": "RMEHTA",
+      "created_by": "ECLARKE",
+      "approved_by": "DOKAFOR",
       "approval": {
        "doc_no": "PR/2026/04417",
-       "approver": "RMEHTA",
+       "approver": "DOKAFOR",
        "status": "APPROVED"
       },
       "warning": null,
-      "idempotency_key": "K8A0FEC59B989",
+      "idempotency_key": "K089EA6157478",
       "sent_to_supplier": true,
       "tool": "release_purchase_order",
       "tool_version": "1.0"
@@ -511,32 +599,35 @@
    ],
    "done": true,
    "user_turns": 3,
-   "words_typed": 22,
-   "chars_typed": 117,
+   "taps": 2,
+   "typed_messages": 1,
+   "words_typed": 17,
+   "chars_typed": 94,
    "tool_calls": 5,
-   "seconds": 20.7
+   "tool_errors": 0,
+   "seconds": 23.1
   },
   {
    "id": "receive",
-   "title": "Receive the goods, as Neha",
-   "user": "NDESAI",
-   "who": "Neha",
+   "title": "Receive the goods, as Aiko",
+   "user": "ATANAKA",
+   "who": "Aiko",
    "turns": [
     {
-     "user": "12,000 gaskets from Deccan Polymers arrived today against PO/2026/01182.",
-     "reply": "Here is the preview to record the goods receipt (GRN):\n\n- **PO:** PO/2026/01182 (Deccan Polymers)\n- **Item:** GSK-SIL-05L (Receiving: 12,000 | Remaining balance: 8,000)\n- **Warehouse:** WH-PUN-STR\n\nShall I go ahead and record this receipt?",
+     "user": "1,200 battery packs from Voltway Cells arrived today against PO/2026/01182, delivery note DN-4471.",
+     "reply": "**Goods Receipt Preview (PO/2026/01182 - Voltway Cells)**\n- **Item & Quantity:** 1,200 × BAT-500 into WH-MAN-STR (800 remaining on order)\n- **Delivery Note:** DN-4471\n\nShall I go ahead and book these goods in?",
      "tools": [
       "receive_goods"
      ],
-     "seconds": 6.84
+     "seconds": 7.59
     },
     {
      "user": "Yes, go ahead.",
-     "reply": "Goods receipt **GRN/2026/30001** has been recorded for 12,000 gaskets against PO/2026/01182. \n\nThe remaining balance on the order is 8,000 units, and the updated stock for GSK-SIL-05L is 66,000 units.",
+     "reply": "The goods receipt has been booked under **GRN/2026/30001**. \n\n1,200 battery packs (BAT-500) have been received into WH-MAN-STR, leaving a balance of 800 on PO/2026/01182. Total stock on hand is now 6,600.",
      "tools": [
       "receive_goods"
      ],
-     "seconds": 4.36
+     "seconds": 7.61
     }
    ],
    "cards": [
@@ -544,20 +635,21 @@
      "tool": "receive_goods",
      "args": {
       "po_no": "PO/2026/01182",
+      "quantity": 1200,
       "confirm": false,
-      "quantity": 12000
+      "remarks": "DN-4471"
      },
      "result": {
       "ok": true,
       "preview": {
        "po_no": "PO/2026/01182",
-       "supplier_code": "DP-RJK-0042",
-       "item_code": "GSK-SIL-05L",
-       "ordered": 20000,
+       "supplier_code": "VC-EIN-0042",
+       "item_code": "BAT-500",
+       "ordered": 2000,
        "received_before": 0,
-       "receiving_now": 12000,
-       "balance_after": 8000,
-       "warehouse": "WH-PUN-STR"
+       "receiving_now": 1200,
+       "balance_after": 800,
+       "warehouse": "WH-MAN-STR"
       },
       "note": "Nothing has been saved. Confirm the count with the user."
      }
@@ -565,71 +657,76 @@
     {
      "tool": "receive_goods",
      "args": {
-      "confirm": true,
+      "quantity": 1200,
       "po_no": "PO/2026/01182",
-      "quantity": 12000
+      "confirm": true,
+      "remarks": "DN-4471"
      },
      "result": {
       "ok": true,
       "grn_no": "GRN/2026/30001",
       "po_no": "PO/2026/01182",
-      "item_code": "GSK-SIL-05L",
-      "received": 12000,
-      "balance": 8000,
+      "item_code": "BAT-500",
+      "received": 1200,
+      "balance": 800,
       "order_closed": false,
-      "stock_after": 66000
+      "stock_after": 6600
      }
     }
    ],
    "done": true,
    "user_turns": 2,
-   "words_typed": 12,
-   "chars_typed": 86,
+   "taps": 1,
+   "typed_messages": 1,
+   "words_typed": 13,
+   "chars_typed": 98,
    "tool_calls": 2,
-   "seconds": 11.2
+   "tool_errors": 0,
+   "seconds": 15.2
   },
   {
    "id": "receive2",
    "title": "Receive the rest",
-   "user": "NDESAI",
-   "who": "Neha",
+   "user": "ATANAKA",
+   "who": "Aiko",
    "turns": [
     {
-     "user": "The other 8,000 have come in too.",
-     "reply": "Here is the preview to record the goods receipt for the remaining balance:\n\n- **PO:** PO/2026/01182 (Deccan Polymers)\n- **Item:** GSK-SIL-05L (Receiving: 8,000 | Remaining balance: 0, order will close)\n- **Warehouse:** WH-PUN-STR\n\nShall I go ahead and record this receipt?",
+     "user": "The other 800 have come in too, delivery note DN-4486.",
+     "reply": "**Goods Receipt Preview (PO/2026/01182 - Voltway Cells)**\n- **Item & Quantity:** 800 × BAT-500 into WH-MAN-STR (completes order, balance 0)\n- **Delivery Note:** DN-4486\n\nShall I confirm and book this receipt?",
      "tools": [
       "receive_goods"
      ],
-     "seconds": 3.83
+     "seconds": 6.62
     },
     {
      "user": "Yes, go ahead.",
-     "reply": "Goods receipt **GRN/2026/30002** has been recorded for the remaining 8,000 gaskets against PO/2026/01182. \n\nThe purchase order is now fully received and closed. Stock for GSK-SIL-05L stands at 74,000 units.",
+     "reply": "The goods receipt has been booked under **GRN/2026/30002**.\n\nThe final 800 battery packs (BAT-500) have been received into WH-MAN-STR, bringing stock to 7,400. The balance is now 0, and PO/2026/01182 is closed.",
      "tools": [
       "receive_goods"
      ],
-     "seconds": 3.65
+     "seconds": 4.75
     }
    ],
    "cards": [
     {
      "tool": "receive_goods",
      "args": {
-      "po_no": "PO/2026/01182",
+      "remarks": "DN-4486",
       "confirm": false,
-      "quantity": 8000
+      "quantity": 800,
+      "po_no": "PO/2026/01182"
      },
      "result": {
       "ok": true,
       "preview": {
        "po_no": "PO/2026/01182",
-       "supplier_code": "DP-RJK-0042",
-       "item_code": "GSK-SIL-05L",
-       "ordered": 20000,
-       "received_before": 12000,
-       "receiving_now": 8000,
+       "supplier_code": "VC-EIN-0042",
+       "item_code": "BAT-500",
+       "ordered": 2000,
+       "received_before": 1200,
+       "receiving_now": 800,
        "balance_after": 0,
-       "warehouse": "WH-PUN-STR"
+       "warehouse": "WH-MAN-STR"
       },
       "note": "Nothing has been saved. Confirm the count with the user."
      }
@@ -637,52 +734,57 @@
     {
      "tool": "receive_goods",
      "args": {
-      "po_no": "PO/2026/01182",
+      "quantity": 800,
+      "remarks": "DN-4486",
       "confirm": true,
-      "quantity": 8000
+      "po_no": "PO/2026/01182"
      },
      "result": {
       "ok": true,
       "grn_no": "GRN/2026/30002",
       "po_no": "PO/2026/01182",
-      "item_code": "GSK-SIL-05L",
-      "received": 8000,
+      "item_code": "BAT-500",
+      "received": 800,
       "balance": 0,
       "order_closed": true,
-      "stock_after": 74000
+      "stock_after": 7400
      }
     }
    ],
    "done": true,
    "user_turns": 2,
+   "taps": 1,
+   "typed_messages": 1,
    "words_typed": 10,
-   "chars_typed": 47,
+   "chars_typed": 54,
    "tool_calls": 2,
-   "seconds": 7.5
+   "tool_errors": 0,
+   "seconds": 11.4
   },
   {
-   "id": "shakti",
+   "id": "brightcell",
    "title": "A cheaper supplier?",
-   "user": "KJOSHI",
-   "who": "Kavita",
+   "user": "ECLARKE",
+   "who": "Emma",
    "turns": [
     {
-     "user": "Shakti Seals in Vadodara quotes Rs 10.40 for the same gasket. Can we buy from them instead?",
-     "reply": "No, we cannot order from Shakti Seals right now:\n\n1. **Food-grade certification required:** Silicone gaskets are food-contact items and, per policy (POL-PUR-001 §6.2, POL-SUP-003 §4.1), can only be bought from suppliers holding a verified food-grade certificate on file in Bahi.\n2. **Not registered:** Shakti Seals is not registered in Bahi. They would first need to be onboarded and have their food-grade certificate verified.\n3. **Existing order released:** PO/2026/01182 has already been released to Deccan Polymers.",
+     "user": "Brightcell Energy in Lyon quotes £104.00 for the same battery pack. Can we buy from them instead?",
+     "reply": "Not right away. Brightcell Energy is not currently registered in Ledgerline, and battery packs cannot be ordered from them until:\n\n1. **Supplier Onboarding:** They must be formally onboarded with full documentation (POL-PUR-001 §6.3, POL-SUP-003 §3.2).\n2. **UN 38.3 Certification:** As battery packs are lithium-cell parts, we can only purchase from suppliers with a valid UN 38.3 safety certificate checked and on file before an order is placed (POL-PUR-001 §6.2, POL-SUP-003 §4.1).\n\nAdditionally, PO/2026/01182 has already been released to Voltway Cells.",
      "tools": [
       "find_supplier",
       "search_policy",
+      "search_policy",
       "search_policy"
      ],
-     "seconds": 18.76
+     "seconds": 15.41
     }
    ],
    "cards": [
     {
      "tool": "find_supplier",
      "args": {
-      "name": "Shakti Seals",
-      "city": "Vadodara"
+      "name": "Brightcell Energy",
+      "city": "Lyon"
      },
      "result": {
       "ok": true,
@@ -693,56 +795,105 @@
     {
      "tool": "search_policy",
      "args": {
-      "question": "Can we buy food contact gaskets from a supplier without food grade certificate or switch suppliers after PO release?"
+      "question": "lithium battery supplier safety certificate UN 38.3 new supplier onboarding"
      },
      "result": {
       "ok": true,
       "answer_in_documents": true,
       "clauses": [
        {
-        "cite": "POL-PUR-001 §6.2",
-        "document": "Purchase Policy v4.1",
-        "effective": "2026-04-01",
-        "status": "in force",
-        "heading": "6. Supplier qualification",
-        "text": "6.2 **Parts that come into contact with food** (gaskets, lids, body blanks and any other item marked food-contact in the item master) may be bought only from a supplier holding a **valid food-grade certificate** on file in Bahi. The certificate must be uploaded and checked **before the first order** is placed. An expired certificate counts as no certificate.",
-        "score": 5.02
-       },
-       {
         "cite": "POL-SUP-003 §4.1",
         "document": "Supplier Policy v2.3",
         "effective": "2026-04-01",
         "status": "in force",
-        "heading": "4. Food-grade certificates",
-        "text": "4.1 A supplier of any part that comes into contact with food (gaskets, lids, body blanks, and any item marked food-contact in the item master) must hold a food-grade certificate. This is the certificate referred to in Purchase Policy §6.2.",
-        "score": 3.81
+        "heading": "4. UN 38.3 certificates",
+        "text": "4.1 A supplier of any lithium-cell part (battery packs, hub motors, chargers, and any item marked lithium-cell in the item master) must hold a UN 38.3 certificate. This is the certificate referred to in Purchase Policy §6.2.",
+        "score": 7.52
        },
        {
         "cite": "POL-SUP-003 §4.5",
         "document": "Supplier Policy v2.3",
         "effective": "2026-04-01",
         "status": "in force",
-        "heading": "4. Food-grade certificates",
-        "text": "4.5 An expired certificate counts as no certificate. The supplier stays ACTIVE in the master, but no food-contact part may be ordered from it until a new certificate is uploaded and checked.",
-        "score": 2.42
+        "heading": "4. UN 38.3 certificates",
+        "text": "4.5 An expired certificate counts as no certificate. The supplier stays ACTIVE in the master, but no lithium-cell part may be ordered from it until a new certificate is uploaded and checked.",
+        "score": 6.64
        },
        {
-        "cite": "POL-SUP-003 §4.7",
+        "cite": "POL-PUR-001 §6.2",
+        "document": "Purchase Policy v4.1",
+        "effective": "2026-04-01",
+        "status": "in force",
+        "heading": "6. Supplier qualification",
+        "text": "6.2 **Lithium-cell parts** (battery packs, hub motors, chargers and any other item marked lithium-cell in the item master) may be bought only from a supplier holding a **valid UN 38.3 certificate** on file in Ledgerline. The certificate must be uploaded and checked **before the first order** is placed. An expired certificate counts as no certificate.",
+        "score": 6.24
+       },
+       {
+        "cite": "POL-SUP-003 §4.2",
         "document": "Supplier Policy v2.3",
         "effective": "2026-04-01",
         "status": "in force",
-        "heading": "4. Food-grade certificates",
-        "text": "4.7 Bahi does not stop an order to a supplier without a certificate. The check in this section is done by the person raising the order, and by the approver.",
-        "score": 1.52
+        "heading": "4. UN 38.3 certificates",
+        "text": "4.2 The certificate must be a test report from a laboratory accredited for lithium-cell materials (for example an UN 38.3-notified laboratory), or a BIS conformity certificate for stainless steel grade 304 or better.",
+        "score": 6.05
        }
       ],
-      "note": "Quote the rule with its citation, e.g. (POL-PUR-001 §6.2). If a clause's status says it is replaced or not yet in force, follow the status. Stock, budgets and statuses come from Bahi."
+      "note": "Quote the rule with its citation, e.g. (POL-PUR-001 §6.2). If a clause's status says it is replaced or not yet in force, follow the status. Stock, budgets and statuses come from Ledgerline."
      }
     },
     {
      "tool": "search_policy",
      "args": {
-      "question": "Can we cancel a released purchase order or switch supplier?"
+      "question": "registering a new supplier or changing orders"
+     },
+     "result": {
+      "ok": true,
+      "answer_in_documents": true,
+      "clauses": [
+       {
+        "cite": "POL-SUP-003 §3.2",
+        "document": "Supplier Policy v2.3",
+        "effective": "2026-04-01",
+        "status": "in force",
+        "heading": "3. Onboarding a new supplier",
+        "text": "3.2 Before the supplier is created in Ledgerline (screen PUR-SUP-01), the proposer must collect: the VAT registration certificate (VAT number), the company registration number, a bank letter confirming the account, proof of insurance, and the signed Supplier Code of Conduct.",
+        "score": 4.68
+       },
+       {
+        "cite": "POL-PUR-001 §6.3",
+        "document": "Purchase Policy v4.1",
+        "effective": "2026-04-01",
+        "status": "in force",
+        "heading": "6. Supplier qualification",
+        "text": "6.3 A new supplier is onboarded under the Supplier Policy (POL-SUP-003) before any order is placed with them.",
+        "score": 4.07
+       },
+       {
+        "cite": "AMD-SUP-2026-02 §1.2",
+        "document": "Amendment 2 to the Supplier Policy v1.0",
+        "effective": "2026-09-01",
+        "status": "in force",
+        "heading": "1. What changes",
+        "text": "1.2 A certificate that meets the old rule (issued within 24 months and not expired) but not the new one counts as no certificate for new orders from 1 September 2026. Orders released before that date are not affected.",
+        "score": 3.23
+       },
+       {
+        "cite": "POL-SUP-003 §3.1",
+        "document": "Supplier Policy v2.3",
+        "effective": "2026-04-01",
+        "status": "in force",
+        "heading": "3. Onboarding a new supplier",
+        "text": "3.1 A new supplier is proposed by a purchase executive or senior buyer, with at least one written quotation and the reason an existing supplier cannot meet the need.",
+        "score": 2.76
+       }
+      ],
+      "note": "Quote the rule with its citation, e.g. (POL-PUR-001 §6.2). If a clause's status says it is replaced or not yet in force, follow the status. Stock, budgets and statuses come from Ledgerline."
+     }
+    },
+    {
+     "tool": "search_policy",
+     "args": {
+      "question": "cancel released purchase order"
      },
      "result": {
       "ok": true,
@@ -750,61 +901,64 @@
       "clauses": [
        {
         "cite": "MAN-PUR-72 §14.5",
-        "document": "Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3",
+        "document": "Ledgerline ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3",
         "effective": "2025-01-15",
         "status": "in force",
         "heading": "14. Purchase order amendment and cancellation (PUR-POM-06) › 14.5 Cancelling",
-        "text": "Press Cancel and enter a reason. The status becomes CN, committed budget is released, and for a released order the quantity is removed from stock on order. Tell the supplier yourself; Bahi does not send a cancellation notice.",
-        "score": 4.57
-       },
-       {
-        "cite": "MAN-PUR-72 §14.4",
-        "document": "Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3",
-        "effective": "2025-01-15",
-        "status": "in force",
-        "heading": "14. Purchase order amendment and cancellation (PUR-POM-06) › 14.4 Moving a Draft off a closed cost centre",
-        "text": "To rescue an order stuck in Draft because its cost centre was closed, amend the cost centre to an open one. The order then becomes AP or PA by the normal rules, and can be released once approved.",
-        "score": 2.47
+        "text": "Press Cancel and enter a reason. The status becomes CN, committed budget is released, and for a released order the quantity is removed from stock on order. Tell the supplier yourself; Ledgerline does not send a cancellation notice.",
+        "score": 7.68
        },
        {
         "cite": "MAN-PUR-72 §14.3",
-        "document": "Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3",
+        "document": "Ledgerline ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3",
         "effective": "2025-01-15",
         "status": "in force",
         "heading": "14. Purchase order amendment and cancellation (PUR-POM-06) › 14.3 Approval after amendment",
         "text": "If the amended gross value is still covered by the original approval, the order keeps its status. If it is more than the approval covers, the order goes back to PA for approval, even if it had been released.",
-        "score": 1.21
+        "score": 6.49
        },
        {
-        "cite": "MAN-PUR-72 §14.1",
-        "document": "Bahi ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3",
+        "cite": "MAN-PUR-72 §14.4",
+        "document": "Ledgerline ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3",
         "effective": "2025-01-15",
         "status": "in force",
-        "heading": "14. Purchase order amendment and cancellation (PUR-POM-06) › 14.1 Purpose",
-        "text": "Change an order's quantity, need-by date or cost centre, or cancel it.",
-        "score": 0.39
+        "heading": "14. Purchase order amendment and cancellation (PUR-POM-06) › 14.4 Moving a Draft off a closed cost centre",
+        "text": "To rescue an order stuck in Draft because its cost centre was closed, amend the cost centre to an open one. The order then becomes AP or PA by the normal rules, and can be released once approved.",
+        "score": 6.29
+       },
+       {
+        "cite": "MAN-PUR-72 §14.2",
+        "document": "Ledgerline ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3",
+        "effective": "2025-01-15",
+        "status": "in force",
+        "heading": "14. Purchase order amendment and cancellation (PUR-POM-06) › 14.2 Amending",
+        "text": "Open the order, change the fields and press F8. Ledgerline recalculates the gross value, releases the budget the order had committed, checks the new cost centre and commits again. If the new cost centre is closed, the order goes back to Draft with W-CC-114.",
+        "score": 6.0
        }
       ],
-      "note": "Quote the rule with its citation, e.g. (POL-PUR-001 §6.2). If a clause's status says it is replaced or not yet in force, follow the status. Stock, budgets and statuses come from Bahi."
+      "note": "Quote the rule with its citation, e.g. (POL-PUR-001 §6.2). If a clause's status says it is replaced or not yet in force, follow the status. Stock, budgets and statuses come from Ledgerline."
      }
     }
    ],
    "done": true,
    "user_turns": 1,
+   "taps": 0,
+   "typed_messages": 1,
    "words_typed": 17,
-   "chars_typed": 91,
-   "tool_calls": 3,
-   "seconds": 18.8
+   "chars_typed": 97,
+   "tool_calls": 4,
+   "tool_errors": 0,
+   "seconds": 15.4
   }
  ],
- "bahi_after": {
+ "ledgerline_after": {
   "pr": [
    {
     "pr_no": "PR/2026/04417",
     "status": "CL",
     "cc_cd": "PRD-07",
-    "est_value": 269040.0,
-    "approved_by": "RMEHTA"
+    "est_value": 273600.0,
+    "approved_by": "DOKAFOR"
    }
   ],
   "po": [
@@ -812,9 +966,10 @@
     "po_no": "PO/2026/01182",
     "status": "CL",
     "cc_cd": "PRD-07",
-    "tax_cd": "GST18-INTER",
-    "gross_value": 280840.0,
-    "approved_by": "RMEHTA",
+    "tax_cd": "VAT20-RC",
+    "basic_value": 238000.0,
+    "gross_value": 285600.0,
+    "approved_by": "DOKAFOR",
     "warn_cd": null
    }
   ],
@@ -822,45 +977,51 @@
    {
     "grn_no": "GRN/2026/30001",
     "po_no": "PO/2026/01182",
-    "qty": 12000,
-    "received_by": "NDESAI"
+    "qty": 1200,
+    "received_by": "ATANAKA",
+    "remarks": "DN-4471"
    },
    {
     "grn_no": "GRN/2026/30002",
     "po_no": "PO/2026/01182",
-    "qty": 8000,
-    "received_by": "NDESAI"
+    "qty": 800,
+    "received_by": "ATANAKA",
+    "remarks": "DN-4486"
    }
   ],
-  "shakti_registered": [],
-  "stock_pun": {
-   "on_hand": 74000,
+  "brightcell_registered": [],
+  "stock_man": {
+   "on_hand": 7400,
    "on_order": 0
   }
  },
  "llm_totals_by_user": {
-  "KJOSHI": {
-   "calls": 19,
-   "tokens_in": 84225,
-   "tokens_out": 1124,
-   "seconds": 48.69,
-   "cost_inr": 4.0024
+  "ECLARKE": {
+   "calls": 24,
+   "tokens_in": 127032,
+   "tokens_out": 1190,
+   "seconds": 71.43,
+   "cost_usd": 0.06709,
+   "replayed": 0
   },
-  "RMEHTA": {
+  "DOKAFOR": {
    "calls": 5,
-   "tokens_in": 14062,
-   "tokens_out": 211,
-   "seconds": 19.96,
-   "cost_inr": 0.6744
+   "tokens_in": 16203,
+   "tokens_out": 219,
+   "seconds": 21.08,
+   "cost_usd": 0.00876,
+   "replayed": 0
   },
-  "NDESAI": {
+  "ATANAKA": {
    "calls": 8,
-   "tokens_in": 24068,
-   "tokens_out": 500,
-   "seconds": 18.64,
-   "cost_inr": 1.191
+   "tokens_in": 24059,
+   "tokens_out": 519,
+   "seconds": 26.55,
+   "cost_usd": 0.01359,
+   "replayed": 0
   }
  },
+ "cost_usd_total": 0.08944,
  "wire_sample": [
   {
    "method": "tools/list",
@@ -870,7 +1031,7 @@
      {
       "name": "find_item",
       "title": "Find item",
-      "description": "Find stock items by description or code (e.g. '5 litre silicone gasket'). Returns active items, best match first, with code, unit and whether they touch food.",
+      "description": "Find stock items by description or code (e.g. '500 Wh battery pack'). Returns active items, best match first, with code, unit and whether they are lithium-cell parts.",
       "inputSchema": {
        "type": "object",
        "properties": {
@@ -902,7 +1063,7 @@
        "properties": {
         "item_code": {
          "type": "string",
-         "description": "Bahi item code, e.g. GSK-SIL-05L"
+         "description": "Ledgerline item code, e.g. BAT-500"
         }
        },
        "required": [
@@ -922,7 +1083,7 @@
      {
       "name": "find_supplier",
       "title": "Find supplier",
-      "description": "Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid food-grade certificate. Use it before registering anyone new.",
+      "description": "Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid UN 38.3 certificate. Use it before registering anyone new.",
       "inputSchema": {
        "type": "object",
        "properties": {
@@ -976,7 +1137,7 @@
      {
       "name": "search_policy",
       "title": "Search policy",
-      "description": "Search Rasoi's purchasing policy and the Bahi manual. Returns the relevant clauses with their citations, or says the documents do not cover it.",
+      "description": "Search Northbridge's purchasing policy and the Ledgerline manual. Returns the relevant clauses with their citations, or says the documents do not cover it.",
       "inputSchema": {
        "type": "object",
        "properties": {
@@ -1008,7 +1169,7 @@
        "properties": {
         "item_code": {
          "type": "string",
-         "description": "Bahi item code"
+         "description": "Ledgerline item code"
         },
         "quantity": {
          "type": "integer",
@@ -1105,13 +1266,13 @@
      {
       "name": "create_purchase_order",
       "title": "Create purchase order",
-      "description": "Create a purchase order (PO) with a supplier. Give request_no for an approved purchase request (it supplies item, quantity, cost centre and date), or item_code, quantity, cost_centre and need_by for a small direct order up to Rs 50,000. confirm=false previews price, tax and value; confirm=true saves it. Returns a receipt with the order's real status: an APPROVED order still has to be released.",
+      "description": "Create a purchase order (PO) with a supplier. Give request_no for an approved purchase request (it supplies item, quantity, cost centre and date), or item_code, quantity, cost_centre and need_by for a small direct order up to £50,000. confirm=false previews price, tax and value; confirm=true saves it. Returns a receipt with the order's real status: an APPROVED order still has to be released.",
       "inputSchema": {
        "type": "object",
        "properties": {
         "supplier_code": {
          "type": "string",
-         "description": "Bahi supplier code, from find_supplier"
+         "description": "Ledgerline supplier code, from find_supplier"
         },
         "request_no": {
          "type": "string",
@@ -1215,7 +1376,7 @@
      {
       "name": "order_status",
       "title": "Order status",
-      "description": "The real status of a purchase order or a purchase request, read from Bahi, with approval, goods received and any warning.",
+      "description": "The real status of a purchase order or a purchase request, read from Ledgerline, with approval, goods received and any warning.",
       "inputSchema": {
        "type": "object",
        "properties": {
@@ -1300,11 +1461,11 @@
         },
         "state": {
          "type": "string",
-         "description": "Indian state"
+         "description": "Two-letter country code, e.g. GB or NL"
         },
-        "gstin": {
+        "vat_no": {
          "type": "string",
-         "description": "15-character GSTIN"
+         "description": "15-character VAT number"
         },
         "confirm": {
          "type": "boolean",
@@ -1315,7 +1476,7 @@
         "name",
         "city",
         "state",
-        "gstin"
+        "vat_no"
        ]
       },
       "annotations": {
@@ -1331,7 +1492,7 @@
      {
       "name": "send_message",
       "title": "Send message",
-      "description": "Send a short message to a colleague or supplier (Slack handle like @rohit, or an email address). Goes through Bahi's notification queue.",
+      "description": "Send a short message to a colleague or supplier (Slack handle like @daniel, or an email address). Goes through Ledgerline's notification queue.",
       "inputSchema": {
        "type": "object",
        "properties": {
@@ -1367,20 +1528,20 @@
    "params": {
     "name": "find_item",
     "arguments": {
-     "query": "5 litre silicone gasket"
+     "query": "city e-bike battery pack"
     }
    },
    "result": {
     "_meta": {
      "io.modelcontextprotocol/serverInfo": {
-      "name": "bahi-toolbox",
+      "name": "ledgerline-toolbox",
       "version": "4.1.4"
      }
     },
     "content": [
      {
       "type": "text",
-      "text": "{\"ok\": true, \"items\": [{\"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-05L-R\", \"description\": \"Gasket, silicone, 5 L (rework)\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-03L\", \"description\": \"Gasket, silicone, 3 L\", \"unit\": \"NOS\", \"food_contact\": true}, {\"item_code\": \"GSK-SIL-07L\", \"description\": \"Gasket, silicone, 7.5 L\", \"unit\": \"NOS\", \"food_contact\": true}], \"note\": \"Inactive (cannot be ordered): GSK-RUB-05L.\"}"
+      "text": "{\"ok\": true, \"items\": [{\"item_code\": \"BAT-500\", \"description\": \"Battery pack, 36 V 500 Wh\", \"unit\": \"NOS\", \"cell_safety\": true}, {\"item_code\": \"BAT-500-R\", \"description\": \"Battery pack, 36 V 500 Wh (refurbished)\", \"unit\": \"NOS\", \"cell_safety\": true}, {\"item_code\": \"BAT-375\", \"description\": \"Battery pack, 36 V 375 Wh\", \"unit\": \"NOS\", \"cell_safety\": true}, {\"item_code\": \"BAT-750\", \"description\": \"Battery pack, 48 V 750 Wh\", \"unit\": \"NOS\", \"cell_safety\": true}, {\"item_code\": \"BOX-BIKE-01\", \"description\": \"Carton, bike shipping\", \"unit\": \"NOS\", \"cell_safety\": false}, {\"item_code\": \"MNT-FRM-01\", \"description\": \"Battery mount, down-tube, long\", \"unit\": \"NOS\", \"cell_safety\": false}], \"note\": \"Inactive (cannot be ordered): BAT-400-OLD.\"}"
      }
     ],
     "isError": false,
@@ -1390,22 +1551,22 @@
   {
    "method": "tools/call",
    "params": {
-    "name": "check_stock",
+    "name": "search_policy",
     "arguments": {
-     "item_code": "GSK-SIL-05L"
+     "question": "city e-bike battery pack"
     }
    },
    "result": {
     "_meta": {
      "io.modelcontextprotocol/serverInfo": {
-      "name": "bahi-toolbox",
+      "name": "ledgerline-toolbox",
       "version": "4.1.4"
      }
     },
     "content": [
      {
       "type": "text",
-      "text": "{\"ok\": true, \"item_code\": \"GSK-SIL-05L\", \"description\": \"Gasket, silicone, 5 L\", \"unit\": \"NOS\", \"warehouses\": [{\"warehouse\": \"WH-PUN-STR\", \"name\": \"Pune main stores\", \"on_hand\": 54000, \"allocated\": 0, \"on_order\": 0, \"free\": 54000}, {\"warehouse\": \"WH-CHK-STR\", \"name\": \"Chakan stores\", \"on_hand\": 12000, \"allocated\": 0, \"on_order\": 0, \"free\": 12000}], \"free_total\": 66000, \"on_order_total\": 0, \"reorder_level\": 30000, \"cover_days\": 11, \"below_reorder\": false}"
+      "text": "{\"ok\": true, \"answer_in_documents\": true, \"clauses\": [{\"cite\": \"MAN-DD-72 \\u00a73.1\", \"document\": \"Ledgerline ERP 7.2 Data Dictionary, Purchasing v7.2.3\", \"effective\": \"2025-01-15\", \"status\": \"in force\", \"heading\": \"3. Item master (itm_*)\", \"text\": \"3.1 itm_cd (Item code): the item's code, for example BAT-500 for the city e-bike battery pack.\", \"score\": 5.99}], \"note\": \"Quote the rule with its citation, e.g. (POL-PUR-001 \\u00a76.2). If a clause's status says it is replaced or not yet in force, follow the status. Stock, budgets and statuses come from Ledgerline.\"}"
      }
     ],
     "isError": false,

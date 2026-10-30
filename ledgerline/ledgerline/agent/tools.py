@@ -197,8 +197,8 @@ def _norm_words(text: str) -> list[str]:
     return out
 
 
-@tool("find_item", "Find stock items by description or code (e.g. '5 litre battery pack'). Returns active items, best "
-      "match first, with their code, unit and whether they touch food.",
+@tool("find_item", "Find stock items by description or code (e.g. '500 Wh battery pack'). Returns active items, best "
+      "match first, with their code, unit and whether they are lithium-cell parts.",
       {"query": {**S, "description": "words describing the item, or its code"}}, ["query"],
       services=("itm_search", "itm_get"))
 def find_item(s: Session, query: str):
@@ -443,7 +443,7 @@ def create_purchase_order(s: Session, supplier_code, item_code, quantity, cost_c
         warnings.append(f"Cost centre {cost_centre} is CLOSED: Ledgerline would save this order as a DRAFT that never reaches "
                         f"the supplier. Ask the user for an open cost centre.")
     if itm["cell_safety"] and cert != "valid":
-        warnings.append(f"This item touches food and {supplier_code}'s UN 38.3 certificate is {cert.upper()}.")
+        warnings.append(f"This is a lithium-cell part and {supplier_code}'s UN 38.3 certificate is {cert.upper()}.")
     if not confirm:
         return {"ok": True, "preview": preview, "warnings": warnings,
                 "note": "Nothing has been saved. Show this to the user and ask to confirm."}

@@ -1,305 +1,245 @@
-# Lecture 1 · The Before and the After: speaker notes
+# Lecture 1 · The Before and the After: speaker notes (v4, Northbridge)
 
-Sat 31 Oct 2026, 7:00–9:00 AM IST. 64 slides (56 plates and 8 hero slides). Deck: `lectures/L1-before-and-after/index.html`. Use the arrow keys or click to step through; every `.step` reveals one line, and every figure builds with it.
+Sat 31 Oct 2026, 7:00–9:00 AM IST. 103 slides: 13 part slides and 14 "Ask the class" slides go by fast; about 75 content plates.
+Slide numbers below are the deck's counter (bottom right). `[click]` = one step. Timings are targets; the running clock is in brackets.
 
-**Live links:**
-- **Base:** https://rajatworkspace--rasoi-experience.us-east.modal.run
-- **Pages:** `/` (invitation), `/before`, `/brief`, `/after`, `/tools`, `/studio`
-- **Check before class:** if `bahi/bahi/experience/DEPLOYED.md` gives a different URL, use that one.
-- **Backup if the app is down:** every live moment has a plate built from our own recorded run (`experiments/logs/`). Say "this is the run we recorded on Modal" and carry on.
+Everything on a plate is either Northbridge seed data (WORLD_V4.md), a run of ours (experiments/logs, experiments/production),
+or a cited public source written on the plate. If a figure shows a green **TODO(v4 data)** card, the run behind it has not
+landed yet: say "this one fills in from our run" and move on.
 
-**The one rule for Parts 1–5:**
-- Say nothing technical until Part 6: no "tool", "model", "LLM", "MCP", "JSON", "API".
-- In Part 5, Ask Rasoi is "the assistant on Rasoi's home page", and nothing more.
-- There are no cost, latency or model comparisons anywhere in this lecture.
-
-**Timings:** 120 minutes in all.
-
-| Part | Minutes | Clock |
-|---|---|---|
-| 1 Rasoi needs you | 12 | 7:00–7:12 |
-| 2 What an ERP is | 22 | 7:12–7:34 |
-| 3 The Before, with 15 minutes hands-on | 34 | 7:34–8:08 |
-| 4 Wishlist | 8 | 8:08–8:16 |
-| 5 The After | 15 | 8:16–8:31 |
-| 6 How it works | 16 | 8:31–8:47 |
-| 7 Agent, the 2026 stack, series map, NB1, A1 | 13 | 8:47–9:00 |
+Live links: the Experience is `https://rajatworkspace--northbridge-experience.us-east.modal.run` (`/`, `/before`, `/brief`, `/after`, `/tools`, `/studio`).
+Do not redeploy it during class (a new container re-seeds every player's Northbridge).
 
 ---
 
-## Part 1 · Rasoi needs you (12 min)
+## Part 0 · Opening (7:00–7:04)
 
-**Slide 1 · Title (1 min).** "This morning you are not a student. Rasoi Steel Works has hired you."
-- Put the Experience link in the chat now.
+**1 · Title.** While people join: "Drop your role and your city in the chat." Then: "Today has three halves. Why agents matter right now and where they break. A real company that needs one, where you do the work by hand. And then the agent doing the same work, opened up all the way to production."
 
-**Slide 2 · Part One (hero).** Read the lede aloud.
+**2 · Ask the class 1: did an agent do real work for you this week?** Read out a few. Most will say writing or code; almost nobody says "inside a work system". "Hold on to that gap. That gap is this course."
 
-**Plate 1 · Open the link together (4 min).** DEMO: open `/` on the projector and type your own name.
-- Wait until most of the class has their letter.
-- Point at the table: today we use `/`, `/before`, `/brief` and `/after`; `/tools` and `/studio` get a glimpse only.
-- Tell them not to open `/after` yet. "You will write your wishlist first. That is the point."
+## Part 1 · Why agents, and why now (7:04–7:22)
 
-**Plate 2 · A letter from Pune (3 min).** Read the letter aloud, slowly. It is addressed to them; the plate carries the app's own words.
-- Pause on "codes, screens, and messages nobody can read".
-- Say once that everything is fictional.
+**3 · Part One.** "Let's start with how fast this moved."
 
-**Plate 3 · What the dealers say (2 min).** Two dealers, Nagpur and Coimbatore, in the Experience's words. Neither complains about the cookers; both complain about the paperwork.
-- Then Kaveri: "confirms orders on WhatsApp in two minutes". That is the competitor.
-- "Keep their words. You will write for them in Part 4."
+**4 · The loop that started it.** "October 2022, a paper called ReAct. The idea is almost embarrassingly simple." [click] "The model writes a thought: I need the item code." [click] "It takes an action, a tool call, and reads the observation." [click] "Thought again, until it can answer." Point at the loop on the left: "Thought, action, observation. Every agent you will ever build is this loop with more engineering around it." This is written out by hand on Emma's question with seed numbers; it is not a recorded run.
 
-**Plate 4 · The Ask (2 min).** The question of the lecture, then the four-part map.
-- "By nine o'clock you will know what an ERP is, why it hurts, what the After looks like, and how it works."
+**5 · From a loop to production.** Click through the seven points. One line each:
+- ReAct: the loop is a prompt pattern.
+- Function calling, June 2023: the model returns JSON arguments; no more parsing free text.
+- Computer use, Oct 2024: it can drive a screen. Slow and error-prone, but it reaches software with no API.
+- MCP, Nov 2024: a standard plug for tools.
+- Coding agents, Feb 2025: the first agents doing hours of real work.
+- Dec 2025: MCP goes to the Linux Foundation; 97M+ monthly SDK downloads.
+- 2026: over half of teams surveyed run agents in production. "The hard part is no longer the demo."
 
-## Part 2 · What an ERP is (22 min)
+**6 · What companies are doing now.** Left column first, [click] three times: momentum. Then the right column: the other side. Say clearly: "These are other people's numbers. Gartner's are forecasts. The MIT 95% is a narrow six-month P&L measure, and people argue about it. Klarna is the honest story: big claims in 2024, hiring people again in 2025." Do not defend any number beyond its source.
 
-**Plate 5 · One shared record (2 min).**
-- Definition first, then the PaperBanana figure.
-- Six modules; each is a group of screens for one department.
+**7 · Ask the class 2: why do agent projects get cancelled?** Let them vote. Most pick 1 (the model). "Hold your answer for ten minutes."
 
-**Plate 6 · Why one record (3 min).** INTERACTIVE: press "Each desk keeps its own book".
-- Stores says "not expected yet" and finance says "no commitment". Then press "One record, shared".
-- "This is the whole reason companies bought ERPs in the 1990s."
+**8 · Works on Friday, dies on Monday.** The FDE-lecture move. Friday: one person, happy path, admin account, nobody checks the ERP. [click] Monday: real people, real limits, a lost reply, a Draft. [click] "Four ways the pilot breaks. All four happened in our own sandbox."
 
-**Plate 7 · Master data (2 min).** Four cards build up: item, supplier, cost centre, person.
-- Stress codes: `GSK-SIL-05L`, `DP-RJK-0042`, `PRD-07`, `KJOSHI`.
-- People are master data too, including their approval limits.
+**9–12 · The four incidents.** Same rhythm each time: the story (Northbridge words), [click] what we saw in our sandbox runs (no numbers: these are earlier sandbox runs), [click] the industry parallel with its source, then [click ×3] "follow the why".
+- **9, the all-powerful account.** SVC_AGENT approves anything. Industry: the July 2025 coding agent that deleted a production database during a code freeze. Ask the three whys out loud. Land on: "Should an assistant ever have more power than the person it works for?"
+- **10, the rule it had just quoted.** It quotes UN 38.3 and then offers to order from Brightcell anyway. Industry: Moffatt v. Air Canada; the company was held responsible for what its chatbot said.
+- **11, two orders after a lost reply.** The save happened, the reply was lost, the retry made a second order. Industry: Stripe's idempotency keys exist for exactly this.
+- **12, SAVED but in Draft.** The agent reported what the system *said*, not what it *holds*. "Every legacy system has a message like this one."
 
-**Plate 8 · Transactions (2 min).** PO/2026/01182 builds in three steps.
-- Its own fields come first.
-- Then the codes that point at master data (green highlights).
-- Then the link to another document (PR/2026/04417).
+**13 · Ask the class 3: which could happen in your company?** Expect ALL. "Now go back to your answer to question 2."
 
-**Plate 9 · Every document has a status (3 min).** The status machine lights up as the lines appear.
-- Make them say it back: "Only RL means the supplier has it."
-- "Keep an eye on DR."
+**14 · Not a model problem.** Pause on the big line. [click] "A better model fixes none of them." [click] The four fixes, each with its lecture. [click] "Building that system is the job this course is named after."
 
-**Plate 10 · Procure-to-pay (3 min).** Six steps appear one by one, each with who does it, the screen code, and what came out in our run.
-- This chain is the running example for all twelve lectures.
+**15 · The mistakes people make.** Six cards, [click] each. Spend the most time on "rules only in the prompt" and "trust the reply, not the record": they are incidents 2 and 4 in one sentence each.
 
-**Plate 11 · Kavita's numbers (3 min).** INTERACTIVE: drag the quantity slider.
-- At 20,000 the estimate is ₹2,69,040, above ₹2,50,000, so it goes to Rohit.
-- Drag down to about 18,000 and it is within her limit. Drag up past about 74,000 and it goes to Anand Patil.
-- The order later uses ₹11.90, giving ₹2,80,840.
+## Part 2 · How we will learn it (7:22–7:26)
 
-**Plate 12 · Why ERPs are screens (2 min).** A real screenshot of PUR-PO-01, taken on Modal.
-- Point at the parts: bold code boxes with F2, the red stars, the buttons, the grey status bar.
+**16 · Part Two.**
 
-**Plate 13 · A button calls a service (2 min).** INTERACTIVE: the three buttons.
-- **A read** (stk_query).
-- **A refused write:** ERR-PO-0412, `rc: "E"`.
-- **A write that "worked":** `rc: "S"`, msg "SAVED", `status: "DR"`.
-- "Input in, output out. We never look inside a service, in this lecture or any other."
+**17 · Our approach.** The PaperBanana figure. "One company, one agent, Ask Northbridge, growing one piece per lecture. Lectures 1 to 7: we build every piece by hand. 8 to 11: the same agent on the tools industry runs, measured. 12: your own module." [click ×4] build, break, measure, meet the industry tool. [click] "Tools change every quarter. The pieces don't."
 
-**Plate 14 · Bahi ERP 7.2, since 1998 (1 min).** The canon numbers: 412 screens, about 3,100 stored procedures, about 1,200 plants.
-- Key line: "Rasoi will not replace Bahi. The After sits on top of it."
+**18 · Ask the class 4: one AI tool you use but couldn't explain.** Read a few. "By Lecture 12 you'll be able to explain each of those from first principles, and build it."
 
-**Plate 15 · Check yourself (1 min).** Ask the class; open the answers one at a time.
+## Part 3 · Northbridge needs you (7:26–7:32)
 
-## Part 3 · The Before (34 min)
+**19 · Part Three, with the QR.** "Everyone open this now, on your phone or laptop, and type your name." Wait about 60 seconds.
 
-**Slide 19 · Part Three (hero).**
+**20 · Open the Experience.** [click] the route table. [click] "Stop at the brief. Don't peek at the After."
 
-**Plate 16 · Your turn (15 min hands-on).** DEMO: open `/before`. Read the five missions aloud. Start them on the timer.
-- Walk the room (or the chat). Common stalls are:
-  - which gasket code to use;
-  - the PRD-05 default;
-  - ERR-PO-0412;
-  - "it says SAVED, I'm done".
-- **Do not rescue them from the Draft.** Let them find ERR-PO-0715 at Release.
-- At 12 minutes, give a two-minute warning.
+**21 · A letter from Manchester.** [click ×3], then let the letter appear and read the last line slowly: "Please read what is happening here. Then tell me what you would do." Everything is fictional.
 
-**Plates 17–23 · Replay (8 min, about a minute each).** Real screenshots of the legacy client. Each step flips to the next screenshot.
-- **Plate 17:** four gaskets, then 54,000 and 9 days. This is one warehouse; the number comes back in Part 5.
-- **Plate 18:** Fetch fills PRD-05. "Nothing warns her."
-- **Plate 19:** Rohit's own PC. Kavita phones him. The approval screen is greyed in her menu.
-- **Plate 20:** order history, and the F2 lookup with three Deccans: the blocked duplicate DP-RJK-0009 and the near-match.
-- **Plate 21:** GST18-INTRA from Fetch gives ERR-PO-0412. She phones IT.
-- **Plate 22 · Saved is not done:** the money plate. SAVED on the bar, DR in the field. On Friday, ERR-PO-0715. Ask the room: "How many of you stopped at SAVED?"
-- **Plate 23:** amendment to PRD-07, released, then Neha's GRN.
+**22 · What the bike shops say.** Hartley Cycles in Bristol, Velo Centraal in Utrecht. [click] [click] Brisa Bikes, two minutes in a chat. "Nobody complains about the bikes. They complain about everything around the bikes."
 
-**Plate 24 · The traps (2 min).** INTERACTIVE: click through all six buttons. Each shows its real screenshot and the exact words on the status bar.
-- The sixth trap is not in Bahi: Shakti Seals.
+**23 · One order, five people.** [click ×5] the cast. [click] the order: BAT-500, Voltway Cells, £119.00, £285,600 with VAT, so Daniel must approve. "You will be each of these people in ten minutes."
 
-**Plate 25 · The Before, measured (3 min).** INTERACTIVE: toggle "First time" and "Careful".
-- **First time:** 14 screens, 29 fields, 14 codes, 2 errors, about 5.6 minutes.
-- **Careful:** 12 screens, 27 fields, 12 codes, 0 errors, about 4.8 minutes.
-- Both are keystroke-level estimates. Ask: "What did your timer say?" Most people take far longer than the estimate, because the estimate does not include finding things out.
+## Part 4 · What an ERP is (7:32–7:46)
 
-**Plate 26 · Where the knowledge lives (2 min).** "The ERP holds the rules. People hold the route." Six cards.
+**24 · Part Four.**
 
-**Plate 27 · The pain points (3 min).** The six-kind taxonomy, with evidence from our run.
-- A1 asks them to sort their own module into these six, so name them clearly.
+**25 · Ask the class 5: have you used an ERP? Which one, how did it feel?** Expect SAP, Oracle, Dynamics, some Odoo. Read out the feelings: "slow", "confusing", "powerful". "Keep that word. Every one of those products is now adding agents on top, for exactly that reason."
 
-**Plate 28 · Check yourself (1 min).**
+**26 · The ERPs the world runs on.** [click ×6]. One sentence each, from the plate; each has its source. SAP's 2027 maintenance deadline is the one to dwell on: "Thousands of companies are migrating right now. Every migration is a chance to put an agent on top."
 
-## Part 4 · Your wishlist (8 min)
+**27 · One shared record.** Definition; [click] all departments; [click] module.
 
-**Slide 33 · Part Four (hero).** "Before you see anything new."
+**28 · Why one record.** Press "Each desk keeps its own book", then "One record, shared". "That is the whole reason companies bought ERPs in the 1990s." (Order number and value come from our careful Before run.)
 
-**Plate 29 · What would you build? (5 min).** DEMO: open `/brief`. Its four questions build up on the plate, then the twelve picks (screenshot on the right). Give them 4–5 quiet minutes.
-- Encourage ambitious answers, and "what must never happen".
+**29 · Master data.** [click] through the four cards: BAT-500, VC-EIN-0042, PRD-07, ECLARKE with the £250,000 limit.
 
-**Plate 30 · The class wall (3 min).** DEMO: show the live wall on `/brief` ("Most picked" bars and the cards). The plate's screenshot holds only test players, so use the live page. Read out three or four entries.
-- Map what they wrote onto the six pains.
-- "Keep the tab open; tick and circle in Part 5."
+**30 · Transactions.** [click] the order points at master data by code; [click] it points at the request.
 
-## Part 5 · The After (15 min)
+**31 · Status.** [click] DR, waiting, AP, RL, CL. "Only Released means Voltway has it. Watch DR: it was incident 4, and you are about to meet it."
 
-**Slide 36 · Part Five (hero).** Pause before the reveal.
+**32 · Procure-to-pay.** [click ×5], who does each step on which screen.
 
-**Plate 31 · Ask Rasoi (2 min).** DEMO: open `/after` and choose Kavita under "You are talking as". The plate is the real home page.
-- Say: "Nothing in Bahi changed."
+**33 · Who has to sign?** Seed numbers: 5,400 in Manchester, 600 a day, 9 days; 1,200 in Leeds. Estimate £273,600, order £285,600. Let someone drag the slider below about 1,800 packs: Emma can sign alone.
 
-**Plates 32–36 · The five missions (8 min).** Each plate is the real transcript from our run.
-- **Live:** type the same sentence into `/after` on the projector first, then show the plate.
-- **If the live reply differs**, say so. The plate is our recorded run; the model can phrase things differently.
-- **32 Stock:** 66,000 across Pune and Chakan, so 11 days, not 9. The legacy screen showed one warehouse.
-- **33 Request:** nobody gave a cost centre, and it found PRD-07 itself. Preview, then "Yes, go ahead.", then PR/2026/04417 waits for RMEHTA.
-- **34 Rohit's yes:** sign in as Rohit on `/after` (or use the approvals inbox). One sentence, a preview, a yes.
-- **35 Order and release:** no ERR-PO-0412, no Draft. It says "approved, not yet released" and asks before sending. Released.
-- **36 Neha:** GRN/2026/30001, 12,000. The second delivery closes the order.
+**34 · A button calls a service.** Three buttons: a read, a refused write (ERR-PO-0412), a write that "worked" and is a Draft. "Remember this box. In Part 9 the agent calls these same services."
 
-**Plate 37 · The Shakti question (2 min).** No screen answers this. It cites Purchase Policy §6.2, registers nobody and orders nothing.
-- "This is pain 6 gone: the rule that lived in Suresh's head."
+## Part 5 · The Before (7:46–8:06, includes 15 minutes hands-on)
 
-**Plate 38 · The scorecard (2 min).** Real numbers on both sides.
-- **Be honest that the After types more characters:** 474 against 228. Those characters are words people already know, there are no codes or route to remember, and there are no errors.
-- **6 of the 12 messages were "Yes, go ahead."**
-- **Time:** about 2.5 minutes of typing (an estimate) plus 1.3 minutes waiting (measured), against about 4.8 minutes for the careful Before.
+**35 · Part Five.** "Open /before. Fifteen minutes. The timer counts your clicks, keys and errors."
 
-**Plate 39 · Your scorecard and the Studio (1 min).** DEMO: their own scorecard on `/after`. The plate shows the scripted test player, a robot, which is why its Before took 0:19; a person takes minutes. Then a ten-second peek at `/studio` ("Lecture 6"); the plate shows a finished run. Back to the wishlist: `/after` puts it next to what was built.
+**36 · Your turn.** [click ×5] the missions. Then start a 15-minute timer and stay quiet. Walk the chat for "stuck" messages. Common sticking points: the item code, the Fetch button, ERR-PO-0412, the grey DR.
 
-## Part 6 · How it works (16 min)
+**37–40 · Replays** (after the 15 minutes, 1 minute each). Each click shows the next real legacy screenshot.
+- 37 the stock: lookalike codes; one warehouse per screen.
+- 38 request and approval: Fetch fills PRD-05, closed on 15 Oct, and nothing warns. Daniel is phoned to look at his inbox.
+- 39 which Voltway: the blocked duplicate, Voltway Paints & Coatings, then ERR-PO-0412: "a UK tax code for a Dutch supplier".
+- 40 saved is not done: SAVED with DR; Friday's ERR-PO-0715; amend to PRD-07; release; Aiko receives 1,200 then 800.
 
-**Slide 46 · Part Six (hero).** "Only now do we open the box. From here, technical words are allowed."
+**41 · The traps.** Click through the six. The last one is not in Ledgerline at all: Brightcell.
 
-**Plate 40 · The whole picture (2 min).** The PaperBanana figure, left to right:
-- the sentence;
-- the orchestrator LLM;
-- MCP, the plug;
-- the toolbox;
-- Bahi, still a black box;
-- the receipt coming back.
+**42 · The Before, measured.** First time vs careful, counted by our legacy driver. [click] careful. "Knowing every trap removes errors, not steps." Ask: "Who beat the careful run's estimate?"
 
-**Plate 41 · One tool per activity (2 min).** INTERACTIVE: click several tools.
-- The ember edge marks tools that save something.
-- "A tool is a job, not a screen." DEMO (optional): `/tools`.
+**43 · Where the knowledge lives.** [click ×6]. "The ERP holds the rules. People hold the route." This is why the next part asks you questions instead of telling you answers.
 
-**Plate 42 · Inside a tool (1 min).** A folder with two files. tool.json is what the model reads; tool.py is what runs.
+## Part 6 · What should it be like? (8:06–8:16) — top priority
 
-**Plate 43 · tool.json (2 min).** Three highlights:
-1. the name and description;
-2. the input schema (`supplier_code` required, `confirm`);
-3. the output schema.
+**44 · Part Six.** "You do not need to know ERPs for this. You only need to have used software at work."
 
-Define JSON schema on the plate.
+**45 · Your brief.** "Open /brief." The four questions are the same as on the next slides. Give them five minutes to type; then go through the four slides as a discussion while the wall fills.
 
-**Plate 44 · tool.py (3 min).** Five highlights, each a trap from Part 3 handled once in code:
-1. the request supplies item, quantity and cost centre;
-2. the tax code from the supplier's state (no ERR-PO-0412);
-3. the closed cost centre warned about before saving (no silent Draft);
-4. `confirm` = preview first;
-5. the receipt read back, with `next_step`.
+**46–50 · Ask the class 6–10.** One minute each. Read two answers aloud per slide, ideally one common, one unusual.
+- 46 how should it feel? Push for concrete words: "like asking a colleague", "it remembers", "I never type a code".
+- 47 never without asking? The line between reading and writing almost always appears. "Hold that: it becomes the preview-and-yes rule."
+- 48 how would you know? Receipts, steps you can see, tests. "Which one would you actually trust?"
+- 49 wrong, and who is responsible? Bring back the tribunal from incident 2. There is no single right answer; the point is that someone must be.
+- 50 click or say? Good answers: say it for once-a-year jobs, click for the same job a hundred times a day. "Lecture 6 is about exactly that."
 
-Folded lines (idempotency, timeout) belong to Lecture 7.
+**51 · The class wall.** Read the top three picks and two unusual answers to question 2. "Keep your tab open. You will tick what the After does."
 
-**Plate 45 · JSON in, JSON out (2 min).** INTERACTIVE: drag the scrubber through all of Ask Rasoi's tool calls from our run.
-- The first view is create_purchase_order with `confirm=false`: the preview.
+## Part 7 · The After (8:16–8:28)
 
-**Plate 46 · The LLM chooses (2 min).** INTERACTIVE: mission buttons.
-- **Request:** check_budget with no arguments, to find an open cost centre. Nobody told it to.
-- **Shakti:** find_supplier, then search_policy, and no write.
-- Define the orchestrator.
+**52 · Part Seven.** "Open /after, sign in as Emma. Same Ledgerline underneath."
 
-**Plate 47 · MCP, the plug (2 min).** Three cards: tools/list (15 tools discovered), tools/call (find_item), and the result as text holding JSON.
-- "The same server plugs into any MCP host. Lecture 4 builds it."
+**53 · Northbridge's new home page.** [click ×3]. "Ledgerline has not changed. Only how people reach it."
 
-**Plate 48 · Check yourself (1 min).** DEMO: switch on "How it works" on `/after` and watch the cards appear. The screenshot on the plate shows one card with its JSON result.
+**54–59 · The missions** (2 minutes each; do them live in the Experience if it is responsive, otherwise use the recorded replies on the plates). Each [click] reveals the next turn.
+- 54 the stock: both plants, no codes. Say aloud: Ask Northbridge reported both warehouses, 6,600 packs and 11 days; the Before showed Manchester only, 5,400 and 9 days. Both are true; a good assistant says which one it means.
+- 55 the request: it found PRD-07 by itself, showed a preview, asked for a yes.
+- 56 Daniel's yes: approved by DOKAFOR. "Compare incident 1."
+- 57 order and release: right tax, open cost centre, says what Ledgerline holds. "Compare incident 4."
+- 58 Aiko's receipt: 1,200 now, 800 to come.
+- 59 the certification question: no, with §6.2 cited; registers nobody. "Compare incident 2."
 
-## Part 7 · So this is an AI agent (13 min)
+**60 · The scorecard.** [click]. After: 12 messages (6 typed, 6 taps on “Yes, go ahead”), 453 characters, 20 tool calls (one returned ok=false in the stock mission and was handled without showing Emma an error), about 1.9 minutes of waiting. Before, first time: 14 screens, 14 codes, 3 sign-ins, 2 error codes, about 5.6 minutes, and that time is a keystroke-level estimate, not a measurement. "Not always fewer keystrokes. Words people already know, and no route to remember." Ask them to tick their brief on /after.
 
-**Slide 56 · Part Seven (hero).** "Go back over what you saw and name it."
+## Part 8 · What is behind this? (8:28–8:32)
 
-**Plate 49 · Building the definition (2 min).** Four pieces appear: a model, tools, a loop, a person. Then the definition.
-- **AI agent:** a model that uses tools in a loop to finish a job for someone.
-- **Enterprise agent:** one that does it inside the company's systems, as a named person, under the company's rules.
+**61 · Part Eight.** "Before I open it: your guesses."
 
-**Plate 50 · What makes it enterprise (1 min).** Permissions, approvals, proof, legacy systems, each with evidence from our run. Lecture 7 builds the first three by hand; Lecture 11 runs them on production tools.
+**62 · Ask the class 11: how did we do this?** Most pick B (clicking the screens) or D (SQL). The answer is C. Do not reveal yet; say "we'll see".
 
-**Plate 51 · The 2026 agent stack (3 min).** INTERACTIVE: the master architecture figure; click each piece.
-- Define "agent stack": the set of tools a company runs for each piece of an agent.
-- Click in this order:
-  - **Harness** → frameworks: the OpenAI Agents SDK and Google ADK (L8), and LangGraph (L5, recapped in L8). "In L5 you write the loop; the Agents SDK's Runner is that loop."
-  - **LLM** → gateways: OpenRouter and LiteLLM (L8; LiteLLM budgets and fallbacks in L11), Ollama for local models (L8).
-  - **MCP** → MCP in depth and A2A (L9).
-  - **Trust bar** → observability: Langfuse, Phoenix, LangSmith (L10); evals: DeepEval, Ragas, promptfoo (L10); guardrails: NeMo Guardrails, Llama Guard (L11); durable execution: Temporal (L11).
-  - **Where people work** → n8n (L9), with Copilot Studio and Agentforce as the enterprise low-code builders.
-  - **Bahi** → "Nothing replaces it."
-  - **Or rent the whole stack** → Bedrock AgentCore, Microsoft Foundry (L11).
-- The three-step strip is the promise of the course:
-  1. build each piece by hand first (L2–L7);
-  2. then use the tool companies use, on the same Ask Rasoi and the same tasks (L8–L11);
-  3. choose your own stack for demo day (L12).
-- "We never use a tool before you could have built it yourself."
+**63 · Ask the class 12: what parts would you need?** Collect a list in the chat: "a model", "the ERP's API", "permissions", "a confirm step", "logs". Keep the list visible; plates 66 and 71 check it.
 
-**Plate 52 · What companies use (2 min).** Other people's numbers, said as such.
-- **Bar chart:** Stack Overflow Developer Survey 2025, developers who had used agents:
-  - Ollama 51%, LangChain 33%, LangGraph 16%;
-  - Vertex AI 15%, Bedrock Agents 15%;
-  - OpenRouter 13%, LlamaIndex 13%.
-- **Cards** (each source said aloud):
-  - PyPI downloads: LangGraph about 34.5M a month vs about 10.3M for the OpenAI Agents SDK (a secondary source);
-  - MCP SDKs about 97M a month; A2A with 150+ organisations, released at the Linux Foundation in April 2026;
-  - LangChain's State of Agent Engineering, a vendor's own survey: 89% have observability, 62% full step tracing, 52% offline evals, 37% online;
-  - prompt injection is #1 in the OWASP LLM Top 10 2025;
-  - Temporal's Agents SDK integration went GA in March 2026;
-  - low-code has no reliable public numbers.
-- **The caveat card is the point:** downloads are not companies, vendors run surveys, tools change every quarter. "That is why we build each piece first."
+## Part 9 · How it works (8:32–8:42)
 
-**Plate 53 · The series map (2 min).** INTERACTIVE: twelve lectures in three groups; click any one to light its piece.
-- **By hand:**
-  - L1 Sat 31 Oct, the Before and the After;
-  - L2 Sun 1 Nov, the brain;
-  - L3 Sat 7 Nov, the memory;
-  - L4 Sun 8 Nov, the hands (toolbox and MCP);
-  - L5 Sat 14 Nov, the loop;
-  - L6 Sun 15 Nov, the studio;
-  - L7 Sat 21 Nov, trust.
-- **The industry stack:**
-  - L8 Sun 22 Nov, agent frameworks;
-  - L9 Sat 28 Nov, protocols and integration;
-  - L10 Sun 29 Nov, observability and evals;
-  - L11 Sat 5 Dec, running agents in production.
-- **Demo day:** L12 Sun 6 Dec, your module.
-- The steps light L2, then L8, then L12.
-- "Twelve lectures, six weekends. By 21 November you will have built every piece of what you just used by hand; by 5 December you will have run each piece on the tools companies use."
-- The master architecture figure (`figures/ask_rasoi_architecture.png`) is the same picture, used at the end of every lecture.
+**64 · Part Nine.**
 
-**Plate 54 · NB1 (1 min).** Colab, replay mode, no key, six exercises. Show the four-line code block.
+**65 · One request, end to end (3D).** Full-bleed, 20 clicks for 21 stages (stage 0 is the overview); a forward click plays the stage (5–20 s), going back jumps to its end. It is one real recorded run (flow3d/trace.json, gemini-3.8-flash): Emma asks for the stock, then raises the request. Narrate in one sentence per stage; each stage's caption is on screen, and the stage table is in flow3d/README.md. The arc:
+- Turn 1, the stock: Emma's message arrives; the harness assembles the context (system prompt, history, 15 tool schemas) before the model has read a word of her request. The LLM picks one tool of 15 (find_item); the guard checks the arguments against tool.json; the call rides MCP as a JSON-RPC frame; Ledgerline's services answer. Then search_policy, check_stock, and a check_stock that returns ok:false with a next step, handled without showing Emma an error. Then the answer.
+- Turn 2, the order: find_supplier, search_policy, then the talking point: Ask Northbridge first tries create_purchase_order and the ERP refuses: "A direct order is limited to £50,000; this one is £285,600." The guard and the ERP's own rule caught the wrong path. It then takes the right one: check_budget, the create_purchase_request preview with confirm=false (£273,600, approver DOKAFOR, nothing saved), and the question to Emma.
+- Turn 3: "Yes, go ahead"; the write lands in Daniel's inbox; the receipt is read back from Ledgerline: WAITING FOR APPROVAL. "Incident 4, fixed." If one model call is visibly slow in the recording, say so: that is why production teams trace latency.
+The standalone version is flow3d/index.html (?autoplay). Without WebGL the slide shows a poster.
 
-**Plate 55 · A1 (1 min).** Due before Lecture 3. Choose a module kit now; the table lists all eight.
+**66 · The pieces.** The PaperBanana overview. "Count your list against this. Who had the harness? Who had MCP?" (answer to question 11: C).
 
-**Plate 56 · Next time (1 min).** "Tomorrow we take the tools away and ask about the gaskets. With no tools, Ask Rasoi makes up a stock figure. To see why, we open the model."
-- Link: `/after?stage=brain`.
+**67 · One tool per activity.** Click check_stock, create_purchase_order. "A tool is a job, not a screen. The ember edge means it saves something, so it previews first."
+
+**68 · A tool is a contract (tool.json).** [click] JSON schema definition, [click ×3] name/description, input schema with confirm, output schema with the real status. "That output field is incident 4, fixed."
+
+**69 · The LLM chooses.** The recorded decisions. "This is the Thought–Action–Observation loop from slide 4. The tool result is the observation." [click] [click] the certification question: it read policy and wrote nothing.
+
+**70 · MCP, the plug.** [click ×2] tools/list, then tools/call. "Lecture 4 builds this; Lecture 9 goes deep."
+
+**71 · So this is an agent.** [click ×4] model + tools + loop + a person. Read the definition. Compare with the class list from question 12.
+
+## Part 10 · In production (8:42–8:51)
+
+All numbers on these plates come from window.PROD (experiments/production/figdata_production.js, from logs/stacks_r1-3.json and logs/ablation_*.json, run 30 Oct 2026). Screenshots are real Langfuse pages of those runs.
+
+**72 · Part Ten.** "A demo runs on one laptop. This is what a production team does with the same agent."
+
+**73 · Same agent, three runtimes.** The figure: same toolbox over MCP, three runtimes, one model API, traces into Langfuse, the same checks on Ledgerline.
+
+**74 · Who makes these, and what for.** [click ×3] OpenAI Agents SDK, LangGraph, Langfuse, each mapped to the lecture where they build the piece by hand.
+
+**75 · Does the runtime matter?** [click] define never-event (NE1–NE6 in the logs: unapproved, duplicate, uncertified supplier, duplicate supplier, "sent" when not released, more goods than arrived). Read the table row by row: all three 15/15 with 0 never-events. Median tokens: harness 17,141, Agents SDK 15,550, LangGraph 14,629. Cost per mission £0.0115 / £0.0122 / £0.0122. p50 / p95: 36.0 / 68.1 s, 38.7 / 62.2 s, 34.0 / 57.6 s. [click] "The gap between stacks is smaller than the spread between runs of the same stack." [click] Daniel's mission (M3): in 5 of 9 runs his assistant reached for create_purchase_order after approving (a line in our own prompt, written for Emma), and Ledgerline refused every save with ERR-SEC-0001. Six of the nine M3 runs also hit the 12-call cap while checking the lithium-cell rule; they still passed on Ledgerline's state. "Least privilege in the ERP held, not the prompt. None of the three frameworks stopped it." Pick a framework for what it gives around the loop (sessions, checkpoints, handoffs, guardrails, an auditable graph), not for accuracy.
+
+**76 · Reading a trace.** The real, public Langfuse trace of mission M4 on our harness (Gemini 3.8 Flash). One view per click: the tree (header: time, cost, tokens, user, and our two scores erp_check and never_events); the release_purchase_order span (arguments in, Ledgerline's receipt out: "this is how you audit 'did it really happen' without trusting the reply"); the timeline (tools take milliseconds, the model takes the seconds: "cut model calls or pick a faster model, don't optimise the ERP"); one model call (what it saw and the tools it chose, with tokens and cost: "this is where you debug why").
+
+**77 · Incident 4, for real.** Llama 4 Maverick, M4. Emma says "Yes, go ahead"; it replies "The order PO/2026/01190 is RELEASED." No order existed (2 of 3 runs of M4: NE5). [click] The tree: model calls and no tool span; it wrote its tool calls as text, in 12 of 15 missions. [click] "The reply looked perfect. The check on Ledgerline's state caught it. If we had graded the reply, it would have passed." Tie it back to slide 12.
+
+**78 · Which model? An ablation.** Click the four metrics; the sentences on the left are filled from the data. Five of six models passed 15/15 with no never-event (GPT-6 Luna: median 14,838 tokens, £0.00045 a mission, 19.3 / 42.2 s). Llama 4 Maverick passed 4/15, with 2 never-events (NE5). Teaching point on GPT-6 Luna, from an earlier sweep, before we fixed the tool (not in the final numbers): it passed the warehouse name "Manchester stores" instead of the code to receive_goods; the tool's next step failed, Luna told Aiko the receipts were not recorded, but Ledgerline had saved them against a warehouse that does not exist. Only the read-back check caught it. "The check on the ERP's state caught what the reply hid, and we fixed the tool." Cost: at the same pass rate, gpt-oss-120b costs about 1/50 of the course default. Caveats aloud: 15 missions per model, read differences under ~2× as noise; a p95 is partly which provider OpenRouter routed you to. And: in our first sweep a leaked example request number made the test too easy. "Your eval can be wrong too. Read the transcripts."
+
+**79 · Ask the class 13: what would you look at first?** Most say pass rate. For Northbridge the first answer is never-events, then where the data goes, then cost.
+
+## Part 11 · The 2026 agent stack (8:50–8:54)
+
+**80 · Part Eleven.**
+
+**81 · The stack.** Nine clicks, one layer each, bottom up: model, gateway, harness, tools and MCP, knowledge, workflows, trust, observability and evals, durable execution and deployment. For each: read the question it answers in quotes, name two tools, say the lecture. The tenth click shows Ask Northbridge on every layer. Anyone can click a layer afterwards.
+
+**82 · Ask Northbridge, whole.** The master architecture. "Every lecture's last slide lights up its piece of this."
+
+## Part 12 · Twelve lectures (8:54–8:57, fast)
+
+**83 · Part Twelve.** "One slide per lecture. I'll go quickly; the slides stay on the hub."
+
+**84–95 · Lectures 1–12.** For each: the story beat, the project, the assignment, in one breath. Slow down on L7 (Trust: Henrik's "can we switch it on?") and L8 (the frameworks the class just saw).
+
+## Part 13 · Your capstone (8:57–8:59)
+
+**96 · Part Thirteen.**
+
+**97 · Your domain, your agent.** [click ×4] the path A1 → demo day. [click] the two options: your own domain from modules/TEMPLATE, or a kit. "Keep it fictional; never bring an employer's real data."
+
+**98 · Graded out of 100, and demo day.** The seven lines; the two overriding rules. [click] the 8-minute slot on Sun 6 Dec.
+
+**99 · Ask the class 14: one job you would hand to an agent tomorrow.** "That may be your capstone."
+
+## Close (8:59–9:00)
+
+**100 · What this course gives you.** [click ×4] role, skills, portfolio, judgement.
+
+**101 · NB1.** Runs in Colab with no key. (Check the cell names against the rebuilt NB1 before class.)
+
+**102 · A1.** Due before Lecture 3, Sat 7 Nov, 7 AM IST.
+
+**103 · Next time: The Brain.** "Tomorrow we take the tools away, and it makes up the stock figure. Then we open the model."
 
 ---
 
-## Where every number comes from
+### If time runs short
+Skip in this order: 28 (why one record), 67 (tool grid), 84–95 (say "the lecture slides are on the hub"), 50, 26's sources.
 
-| Plate | Number | Log |
-|---|---|---|
-| 6–10 | codes, PO fields, statuses, P2P outputs | `experiments/logs/before_measure.json` (careful run) |
-| 11 | ₹2,69,040 and ₹2,80,840 | `before_measure.json` (the PR estimate and the PO gross Bahi computed); rates and limits from `bahi/erp/seed.py` |
-| 13 | envelopes, 38 services | `experiments/logs/services_blackbox.json` |
-| 12, 14, 16–24 | screenshots and status-bar text | `experiments/legacy_shots.py` → `figs/legacy/*.jpg`, `experiments/logs/legacy_shots.json` |
-| 25, 27 | screens, fields, codes, errors, minutes (KLM estimate) | `before_measure.json` |
-| 32–38, 45–47, 50 | transcripts, tool calls, 6 of 12, 474 characters, 1.3 min waiting, 15 tools over MCP | `experiments/logs/after_run.json` (gemini-3.8-flash, cassette `L1v3_after`) |
-| 14 | 412 screens, about 3,100 procedures, about 1,200 plants, 1998 | the story canon (BUILD.md §1), not measured |
-| 52 | market evidence: survey shares, downloads, A2A organisations, survey percentages, OWASP rank, release dates | not our measurement: market evidence as collected in `INDUSTRY_TOOLS_PLAN.md` (2026-10-28), each source named on the plate with its caveat |
-| 1–3, 29–31, 39, 48 | the app's letter, quotes, brief, wall, home page, scorecard, Studio, tool cards | Experience screenshots (`bahi/bahi/experience/shots/`, `studio/shots/`) → `figs/app/*.jpg`; story numbers in the quotes (600 cookers, eleven days) are the Experience's fiction |
-
-**How the figures were made:**
-- **PaperBanana** (on Modal, `tools/pb_modal.py`; specs in `figs/figs.json`): `erp_shared_record`, `ask_rasoi_how_it_works` and `tool_anatomy` are used; `before_after` is spare.
-- **The 2026 agent stack (plate 51):** `figs/ask_rasoi_stack_base.jpg` is the lead's master PaperBanana figure `figures/ask_rasoi_architecture_wide.png`, resized; `stackfig.js` lays clickable layers over it (the same file is in `lectures/L12-your-module/`).
-- **Live SVG/HTML** in `figs.js`.
-- **Regenerating:** `python3 gen_figdata.py` rebuilds `figdata.js` from the logs.
+### Sources on the plates (for questions)
+- ReAct: Yao et al., arXiv 2210.03629 (6 Oct 2022). Function calling: OpenAI, 13 Jun 2023. Computer use: Anthropic, 22 Oct 2024. MCP: Anthropic, 25 Nov 2024; donated to the Agentic AI Foundation (Linux Foundation) 9 Dec 2025 with 97M+ monthly SDK downloads and 10,000+ active public servers. Claude Code: 24 Feb 2025.
+- LangChain, State of Agent Engineering: 1,340 responses, 18 Nov–2 Dec 2025; 57.3% in production; 89% observability; 62% step tracing; 52.4% offline evals; 37.3% online; quality the top barrier (about a third).
+- Gartner: 25 Jun 2025 (40%+ of agentic AI projects cancelled by end 2027; about 130 real vendors); 26 Aug 2025 (up to 40% of enterprise apps with task-specific agents by end 2026, from under 5%).
+- MIT Project NANDA, The GenAI Divide: State of AI in Business 2025 (95% of pilots, no measurable P&L impact; a narrow, debated measure).
+- Klarna press release 27 Feb 2024; CEO interview with Bloomberg, May 2025.
+- Replit/SaaStr incident, Jul 2025 (eWeek, The Register). Moffatt v. Air Canada, 2024 BCCRT 149. Stripe API reference, idempotent requests.
+- SAP: S/4HANA launched 2015; Business Suite 7 mainstream maintenance to 2027 (The Register). NetSuite: founded 1998; Oracle completed the purchase 7 Nov 2016, about $9.3bn. Dynamics 365: GA 1 Nov 2016. Odoo: odoo.com says over 28 million users. Workday: over 60% of the Fortune 500 (Fortune, 1 Apr 2025). Infor: Koch Industries completed the acquisition in May 2020.
+- OpenAI Agents SDK: 11 Mar 2025, successor to Swarm. LangGraph 1.0: Oct 2025. Langfuse: MIT-licensed, acquired by ClickHouse 16 Jan 2026.
+- LinkedIn Jobs on the Rise 2026 (US): AI engineer first.

@@ -51,7 +51,7 @@ const RX = {
   inr(n, dec) { if (n == null || isNaN(n)) return '—'; return new Intl.NumberFormat('en-GB', { maximumFractionDigits: dec || 0, minimumFractionDigits: dec || 0 }).format(n); },
   // Model cost is kept internally in rupees at the course's fixed rate (llm.py USD_INR = 88); shown in pounds at $1 = £0.79.
   gbpFromInr(v) { return (v || 0) / 88 * 0.79; },
-  rupees(n) { return n == null ? '—' : '£' + RX.inr(n); },
+  money(n) { return n == null ? '—' : '£' + RX.inr(n); },
   mmss(s) { s = Math.max(0, Math.round(s || 0)); const m = Math.floor(s / 60); return m + ':' + String(s % 60).padStart(2, '0'); },
   dur(s) { s = Math.round(s || 0); if (s < 60) return s + ' s'; const m = Math.floor(s / 60); return m + ' min ' + (s % 60) + ' s'; },
   toast(msg, ms) {

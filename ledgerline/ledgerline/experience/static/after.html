@@ -232,7 +232,7 @@ body{background:#fff}
   const MONEY = /value|rate|limit/;
   const WHO = { ECLARKE: 'Emma Clarke', DOKAFOR: 'Daniel Okafor', ATANAKA: 'Aiko Tanaka', HWEBER: 'Henrik Weber', LMORENO: 'Luis Moreno' };
   const fdate = (v) => { const d = new Date(v + 'T00:00:00'); return isNaN(d) ? v : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); };
-  const fv = (k, v) => (typeof v === 'string' && WHO[v]) ? WHO[v] : (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)) ? fdate(v) : v === true ? 'yes' : v === false ? 'no' : v == null ? '—' : typeof v === 'number' ? (MONEY.test(k) ? (k.includes('rate') ? '£' + RX.inr(v, 2) : RX.rupees(v)) : RX.inr(v)) : String(v);
+  const fv = (k, v) => (typeof v === 'string' && WHO[v]) ? WHO[v] : (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)) ? fdate(v) : v === true ? 'yes' : v === false ? 'no' : v == null ? '—' : typeof v === 'number' ? (MONEY.test(k) ? (k.includes('rate') ? '£' + RX.inr(v, 2) : RX.money(v)) : RX.inr(v)) : String(v);
   const TITLES = { create_purchase_request: 'Purchase request', create_purchase_order: 'Purchase order', receive_goods: 'Goods receipt', register_supplier: 'New supplier' };
   function previewHTML(pv, live) {
     const rows = Object.entries(pv.preview).filter(([k, v]) => v !== null && v !== '' && !(k === 'cost_centre_state' && ['OK', 'OPEN'].includes(v)));
@@ -348,7 +348,7 @@ body{background:#fff}
   }
   function renderInbox(rows) {
     $('inbox').innerHTML = rows.length ? rows.map((r) => `<div class="it"><div><b><span class="tag ${r.doc_type === 'PR' ? 'af' : 'gr'}" style="margin-right:8px;padding:4px 9px">${r.doc_type}</span>${RX.esc(r.doc_no)}</b>
-      <span>${RX.esc(r.item_code)} × ${RX.inr(r.quantity)} · ${RX.rupees(r.value)} · from ${RX.esc(r.requested_by)}</span></div>
+      <span>${RX.esc(r.item_code)} × ${RX.inr(r.quantity)} · ${RX.money(r.value)} · from ${RX.esc(r.requested_by)}</span></div>
       <div style="display:flex;gap:6px"><button class="btn sky sm" data-ap="${r.doc_type}|${r.doc_no}">Approve</button></div></div>`).join('')
       : '<div class="empty">Nothing is waiting for Daniel.</div>';
     $('inbox').querySelectorAll('[data-ap]').forEach((b) => b.onclick = async () => {
@@ -399,9 +399,9 @@ body{background:#fff}
       : `<span class="tag">Your brief</span><p class="ink2" style="margin-top:12px">You have not written your brief yet. <a href="/brief">Write it</a>, then come back.</p>`;
     const t = ST.track, A = ST.after || {}, s = Object.fromEntries(t.steps.map((x) => [x.k, x]));
     const did = [];
-    if (s.request.done) did.push(`Raised <b>${RX.esc(t.pr.pr_no)}</b> from one sentence, estimated at ${RX.rupees(t.pr.est_value)}, and said it waits for Daniel.`);
+    if (s.request.done) did.push(`Raised <b>${RX.esc(t.pr.pr_no)}</b> from one sentence, estimated at ${RX.money(t.pr.est_value)}, and said it waits for Daniel.`);
     if (s.approved.done) did.push(`Daniel approved it${A.taps ? ' with one tap' : ''}, with his own limit.`);
-    if (s.order.done) did.push(`Made <b>${RX.esc(t.po.po_no)}</b> with Voltway at the contract rate: ${RX.rupees(t.po.gross_value)} with VAT, on cost centre ${RX.esc(t.po.cc_cd)}.`);
+    if (s.order.done) did.push(`Made <b>${RX.esc(t.po.po_no)}</b> with Voltway at the contract rate: ${RX.money(t.po.gross_value)} with VAT, on cost centre ${RX.esc(t.po.cc_cd)}.`);
     if (s.released.done) did.push('Released it to Voltway, and said so only once Ledgerline said RELEASED.');
     if (t.grns.length) did.push(`Aiko received ${t.grns.map((g) => RX.inr(g.qty)).join(' + ')} (${t.grns.map((g) => RX.esc(g.grn_no)).join(', ')}). Stock is now ${RX.inr(t.stock.on_hand)}.`);
     $('did').innerHTML = `<span class="tag af">What Ask Northbridge did in your Northbridge</span>${did.length ? `<ol class="did" style="padding-left:20px;margin-top:14px">${did.map((d) => `<li>${d}</li>`).join('')}</ol>`

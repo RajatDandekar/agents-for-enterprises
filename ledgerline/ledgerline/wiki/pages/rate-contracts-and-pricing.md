@@ -30,4 +30,4 @@ Rate contracts set agreed prices for regular items from suppliers over defined v
 - [[purchase-orders]] Purchase Order Entry and Rules
 - [[purchase-policy-overview]] General Purchasing Policy
 - [[supplier-onboarding-and-master]] Supplier Onboarding and Management
-- [[battery-safety-compliance]] Food-Grade Compliance and Certificates
+- [[battery-safety-compliance]] Battery Safety Compliance and Certificates

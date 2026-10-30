@@ -32,7 +32,7 @@ PRICE = {"openrouter:google/gemini-3.8-flash": (0.825, 4.125), "openrouter:googl
 
 
 def cost_of(r) -> float:
-    """Estimated rupees for one reply (fixed 88 per USD, as ledgerline.llm)."""
+    """Estimated cost of one reply, kept in rupees internally (fixed 88 per USD, as ledgerline.llm); pages show pounds."""
     p = PRICE.get(r.model)
     if not p:
         return r.cost_inr
@@ -55,8 +55,8 @@ You are talking to {name}, {role}. Today is Monday 26 October 2026.
 You can search Northbridge's purchase policy and the Ledgerline manual with search_policy. For any question about a rule, call it
 first and quote the clause with its citation, for example (POL-PUR-001 §6.2). Never state a rule from memory.
 If the first search does not answer it, search again for the rule behind the question (which suppliers may be used,
-certificates, limits, approvals). Battery packs, lids and body blanks touch food.
-Northbridge makes e-bikes, so many of the parts it buys touch food. Before you answer, think which of Northbridge's rules
+certificates, limits, approvals). Battery packs, hub motors and chargers contain or charge lithium cells.
+Northbridge makes e-bikes, so many of the parts it buys contain lithium cells. Before you answer, think which of Northbridge's rules
 the question could depend on (the kind of part, the supplier, the amount, the price) and search for each of them
 separately.
 You cannot see or change Ledgerline ERP yet: no stock, orders, prices or approvals. If asked for one, say so plainly.
@@ -68,9 +68,9 @@ permissions and nobody else's. Today is Monday 26 October 2026.
 
 How you work
 - Every fact (stock, rates, suppliers, budgets, approvals, statuses, rules) comes from a tool. Never guess a number.
-  For a question about a rule, call search_policy and cite the clause. Battery packs, lids and body blanks touch food.
+  For a question about a rule, call search_policy and cite the clause. Battery packs, hub motors and chargers contain or charge lithium cells.
 - Anything that saves a request, an order or a goods receipt: first call the tool with confirm=false and show the
-  preview as a short list (item, quantity, supplier, value in rupees, cost centre, need-by date, who must approve).
+  preview as a short list (item, quantity, supplier, value in pounds, cost centre, need-by date, who must approve).
   Ask {first} to confirm. Call it again with confirm=true only after a clear yes.
 - Release and approve tools have no preview. An instruction like "release it" or "approve it", or a yes to a plan
   that says you will release it, is the go-ahead for that one document.
@@ -129,14 +129,14 @@ def cell_safety_block(erp, tool: str, args: dict) -> dict | None:
     if not sup or not item:
         return None
     with erp.lock:
-        food = erp.q1("SELECT cell_safety FROM item WHERE itm_cd=?", item)
+        cell = erp.q1("SELECT cell_safety FROM item WHERE itm_cd=?", item)
         cert = erp.q1("SELECT MAX(valid_to) AS v FROM sup_cert WHERE sup_cd=? AND cert_type='UN38.3'", sup)
         today = erp.today
-    if not food or not food["cell_safety"] or (cert and cert["v"] and cert["v"] >= today):
+    if not cell or not cell["cell_safety"] or (cert and cert["v"] and cert["v"] >= today):
         return None
     state = "has an expired UN 38.3 certificate" if cert and cert["v"] else "has no UN 38.3 certificate"
     return json.dumps({"ok": False, "blocked_by": "battery-safety guard (Purchase Policy §6.2)",
-                       "error": f"{item} touches food and supplier {sup} {state}. Northbridge may not order it from them.",
+                       "error": f"{item} is a lithium-cell part and supplier {sup} {state}. Northbridge may not order it from them.",
                        "next_step": "Tell the user this order cannot go ahead under §6.2. Offer a certified supplier "
                                     "(find_supplier shows certificates), or the supplier's valid certificate first."})
 

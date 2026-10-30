@@ -11,7 +11,7 @@ This page defines the core data formats, organizational codes, unit of measure s
 ## Rules
 - Service responses return an envelope containing four fields: `rc` (return code: S for success, E for error), `err_cd` (the error code when `rc` is E), `msg` (a short message in capitals), and `data` (the result) [MAN-DD-72 §1.2].
 - Dates in payloads must use the format YYYY-MM-DD [MAN-DD-72 §1.3].
-- Amounts must be entered in rupees with two decimal places [MAN-DD-72 §1.3].
+- Amounts must be entered in pounds sterling with two decimal places [MAN-DD-72 §1.3].
 - System codes must be written in capital letters [MAN-DD-72 §1.3].
 - Organisation units use specific codes: NBC-MAN-01 for the Manchester plant and NBC-LDS-01 for the Leeds unit, both located in England (state code MH) [MAN-DD-72 §2.1].
 - Supplier and organisation unit locations use two-letter state codes, such as MH (England), GJ (the Netherlands), and WB (West Bengal) [MAN-DD-72 §2.2].

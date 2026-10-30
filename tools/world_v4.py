@@ -97,7 +97,8 @@ MAP = [
 
 OLD_WORDS = ["Rasoi", "Kavita", "Rohit", "Neha", "Suresh", "Anand", "Deccan", "Sahyadri", "Mahalaxmi", "Kaveri",
              "Shakti", "Pune", "Chakan", "Diwali", "gasket", "cooker", "Bahi", "bahi", "GST", "₹", "lakh", "crore",
-             "IST", "FSSAI", "India", "Rs.", "INR"]
+             "IST", "FSSAI", "India", "Rs.", "INR", "food", "Food", "rupee", "rupees", "litre", "godown",
+             "festival", "challan", "IGST", "CGST", "SGST", "MSME", "PAN", "Nagpur", "dealer", "lids", "Indian"]
 TEXT = {".py", ".md", ".json", ".jsonl", ".js", ".html", ".css", ".txt", ".yaml", ".yml", ".toml", ".sh", ".ipynb",
         ".csv", ".sql", ".env", ".cfg", ".ini", ""}
 SKIP = {"cassettes", "__pycache__", ".git", "qa", "node_modules", "shots", "archive", "site-dist", ".venv"}

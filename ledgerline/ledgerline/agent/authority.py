@@ -50,7 +50,7 @@ SERVICE_ROLES = {"SYS-ADMIN"}  # POL-APR-002 §4.2: integration and service acco
 
 
 def inr(x) -> str:
-    """£ with Indian digit grouping: 285600 -> £285,600."""
+    """£ with digit grouping: 285600 -> £285,600."""
     if x is None:
         return "-"
     x = float(x)
@@ -651,7 +651,7 @@ class NeverEventGuard:
     def check_order(self, sup: str, itm: str, gross: float | None, key: str | None = None) -> dict | None:
         """Before an order is written (NE1 for a service account, NE2, NE3)."""
         if itm and sup and self._food(itm) and not self._cert_ok(sup):
-            return self._no("NE3", "Purchase Policy §6.2", f"{itm} touches food and {sup} has no valid battery-safety "
+            return self._no("NE3", "Purchase Policy §6.2", f"{itm} is a lithium-cell part and {sup} has no valid battery-safety "
                             "certificate in Ledgerline.", "Ask the user for the certificate's reference and expiry, record it, "
                             "then try again. Nothing was written.")
         live = [o for o in self._live_today(sup, itm) if not key or o["client_ref"] != key]

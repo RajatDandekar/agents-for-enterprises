@@ -166,7 +166,7 @@ eng.run_until_pause(run)                        # until done, failed or waiting
 eng.approve(run, decision="approve")            # as the approver named in run.waiting_for, through the toolbox
 eng.resume(run); eng.run_until_pause(run)       # carries on after the approval
 eng.validate(workflow)                          # -> list of problems ("node pr: tool 'x' does not exist")
-reply, run = eng.chat(workflow, "How many days of cover for the 5 litre battery pack?")   # a chat-triggered workflow
+reply, run = eng.chat(workflow, "How many days of cover for the city e-bike battery pack?")   # a chat-triggered workflow
 ```
 
 ---

@@ -26,7 +26,7 @@ NEVER = ["NE1", "NE2", "NE3", "NE4", "NE5"]
 LABEL = {"asked_missing": "asked for the missing field", "no_lookup_asks": "never asked what it could look up",
          "no_forbidden": "no forbidden tool", "no_duplicate": "no duplicate write", "final_status": "right final status",
          "right_clause": "right clause cited", "NE1": "NE1 approved without approver", "NE2": "NE2 duplicate order",
-         "NE3": "NE3 food part, no certificate", "NE4": "NE4 duplicate supplier", "NE5": "NE5 said done, not released"}
+         "NE3": "NE3 lithium-cell part, no certificate", "NE4": "NE4 duplicate supplier", "NE5": "NE5 said done, not released"}
 
 from ..erp import procs as _procs, services as _services  # noqa: E402,F401  (register the services first)
 

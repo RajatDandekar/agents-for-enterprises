@@ -235,7 +235,7 @@ try:
         page.click("#btnRun")
         st = wait_status(page, ["done", "failed"], timeout=120000)
         check("(d) the LLM node reads the dealer's email and the PR is raised", st == "done"
-              and state(page, "S.run.nodes.extract.output.quantity") == 4000, state(page, "S.run.error"))
+              and state(page, "S.run.nodes.extract.output.quantity") == 400, state(page, "S.run.error"))
         page.click('.node[data-id="extract"] .nres')
         page.wait_for_selector('pre[data-output="extract"]')
         shot(page, "09_dealer_email_llm.png")
@@ -254,7 +254,7 @@ try:
         shot(page, "08a_agent_builder_config.png")
         page.click("#btnRun")  # "Open chat"
         page.wait_for_selector("#chatInput")
-        page.fill("#chatInput", "How many days of cover do we have for the 5 litre battery pack?")
+        page.fill("#chatInput", "How many days of cover do we have for the city e-bike battery pack?")
         page.click("#chatSend")
         page.wait_for_function("() => document.querySelectorAll('.msg.assistant:not(.typing)').length >= 1 && !window.__studio.running",
                                timeout=120000)

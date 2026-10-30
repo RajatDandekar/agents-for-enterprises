@@ -37,6 +37,7 @@ step(emma, "receive_goods", {"po_no": po["po_no"], "quantity": 100, "confirm": T
 rel = step(emma, "release_purchase_order", {"po_no": po["po_no"]})
 assert rel.get("sent_to_supplier"), rel
 step(aiko, "receive_goods", {"po_no": po["po_no"], "quantity": 1200})
+step(aiko, "receive_goods", {"po_no": po["po_no"], "quantity": 1200, "warehouse": "Manchester stores", "confirm": True}, want=False)  # a name, not a code: refused before any save
 g1 = step(aiko, "receive_goods", {"po_no": po["po_no"], "quantity": 1200, "confirm": True})
 step(aiko, "receive_goods", {"po_no": po["po_no"], "quantity": 900, "confirm": True}, want=False)  # more than ordered
 g2 = step(aiko, "receive_goods", {"po_no": po["po_no"], "quantity": 800, "confirm": True})

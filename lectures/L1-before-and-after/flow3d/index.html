@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How it works: one request in 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&display=swap">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<style>
+  html, body { margin: 0; height: 100%; background: #f4f8ff; overflow: hidden; }
+  #stage { position: fixed; inset: 0; }
+  #hint { position: fixed; right: 30px; top: 26px; font: 400 13px/1.4 "Google Sans Flex", Arial, sans-serif; color: #6b6e76; pointer-events: none; transition: opacity 1s; }
+</style>
+<script src="trace.js"></script>
+</head>
+<body>
+<div id="stage"></div>
+<div id="hint">Right arrow or space: next · Left: back · R: replay · A: autoplay · F: full screen</div>
+<script type="module">
+import { mountFlow3D, loadTrace } from './flow3d.js';
+const q = new URLSearchParams(location.search);
+const el = document.getElementById('stage');
+let trace = window.FLOW3D_TRACE;
+try { trace = await loadTrace(new URL('trace.json', location.href)); } catch (e) { /* opened from disk: trace.js has the same data */ }
+await document.fonts.ready.catch(() => {});
+const f = mountFlow3D(el, {
+  trace, mode: 'standalone', still: q.has('still'),
+  stage: q.has('stage') ? +q.get('stage') : undefined, t: q.get('t') === null ? undefined : (q.get('t') === 'end' ? 'end' : +q.get('t')),
+  autoplay: q.has('autoplay'),
+});
+window.flow3d = f;
+window.__flow3dReady = true;
+if (q.has('still')) document.getElementById('hint').remove(); else setTimeout(() => { const h = document.getElementById('hint'); if (h) h.style.opacity = 0; }, 6000);
+addEventListener('keydown', (e) => {
+  if (['ArrowRight', ' ', 'PageDown', 'Enter'].includes(e.key)) { e.preventDefault(); f.next(); }
+  else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); f.prev(); }
+  else if (e.key === 'r' || e.key === 'R') f.replay();
+  else if (e.key === 'a' || e.key === 'A') f.autoplay();
+  else if (e.key === 'Home') f.go(0, true);
+  else if (e.key === 'End') f.go(f.count - 1, true);
+  else if (e.key === 'f' || e.key === 'F') { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}); }
+});
+</script>
+</body>
+</html>

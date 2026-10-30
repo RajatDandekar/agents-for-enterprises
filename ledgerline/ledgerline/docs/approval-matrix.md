@@ -38,7 +38,7 @@ This matrix sets who may approve a purchase request or purchase order, and up to
 4.3 An approver on leave may delegate in writing to someone of the same or a higher role for a stated period. Delegation to a lower role is not allowed.
 
 ## 5. Examples
-5.1 Emma Clarke (purchase executive) raises an order for 2,000 battery packs at £119.00: basic £238,000, VAT 18% £47,600, gross £285,600. The gross is above her £250,000 limit, so the order goes to her manager, Daniel Okafor (purchase manager, limit £1,000,000), for approval.
+5.1 Emma Clarke (purchase executive) raises an order for 2,000 battery packs at £119.00: basic £238,000, VAT 20% £47,600, gross £285,600. The gross is above her £250,000 limit, so the order goes to her manager, Daniel Okafor (purchase manager, limit £1,000,000), for approval.
 5.2 The same order at basic value alone (£238,000) would look within her limit. That is why limits are measured on the gross value (§2.1).
 5.3 An order of £720,000 gross raised by the senior buyer goes to the purchase manager. An order of £1,200,000 gross raised by anyone in purchasing goes to the plant head, Henrik Weber.
 

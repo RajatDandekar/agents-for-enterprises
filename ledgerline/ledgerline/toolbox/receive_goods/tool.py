@@ -14,6 +14,12 @@ def run(s, po_no, quantity, warehouse=None, remarks="", confirm=False):
     if h["status"] != "RL":
         raise ToolError(f"{po_no} is not open for receipt (status {h['status']}).",
                         "Only a RELEASED order can be received. Check order_status.")
+    if warehouse:  # Ledgerline's grn_save accepts any code, so check it here, before anything is saved
+        codes = [w["whs_cd"] for w in _ledgerline(s, "whs_list")["rows"]]
+        if warehouse not in codes:
+            raise ToolError(f"There is no warehouse with code {warehouse!r}.",
+                            f"Use one of {', '.join(codes)}, or leave warehouse out to use the order's own "
+                            f"({h['whs_cd']}).")
     if not confirm:
         return {"ok": True, "preview": preview, "note": "Nothing has been saved. Confirm the count with the user."}
     r = _ledgerline(s, "grn_save", po_no=po_no, qty=quantity, remarks=remarks, **({"whs_cd": warehouse} if warehouse else {}))
