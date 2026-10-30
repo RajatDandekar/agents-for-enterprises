@@ -7,756 +7,593 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <link rel="stylesheet" href="../../engine/plates.css">
-<style>
-.fade-hide{opacity:0!important;pointer-events:none}
-.thread .msg,.thread .truth,.tw,.wl,.c1,.c2,.c3,.c4,.c5,.q0,.q1,.q2,.s0,.s1,.s2,.s3,.s4,.sg2,.tile,.r1,.r2,.samp{transition:opacity .45s ease}
-.truth{display:grid;grid-template-columns:1fr auto;gap:2px 14px;align-items:center;background:var(--win);border:2px solid;border-color:#fff #404040 #404040 #fff;padding:10px 14px;font:15px/1.35 Tahoma,Verdana,sans-serif;color:#000;margin-top:4px}
-.truth b{grid-column:1/-1;font-weight:700}.truth .big{grid-row:2/4;grid-column:2;font:700 34px/1 Tahoma,sans-serif;color:#0A246A}
-.pb{display:flex;align-items:center;gap:10px;margin:5px 0;font-size:18px}
-.pb .pt{font:450 17px/1.2 var(--mono);text-align:right;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pb .pr{display:inline-block;height:24px;background:var(--card);border-radius:7px;overflow:hidden}
-.pb .pr i{display:block;height:100%;border-radius:7px;transition:width .35s ease}
-.pb .pbv{font:500 16px/1 var(--mono);color:var(--ink-2);white-space:nowrap}
-.pb.hi .pt{color:var(--after);font-weight:600}.pb.dim{opacity:.28}
-.ptext{background:var(--card);border-radius:16px;padding:12px 16px;font-size:20px;margin-bottom:12px;line-height:1.45}
-.ptext .mono{font-size:17px}.cursor{color:var(--after);animation:blink 1s steps(2) infinite}
-@keyframes blink{50%{opacity:0}}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.tw{padding:14px 16px}.tw .tag{margin-bottom:8px}
-.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start}
-.nchip{font:500 15px/1 var(--mono);padding:7px 9px;border-radius:999px;cursor:pointer}
-.nchip.bad{background:var(--before-soft);color:var(--before)}.nchip.no{background:#fff;color:var(--ink-3)}.nchip.ok{background:var(--gold-soft);color:var(--gold)}
-.reply{margin-top:10px;min-height:50px;background:var(--card);border-radius:14px;padding:10px 14px;font-size:17px}
-.tchip{display:inline-flex;align-items:center;font:450 17px/1 var(--mono);padding:7px 8px;border-radius:9px;background:var(--card);white-space:pre}
-.tchip.sm{font-size:14px;padding:4px 5px;border-radius:6px}
-.tchip.c0{background:#dbe9ff}.tchip.c1{background:#e3f5ec}.tchip.c2{background:#fdebd9}.tchip.c3{background:#ece6fb}
-.tchip.new{background:var(--after);color:#fff}.tchip i{font-style:normal;font-size:13px;color:var(--ink-3)}
-.tchip sub{font:500 12px var(--font);color:var(--ink-3);margin-left:4px}
-.chips.big .tchip{font-size:19px;padding:8px 9px}
-.wl{margin-bottom:16px}.wl .k,.sg2 .k{font:600 14px/1.2 var(--font);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px}
-.bpe-top{display:flex;gap:12px;margin-bottom:12px}
-.stat{background:var(--card);border-radius:16px;padding:10px 14px;display:flex;flex-direction:column;gap:3px;font-size:15px;color:var(--ink-2)}
-.stat b{font:500 30px/1 var(--font);color:var(--ink)}.stat.wide{flex:1}.stat.wide b{font-size:24px}
-.bw{display:grid;grid-template-columns:120px 1fr;align-items:center;gap:8px;margin:7px 0}
-.pairc{display:inline-block;font:450 15px/1 var(--mono);background:var(--card);padding:6px 9px;border-radius:8px;margin:0 6px 6px 0}
-.pairc.on{background:var(--after-soft);color:var(--after)}
-.counts{display:flex;gap:20px;margin-top:14px;font-size:20px;color:var(--ink-2)}.counts b{font-weight:600;color:var(--ink)}.counts .a b{color:var(--after)}
-.idc{display:inline-flex;flex-direction:column;align-items:center;gap:4px}.idc .id{font-size:14px;color:var(--ink-3)}
-table.qk td,table.hc td,table.cm td,table.sm td{font-size:18px}table.hc td.n,table.cm td.n,table.sm td.n,table.qk td.n{font-size:17px}
-table.cm td.n{text-align:center;border:2px solid #fff;border-radius:6px}table.cm td.mask{background:#f1f2f4;color:var(--ink-3);font-size:14px}
-.cover{position:absolute;left:0;right:0;top:0;background:#fff;transition:height .6s ease}
-.ov{position:absolute;background:#fff;display:flex;flex-wrap:wrap;gap:4px;align-items:center;justify-content:center;overflow:hidden}
-.ovc{font-size:14px!important;padding:4px 6px!important}
-.ovt{font:500 14px/1.25 var(--font);color:var(--ink-2);width:100%;text-align:center}
-.ovbars{display:flex;flex-direction:column;gap:2px;width:100%}
-.ovbars span{display:grid;grid-template-columns:110px 155px 50px;align-items:center;gap:6px;font:450 13px/1.1 var(--mono)}
-.ovbars b{font-weight:500;text-align:right}.ovbars i{display:block;height:11px;border-radius:4px;background:var(--after)}.ovbars em{font-style:normal;color:var(--ink-2)}
-.posrow{display:flex;gap:8px;align-items:center;margin-bottom:10px}
-.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.tile{background:var(--card);border-radius:20px;padding:14px 18px;display:flex;flex-direction:column;gap:4px}
-.tile b{font:500 30px/1.1 var(--font);letter-spacing:-.01em}.tile span{font-size:17px;color:var(--ink-2)}
-.sline{font-size:15px;padding:4px 0;border-bottom:1px solid var(--rule);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sline b{font:600 15px var(--mono);color:var(--before);margin-left:6px}
-.sg2{margin-bottom:10px}
-.sgrid{display:grid;grid-template-columns:1fr 1fr;column-gap:24px}
-.json.tpl{white-space:pre-wrap;font-size:17px;line-height:1.6}.tpl .sp{color:var(--after);font-weight:600}
-.two{position:absolute;left:100px;right:100px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}
-.two .mono{word-break:break-all}
-.three{position:absolute;left:100px;right:100px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
-.img{position:absolute}.img img{width:100%;height:100%;object-fit:contain;display:block}
-.q{font-size:22px;margin-bottom:12px}.q b{color:var(--after)}
-.ans{font-size:19px;color:var(--ink-2)}
-.pill{white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;gap:8px;font:500 19px/1 var(--font);padding:13px 20px;border-radius:999px;background:var(--glass);border:1px solid var(--pill-line);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--after);text-decoration:none}
-.pill::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--after)}
-.lit{position:absolute;border-radius:16px;box-shadow:0 0 0 4000px rgba(255,255,255,.72),0 0 0 4px var(--after);pointer-events:none}
-.map9{columns:2;column-gap:30px;font-size:22px;line-height:1.5;margin:0;padding-left:28px}
-.map9 li{margin-bottom:6px;break-inside:avoid}
-.bigq{font-size:48px}
-</style>
+<link rel="stylesheet" href="l2.css">
 </head>
 <body>
 <div class="deck" id="deck">
 
-<!-- ============ OPENING ============ -->
+<!-- =============================== OPENING =============================== -->
 <section class="slide" data-plain="1">
   <div class="center">
-    <div class="kicker">Agentic Systems Engineering · Lecture 2 · Sun 1 Nov 2026 · 7–9 AM IST</div>
-    <h1>The Brain: How an LLM Works</h1>
-    <p class="lede" style="max-width:1100px;margin-top:26px">Ask Rasoi gets its first piece: a large language model. Today we open it up, one token at a time, and find out why it talks so well, and why it makes things up.</p>
-    <p class="small" style="margin-top:18px">Dr. Rajat Dandekar · Vizuara</p>
+    <div class="kicker">Agentic Systems Engineering · Lecture 2 of 12 · Sun 1 Nov 2026 · Dr. Rajat Dandekar, Vizuara</div>
+    <h1>The Brain: how an LLM works</h1>
+    <p class="lede" style="margin-top:26px">We follow one sentence, Emma’s question, through a real language model, from the first letter to the last digit of its answer.</p>
   </div>
 </section>
 
-<section class="slide" data-plate="Last Time, This Time">
-  <div class="lec-top"><h2>Last time, this time</h2><p class="sub">Lecture 1 showed you Rasoi's Before and After. Today we start building the After, one piece per lecture.</p></div>
-  <div class="ba">
-    <div class="card bf step"><span class="tag bf">Lecture 1 · The Before and the After</span><h3>The whole thing, from outside</h3>You played Bahi ERP 7.2 from 1998: check stock, raise the request, approve as Rohit, make and release the order, receive the goods. Then you did the same in one conversation with Ask Rasoi.</div>
-    <div class="card af step"><span class="tag af">Lecture 2 · The Brain</span><h3>The first piece: the model</h3>Ask Rasoi with nothing but a large language model (LLM). No tools, no Rasoi data. We open it up: tokens, embeddings, attention, the transformer, training and sampling.</div>
+<section class="slide" data-plate="Where We Are in the Course">
+  <div class="col" style="width:440px">
+    <h2>Last time, the whole After</h2>
+    <p>In Lecture 1 you did Emma’s battery pack order by hand on Ledgerline. Then Ask Northbridge did it from one sentence.</p>
+    <p class="step">It had four parts: a brain, knowledge, hands, and a loop with trust around it.</p>
+    <p class="step"><b class="a">Today we open the first one: the brain.</b> Lecture 3 adds knowledge, Lecture 4 adds hands.</p>
   </div>
-  <div class="opens step"><span class="k">You are the engineer</span>Anand Patil wants Ask Rasoi on the home page before Diwali. Your first build is the bare brain. Kavita tries it on Monday morning.</div>
+  <div class="pfig" style="left:600px;top:150px;width:900px;height:502px"><img src="figs/ask_northbridge_architecture.jpg" alt="Ask Northbridge: people, harness with the LLM, MCP, toolbox, Ledgerline, trust"><div class="lit step" style="left:19%;top:31.6%;width:14.6%;height:10.4%"></div></div>
+  <div class="cap" style="left:600px;top:668px;width:900px"><b>Fig. 1.</b> Ask Northbridge, the whole system from Lecture 1. The LLM, the brain, is the box we open today.</div>
 </section>
 
-<section class="slide" data-plate="Monday, 9:12 AM">
+<section class="slide" data-plate="Monday, 9:05 AM">
   <div class="col" style="width:470px">
-    <h2>Kavita asks the brain</h2>
-    <p>She needs 20,000 gaskets before the Diwali run. First she checks stock.</p>
-    <p class="step">The answer is quick, polite and sure of itself.</p>
-    <p class="step">She asks where the number came from.</p>
-    <p class="step">It names a source, just as smoothly.</p>
-    <p class="step"><b class="b">Bahi says 54,000.</b> The number and the source were both made up.</p>
+    <h2>Emma asks the brain</h2>
+    <p>We took away Ask Northbridge’s tools. No Ledgerline, no policy search. Just the model.</p>
+    <p>Emma asks how many city e-bike battery packs Northbridge has.</p>
+    <p class="step">Ledgerline says 5,400 in Manchester. The brain said something else, and said it calmly.</p>
   </div>
-  <div class="fig" data-fig="coldopen" style="left:640px;top:110px;width:860px;height:640px"></div>
-  <div class="cap" style="left:640px;top:770px;width:860px"><b>Fig. 1.</b> A real run: gemini-3.8-flash, temperature 0, no tools, with the "You know Rasoi's stock" system prompt shown on the next plate. Logged in <code>experiments/logs/cold_open_variants.json</code>; the truth from the <code>check_stock</code> tool in <code>cold_open.json</code>.</div>
+  <div class="fig" data-fig="coldshot" style="left:640px;top:120px;width:860px;height:560px"></div>
+  <div class="cap" style="left:640px;top:700px;width:860px">The live app at <code>/after?stage=brain</code>, from the Experience team’s end-to-end test. Ledgerline’s figure is Northbridge’s seed data.</div>
 </section>
 
-<section class="slide" data-plate="We Asked 48 More Times">
-  <div class="col" style="width:420px">
-    <h2>Was it bad luck?</h2>
-    <p style="font-size:22px">A <span class="term">system prompt</span> is the builder's instruction at the top of every chat. We tried two, on two models, 12 times each at temperature 1 (more randomness; Part 7 explains).</p>
-    <p class="step" style="font-size:21px"><b>Modest prompt:</b> <span class="mono" style="font-size:16px" data-fd="cold.systems.plain"></span></p>
-    <p class="step" style="font-size:21px"><b class="b">"You know Rasoi's stock" prompt:</b> <span class="mono" style="font-size:16px" data-fd="cold.systems.confident"></span></p>
-    <p class="step" style="font-size:22px">Not one reply said 54,000. The modest prompt helps, but does not stop it.</p>
+<section class="slide" data-plate="Was It Bad Luck?">
+  <div class="col" style="width:440px">
+    <h2>We asked again</h2>
+    <p>One answer could be bad luck. So we asked the app the same question, the same way, again and again.</p>
+    <p class="step">Turn the temperature up: still a number every time, still never 5,400.</p>
+    <p class="step">Then Emma asks where the number came from. It invents a source too.</p>
+    <p class="step small">Asked with no system prompt at all, the same model declines. The app’s prompt, “Help with purchasing: stock…”, is what makes it answer.</p>
   </div>
-  <div class="fig" data-fig="twelve" style="left:570px;top:110px;width:930px;height:640px"></div>
-  <div class="cap" style="left:570px;top:780px;width:930px"><b>Fig. 2.</b> Every chip is one real reply: the first number it gave, or "declined". Click a chip to read it. <code>experiments/logs/cold_open_variants.json</code>.</div>
+  <div class="fig" data-fig="coldruns" style="left:620px;top:150px;width:880px;height:560px"></div>
+  <div class="cap" style="left:620px;top:730px;width:880px">Ask Northbridge at <code>?stage=brain</code> on gemini-3.8-flash, recorded on Modal. <code>experiments/logs/cold_open.json</code>.</div>
 </section>
 
-<section class="slide" data-plate="The Question for Today">
-  <div class="center">
-    <p class="kicker">The question for today</p>
-    <p class="bigq">How can a program write such fluent, confident sentences, and why did it make up 1,420?</p>
-    <ol class="map9 step" style="margin-top:34px">
-      <li>The game: predict the next word</li><li>Tokens</li><li>Embeddings</li><li>Attention</li><li>The transformer</li>
-      <li>Training</li><li>Generation and temperature</li><li>The chat format</li><li>Why it makes things up</li>
-    </ol>
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · <span class="qnum"></span></p>
+    <h2 class="q-text">Where do you think that number <em>came from?</em></h2>
+    <div class="q-opts"><span class="q-opt"><b>1</b> It looked it up somewhere</span><span class="q-opt"><b>2</b> It remembered it from training</span><span class="q-opt"><b>3</b> It made it up</span><span class="q-opt"><b>4</b> Something else</span></div>
+    <p class="q-cue">Type 1 to 4 in the chat. Keep your answer: we come back to it in Section 9</p>
   </div>
 </section>
 
-<!-- ============ 1 · THE GAME ============ -->
+<section class="slide" data-plate="Today’s Question">
+  <div class="center" style="left:140px;right:140px">
+    <p class="big">How did a machine write that sentence, <em>one word at a time</em>, and why is the number wrong?</p>
+    <p class="lede step" style="margin-top:34px">We cannot open Gemini, the model behind Ask Northbridge. So we open a small model of the same kind, send it the same question with the same system prompt, and watch every step.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="The Model We Open">
+  <div class="col" style="width:460px">
+    <h2>Qwen2.5-0.5B-Instruct</h2>
+    <p>A small open chat model from Alibaba’s Qwen team, released in September 2024. It runs on a laptop CPU.</p>
+    <p class="step">It is built like Gemini and GPT: the same parts, only fewer and smaller.</p>
+    <p class="step">We asked it Emma’s question. It made up a number too. Every number in today’s 3D scene comes from that one run.</p>
+  </div>
+  <div class="fig" data-fig="qwencard" style="left:640px;top:130px;width:860px;height:640px"></div>
+  <div class="cap" style="left:640px;top:790px;width:860px">Sizes from the model’s <code>config.json</code> and model card (huggingface.co/Qwen/Qwen2.5-0.5B-Instruct). The answer is from <code>brain3d/trace.json</code>.</div>
+</section>
+
+<section class="slide" data-plate="Today’s Map">
+  <div class="lec-top"><h2>One sentence, nine sections</h2><p class="sub">The same scene stays on screen all lecture. Each section adds one stage and shows that stage’s real numbers.</p></div>
+  <div class="pfig" style="left:180px;top:250px;width:1240px;height:592px"><img src="figs/todays_map.jpg" alt="The model: tokens, vectors, attention, 24 blocks, probabilities, the next token, the loop; training below; Ledgerline with no connection"></div>
+</section>
+
+<!-- =============================== 1 · THE GAME =============================== -->
 <section class="slide part" data-plain="1" data-num="1">
-  <div class="center"><span class="num">Part 1</span><h1>The game</h1><p class="lede">Everything an LLM does is one game, played again and again: guess the next piece of text.</p></div>
+  <div class="center"><span class="num">Section 1 of 9 · The game</span>
+    <h1 class="q2">What does a language model actually do?</h1>
+    <p class="lede">Start with the whole model as one sealed box. Text goes in. What comes out?</p></div>
 </section>
 
-<section class="slide" data-plate="A Language Model">
-  <div class="col">
-    <h2>One question, asked again and again</h2>
-    <p>Give it some text. It answers one question: what comes next?</p>
-    <div class="def step"><b>Language model</b>A program that gives a probability to every possible next token, given the text so far.</div>
-    <p class="step">A <span class="term">token</span> is a piece of text: a word, part of a word, a digit. Part 2 explains why.</p>
-    <p class="step">Our open model, Qwen2.5-0.5B, guesses "pipes" (<span data-fd="nt.makes.top.0.p" data-f="pct"></span>), "plates", "vessels". "cookers" comes fifth, at <span data-fd="extra.cookers.p_cookers" data-f="pct"></span>.</p>
-    <p class="step">It has never heard of Rasoi. A steel works that makes pressure pipes sounds just as likely to it.</p>
+<section class="slide" data-plate="The Scene · 1 · The Game">
+  <div class="fig" data-fig="b3d" data-section="1" style="left:0;top:0;width:1600px;height:900px"></div>
+  <span class="step"></span><span class="step"></span>
+</section>
+
+<section class="slide" data-plate="Guess the Next Token">
+  <div class="col" style="width:460px">
+    <h2>One question, again and again</h2>
+    <div class="def"><b>Language model</b>A program that, given some text, gives a probability to every possible next piece of text.</div>
+    <p class="step">After Emma’s question, it is fairly sure how the answer starts.</p>
+    <p class="step">At the first digit of the number, look how many digits it thinks are possible.</p>
   </div>
-  <div class="fig" data-fig="nextbars" data-keys="makes" style="left:700px;top:150px;width:800px;height:560px"></div>
-  <div class="cap" style="left:700px;top:740px;width:800px"><b>Fig. 3.</b> Real next-token probabilities from Qwen2.5-0.5B (494 million parameters), run on a Modal CPU. <code>experiments/logs/next_token.json</code>.</div>
+  <div class="fig" data-fig="nextbars" style="left:640px;top:150px;width:860px;height:560px"></div>
+  <div class="cap" style="left:640px;top:740px;width:860px">The model’s real probabilities, from the recorded pass. The “pieces” are called tokens: Section 2.</div>
 </section>
 
-<section class="slide" data-plate="Try Other Rasoi Text">
-  <div class="col" style="width:470px">
-    <h2>Same game, other text</h2>
-    <p>Switch the prompt. Read the top guesses.</p>
-    <p class="step">"… before the Diwali": "season" (<span data-fd="nt.diwali.top.0.p" data-f="pct"></span>), "festival", a full stop. All plausible. None is a fact about Kavita.</p>
-    <p class="step">"… buys its gaskets from": "a", "the", "China", "India". It has never heard of Deccan Polymers.</p>
-    <p class="step"><b>Plausible is not the same as true.</b> Hold on to that; it is the whole of Part 9.</p>
-  </div>
-  <div class="fig" data-fig="nextbars" data-keys="diwali,supplier,makes" data-n="10" style="left:640px;top:120px;width:860px;height:640px"></div>
-  <div class="cap" style="left:640px;top:780px;width:860px"><b>Fig. 4.</b> Click a prompt. Qwen2.5-0.5B, <code>experiments/logs/next_token.json</code>.</div>
-</section>
-
-<section class="slide" data-plate="Again and Again">
-  <div class="col" style="width:470px">
-    <h2>Writing is the game, repeated</h2>
-    <p>Pick a token. Add it to the text. Ask again.</p>
-    <p class="step">Here we always pick the top guess. That is called <span class="term">greedy</span> decoding.</p>
-    <p class="step">Drag the slider: each step adds one token, and the guesses change because the text changed.</p>
-    <p class="step small">Ten steps give: <span class="mono" style="font-size:16px" data-fd="greedy_text"></span></p>
-  </div>
-  <div class="fig" data-fig="greedy" style="left:640px;top:130px;width:860px;height:560px"></div>
-  <div class="cap" style="left:640px;top:720px;width:860px"><b>Fig. 5.</b> Greedy generation, one token at a time, with the top 5 at every step. Qwen2.5-0.5B, <code>next_token.json</code> (greedy_steps).</div>
-</section>
-
-<section class="slide" data-plate="The Loop">
-  <div class="fig" data-fig="pbfig" data-ov="loop" data-src="figs/generation_loop.jpg" style="left:180px;top:110px;width:1240px;height:692px"></div>
-  <div class="cap" style="left:180px;top:810px;width:1240px"><b>Fig. 6.</b> The loop behind every LLM reply: one token per turn. Today we open each box: the tokenizer (Part 2), the transformer (Parts 3–5), and picking (Part 7).</div>
-</section>
-
-<section class="slide" data-plate="The Stock Question, as a Game">
-  <div class="col" style="width:470px">
-    <h2>What comes after "On hand in Pune stores:"?</h2>
-    <p>We gave Qwen2.5-0.5B a stock report header, ending in a space, and asked for the next token.</p>
-    <p class="step">Every digit gets some probability: "1" <span data-fd="extra.stock_top.0.p" data-f="pct"></span>, "2" <span data-fd="extra.stock_top.1.p" data-f="pct"></span>, "5" <span data-fd="extra.stock_top.2.p" data-f="pct"></span>. It has never seen Bahi's stock table.</p>
-    <p class="step">Sample ten times: 350 boxes, 200 units, 5 tonnes … None is 54,000.</p>
-    <div class="measured step">This is the cold open in miniature. The model was not lying; it was playing its game.</div>
-  </div>
-  <div class="fig" data-fig="stockdist" style="left:640px;top:110px;width:860px;height:700px"></div>
-</section>
-
-<section class="slide" data-plate="Check Yourself · The Game">
-  <div class="lec-top"><h2>Check yourself</h2><p class="sub">Answer out loud before you click.</p></div>
-  <div class="two" style="top:270px">
-    <div class="card"><p class="q">1. The model gives "pipes" <b><span data-fd="nt.makes.top.0.p" data-f="pct"></span></b>. What do all the probabilities for the next token add up to?</p><p class="ans step">Exactly 1 (100%), spread over all <span data-fd="card.vocab" data-f="in"></span> tokens in the vocabulary.</p></div>
-    <div class="card"><p class="q">2. Why did ten samples give ten different stock figures?</p><p class="ans step">Each sample picks a digit at random according to the probabilities. Many digits are plausible, so the picks differ. Nothing ties them to Bahi.</p></div>
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · <span class="qnum"></span></p>
+    <h2 class="q-text">If all it does is guess the next piece, how can it write a <em>whole, sensible email?</em></h2>
+    <p class="q-sub">One line in the chat. There is no wrong answer yet.</p>
   </div>
 </section>
 
-<!-- ============ 2 · TOKENS ============ -->
+<!-- =============================== 2 · TOKENS =============================== -->
 <section class="slide part" data-plain="1" data-num="2">
-  <div class="center"><span class="num">Part 2</span><h1>Tokens</h1><p class="lede">The model does not read letters or words. It reads tokens, and the way text is cut into tokens decides cost, speed and what fits.</p></div>
+  <div class="center"><span class="num">Section 2 of 9 · Tokens</span>
+    <div class="recall"><b>Last section</b>The model guesses the next piece of text. Now: what exactly does it read?</div>
+    <h1 class="q2">How does text get into a model?</h1></div>
 </section>
 
-<section class="slide" data-plate="Letters, Words or Tokens?">
-  <div class="col" style="width:480px">
-    <h2>Why not words? Why not letters?</h2>
-    <p class="step"><b>Letters:</b> a tiny vocabulary, but every sentence becomes very long, and long is slow.</p>
-    <p class="step"><b>Words:</b> short sentences, but the list of words never ends: GSK-SIL-05L, ₹2,80,840, Hindi, typos.</p>
-    <p class="step"><b>Tokens:</b> in between. Common words are one token; rare text is cut into known pieces.</p>
-    <div class="def step"><b>Token</b>A piece of text from a fixed list, the vocabulary. Any text can be written with it.</div>
-  </div>
-  <div class="fig" data-fig="wlt" style="left:660px;top:130px;width:840px;height:640px"></div>
-  <div class="cap" style="left:660px;top:790px;width:840px"><b>Fig. 7.</b> Kavita's PO line three ways. Real Qwen2.5 tokens; ␣ is a space. <code>experiments/logs/tokens.json</code>.</div>
+<section class="slide" data-plate="The Scene · 2 · Tokens">
+  <div class="fig" data-fig="b3d" data-section="2" style="left:0;top:0;width:1600px;height:900px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span>
 </section>
 
-<section class="slide" data-plate="Byte-Pair Encoding, by Hand">
-  <div class="col" style="width:440px">
-    <h2>Build a vocabulary by merging</h2>
-    <p>Start with single characters. Count every neighbouring pair. Merge the most frequent pair into one new token. Repeat.</p>
-    <div class="def step"><b>Byte-pair encoding (BPE)</b>Build the vocabulary by repeatedly merging the most frequent pair of neighbouring tokens.</div>
-    <p class="step">Drag the slider. Each merge adds one token to the vocabulary and makes the corpus shorter.</p>
-    <p class="step small">Real tokenizers do the same on huge text until the vocabulary has <span data-fd="tok.vocab.qwen" data-f="in"></span> tokens (Qwen2.5) or <span data-fd="tok.vocab.gpt2" data-f="in"></span> (GPT-2).</p>
-  </div>
-  <div class="fig" data-fig="bpe" style="left:600px;top:110px;width:900px;height:720px"></div>
-</section>
-
-<section class="slide" data-plate="Real Tokenizers on Rasoi Text">
+<section class="slide" data-plate="What the Model Is Sent">
   <div class="col" style="width:420px">
-    <h2>How Rasoi's text is cut</h2>
-    <p>Pick a sentence and a tokenizer.</p>
-    <p class="step">Qwen2.5 writes every digit as its own token: 20,000 is six tokens, plus one for the space.</p>
-    <p class="step">Qwen2.5 has the rupee sign, with its space, as one token. GPT-2 does not: it writes the rupee sign as three raw bytes.</p>
-    <p class="step">Hindi costs far more tokens than the same sentence in English letters.</p>
+    <h2>A chat is one long text</h2>
+    <p>Emma sees messages. The model sees one text.</p>
+    <div class="def step"><b>System prompt</b>The builder’s instructions, sent before every chat. Emma never sees it.</div>
+    <p class="step">Markers show where each message starts and ends. The text stops right where the assistant should speak, so the next token is the start of the reply.</p>
   </div>
-  <div class="fig" data-fig="tokviz" style="left:580px;top:120px;width:920px;height:640px"></div>
-  <div class="cap" style="left:580px;top:780px;width:920px"><b>Fig. 8.</b> Real splits by the Qwen2.5 and GPT-2 tokenizers. A grey code is a fragment of a character (bytes in hex). <code>experiments/logs/tokens.json</code>.</div>
+  <div class="fig" data-fig="chattpl" style="left:580px;top:150px;width:920px;height:520px"></div>
 </section>
 
-<section class="slide" data-plate="Why Token Counts Matter">
-  <div class="col" style="width:480px">
-    <h2>You pay, wait and fit in tokens</h2>
-    <p class="step"><b>Context:</b> a model can read only so many tokens at once (Part 8).</p>
-    <p class="step"><b>Cost:</b> providers charge per token in and per token out.</p>
-    <p class="step"><b>Speed:</b> the reply is written one token at a time.</p>
-    <p class="step">Kavita's question with the system prompt was <b class="a"><span data-fd="cold.cells.2.t0.tokens_in"></span> tokens</b> in Gemini's count, and the reply <b class="a"><span data-fd="cold.cells.2.t0.tokens_out"></span></b>.</p>
-  </div>
-  <div class="fig" data-fig="tokcost" style="left:680px;top:150px;width:820px;height:560px"></div>
-  <div class="cap" style="left:680px;top:740px;width:820px"><b>Fig. 9.</b> Rasoi's policy documents in Qwen2.5 tokens. <code>tokens.json</code> (docs); Gemini counts from <code>cold_open_variants.json</code>.</div>
-</section>
-
-<section class="slide" data-plate="The Model Sees Numbers">
-  <div class="lec-top"><h2>The model never sees text</h2><p class="sub">The tokenizer turns text into a list of whole numbers, the token IDs. That list is all the model gets.</p></div>
-  <div class="fig" data-fig="tokids" style="left:100px;top:300px;width:1400px;height:200px"></div>
-  <div class="card step" style="position:absolute;left:100px;top:540px;width:1400px">Each ID is a row number in the vocabulary of <b><span data-fd="card.vocab" data-f="in"></span></b> tokens. The same text always gives the same IDs. The next part answers the obvious question: what does the model do with a row number?</div>
-  <div class="cap" style="left:100px;top:780px;width:1400px"><b>Fig. 10.</b> Kavita's sentence as Qwen2.5 token IDs. <code>tokens.json</code>.</div>
-</section>
-
-<section class="slide" data-plate="Check Yourself · Tokens">
-  <div class="lec-top"><h2>Check yourself</h2></div>
-  <div class="two" style="top:230px">
-    <div class="card"><p class="q">1. In the BPE example, why does "gas" become one token before "seal" does?</p><p class="ans step">"g", "a", "s" sit next to each other in every gasket and gaskets, so those pairs are the most frequent. "seal" appears less often.</p></div>
-    <div class="card"><p class="q">2. A Hindi purchase note costs more than the same note in English letters. Why, and why does it matter for Rasoi?</p><p class="ans step">The vocabulary was built from text that is mostly English, so Devanagari is cut into small byte pieces. More tokens: more cost, slower replies, less room in the context.</p></div>
-  </div>
-</section>
-
-<!-- ============ 3 · EMBEDDINGS ============ -->
-<section class="slide part" data-plain="1" data-num="3">
-  <div class="center"><span class="num">Part 3</span><h1>Embeddings</h1><p class="lede">Each token ID becomes a long list of numbers. Similar meanings end up pointing in similar directions.</p></div>
-</section>
-
-<section class="slide" data-plate="A Token Becomes a Vector">
-  <div class="col" style="width:470px">
-    <h2>Look up a row</h2>
-    <p>The model keeps one big table. Row number = token ID. Each row is a vector.</p>
-    <div class="def step"><b>Embedding</b>The vector of numbers a model uses for a token. It is learnt during training.</div>
-    <p class="step">In Qwen2.5-0.5B each row has <span data-fd="card.d_model" data-f="in"></span> numbers. The table alone is <span data-fd="card.embedding_params" data-f="m"></span> of its numbers.</p>
-  </div>
-  <div class="fig" data-fig="embrow" style="left:640px;top:140px;width:860px;height:560px"></div>
-  <div class="cap" style="left:640px;top:720px;width:860px"><b>Fig. 11.</b> The embedding table of Qwen2.5-0.5B and the real first 8 numbers of the "supplier" row ("gasket" is two tokens, "g" + "askets"). <code>experiments/logs/embeddings.json</code>.</div>
-</section>
-
-<section class="slide" data-plate="Meaning as Direction">
-  <div class="col" style="width:470px">
-    <h2>Close in meaning, close in direction</h2>
-    <p>Two vectors can point the same way or different ways.</p>
-    <div class="def step"><b>Cosine similarity</b>How closely two vectors point the same way: 1 = same direction, 0 = unrelated.</div>
-    <p class="step">Pick a word. The bars are its cosine with the other Rasoi words, coloured by group: parts, firms, documents, money, places, festivals.</p>
-    <p class="step small">Nobody told the model which words are parts or places. It learnt it from how words are used.</p>
-  </div>
-  <div class="fig" data-fig="cosine" style="left:660px;top:140px;width:840px;height:600px"></div>
-  <div class="cap" style="left:660px;top:760px;width:840px"><b>Fig. 12.</b> Cosine similarity between Qwen2.5 vectors for 31 Rasoi words (vectors after block 8, as on the next plate). <code>embeddings.json</code>.</div>
-</section>
-
-<section class="slide" data-plate="A Map of Rasoi Words">
-  <div class="col" style="width:380px">
-    <h2>The map</h2>
-    <p style="font-size:23px">896 numbers do not fit on a screen. We squash them to two (a projection called PCA) and keep the groups' colours.</p>
-    <p class="step" style="font-size:23px">Click a word: dashed lines go to its three nearest neighbours.</p>
-    <p class="step" style="font-size:23px">Switch between the raw table rows and the vectors after a few blocks. A word's nearest neighbour is in its own group for <span data-fd="emb.static.nn_same_group" data-f="pct"></span> of words in the raw table, and <span data-fd="emb.layers.8.nn_same_group" data-f="pct"></span> after block 8.</p>
-  </div>
-  <div class="fig" data-fig="embmap" style="left:520px;top:110px;width:980px;height:740px"></div>
-</section>
-
-<section class="slide" data-plate="Neighbours in the Whole Vocabulary">
-  <div class="col">
-    <h2>Nearest rows in the whole table</h2>
-    <p>Search all <span data-fd="card.vocab" data-f="in"></span> rows of the table for the most similar directions.</p>
-    <p class="step">"Pune" sits next to "Mumbai", "Maharashtra" and "Kolkata". "supplier" sits next to its own spellings and 供应商, the Chinese word for supplier.</p>
-    <p class="step">This is what an embedding knows: <b>how a word is used</b>. Not how many gaskets Rasoi has.</p>
-  </div>
-  <div class="fig" data-fig="vnn" style="left:700px;top:150px;width:800px;height:600px"></div>
-  <div class="cap" style="left:700px;top:770px;width:800px"><b>Fig. 13.</b> Nearest neighbours by cosine in Qwen2.5-0.5B's input embedding table. <code>embeddings.json</code> (vocab_neighbours).</div>
-</section>
-
-<section class="slide" data-plate="Check Yourself · Embeddings">
-  <div class="lec-top"><h2>Check yourself</h2></div>
-  <div class="two" style="top:230px">
-    <div class="card"><p class="q">1. "vendor" and "supplier" have similar vectors. Who decided that?</p><p class="ans step">Nobody. Training nudged the vectors so the model predicts text well. Words used in the same places end up pointing the same way.</p></div>
-    <div class="card"><p class="q">2. The word "run" in "Diwali run" and in "run the report" gets the same table row. Is that a problem?</p><p class="ans step">Yes, the row cannot know which meaning is meant. The token has to look at its neighbours. That is attention, next.</p></div>
-  </div>
-</section>
-
-<!-- ============ 4 · ATTENTION ============ -->
-<section class="slide part" data-plain="1" data-num="4">
-  <div class="center"><span class="num">Part 4</span><h1>Attention</h1><p class="lede">How a token picks up meaning from the tokens before it. We do it by hand first, then read it off a real model.</p></div>
-</section>
-
-<section class="slide" data-plate="Query, Key, Value">
-  <div class="col" style="width:520px">
-    <h2>Three vectors per token</h2>
-    <p>Each token turns its embedding into three new vectors, using three learnt matrices.</p>
-    <p class="step"><b>Query</b>: what am I looking for? ("gaskets" asks: how many?)</p>
-    <p class="step"><b>Key</b>: what do I contain? ("20,000" answers: I am a quantity.)</p>
-    <p class="step"><b>Value</b>: what do I pass on if you pick me?</p>
-    <div class="def step"><b>Attention</b>Each token's new vector is a weighted sum of earlier tokens' values, weighted by how well its query matches their keys.</div>
-  </div>
-  <div class="fig" data-fig="qkv" style="left:700px;top:190px;width:800px;height:400px"></div>
-  <div class="cap" style="left:700px;top:600px;width:800px"><b>Fig. 14.</b> A hand-sized example: four tokens, two numbers per vector. Real models use 64 numbers per head. <code>experiments/logs/hand_attention.json</code>.</div>
-</section>
-
-<section class="slide" data-plate="Attention for &quot;gaskets&quot;, by Hand">
-  <div class="col" style="width:380px">
-    <h2>Five steps with a pencil</h2>
-    <p class="step" style="font-size:22px">1. Score: multiply its query with each key, number by number, and add.</p>
-    <p class="step" style="font-size:22px">2. Divide by √2 (√ of the vector length) to keep scores tame.</p>
-    <p class="step" style="font-size:22px">3. Take e to the power of each score.</p>
-    <p class="step" style="font-size:22px">4. Divide by the sum: weights that add to 1. This is <span class="term">softmax</span>.</p>
-    <p class="step" style="font-size:22px">5. Add up the values, each times its weight.</p>
-  </div>
-  <div class="fig" data-fig="handcalc" style="left:520px;top:110px;width:980px;height:720px"></div>
-</section>
-
-<section class="slide" data-plate="The Causal Mask">
-  <div class="col" style="width:470px">
-    <h2>No peeking ahead</h2>
-    <p>Do the same for every token at once: a table of scores, one row per token that looks.</p>
-    <p class="step">A token may look only at itself and earlier tokens. Later cells are blocked.</p>
-    <div class="def step"><b>Causal mask</b>Set the scores for later tokens to minus infinity before softmax, so their weight is 0.</div>
-    <p class="step small">Why: the model is trained to predict the next token. If it could see it, it would just copy it.</p>
-  </div>
-  <div class="fig" data-fig="causal" style="left:680px;top:190px;width:820px;height:440px"></div>
-  <div class="cap" style="left:680px;top:650px;width:820px"><b>Fig. 15.</b> Scaled scores, then the mask, then the softmax weights, for the hand example. <code>hand_attention.json</code>.</div>
-</section>
-
-<section class="slide" data-plate="Real Attention in Qwen2.5">
-  <div class="col" style="width:400px">
-    <h2>Now read it off a real model</h2>
-    <p style="font-size:23px">Kavita's sentence through Qwen2.5-0.5B: <span data-fd="card.layers"></span> blocks, <span data-fd="card.heads"></span> heads each.</p>
-    <p class="step" style="font-size:22px">Layer <span data-fd="att.digit_head.layer"></span>, head <span data-fd="att.digit_head.head"></span>: the last piece of "gaskets" puts <span data-fd="att.digit_head.w" data-f="pct"></span> of its weight on the digits of 20,000.</p>
-    <p class="step" style="font-size:22px">Layer <span data-fd="att.top_prev.0.layer"></span>, head <span data-fd="att.top_prev.0.head"></span> simply looks one token back (<span data-fd="att.top_prev.0.prev_token" data-f="pct"></span> on average).</p>
-    <p class="step" style="font-size:22px">Across all heads, <span data-fd="att.mean_first" data-f="pct"></span> of the weight lands on the first token, a known habit of trained models (an "attention sink").</p>
-  </div>
-  <div class="fig" data-fig="attnmap" style="left:540px;top:104px;width:960px;height:740px"></div>
-</section>
-
-<section class="slide" data-plate="Many Heads">
+<section class="slide" data-plate="Cut into Tokens">
   <div class="col" style="width:440px">
-    <h2>Fourteen heads, side by side</h2>
-    <p>One attention calculation is one <span class="term">head</span>. A block runs many heads at once, each with its own query, key and value matrices.</p>
-    <div class="def step"><b>Multi-head attention</b>Several heads in parallel; their outputs are joined and mixed into one vector per token.</div>
-    <p class="step">Each head learns a different way of looking. Drag the layer slider.</p>
+    <h2>Pieces from a fixed list</h2>
+    <div class="def"><b>Token</b>A piece of text from the model’s fixed list of about 151,000. Each has a number, its id.</div>
+    <p class="step">Common words are one token. Rare words, codes and numbers are cut into several.</p>
+    <p class="step">The model never sees letters. It sees this list of ids, and nothing else.</p>
   </div>
-  <div class="fig" data-fig="heads" style="left:620px;top:140px;width:880px;height:440px"></div>
-  <div class="cap" style="left:620px;top:600px;width:880px"><b>Fig. 16.</b> All 14 heads of one Qwen2.5-0.5B layer on Kavita's sentence (rows = token that looks, columns = token looked at). <code>experiments/logs/attention.json</code>.</div>
+  <div class="fig" data-fig="toksplit" style="left:620px;top:120px;width:880px;height:680px"></div>
 </section>
 
-<section class="slide" data-plate="Check Yourself · Attention">
-  <div class="lec-top"><h2>Check yourself</h2></div>
-  <div class="two" style="top:230px">
-    <div class="card"><p class="q">1. In the hand example, why is the first row of weights always [1, 0, 0, 0]?</p><p class="ans step">"Kavita" is the first token. The mask lets it see only itself, so all its weight is on itself.</p></div>
-    <div class="card"><p class="q">2. If all of a token's scores were equal, what would its new vector be?</p><p class="ans step">Equal weights, so the plain average of the values it may see. (You will meet this in Assignment A2.)</p></div>
+<section class="slide" data-plate="Where the Pieces Come From">
+  <div class="col" style="width:440px">
+    <h2>Byte-pair encoding, by hand</h2>
+    <div class="def"><b>Byte-pair encoding (BPE)</b>Start from single letters. Again and again, glue the pair that appears most often into a new piece.</div>
+    <p class="step">Drag the slider. “battery” becomes one piece at merge 10, because it is common.</p>
+    <p class="step">Why not whole words? A word list built from Northbridge’s documents misses <span data-l2="tokens.why.oov_share" data-f="pct"></span> of the words in two new ones. Pieces never miss: any text can be spelt with them.</p>
+  </div>
+  <div class="fig" data-fig="bpe" style="left:620px;top:140px;width:880px;height:640px"></div>
+  <div class="cap" style="left:620px;top:790px;width:880px">The same twelve words as NB2 exercise 2. <code>experiments/logs/bpe.json</code>, recomputed on the slide.</div>
+</section>
+
+<section class="slide" data-plate="You Pay in Tokens">
+  <div class="col" style="width:460px">
+    <h2>Tokens are the unit of cost</h2>
+    <p>Providers charge per token in and per token out. One of Emma’s questions costs a fraction of a penny.</p>
+    <p class="step">Today’s models also “think” before they answer, and you pay for those tokens too.</p>
+    <p class="step">The same question takes more tokens in other languages, so it costs more.</p>
+    <p class="small">Every turn re-sends the whole chat; an agent also sends its tools and every result. From now on, every budget is in tokens.</p>
+  </div>
+  <div class="fig" data-fig="tokcost" style="left:640px;top:140px;width:860px;height:640px"></div>
+  <div class="cap" style="left:640px;top:790px;width:860px">Ask Northbridge’s cold-open runs and one more call for the provider’s full usage record. <code>experiments/logs/cold_open.json</code>, <code>tokens.json</code>.</div>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · <span class="qnum"></span></p>
+    <h2 class="q-text">Your documents are full of codes like <em>BAT-500</em> and <em>PO/2026/01182</em>. What could go wrong when a model cuts them into pieces?</h2>
   </div>
 </section>
 
-<!-- ============ 5 · THE TRANSFORMER ============ -->
-<section class="slide part" data-plain="1" data-num="5">
-  <div class="center"><span class="num">Part 5</span><h1>The transformer</h1><p class="lede">Attention is one part. A block adds an MLP, residual connections and normalisation, and the model stacks many blocks.</p></div>
+<!-- =============================== 3 · VECTORS =============================== -->
+<section class="slide part" data-plain="1" data-num="3">
+  <div class="center"><span class="num">Section 3 of 9 · Vectors</span>
+    <div class="recall"><b>Last section</b>Emma’s question became a list of token ids. Now: an id is only a label. Where does meaning come in?</div>
+    <h1 class="q2">How can numbers carry meaning?</h1></div>
 </section>
 
-<section class="slide" data-plate="One Block, Built Up">
-  <div class="col" style="width:470px">
-    <h2>Inside one block</h2>
-    <p class="step"><b>Norm:</b> rescale each token's vector to a steady size, so numbers do not blow up.</p>
-    <p class="step"><b>Attention:</b> tokens look at earlier tokens (Part 4).</p>
-    <p class="step"><b>Add:</b> the result is added to what was there. This running total is the <span class="term">residual stream</span>.</p>
-    <p class="step"><b>MLP:</b> a small two-layer network applied to each token on its own: where much of what the model "knows" is stored.</p>
-    <p class="step"><b>Stack it:</b> the output of one block is the input of the next, 24 times.</p>
+<section class="slide" data-plate="The Scene · 3 · Vectors">
+  <div class="fig" data-fig="b3d" data-section="3" style="left:0;top:0;width:1600px;height:900px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span>
+</section>
+
+<section class="slide" data-plate="Look Up a Row">
+  <div class="col" style="width:440px">
+    <h2>Each token becomes a vector</h2>
+    <div class="def"><b>Embedding</b>A long list of numbers stored for each token. The model looks up the row for each id.</div>
+    <p class="step">In Qwen2.5-0.5B each row has 896 numbers. A list of numbers like this is a <b>vector</b>.</p>
+    <p class="step">Nobody wrote these numbers. Training set them (Section 8).</p>
   </div>
-  <div class="fig" data-fig="pbfig" data-ov="transformer" data-src="figs/transformer.jpg" data-stops="0.92,0.72,0.55,0.44,0.36,0" style="left:640px;top:150px;width:860px;height:480px;background:#fff"></div>
-  <div class="cap" style="left:640px;top:650px;width:860px"><b>Fig. 17.</b> The decoder-only transformer, as in Qwen2.5-0.5B. The tokens at the bottom and the probabilities at the top are the real ones for "… before the Diwali" (Fig. 4).</div>
+  <div class="fig" data-fig="embrow" style="left:640px;top:160px;width:860px;height:520px"></div>
+</section>
+
+<section class="slide" data-plate="Close in Meaning, Close in Direction">
+  <div class="col" style="width:420px">
+    <h2>A map of meaning</h2>
+    <div class="def"><b>Cosine similarity</b>How closely two vectors point the same way: 1 = same direction, 0 = unrelated.</div>
+    <p>Words used in similar sentences end up with similar rows.</p>
+    <p class="step">The nearest rows to “battery” and “Manchester” in the whole list of 151,000.</p>
+  </div>
+  <div class="fig" data-fig="embmap" style="left:580px;top:110px;width:920px;height:700px"></div>
+  <div class="cap" style="left:580px;top:820px;width:920px">The 896 numbers squeezed down to 2 for the picture (principal components). Real rows from the model’s table.</div>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · <span class="qnum"></span></p>
+    <h2 class="q-text">Which words mean something <em>different at your company</em> than in everyday English?</h2>
+    <p class="q-sub">At Northbridge: “release”, “draft”, “stores”. The model learnt the everyday meaning.</p>
+  </div>
+</section>
+
+<!-- =============================== 4 · ATTENTION =============================== -->
+<section class="slide part" data-plain="1" data-num="4">
+  <div class="center"><span class="num">Section 4 of 9 · Attention</span>
+    <div class="recall"><b>Last section</b>Each token became a vector, on its own. Now: “stores” means little without “Manchester”.</div>
+    <h1 class="q2">How does a word know what is around it?</h1></div>
+</section>
+
+<section class="slide" data-plate="The Scene · 4 · Attention">
+  <div class="fig" data-fig="b3d" data-section="4" style="left:0;top:0;width:1600px;height:900px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span>
+</section>
+
+<section class="slide" data-plate="Attention, by Hand">
+  <div class="col" style="width:400px">
+    <h2>Five steps with a pencil</h2>
+    <div class="def"><b>Attention</b>Each token asks a question (query), every earlier token offers a label (key) and some content (value). Good matches pass on more content.</div>
+    <p class="step small">Click through the five steps. The match decides the weights; the weights mix the values.</p>
+  </div>
+  <div class="fig" data-fig="handattn" style="left:540px;top:140px;width:960px;height:640px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="cap" style="left:540px;top:740px;width:960px">The same four tokens as NB2 section 4. Numbers chosen by hand, two per token; a real head uses 64. The steps are the same.</div>
+</section>
+
+<section class="slide" data-plate="No Peeking Ahead">
+  <div class="col" style="width:440px">
+    <h2>Real heads, looking back</h2>
+    <p class="small">From the last position, right where the answer starts.</p>
+    <div class="def"><b>Causal mask</b>A token may only look at itself and tokens before it, never ahead. That is how it can learn to guess what comes next.</div>
+    <p class="step"><b>Head:</b> one attention calculation. Each block runs 14 side by side, each free to look for something different.</p>
+  </div>
+  <div class="fig" data-fig="heads" style="left:620px;top:130px;width:880px;height:640px"></div>
 </section>
 
 <section class="slide" data-plate="Where Is the Order?">
-  <div class="col" style="width:470px">
+  <div class="col" style="width:440px">
     <h2>Position</h2>
-    <p>Attention adds up values. Adding does not care about order.</p>
-    <p class="step">So the model must be told where each token sits.</p>
-    <p class="step">Two common ways: add a position vector, or rotate queries and keys by position.</p>
+    <p>Who approves whom depends on word order.</p>
+    <p class="step">A weighted sum has no order.</p>
+    <p class="step">So the model mixes each token’s position into the match.</p>
   </div>
-  <div class="fig" data-fig="position" style="left:660px;top:150px;width:840px;height:600px"></div>
+  <div class="fig" data-fig="position" style="left:640px;top:170px;width:860px;height:560px"></div>
 </section>
 
-<section class="slide" data-plate="The Model, by the Numbers">
-  <div class="col" style="width:440px">
-    <h2>Qwen2.5-0.5B</h2>
-    <p>The small open model we have used all morning, read from its own configuration.</p>
-    <p class="step">Ask Rasoi's brain, gemini-3.8-flash, is far larger. Google does not publish its size, so we do not guess it.</p>
-    <p class="step small">Every number here is a setting or a count from the model files: <code>experiments/logs/model_card.json</code>.</p>
-  </div>
-  <div class="fig" data-fig="card" style="left:620px;top:140px;width:880px;height:600px"></div>
-</section>
-
-<section class="slide" data-plate="Follow One Token Up the Stack">
-  <div class="col" style="width:440px">
-    <h2>What does it think, block by block?</h2>
-    <p>Take the vector of the last token, "Diwali", after each block, and read it out with the final layer as if the model stopped there.</p>
-    <p class="step">Up to block 19 the best guess is junk, or 季, the Chinese word for "season". From block 20 on it is "season".</p>
-    <p class="step small">This trick is called the "logit lens". It is a view into the model, not how it is used.</p>
-  </div>
-  <div class="fig" data-fig="lens" style="left:600px;top:120px;width:900px;height:640px"></div>
-  <div class="cap" style="left:600px;top:780px;width:900px"><b>Fig. 18.</b> Top 3 next-token guesses read from each block's output. Qwen2.5-0.5B, <code>experiments/logs/logit_lens.json</code>.</div>
-</section>
-
-<section class="slide" data-plate="Logits and Softmax">
-  <div class="col" style="width:440px">
-    <h2>From a vector to probabilities</h2>
-    <p>The last block's vector is multiplied by the unembedding: one score per token in the vocabulary.</p>
-    <div class="def step"><b>Logit</b>The raw score the model gives a token. Higher means more likely.</div>
-    <p class="step">Softmax turns scores into probabilities: e to the power of each score, divided by the sum. The same softmax as in attention.</p>
-    <p class="step">The last column is the true probability over all tokens; it matches Fig. 3.</p>
-  </div>
-  <div class="fig" data-fig="softmax" style="left:600px;top:200px;width:900px;height:420px"></div>
-  <div class="cap" style="left:600px;top:640px;width:900px"><b>Fig. 19.</b> Real top-5 logits for "Rasoi Steel Works makes pressure". <code>next_token.json</code>.</div>
-</section>
-
-<section class="slide" data-plate="Check Yourself · The Transformer">
-  <div class="lec-top"><h2>Check yourself</h2></div>
-  <div class="three" style="top:230px">
-    <div class="card"><p class="q">1. What does attention do that the MLP cannot?</p><p class="ans step">Move information between tokens. The MLP works on each token on its own.</p></div>
-    <div class="card"><p class="q">2. Why add the block's output to its input instead of replacing it?</p><p class="ans step">The residual stream keeps what earlier blocks found, and each block only adds a correction. Deep stacks train much more easily.</p></div>
-    <div class="card"><p class="q">3. Which part makes 151,936 scores?</p><p class="ans step">The unembedding at the top: one score per token in the vocabulary.</p></div>
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · <span class="qnum"></span></p>
+    <h2 class="q-text">When you read a long purchase order, which earlier lines do you <em>look back at</em> to understand the line in front of you?</h2>
   </div>
 </section>
 
-<!-- ============ 6 · TRAINING ============ -->
+<!-- =============================== 5 · THE STACK =============================== -->
+<section class="slide part" data-plain="1" data-num="5">
+  <div class="center"><span class="num">Section 5 of 9 · 24 blocks</span>
+    <div class="recall"><b>Last section</b>Attention lets each token look back. Now: one look is not enough to answer a question.</div>
+    <h1 class="q2">What happens between reading and answering?</h1></div>
+</section>
+
+<section class="slide" data-plate="The Scene · 5 · 24 Blocks">
+  <div class="fig" data-fig="b3d" data-section="5" style="left:0;top:0;width:1600px;height:900px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span>
+</section>
+
+<section class="slide" data-plate="One Block">
+  <div class="col" style="width:420px">
+    <h2>Look, then think</h2>
+    <div class="def"><b>MLP</b>A small network applied to each token on its own: it works on what attention gathered.</div>
+    <div class="def step"><b>Transformer block</b>Attention, then MLP, each adding its result back onto the token’s vector.</div>
+    <p class="step">Stack 24 of them and you have Qwen2.5-0.5B. Vectors keep their size, 896, all the way up.</p>
+  </div>
+  <div class="pfig" style="left:580px;top:150px;width:920px;height:514px"><img src="figs/block_inside.jpg" alt="One transformer block: normalise, attention, add back the input, normalise, MLP, add back the input; repeat 24 times"></div>
+  <div class="cap" style="left:580px;top:680px;width:920px"><b>Fig. 2.</b> One block. “Add back the input” keeps what the token already knew; each block only adds a correction.</div>
+</section>
+
+<section class="slide" data-plate="Watch the Answer Form">
+  <div class="col" style="width:420px">
+    <h2>What would it say now?</h2>
+    <p>We can stop after any block and ask: if you had to answer now, what would you say?</p>
+    <p class="step">Early blocks give junk. “We” first comes out on top only at block <span data-tr="logit_lens.last_first_layer_top1_is_final"></span> of 24.</p>
+    <p class="step small">This trick is called the logit lens. Drag the slider through all 24 blocks.</p>
+  </div>
+  <div class="fig" data-fig="lens" style="left:600px;top:140px;width:900px;height:620px"></div>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · <span class="qnum"></span></p>
+    <h2 class="q-text">Qwen2.5-0.5B has 24 blocks. The biggest models have far more, and far wider. <em>What does the extra size buy, and what does it cost?</em></h2>
+  </div>
+</section>
+
+<!-- =============================== 6 · A CHOICE =============================== -->
 <section class="slide part" data-plain="1" data-num="6">
-  <div class="center"><span class="num">Part 6</span><h1>Training</h1><p class="lede">Where the numbers in all those tables come from: billions of tiny corrections, each one making the next token a little less surprising.</p></div>
+  <div class="center"><span class="num">Section 6 of 9 · A choice</span>
+    <div class="recall"><b>Last section</b>The answer forms in the top block, as a vector. Now: a vector is not a word.</div>
+    <h1 class="q2">How does a list of numbers become one word?</h1></div>
+</section>
+
+<section class="slide" data-plate="The Scene · 6 · A Choice">
+  <div class="fig" data-fig="b3d" data-section="6" style="left:0;top:0;width:1600px;height:900px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span>
+</section>
+
+<section class="slide" data-plate="Scores into Probabilities">
+  <div class="col" style="width:420px">
+    <h2>Softmax</h2>
+    <div class="def"><b>Logit</b>A score for every token in the list: how well the top vector matches that token’s row.</div>
+    <div class="def step"><b>Softmax</b>Raise e to each score, then divide by the total. Every result is positive and they add up to 1.</div>
+    <p class="step small">Worked on the model’s real top five, at the first digit of its answer.</p>
+  </div>
+  <div class="fig" data-fig="softmax" style="left:580px;top:170px;width:920px;height:520px"></div>
+  <span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="The Temperature Dial">
+  <div class="col" style="width:420px">
+    <h2>Picking one token</h2>
+    <div class="def"><b>Sampling</b>Pick the next token at random, in proportion to its probability.</div>
+    <div class="def step"><b>Temperature</b>Divide every score by T first. Below 1 sharpens; above 1 flattens; 0 means always take the top one.</div>
+    <p class="step small">Click the dial. Real probabilities at the first digit.</p>
+  </div>
+  <div class="fig" data-fig="temp" style="left:580px;top:150px;width:920px;height:600px"></div>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · <span class="qnum"></span></p>
+    <h2 class="q-text">Ask Northbridge will raise purchase requests. Where would you set the dial, and is there <em>any job at Northbridge</em> where you would turn it up?</h2>
+  </div>
+</section>
+
+<!-- =============================== 7 · THE LOOP =============================== -->
+<section class="slide part" data-plain="1" data-num="7">
+  <div class="center"><span class="num">Section 7 of 9 · The loop</span>
+    <div class="recall"><b>Last section</b>One pass through the model picks one token. Now: Emma got a whole sentence.</div>
+    <h1 class="q2">How does one guess become a whole answer?</h1></div>
+</section>
+
+<section class="slide" data-plate="The Scene · 7 · The Loop">
+  <div class="fig" data-fig="b3d" data-section="7" style="left:0;top:0;width:1600px;height:900px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span>
+</section>
+
+<section class="slide" data-plate="One Token at a Time">
+  <div class="col" style="width:420px">
+    <h2>Add it, run again</h2>
+    <div class="def"><b>Generation</b>Pick a token, add it to the end of the text, run the whole model again. Stop at the end marker.</div>
+    <p class="step">This is the answer to the Section 1 question: a whole email is many single guesses, each one seeing all the ones before.</p>
+    <p class="step small">Drag through the answer. Orange tokens are the digits of the number.</p>
+  </div>
+  <div class="fig" data-fig="gen" style="left:580px;top:140px;width:920px;height:620px"></div>
+</section>
+
+<section class="slide" data-plate="How Sure Was It?">
+  <div class="col" style="width:420px">
+    <h2>It sounds sure. It was not.</h2>
+    <p>The number was written digit by digit, like every other token.</p>
+    <p class="step">The model gave its first digit only a <span data-tr="generation.digits.0.p" data-f="pct"></span> chance. The sentence still reads as a plain fact.</p>
+    <p class="step">Sample again and you get a different number. That is the spread we saw in the cold open.</p>
+  </div>
+  <div class="fig" data-fig="digits" style="left:580px;top:140px;width:920px;height:640px"></div>
+</section>
+
+<section class="slide" data-plate="It Only Sees What You Send">
+  <div class="col" style="width:460px">
+    <h2>The context window</h2>
+    <div class="def"><b>Context window</b>The most tokens a model can read at once: system prompt, chat so far, and its own reply. For Qwen2.5-0.5B, 32,768.</div>
+    <p class="step">The model keeps nothing between calls. Each turn, the app sends the whole chat again.</p>
+    <p class="step">So the context is the model’s only memory. Remember this sentence: it is Lecture 3.</p>
+  </div>
+  <div class="card step" style="position:absolute;left:660px;top:200px;width:840px;font-size:23px"><span class="tag nt">Turn 1 sends</span><br>system prompt + Emma’s question</div>
+  <div class="card step" style="position:absolute;left:660px;top:350px;width:840px;font-size:23px"><span class="tag nt">Turn 2 sends</span><br>system prompt + Emma’s question + its answer + Emma’s next message</div>
+  <div class="card af step" style="position:absolute;left:660px;top:530px;width:840px;font-size:23px">A new chat tomorrow starts empty. Tell it the stock today, and it will not know it tomorrow.</div>
+  <div class="cap" style="left:660px;top:700px;width:840px">32,768 tokens: <code>max_position_embeddings</code> in the model’s config.json and the model card.</div>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · <span class="qnum"></span></p>
+    <h2 class="q-text">The answer read as a plain fact, yet the model was unsure of every digit. <em>How would your users know the difference?</em></h2>
+  </div>
+</section>
+
+<!-- =============================== 8 · TRAINING =============================== -->
+<section class="slide part" data-plain="1" data-num="8">
+  <div class="center"><span class="num">Section 8 of 9 · Training</span>
+    <div class="recall"><b>Last section</b>The machine is complete and it writes token by token. Now: we never said where its numbers came from.</div>
+    <h1 class="q2">Where did the numbers in the blocks come from?</h1></div>
+</section>
+
+<section class="slide" data-plate="The Scene · 8 · Training">
+  <div class="fig" data-fig="b3d" data-section="8" style="left:0;top:0;width:1600px;height:900px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span>
 </section>
 
 <section class="slide" data-plate="Loss Is Surprise">
   <div class="col" style="width:440px">
-    <h2>How surprised was it?</h2>
-    <p>For each real next token, ask: what probability did the model give it?</p>
-    <div class="def step"><b>Loss (cross-entropy)</b>The average of −log p(the real next token). Low loss = little surprise.</div>
-    <p class="step">Names and numbers surprise it. "run" costs <span data-fd="surprise.sentences.0.nll.17" data-f="bits"></span> bits, because it expected "season"; "elephant" costs <span data-fd="surprise.sentences.1.nll.17" data-f="bits"></span>.</p>
-    <p class="step">A blind guess over the whole vocabulary would cost <span data-fd="surprise.uniform_nll" data-f="bits"></span> bits on every token.</p>
-  </div>
-  <div class="fig" data-fig="surprise" style="left:600px;top:120px;width:900px;height:640px"></div>
-  <div class="cap" style="left:600px;top:780px;width:900px"><b>Fig. 20.</b> Per-token surprise of Qwen2.5-0.5B on three Rasoi sentences. Orange = more than 8 bits. <code>experiments/logs/surprise.json</code>.</div>
-</section>
-
-<section class="slide" data-plate="Gradient Descent">
-  <div class="col" style="width:470px">
     <h2>Downhill, a little at a time</h2>
-    <p>Training makes the loss smaller. For every number in the model, work out which way to nudge it so the loss goes down.</p>
-    <div class="def step"><b>Gradient descent</b>Repeatedly nudge every weight a small step in the direction that lowers the loss.</div>
-    <p class="step">Our tiny GPT, trained on Rasoi's text in the notebook: <span data-fd="tiny.params" data-f="in"></span> numbers, <span data-fd="tiny.config.steps" data-f="in"></span> steps, <span data-fd="tiny.train_seconds_cpu2" data-f="min"></span> on two CPU cores.</p>
-    <p class="step small">Validation = text it never trained on. If only the train loss fell, it would be memorising.</p>
+    <div class="def"><b>Loss</b>How surprised the model was by the real next token. Low loss means it guessed well.</div>
+    <div class="def step"><b>Training</b>Nudge every number a little in the direction that lowers the loss. Repeat millions of times.</div>
+    <p class="step small">We did it ourselves: a tiny GPT, trained in NB2 on Northbridge’s own documents.</p>
   </div>
-  <div class="fig" data-fig="losscurve" style="left:640px;top:140px;width:860px;height:520px"></div>
-  <div class="cap" style="left:640px;top:680px;width:860px"><b>Fig. 21.</b> Loss of the tiny GPT (4 blocks, 4 heads, 128 numbers per token, character level) on Rasoi's corpus. <code>experiments/logs/tinygpt.json</code>.</div>
+  <div class="fig" data-fig="losscurve" style="left:640px;top:150px;width:860px;height:540px"></div>
 </section>
 
-<section class="slide" data-plate="What the Tiny GPT Learnt">
-  <div class="lec-top"><h2>Before and after training</h2><p class="sub">Same prompt, same temperature (0.8), our tiny GPT before step 1 and after <span data-fd="tiny.config.steps" data-f="in"></span> steps.</p></div>
-  <div class="two" style="top:260px">
-    <div class="card bf"><span class="tag bf">step 0 · random numbers</span><div class="mono" style="font-size:16px;white-space:pre-wrap" data-fd="tiny.sample_untrained"></div></div>
-    <div class="card af step"><span class="tag af">step 1,500</span><div class="mono" style="font-size:16px;white-space:pre-wrap" data-fd="tiny.samples.Stores, 26 Oct 2026: GSK-SIL-05L in Pune stores,.0.8"></div></div>
-  </div>
-  <div class="opens step" style="top:690px"><span class="k">Look at the stock figure</span>It writes a stores line in Rasoi's exact format, with a number it made up. It learnt what a stock line looks like, not what Rasoi has.</div>
+<section class="slide" data-plate="Before and After Training">
+  <div class="lec-top"><h2>What our tiny GPT learnt</h2><p class="sub">Same model, same start of text: before training and after training on Northbridge’s documents.</p></div>
+  <div class="fig" data-fig="tinysamples" style="left:100px;top:250px;width:1400px;height:420px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="opens step" style="top:700px"><span class="k">Look at the numbers</span>Emma’s e-mail with 5,400 is in its training text. It still never wrote 5,400. Training stores patterns, not facts you can look up: the cold open, at small scale.</div>
 </section>
 
-<section class="slide" data-plate="Three Stages of Training">
-  <div class="img" style="left:200px;top:100px;width:1200px;height:670px"><img src="figs/training_stages.jpg" alt="Pretraining, instruction tuning, preference tuning, frozen"></div>
-  <div class="cap" style="left:200px;top:780px;width:1200px"><b>Fig. 22.</b> How a chat model is made. Qwen2.5 was pretrained on 18 trillion tokens (Qwen2.5 technical report). The next three plates take one stage each.</div>
+<section class="slide" data-plate="Three Stages, Then Frozen">
+  <div class="pfig" style="left:180px;top:110px;width:1240px;height:692px"><img src="figs/training_stages.jpg" alt="Pretraining, instruction tuning, preference tuning, last training day, frozen weights"></div>
+  <div class="cap" style="left:180px;top:812px;width:1240px"><b>Fig. 3.</b> How a chat model is made. Qwen2.5: up to 18 trillion tokens of pretraining, over a million instruction examples, then preference tuning (DPO, then online RL). Qwen2.5 Technical Report, arXiv:2412.15115.</div>
 </section>
 
-<section class="slide" data-plate="Stage 1 · Pretraining">
-  <div class="col" style="width:470px">
-    <h2>A base model continues text</h2>
-    <p>Pretraining is exactly our tiny GPT, at enormous scale: predict the next token of public text.</p>
-    <p class="step">The result does not answer questions. It continues documents.</p>
-    <p class="step">Give it a stock report header and it writes a stock figure, as on the stock plate in Part 1.</p>
-  </div>
-  <div class="card step" style="position:absolute;left:660px;top:200px;width:840px"><span class="tag nt">Qwen2.5-0.5B base · greedy</span>
-    <div class="mono" style="font-size:16px;white-space:pre-wrap">Stock report, Rasoi Steel Works, Pune.
-Item: GSK-SIL-05L, silicone gasket, 5 litre.
-On hand in Pune stores:<b class="b" data-fd="stock_greedy"></b></div></div>
-  <div class="card step" style="position:absolute;left:660px;top:470px;width:840px"><span class="tag nt">Qwen2.5-0.5B base · greedy</span>
-    <div class="mono" style="font-size:16px;white-space:pre-wrap">Rasoi Steel Works buys its 5-litre silicone gaskets from<b class="b" data-fd="supplier_greedy"></b></div></div>
-  <div class="cap" style="left:660px;top:700px;width:840px"><b>Fig. 23.</b> Real greedy continuations. <code>next_token.json</code>.</div>
-</section>
-
-<section class="slide" data-plate="Stage 2 · Instruction Tuning">
-  <div class="col" style="width:470px">
-    <h2>A model that answers</h2>
-    <p>Keep training, now on example conversations: a question, then a good answer.</p>
-    <div class="def step"><b>Instruction tuning</b>Further training on example conversations, so the model replies to a request instead of continuing it.</div>
-    <p class="step">Same small model, instruction-tuned, asked Kavita's question with the modest prompt. It answers like an assistant, and invents a figure.</p>
-  </div>
-  <div class="card af step" style="position:absolute;left:660px;top:230px;width:840px"><span class="tag af">Qwen2.5-0.5B-Instruct · greedy</span><div style="font-size:21px" data-fd="chat.answer_greedy"></div></div>
-  <div class="card step" style="position:absolute;left:660px;top:470px;width:840px"><span class="tag nt">turn 2 · "Where did that number come from?"</span><div style="font-size:21px" data-fd="chat.turn2_answer"></div></div>
-  <div class="cap" style="left:660px;top:730px;width:840px"><b>Fig. 24.</b> Real replies from the instruction-tuned model. <code>experiments/logs/chat_template.json</code>.</div>
-</section>
-
-<section class="slide" data-plate="Stage 3 · Preference Tuning">
-  <div class="col" style="width:470px">
-    <h2>A model people prefer</h2>
-    <p>Show people two answers to the same question. They pick the better one. Train the model to give more answers like the winners.</p>
-    <div class="def step"><b>Preference tuning (RLHF)</b>Reinforcement learning from human feedback: reward the kind of answer people prefer.</div>
-    <p class="step">This is where "I don't have access to live inventory data" comes from. People prefer an honest refusal to a made-up number.</p>
-  </div>
-  <div class="two" style="left:660px;top:200px;grid-template-columns:1fr">
-    <div class="card af step"><span class="tag af">gemini-3.8-flash · modest prompt · temperature 0</span><div style="font-size:20px" data-fd="cold.cells.0.t0.reply"></div></div>
-    <div class="card bf step"><span class="tag bf">same model · "you know Rasoi's stock" prompt</span><div style="font-size:20px" data-fd="cold.cells.2.t0.reply"></div></div>
-  </div>
-  <div class="opens step" style="left:660px;top:640px"><span class="k">The catch</span>The habit is a preference, not a rule. A system prompt that says "you know the stock" outweighs it, and at temperature 1 even the modest prompt invented a figure in <span data-fd="cold.cells.0.nums" data-f="count"></span> of 12 tries.</div>
-</section>
-
-<section class="slide" data-plate="Frozen at Training Time">
-  <div class="col" style="width:520px">
-    <h2>What it knows was fixed on its last training day</h2>
-    <p class="step">After training, the numbers stop changing. Using the model never teaches it anything.</p>
-    <p class="step">It saw public text: web pages, books, code. It never saw Bahi's tables.</p>
-    <p class="step">So it cannot know today's stock, yesterday's GRN or Rohit's approvals, however well it talks.</p>
-  </div>
-  <div class="card af step" style="position:absolute;left:700px;top:200px;width:800px;font-size:24px"><h3>What it does have</h3>How purchase departments write. What a stock answer sounds like. That Pune is a city, gaskets are parts and GST is a tax. Enough to write a perfect-sounding wrong answer.</div>
-  <div class="card bf step" style="position:absolute;left:700px;top:470px;width:800px;font-size:24px"><h3>What it does not have</h3>Any row of any Rasoi table. Any way to look one up. Any memory of your last chat, unless you send it again (Part 8).</div>
-</section>
-
-<section class="slide" data-plate="Check Yourself · Training">
-  <div class="lec-top"><h2>Check yourself</h2></div>
-  <div class="three" style="top:230px">
-    <div class="card"><p class="q">1. Our tiny GPT started at a loss of <span data-fd="tiny.curve.0.val" data-f="x2"></span>. Where does that number come from?</p><p class="ans step">A random model guesses roughly evenly over its <span data-fd="tiny.config.vocab"></span> characters: ln(<span data-fd="tiny.config.vocab"></span>) = 4.41. A fresh random model is not perfectly even, so it is a little higher.</p></div>
-    <div class="card"><p class="q">2. Which stage taught the model to reply instead of continuing a document?</p><p class="ans step">Instruction tuning.</p></div>
-    <div class="card"><p class="q">3. Kavita tells Ask Rasoi the stock is 54,000. Tomorrow, in a new chat, does it know?</p><p class="ans step">No. The weights are frozen and a new chat starts empty.</p></div>
-  </div>
-</section>
-
-<!-- ============ 7 · GENERATION ============ -->
-<section class="slide part" data-plain="1" data-num="7">
-  <div class="center"><span class="num">Part 7</span><h1>Generation</h1><p class="lede">The model gives probabilities. Something still has to pick a token. How we pick changes what Ask Rasoi says.</p></div>
-</section>
-
-<section class="slide" data-plate="Temperature and Top-p">
-  <div class="col" style="width:440px">
-    <h2>Two dials</h2>
-    <div class="def"><b>Sampling</b>Pick the next token at random, in proportion to its probability.</div>
-    <div class="def step" style="margin-top:12px"><b>Temperature</b>Divide every logit by T before softmax. T below 1 sharpens; above 1 flattens.</div>
-    <div class="def step" style="margin-top:12px"><b>Top-p</b>Keep only the most likely tokens whose probabilities add up to p; never pick the rest.</div>
-    <p class="step" style="margin-top:14px">Move the sliders on real logits. At T = 0.1 one token takes almost everything.</p>
-  </div>
-  <div class="fig" data-fig="temp" style="left:600px;top:110px;width:900px;height:720px"></div>
-</section>
-
-<section class="slide" data-plate="Same Prompt, Different Text">
+<section class="slide" data-plate="The Last Training Day">
   <div class="col" style="width:420px">
-    <h2>Why the same question gets different answers</h2>
-    <p>Temperature 0 always gives the same text. Anything above 0 is a fresh draw each time.</p>
-    <p class="step">Higher temperature: more variety, then nonsense.</p>
-    <p class="step">This is why our 12 tries at the start gave 1,450, 2,450, 3,420 … from one question.</p>
+    <h2>What year does it think it is?</h2>
+    <div class="def"><b>Cut-off</b>The last day of text a model was trained on. It knows nothing after it.</div>
+    <p class="step">Each model says its own last day. None of them is 26 October 2026.</p>
+    <p class="small">The date it gives in the app comes from the system prompt, not from the model.</p>
   </div>
-  <div class="fig" data-fig="samplesT" style="left:580px;top:110px;width:920px;height:720px"></div>
+  <div class="fig" data-fig="cutoff" style="left:580px;top:120px;width:920px;height:700px"></div>
 </section>
 
-<section class="slide" data-plate="Check Yourself · Generation">
-  <div class="lec-top"><h2>Check yourself</h2></div>
-  <div class="two" style="top:230px">
-    <div class="card"><p class="q">1. Ask Rasoi will raise purchase requests in Lecture 5. Which temperature would you use, and why?</p><p class="ans step">Low (0 or close): we want the same, predictable answer every time, not variety.</p></div>
-    <div class="card"><p class="q">2. Does temperature 0 stop the model inventing the stock figure?</p><p class="ans step">No. It makes it invent the <i>same</i> figure every time (1,420 in our run). Temperature changes the pick, not what the model knows.</p></div>
-  </div>
-</section>
-
-<!-- ============ 8 · CHAT FORMAT ============ -->
-<section class="slide part" data-plain="1" data-num="8">
-  <div class="center"><span class="num">Part 8</span><h1>The chat format</h1><p class="lede">A chat looks like messages. Inside, it is one long sequence of tokens that the model continues.</p></div>
-</section>
-
-<section class="slide" data-plate="Messages Are Just Text">
-  <div class="col" style="width:560px">
-    <h2>What you send</h2>
-    <div class="card" style="background:var(--g3);margin-bottom:10px;font-size:19px"><span class="tag nt">system</span><br><span data-fd="chat.messages.0.content"></span></div>
-    <div class="card" style="margin-bottom:10px;font-size:19px"><span class="tag nt">user</span><br><span data-fd="chat.messages.1.content"></span></div>
-    <p class="step" style="font-size:21px"><b>system</b>: the builder's instructions. <b>user</b>: Kavita. <b>assistant</b>: the model's replies. Special tokens mark where each message starts and ends; the model writes what comes after the last one.</p>
-  </div>
-  <div class="fig step" data-fig="chattpl" style="left:740px;top:118px;width:760px;height:350px"></div>
-  <div class="cap" style="left:740px;top:480px;width:760px"><b>Fig. 25.</b> What the model reads: the real chat-template text for these two messages, built by the Qwen2.5-0.5B-Instruct tokenizer. <code>experiments/logs/chat_template.json</code>.</div>
-</section>
-
-<section class="slide" data-plate="The Context Window">
-  <div class="col" style="width:480px">
-    <h2>It only sees what you send</h2>
-    <div class="def"><b>Context window</b>The most tokens a model can read at once: the system prompt, the whole chat so far and its reply.</div>
-    <p class="step">The model keeps no memory between calls. Every turn, the app sends the whole history again.</p>
-    <p class="step">So every turn costs more tokens than the last. Qwen2.5-0.5B's window is <span data-fd="card.context" data-f="in"></span> tokens.</p>
-  </div>
-  <div class="fig" data-fig="context" style="left:660px;top:200px;width:840px;height:300px"></div>
-  <div class="cap" style="left:660px;top:520px;width:840px"><b>Fig. 26.</b> Tokens sent in, turn 1 and turn 2 of the cold open. Gemini counts from <code>cold_open_variants.json</code>; Qwen from <code>chat_template.json</code>.</div>
-</section>
-
-<section class="slide" data-plate="Cost and Speed, in Tokens">
-  <div class="lec-top"><h2>One answer, priced</h2><p class="sub">The cold-open reply from gemini-3.8-flash, as measured, priced at the course's assumed list price (₹88 per US dollar).</p></div>
-  <div class="three" style="top:270px">
-    <div class="card step"><h3>Tokens</h3><p style="font-size:44px;margin:0" class="a"><span data-fd="cold.cells.2.t0.tokens_in"></span> in · <span data-fd="cold.cells.2.t0.tokens_out"></span> out</p><p class="small">input is the prompt; output is the reply</p></div>
-    <div class="card step"><h3>Time</h3><p style="font-size:44px;margin:0" class="a"><span data-fd="cold.cells.2.t0.seconds" data-f="x1"></span> s</p><p class="small">wall-clock for the whole call</p></div>
-    <div class="card step"><h3>Cost</h3><p style="font-size:44px;margin:0" class="a">₹<span data-fd="cold.cells.2.t0.cost_inr" data-f="x3"></span></p><p class="small">output tokens cost 6× input in our price table</p></div>
-  </div>
-  <div class="opens step" style="top:600px"><span class="k">Why it matters later</span>An agent re-sends the history, the tool definitions and every tool result on every step, so its tokens add up quickly. Tokens are the unit of every budget from now on.</div>
-</section>
-
-<section class="slide" data-plate="Check Yourself · Chat Format">
-  <div class="lec-top"><h2>Check yourself</h2></div>
-  <div class="two" style="top:230px">
-    <div class="card"><p class="q">1. Where did "Where did that number come from?" get its answer from, if the model has no memory?</p><p class="ans step">From the context: the app re-sent the system prompt, the question and the earlier reply with the new question. It continued that text.</p></div>
-    <div class="card"><p class="q">2. Could we fix the cold open by pasting Bahi's whole stock table into the system prompt?</p><p class="ans step">For one table, yes: then the facts are in the context. That is the idea of Lecture 3. It does not scale to all of Bahi, which is why Lecture 4 adds tools.</p></div>
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · <span class="qnum"></span></p>
+    <h2 class="q-text">If we trained a model on every Northbridge document ever written, would it then know <em>today’s stock?</em></h2>
+    <p class="q-sub">Think about the last training day, and about what changes in Ledgerline every hour.</p>
   </div>
 </section>
 
-<!-- ============ 9 · WHY IT MAKES THINGS UP ============ -->
+<!-- =============================== 9 · WHY IT MADE IT UP =============================== -->
 <section class="slide part" data-plain="1" data-num="9">
-  <div class="center"><span class="num">Part 9</span><h1>Why it makes things up</h1><p class="lede">Back to Monday morning, with everything we now know.</p></div>
+  <div class="center"><span class="num">Section 9 of 9 · The fix</span>
+    <div class="recall"><b>Last section</b>The weights were frozen on the last training day, from public text. Now: back to Monday morning.</div>
+    <h1 class="q2">Why did it make the number up, and what fixes it?</h1></div>
+</section>
+
+<section class="slide" data-plate="The Scene · 9 · Trace the Number Back">
+  <div class="fig" data-fig="b3d" data-section="9" style="left:0;top:0;width:1600px;height:900px"></div>
+  <span class="step"></span><span class="step"></span><span class="step"></span>
 </section>
 
 <section class="slide" data-plate="The Cold Open, Explained">
-  <div class="col" style="width:470px">
-    <h2>1,420, step by step</h2>
-    <p class="step">The question became tokens. The system prompt said "you know Rasoi's stock".</p>
-    <p class="step">The model played its game: what text usually follows a stock question? "We currently have …", then a number.</p>
-    <p class="step">Every digit was plausible. Nothing in it is connected to Bahi.</p>
-    <p class="step">The follow-up was the same game: what usually follows "where did that come from?" A source.</p>
+  <div class="col" style="width:460px">
+    <h2>A plausible number</h2>
+    <p class="step">The question became tokens. Nothing in them was the stock.</p>
+    <p class="step">The weights hold patterns from public text: what a stock answer sounds like.</p>
+    <p class="step">So it wrote a stock answer, digit by likely digit.</p>
+    <p class="step">It did not lie. It did the only thing it does: guess the next token.</p>
   </div>
-  <div class="img" style="left:640px;top:130px;width:860px;height:480px"><img src="figs/why_it_invents.jpg" alt="What the model learned versus Bahi ERP, no connection, two bridges"></div>
-  <div class="cap" style="left:640px;top:620px;width:860px"><b>Fig. 27.</b> The model predicts plausible text from what it learnt; Rasoi's facts live in Bahi. Nothing joins them yet.</div>
+  <div class="pfig" style="left:640px;top:150px;width:860px;height:480px"><img src="figs/why_it_invents.jpg" alt="The model's weights and context; a plausible number; Ledgerline with 5,400, no connection; knowledge and tools sockets"></div>
+  <div class="cap" style="left:640px;top:646px;width:860px"><b>Fig. 4.</b> The facts are in Ledgerline. Nothing joins them to the model yet. Both fixes put the facts into the context.</div>
 </section>
 
-<section class="slide" data-plate="What Would Fix It">
-  <div class="col" style="width:460px">
-    <h2>Give it facts, give it hands</h2>
-    <p class="step"><b class="g">Lecture 3 · Knowledge:</b> put the right facts into the context: the policy, the rules. "Can we buy from Shakti Seals?" gets §6.2.</p>
-    <p class="step"><b class="g">Lecture 4 · Hands:</b> let it look things up. It writes a request; our code runs it on Bahi; the result goes back into the context.</p>
-    <p class="step">A tool call is not magic. It is the model writing a small JSON object instead of an answer.</p>
+<section class="slide" data-plate="Put the Fact in the Context">
+  <div class="col" style="width:440px">
+    <h2>One line changes the answer</h2>
+    <p>Same model, same question. We add one Ledgerline stock line to the system prompt.</p>
+    <p class="step">Now the number is in the context.</p>
+    <p class="step">Attention finds it, and the answer is right. Gemini, with the same line: <span data-l2="facts.correct"></span> of <span data-l2="facts.runs.length"></span> runs said 5,400.</p>
+    <p class="step">Sample at 0.7, though, and the digits can still drift. For facts: keep the dial low, and check the number.</p>
+    <p class="step"><b class="g">Lecture 3, knowledge:</b> find the right facts and put them in. <b class="g">Lecture 4, tools:</b> let the model ask Ledgerline itself.</p>
   </div>
-  <div class="fig step" data-fig="toolcall" style="left:640px;top:130px;width:860px;height:640px"></div>
-  <div class="cap" style="left:640px;top:790px;width:860px"><b>Fig. 28.</b> A real reply from gemini-3.8-flash when two tools are offered: no number, a request. <code>cold_open.json</code> (tool_preview, truth).</div>
+  <div class="fig" data-fig="facts" style="left:620px;top:120px;width:880px;height:720px"></div>
 </section>
 
 <section class="slide" data-plate="Try It Live · Stage Brain">
-  <div class="col" style="width:520px">
-    <h2>Ask Rasoi, as it is today</h2>
-    <p style="font-size:23px">Open the link on your phone or laptop. This is Ask Rasoi with the brain only: no tools, no Rasoi data.</p>
-    <p class="step" style="font-size:22px">1. Ask: "How many 5-litre silicone gaskets do we have in Pune stores?"</p>
+  <div class="col" style="width:540px">
+    <h2>Ask Northbridge, brain only</h2>
+    <p style="font-size:23px">Open the link on your phone or laptop. No tools, no Ledgerline.</p>
+    <p class="step" style="font-size:22px">1. Ask: “How many city e-bike battery packs do we have in Manchester stores?”</p>
     <p class="step" style="font-size:22px">2. Ask again. Then ask where the number came from.</p>
-    <p class="step" style="font-size:22px">3. Ask something it does well: "Draft a polite reminder to Deccan Polymers about the Diwali delivery."</p>
-    <p class="step" style="font-size:22px">4. Post on the class wall: one thing it did well, one thing it made up.</p>
+    <p class="step" style="font-size:22px">3. Ask something it does well: “Draft a polite reminder to Voltway Cells about the delivery for the spring launch run.”</p>
+    <p class="step" style="font-size:22px">4. Post one thing it did well and one thing it made up.</p>
   </div>
-  <div class="img" style="left:680px;top:120px;width:820px;height:461px;border-radius:18px;overflow:hidden;box-shadow:var(--shadow)"><img src="../../bahi/bahi/experience/shots/27_after_stage_brain.png" alt="Ask Rasoi at stage brain answering 1,450 units"></div>
-  <div class="cap" style="left:680px;top:592px;width:820px"><b>Fig. 29.</b> The live Experience at stage brain, in the Experience team's end-to-end test: "We currently have 1,450 units". Bahi's Pune main stores hold 54,000.</div>
-  <div class="card af" style="position:absolute;left:680px;top:670px;width:820px;display:flex;align-items:center;gap:18px">
-    <a class="pill" href="https://rajatworkspace--rasoi-experience.us-east.modal.run/after?stage=brain" target="_blank" rel="noopener">Try it live · /after?stage=brain</a>
-    <span class="small">It may decline or invent: in our runs both happened, depending on the prompt and on chance.</span>
+  <div class="card af" style="position:absolute;left:760px;top:300px;width:740px;padding:34px 36px">
+    <p style="font-size:24px;margin-bottom:22px">The same Ask Northbridge you used in Lecture 1, at the stage we built today.</p>
+    <a class="live" href="https://rajatworkspace--northbridge-experience.us-east.modal.run/after?stage=brain" target="_blank" rel="noopener">Try it live <code>/after?stage=brain</code></a>
+    <p class="small" style="margin-top:22px">It may decline or invent. Both are the same game: which reply is the likeliest next text for this prompt.</p>
   </div>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · <span class="qnum"></span></p>
+    <h2 class="q-text">Think of your own work. Which questions would this brain answer well on its own, and which would it <em>make up?</em></h2>
+    <p class="q-sub">And back to the first question: was it 1, 2, 3 or 4?</p>
+  </div>
+</section>
+
+<!-- =============================== CLOSING =============================== -->
+<section class="slide" data-plate="The Whole Machine">
+  <div class="fig" data-fig="b3d" data-section="all" style="left:0;top:0;width:1600px;height:900px"></div>
+  
+</section>
+
+<section class="slide" data-plate="One Sentence, Nine Steps">
+  <div class="lec-top"><h2>What happened to Emma’s question</h2></div>
+  <ol class="recap" style="position:absolute;left:100px;right:100px;top:220px">
+    <li class="step"><span class="n">1</span><span><b>The game.</b> The model gives a probability to every possible next token.</span></li>
+    <li class="step"><span class="n">2</span><span><b>Tokens.</b> The chat became one text, then <span data-tr="prompt.n_tokens" data-f="n"></span> token ids.</span></li>
+    <li class="step"><span class="n">3</span><span><b>Vectors.</b> Each id became a row of 896 numbers; similar words sit close.</span></li>
+    <li class="step"><span class="n">4</span><span><b>Attention.</b> Each token looked back and mixed in what it needed.</span></li>
+    <li class="step"><span class="n">5</span><span><b>24 blocks.</b> Look, then think, 24 times; the answer formed near the top.</span></li>
+    <li class="step"><span class="n">6</span><span><b>A choice.</b> Scores became probabilities; temperature shaped them; one token was picked.</span></li>
+    <li class="step"><span class="n">7</span><span><b>The loop.</b> Add it, run again, until the end marker. The digits too.</span></li>
+    <li class="step"><span class="n">8</span><span><b>Training.</b> The numbers came from public text and were frozen on the last training day.</span></li>
+    <li class="step"><span class="n">9</span><span><b>The fix.</b> Nothing carried the stock, so it wrote a likely one. Facts in the context fix it.</span></li>
+  </ol>
+</section>
+
+<section class="slide" data-plate="What the Brain Needs Next">
+  <div class="lec-top"><h2>Two sockets</h2><p class="sub">The brain talks well. It cannot know Northbridge. The next two lectures connect it.</p></div>
+  <div class="two" style="top:280px">
+    <div class="card af step"><span class="tag af">Lecture 3 · Sat 7 Nov · The Memory</span><h3>Knowledge</h3>Emma asks whether she can buy battery packs from Brightcell Energy. The answer is in Purchase Policy §6.2. We find the right paragraph by meaning and put it in the context, with its citation.</div>
+    <div class="card af step"><span class="tag af">Lecture 4 · Sun 8 Nov · The Hands</span><h3>Tools</h3>Ask Northbridge checks the stock itself. Offered two tools, the same model wrote no number at all: it asked for <code>find_item("city e-bike battery pack")</code>. Our code runs it on Ledgerline, and the real 5,400 comes back into the context.</div>
+  </div>
+  <div class="opens step" style="top:640px;background:var(--g1)"><span class="k" style="color:var(--after)">The same idea twice</span>Both fixes do what one line did in Section 9: they put the facts into the context. They differ in who fetches them.</div>
 </section>
 
 <section class="slide" data-plate="The Notebook · NB2">
-  <div class="lec-top"><h2>NB2 · The Brain</h2><p class="sub">Colab, free CPU. Parts (a)–(d) run a real model and train your own; part (e) replays our recorded Gemini calls.</p></div>
+  <div class="lec-top"><h2>NB2 · The Brain</h2><p class="sub">Colab, free CPU, no API key. Nine sections, one per section of today, on Emma’s same question.</p></div>
   <div class="three" style="top:250px">
-    <div class="card"><h3>(a) The game</h3>Load Qwen2.5-0.5B. Next-token probabilities for Rasoi prompts, ten sampled stock figures, temperature by hand. <b>Exercise 1:</b> softmax.</div>
-    <div class="card"><h3>(b) Tokens</h3>BPE by hand on a tiny gasket corpus, then real splits of Rasoi text. <b>Exercise 2:</b> write the merge.</div>
-    <div class="card"><h3>(c) Attention</h3>The four-token example in numpy, then real attention weights. <b>Exercises 3–4:</b> one row by hand; find the head that reads 20,000.</div>
-    <div class="card"><h3>(d) A tiny GPT</h3>About 80 lines of PyTorch, trained on Rasoi's 1,19,651 characters. <b>Exercises 5–6:</b> the step-0 loss; temperature.</div>
-    <div class="card"><h3>(e) A real chat model</h3>gemini-3.8-flash through <code>bahi.llm</code>, cassette <code>L2v3_coldopen</code>: the invented 1,420. <b>Exercise 7:</b> send the second turn.</div>
-    <div class="card af"><h3>Your module</h3>Load your capstone module's documents and start Assignment A2.</div>
+    <div class="card"><h3>Sections 1–3</h3>Ask Northbridge’s recorded runs, then Qwen2.5-0.5B-Instruct live: the next-token bars, the 100 tokens, the cost, the vectors. <b>Exercises 1–3:</b> softmax by hand, one BPE merge, the price in pounds.</div>
+    <div class="card"><h3>Sections 4–7</h3>Attention on “Emma needs 2,000 packs” in numpy, then the real heads, the logit lens, temperature and the loop. <b>Exercise 4:</b> one attention row by hand.</div>
+    <div class="card"><h3>Sections 8–9</h3>A tiny GPT trained from scratch on Northbridge’s documents in a few minutes; the cut-off; the fact in the prompt. <b>Exercises 5–6:</b> the loss before training; put the fact in the prompt.</div>
   </div>
-  <div class="cap" style="left:100px;top:790px;width:1400px">On Modal (2 CPUs, no Gemini key needed) all 22 code cells ran top to bottom in replay mode with 0 errors; training the tiny GPT is the longest cell, about 8 minutes.</div>
+  <div class="opens" style="top:600px;background:var(--g3)"><span class="k" style="color:var(--gold)">Proved</span>Replayed on Modal top to bottom: 32 code cells, 0 errors. Every exercise has its solution behind <code>SOLUTION = True</code>: set it to <code>False</code> and try it yourself. The last cell takes your own documents: that is A2.</div>
 </section>
 
 <section class="slide" data-plate="Assignment A2">
-  <div class="lec-top"><h2>A2 · The Brain, on your module</h2><p class="sub">Due before Lecture 3, Sat 7 Nov. Details in <code>A2.md</code>.</p></div>
-  <div class="three" style="top:260px">
-    <div class="card"><span class="tag nt">3 points</span><h3>Attention by hand</h3>Three tokens from an approval note ("Rohit approves PR"), two numbers each. Weights and outputs for every token, checked in numpy.</div>
-    <div class="card"><span class="tag nt">4 points</span><h3>Train the tiny GPT</h3>On your module's documents. Report the losses, the time and three samples; mark every number that looks right but is made up.</div>
-    <div class="card"><span class="tag nt">3 points</span><h3>Explain the gap</h3>Three questions your users ask that need Bahi's live data. Two real bare-model replies. Why it answers that way, in your words.</div>
+  <div class="lec-top"><h2>A2 · How a brain would read your work</h2><p class="sub">On your own work or domain. Due before Lecture 3, Sat 7 Nov, 7 AM IST. Details in <code>A2.md</code>.</p></div>
+  <div class="grid4" style="position:absolute;left:100px;right:100px;top:250px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+    <div class="card" style="font-size:19px"><span class="tag nt">2 points</span><h3>Tokens</h3>Cut a page of your own text. What splits most, and why it matters. What 1,000 questions a day for a year would cost, thinking included.</div>
+    <div class="card" style="font-size:19px"><span class="tag nt">3 points</span><h3>Where it invents</h3>Three real questions, asked of a brain alone, four times. Trace one invented detail through today’s steps. Which made-up answer would do the most harm?</div>
+    <div class="card" style="font-size:19px"><span class="tag nt">3 points</span><h3>The facts it needs</h3>Where each missing fact lives. Knowledge (Lecture 3) or tools (Lecture 4)? Put one fact in the prompt and test it.</div>
+    <div class="card" style="font-size:19px"><span class="tag nt">2 points</span><h3>Run NB2</h3>Solve at least three of the six exercises yourself, and answer two short questions.</div>
   </div>
-  <div class="opens step" style="top:600px;background:var(--g1)"><span class="k" style="color:var(--after)">Two tracks</span>Guided: run NB2, change only the module. Builder: also try a bigger tiny GPT or a word-level vocabulary and compare.</div>
-</section>
-
-<section class="slide" data-plate="Where We Are">
-  <div class="col" style="width:470px">
-    <h2>Ask Rasoi, with the brain lit</h2>
-    <p>The LLM is the part that reads and writes language.</p>
-    <p class="step">On its own it can talk, summarise and draft. It cannot know Rasoi.</p>
-    <p class="step">Next it gets knowledge (L3), then hands (L4), then the loop that makes it an agent (L5).</p>
-  </div>
-  <div class="img" style="left:860px;top:110px;width:560px;height:750px"><img src="figs/ask_rasoi_architecture.jpg" alt="Ask Rasoi architecture"><div class="lit" style="left:5.7%;top:29.9%;width:22.3%;height:14.6%"></div></div>
+  <div class="opens step" style="top:640px;background:var(--g1)"><span class="k" style="color:var(--after)">Use today’s words</span>Token, vector, attention, next-token probability, temperature, sampling, training data, cut-off, system prompt, context.</div>
 </section>
 
 <section class="slide" data-plain="1">
   <div class="center" style="text-align:center;align-items:center">
-    <div class="kicker">Next time · Lecture 3 · Sat 7 Nov 2026</div>
+    <div class="kicker">Next time · Lecture 3 · Sat 7 Nov 2026, 7–9 AM IST</div>
     <h1 style="font-size:96px">The Memory</h1>
-    <p class="lede" style="max-width:1050px;margin-top:24px">The model does not know Rasoi. Context is its only memory. We give it Rasoi's policies, find the right paragraph by meaning, and make it cite §6.2 when Kavita asks about Shakti Seals.</p>
+    <p class="lede" style="max-width:1050px;margin-top:24px">The model does not know Northbridge, and the context is its only memory. We give it Northbridge’s policies, find the right paragraph by meaning, and make it cite §6.2 when Emma asks about Brightcell Energy.</p>
   </div>
 </section>
 
 </div>
 <script src="figdata.js"></script>
+<script src="brain3d/trace.js"></script>
 <script src="figs.js"></script>
+<script src="brain3d/deck.js"></script>
 <script>
-/* Fill every [data-fd] span from figdata.js, so plate text and figures share one source (experiments/logs). */
-(() => {
-  const get = (p) => p.split('.').reduce((o, k) => (o == null ? o : o[k]), window.FD);
-  document.querySelectorAll('[data-fd]').forEach((e) => {
-    const path = e.dataset.fd;
-    let v = path.includes('Stores, 26 Oct') ? window.FD.tiny.samples['Stores, 26 Oct 2026: GSK-SIL-05L in Pune stores,']['0.8'] : get(path);
-    const f = e.dataset.f || '';
-    if (v == null) { v = 'not yet measured'; }
-    else if (f === 'in') v = Number(v).toLocaleString('en-IN');
-    else if (f === 'pct') v = (100 * v).toFixed(v < 0.1 ? 1 : 0) + '%';
-    else if (f === 'm') v = (v / 1e6).toFixed(0) + ' million';
-    else if (f === 'count') v = v.filter((x) => x !== null).length;
-    else if (f === 'bits') v = (v / Math.LN2).toFixed(1);
-    else if (f === 'min') v = `${Math.round(v)} seconds (about ${Math.round(v / 60)} minutes)`;
-    else if (f.startsWith('x')) v = Number(v).toFixed(+f.slice(1));
-    e.textContent = v;
-  });
-})();
+/* "Ask the class" numbers, and text spans filled from the trace. */
+(() => { let q = 0; document.querySelectorAll('.qnum').forEach((e) => { e.textContent = String(++q); }); if (window.FIGS && FIGS._fill) FIGS._fill(); })();
 </script>
 <script src="../../engine/plates.js"></script>
 </body>

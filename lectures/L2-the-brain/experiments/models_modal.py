@@ -1,24 +1,40 @@
-"""Lecture 2: every number about a real open model and the tiny GPT, measured on Modal (CPU, like free Colab).
+"""Lecture 2 v4 (Northbridge Cycles): the numbers about tokens, the tiny GPT and the cut-off, measured on Modal CPU.
 
-    /Users/raj/.venv/bin/modal run lectures/L2-the-brain/experiments/models_modal.py            # both jobs
+    /Users/raj/.venv/bin/modal run lectures/L2-the-brain/experiments/models_modal.py              # both jobs
     /Users/raj/.venv/bin/modal run lectures/L2-the-brain/experiments/models_modal.py --only qwen
     /Users/raj/.venv/bin/modal run lectures/L2-the-brain/experiments/models_modal.py --only tiny
 
-Job "qwen" (Qwen/Qwen2.5-0.5B base and -Instruct, float32, eager attention, 4 CPUs) writes to logs/:
-  model_card.json  next_token.json  tokens.json  bpe.json  embeddings.json  attention.json  logit_lens.json
-  surprise.json  samples.json  chat_template.json  hand_attention.json
-Job "tiny" (2 CPUs, the free-Colab budget) trains bahi.course.l2.tinygpt on the Rasoi corpus: logs/tinygpt.json.
-Compact copies the notebook replays from are written to bahi/bahi/course/l2/rec_*.json.
+The one forward pass of Emma's question that the 3D scene plays (tokens, vectors, attention, the logit lens,
+temperatures, the generated answer, the answer with the fact) is recorded by the 3D builder in brain3d/trace.json.
+This file does not repeat it for the deck. It records:
+
+Job "qwen" (Qwen/Qwen2.5-0.5B-Instruct and the GPT-2 tokenizer, float32, 4 CPUs), to logs/:
+  model_card.json   size of the model (read by brain3d/capture_trace.py too)
+  tokens.json       how the app's prompt and Northbridge's words and numbers are cut; the question in six languages;
+                    why tokens and not words (a word vocabulary from the corpus meets two documents it has not seen);
+                    token counts of Northbridge's documents and of the tiny-GPT corpus
+  bpe.json          byte-pair encoding by hand on a tiny Northbridge text, then 300 merges learnt on the corpus
+  cutoff.json       where the model's "now" is: the probability of each year after "The current year is", and its
+                    own answers to "what year is it?" and "what does your training data cover?"
+  hand_attention.json  the four-token attention example worked by hand
+  nb_qwen.json      what NB2 computes live with Qwen, recorded for its replay fallback (gen_figdata.py copies it to
+                    ledgerline/course/l2/rec_qwen.json): the same functions, prompts and settings as the notebook
+Job "tiny" (2 CPUs, the free-Colab budget): ledgerline.course.l2.tinygpt trained on northbridge_corpus.md, to
+  tinygpt.json      loss curve, samples before and after training, the corpus's last day (its training cut-off)
+
+The app's brain-stage system prompt is read from ledgerline.course.l2.brain (= harness._system("brain", "ECLARKE"))
+on the laptop and passed to the job, so the prompt is the app's, character for character.
 """
 import json
 import pathlib
+import sys
 
 import modal
 
 HERE = pathlib.Path(__file__).resolve().parent
 COURSE = HERE.parents[2] if len(HERE.parents) > 2 else HERE
-L2PKG = COURSE / "bahi" / "bahi" / "course" / "l2"
-DOCS = COURSE / "bahi" / "bahi" / "docs"
+L2PKG = COURSE / "ledgerline" / "ledgerline" / "course" / "l2"
+DOCS = COURSE / "ledgerline" / "ledgerline" / "docs"
 LOCAL = L2PKG.exists()
 
 image = (modal.Image.debian_slim(python_version="3.11")
@@ -33,117 +49,105 @@ if LOCAL:
              .add_local_dir(DOCS, "/docs", ignore=lambda p: "_index" in str(p)))
 app = modal.App("l2-brain-models", image=image)
 
-BASE, INSTRUCT = "Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-0.5B-Instruct"
-SENT = "Kavita needs 20,000 gaskets before the Diwali run."
+INSTRUCT = "Qwen/Qwen2.5-0.5B-Instruct"
+QUESTION = "How many city e-bike battery packs do we have in Manchester stores?"
+FACT = "Ledgerline stock, BAT-500 at Manchester main stores: 5,400 on hand"
+RAW = "City e-bike battery packs (BAT-500) in Manchester stores: "   # a stock line to complete, no chat format
+LANGS = {
+    "English": QUESTION,
+    "German": "Wie viele Akkus für City-E-Bikes haben wir in den Lagern in Manchester?",
+    "Dutch": "Hoeveel accu's voor stads-e-bikes hebben we in de magazijnen in Manchester?",
+    "Polish": "Ile akumulatorów do miejskich rowerów elektrycznych mamy w magazynach w Manchesterze?",
+    "Greek": "Πόσες μπαταρίες για ηλεκτρικά ποδήλατα πόλης έχουμε στις αποθήκες του Μάντσεστερ;",
+    "Japanese": "マンチェスターの倉庫に、シティ電動自転車のバッテリーパックはいくつありますか？",
+}
+CUTS = ["Manchester", " Manchester", " battery", " batteries", " e-bike", " Northbridge", " Ledgerline", " Voltway",
+        " Brightcell", " Gdańsk", " BAT-500", "5,400", " 5,400", "5400", " £285,600", " 2,000", " UN 38.3", " VAT20-RC"]
+YEARS = list(range(2015, 2031))
 
 
 @app.function(cpu=4, memory=12288, timeout=3000)
-def qwen() -> dict:
-    import sys
+def qwen(system: str) -> dict:
+    import re
     import time
 
     import numpy as np
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
-    from transformers.models.gpt2.tokenization_gpt2 import bytes_to_unicode
 
-    sys.path.insert(0, "/")
     torch.set_grad_enabled(False)
     out = {}
-    byte_dec = {v: k for k, v in bytes_to_unicode().items()}
-    tok = AutoTokenizer.from_pretrained(BASE)
+    tok = AutoTokenizer.from_pretrained(INSTRUCT)
     gtok = AutoTokenizer.from_pretrained("gpt2")
     t0 = time.time()
-    model = AutoModelForCausalLM.from_pretrained(BASE, torch_dtype=torch.float32, attn_implementation="eager").eval()
+    model = AutoModelForCausalLM.from_pretrained(INSTRUCT, torch_dtype=torch.float32, attn_implementation="eager").eval()
     load_s = time.time() - t0
     cfg = model.config
+    show = lambda i: tok.decode([int(i)])
+    R = lambda x, n=4: float(round(float(x), n))
 
-    def pieces(tk, ids):
-        res = []
-        for i in ids:
-            raw = tk.convert_ids_to_tokens(int(i))
-            try:
-                b = bytes(byte_dec[c] for c in raw)
-            except KeyError:
-                b = raw.encode()
-            try:
-                text = b.decode("utf-8")
-            except UnicodeDecodeError:
-                text = None  # a fragment of a multi-byte character
-            res.append({"id": int(i), "raw": raw, "text": text, "bytes": b.hex(" ")})
-        return res
+    def chat_ids(sys_text, question=QUESTION):
+        msgs = [{"role": "system", "content": sys_text}, {"role": "user", "content": question}]
+        text = tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
+        return text, tok(text, add_special_tokens=False).input_ids
 
-    def ids(s):
-        return tok(s, return_tensors="pt").input_ids
-
-    def show(tid):
-        return tok.decode([int(tid)])
+    text, ids = chat_ids(system)
 
     # ---------------- model card
     n_params = sum(p.numel() for p in model.parameters())
-    x = ids(SENT)
-    t1 = time.time(); model(x); fwd = time.time() - t1
+    t1 = time.time(); model(torch.tensor([ids])); fwd = time.time() - t1
     out["model_card.json"] = {
-        "model": BASE, "params": n_params, "layers": cfg.num_hidden_layers, "d_model": cfg.hidden_size,
+        "model": INSTRUCT, "params": n_params, "layers": cfg.num_hidden_layers, "d_model": cfg.hidden_size,
         "heads": cfg.num_attention_heads, "kv_heads": cfg.num_key_value_heads,
         "head_dim": cfg.hidden_size // cfg.num_attention_heads, "mlp_hidden": cfg.intermediate_size,
         "vocab": cfg.vocab_size, "tokenizer_len": len(tok), "context": cfg.max_position_embeddings,
         "tied_embeddings": cfg.tie_word_embeddings, "rope_theta": cfg.rope_theta, "norm": type(model.model.norm).__name__,
         "activation": cfg.hidden_act, "embedding_params": int(model.model.embed_tokens.weight.numel()),
-        "load_seconds_cpu4": round(load_s, 1), "forward_seconds_cpu4": round(fwd, 3), "forward_tokens": x.shape[1],
+        "load_seconds_cpu4": round(load_s, 1), "forward_seconds_cpu4": round(fwd, 3), "forward_tokens": len(ids),
         "gpt2_vocab": len(gtok)}
 
-    # ---------------- next-token probabilities
-    def dist(prompt, k=20, keep=60):
-        lg = model(ids(prompt)).logits[0, -1]
-        p = torch.softmax(lg, -1)
-        top = torch.topk(lg, keep)
-        return {"prompt": prompt, "n_tokens": int(ids(prompt).shape[1]),
-                "top": [{"text": show(i), "id": int(i), "logit": round(float(l), 3), "p": round(float(p[i]), 5)}
-                        for l, i in zip(top.values[:k], top.indices[:k])],
-                "logits60": [{"text": show(i), "logit": round(float(l), 3)} for l, i in zip(top.values, top.indices)],
-                "entropy_bits": round(float(-(p * torch.log2(p.clamp_min(1e-12))).sum()), 3)}
+    # ---------------- tokens: the app's prompt
+    enc = tok(text, return_offsets_mapping=True, add_special_tokens=False)
+    s0, u0 = text.index(system), text.index(QUESTION)
+    spans = {"system": (s0, s0 + len(system)), "user": (u0, u0 + len(QUESTION))}
+    pieces = []
+    for tid, (a, b) in zip(enc.input_ids, enc.offset_mapping):
+        role = next((r for r, (x, y) in spans.items() if a >= x and b <= y and b > a), "template")
+        pieces.append([show(tid), int(tid), role])
+    counts = {r: sum(1 for p in pieces if p[2] == r) for r in ("system", "user", "template")}
 
-    prompts = {"makes": "Rasoi Steel Works makes pressure",
-               "diwali": "Kavita needs 20,000 gaskets before the Diwali",
-               "stock": "Stock report, Rasoi Steel Works, Pune.\nItem: GSK-SIL-05L, silicone gasket, 5 litre.\nOn hand in Pune stores:",
-               "supplier": "Rasoi Steel Works buys its 5-litre silicone gaskets from"}
-    nt = {k: dist(v) for k, v in prompts.items()}
-    # the game played again and again: greedy, one token at a time, with the top 5 at each step
-    seq, steps = ids("Kavita needs 20,000 gaskets before the"), []
-    for _ in range(10):
-        lg = model(seq).logits[0, -1]
-        p = torch.softmax(lg, -1)
-        tp = torch.topk(p, 5)
-        steps.append({"context": tok.decode(seq[0]), "top5": [{"text": show(i), "p": round(float(v), 4)} for v, i in zip(tp.values, tp.indices)]})
-        seq = torch.cat([seq, tp.indices[:1].view(1, 1)], 1)
-    nt["greedy_steps"] = steps
-    nt["greedy_text"] = tok.decode(seq[0])
+    def cut(tk, s):
+        return [[tk.decode([i]), int(i)] for i in tk(s, add_special_tokens=False).input_ids]
 
-    def gen(prompt, n=12, temperature=1.0, top_p=1.0, seed=0, mdl=None, input_ids=None):
-        mdl = mdl or model
-        torch.manual_seed(seed)
-        inp = input_ids if input_ids is not None else ids(prompt)
-        kw = dict(do_sample=temperature > 0, max_new_tokens=n, pad_token_id=tok.eos_token_id)
-        if temperature > 0:
-            kw.update(temperature=temperature, top_p=top_p, top_k=0)
-        o = mdl.generate(inp, attention_mask=torch.ones_like(inp), **kw)
-        return tok.decode(o[0, inp.shape[1]:], skip_special_tokens=True)
+    langs = {k: {"text": v, "chars": len(v), "words": len(v.split()), "bytes": len(v.encode()),
+                 "qwen": len(tok(v, add_special_tokens=False).input_ids), "gpt2": len(gtok(v).input_ids),
+                 "qwen_pieces": [p[0] for p in cut(tok, v)]} for k, v in LANGS.items()}
 
-    nt["stock_samples"] = [{"seed": s, "text": gen(prompts["stock"], 8, 1.0, seed=s)} for s in range(10)]
-    nt["stock_greedy"] = gen(prompts["stock"], 8, 0)
-    nt["supplier_greedy"] = gen(prompts["supplier"], 12, 0)
-    out["next_token.json"] = nt
-
-    # ---------------- tokens
-    sents = [SENT, "PO/2026/01182: 20,000 x GSK-SIL-05L at ₹11.90, gross ₹2,80,840.",
-             "Kavita ko Diwali se pehle 20,000 gasket chahiye.", "कविता को दिवाली से पहले 20,000 गैस्केट चाहिए।"]
-    tk = {"sentences": []}
-    for s in sents:
-        q = tok(s).input_ids
-        g = gtok(s).input_ids
-        tk["sentences"].append({"text": s, "chars": len(s), "words": len(s.split()), "bytes": len(s.encode()),
-                                "qwen": pieces(tok, q), "gpt2": pieces(gtok, g), "n_qwen": len(q), "n_gpt2": len(g)})
+    # why tokens and not words: a word vocabulary built from the tiny-GPT corpus meets two documents it never saw
+    WORD = re.compile(r"[A-Za-z0-9£§][A-Za-z0-9£§.,/'-]*[A-Za-z0-9]|[A-Za-z0-9]")
+    corpus = pathlib.Path("/l2/northbridge_corpus.md").read_text()
+    cw = WORD.findall(corpus)
+    vocab_w = {}
+    for w in cw:
+        vocab_w[w] = vocab_w.get(w, 0) + 1
+    unseen_docs = ["user-manual.md", "data-dictionary.md"]
+    nw = []
+    for f in unseen_docs:
+        nw += WORD.findall(pathlib.Path("/docs", f).read_text())
+    oov = [w for w in nw if w not in vocab_w]
+    oov_distinct = sorted(set(oov), key=lambda w: -oov.count(w))
+    manual = pathlib.Path("/docs/user-manual.md").read_text()
+    man_ids = tok(manual, add_special_tokens=False).input_ids
+    why = {"word_vocab_from_corpus": len(vocab_w), "corpus_words": len(cw),
+           "words_seen_once": sum(1 for v in vocab_w.values() if v == 1),
+           "number_words_in_vocab": sum(1 for w in vocab_w if any(c.isdigit() for c in w)),
+           "unseen_docs": unseen_docs, "unseen_doc_words": len(nw), "oov_words": len(oov),
+           "oov_share": R(len(oov) / len(nw), 4), "oov_distinct": len(oov_distinct), "oov_examples": oov_distinct[:40],
+           "qwen_unknown_tokens": sum(1 for i in man_ids if i == tok.unk_token_id) if tok.unk_token_id is not None else 0,
+           "qwen_roundtrip_exact": tok.decode(man_ids) == manual,
+           "manual": {"chars": len(manual), "words": len(manual.split()), "qwen_tokens": len(man_ids),
+                      "chars_per_token": R(len(manual) / len(man_ids), 2), "words_per_token": R(len(manual.split()) / len(man_ids), 3)},
+           "char_vocab_corpus": len(set(corpus)), "qwen_vocab": len(tok)}
     docs = {}
     allt = ""
     for f in sorted(pathlib.Path("/docs").glob("*.md")):
@@ -151,193 +155,130 @@ def qwen() -> dict:
             continue
         t = f.read_text()
         allt += t
-        docs[f.name] = {"chars": len(t), "words": len(t.split()), "qwen_tokens": len(tok(t).input_ids)}
-    docs["ALL"] = {"chars": len(allt), "words": len(allt.split()), "qwen_tokens": len(tok(allt).input_ids)}
-    tk["docs"] = docs
-    corpus = pathlib.Path("/l2/rasoi_corpus.md").read_text()
-    tk["corpus"] = {"chars": len(corpus), "words": len(corpus.split()), "qwen_tokens": len(tok(corpus).input_ids),
-                    "distinct_chars": len(set(corpus))}
-    tk["vocab"] = {"qwen": len(tok), "gpt2": len(gtok)}
-    out["tokens.json"] = tk
+        docs[f.name] = {"chars": len(t), "words": len(t.split()), "qwen_tokens": len(tok(t, add_special_tokens=False).input_ids)}
+    docs["ALL"] = {"chars": len(allt), "words": len(allt.split()), "qwen_tokens": len(tok(allt, add_special_tokens=False).input_ids)}
+    out["tokens.json"] = {
+        "model": INSTRUCT, "system": system, "question": QUESTION, "chat_text": text, "n_tokens": len(ids),
+        "counts": counts, "pieces": pieces,
+        "question_tokens": cut(tok, QUESTION), "question_words": len(QUESTION.split()), "question_chars": len(QUESTION),
+        "system_words": len(system.split()), "system_chars": len(system),
+        "cuts": {s: {"qwen": cut(tok, s), "gpt2": cut(gtok, s)} for s in CUTS},
+        "languages": langs, "why_tokens": why, "docs": docs,
+        "corpus": {"chars": len(corpus), "words": len(corpus.split()), "qwen_tokens": len(tok(corpus, add_special_tokens=False).input_ids),
+                   "distinct_chars": len(set(corpus))},
+        "vocab": {"qwen": len(tok), "gpt2": len(gtok)}}
 
-    # ---------------- BPE by hand on a tiny corpus
-    tiny = "gasket gaskets gasket seal gaskets seals gasket seal gasket kit gaskets set"
-    words = {}
-    for w in tiny.split():
-        words[tuple(w) + ("_",)] = words.get(tuple(w) + ("_",), 0) + 1
-    vocab = sorted({c for w in words for c in w})
-    start_vocab = list(vocab)
-    merges = []
-    for step in range(10):
-        pairs = {}
-        for w, n in words.items():
-            for a, b in zip(w, w[1:]):
-                pairs[(a, b)] = pairs.get((a, b), 0) + n
-        if not pairs:
-            break
-        best = max(pairs, key=lambda k: (pairs[k], -list(pairs).index(k)))
-        new = {}
-        for w, n in words.items():
-            o, i = [], 0
+    # ---------------- BPE: by hand on a tiny Northbridge text, then learnt on the corpus
+    def bpe_train(word_counts, n_merges, keep_steps=12):
+        words = {tuple(w) + ("_",): c for w, c in word_counts.items()}
+        merges, steps, sizes = [], [], []
+        vocab = sorted({c for w in words for c in w})
+        start_vocab, start_tokens = list(vocab), sum(len(w) * n for w, n in words.items())
+        for step in range(1, n_merges + 1):
+            pairs = {}
+            for w, n in words.items():
+                for a, b in zip(w, w[1:]):
+                    pairs[(a, b)] = pairs.get((a, b), 0) + n
+            if not pairs:
+                break
+            best = max(pairs, key=lambda k: (pairs[k], -list(pairs).index(k)))
+            new = {}
+            for w, n in words.items():
+                o, i = [], 0
+                while i < len(w):
+                    if i < len(w) - 1 and (w[i], w[i + 1]) == best:
+                        o.append(w[i] + w[i + 1]); i += 2
+                    else:
+                        o.append(w[i]); i += 1
+                new[tuple(o)] = new.get(tuple(o), 0) + n
+            words = new
+            merges.append(best)
+            ntok = sum(len(w) * n for w, n in words.items())
+            sizes.append({"merges": step, "vocab": len(start_vocab) + step, "corpus_tokens": ntok})
+            if step <= keep_steps:
+                steps.append({"step": step, "pair": list(best), "count": pairs[best],
+                              "top_pairs": sorted([[a + "+" + b, c] for (a, b), c in pairs.items()], key=lambda z: -z[1])[:6],
+                              "words": {"".join(w).rstrip("_"): list(w) for w in list(words)[:12]},
+                              "vocab_size": len(start_vocab) + step, "corpus_tokens": ntok})
+        return {"start_vocab": start_vocab, "start_tokens": start_tokens, "merges": merges, "steps": steps, "sizes": sizes}
+
+    def bpe_apply(word, merges):
+        w = list(word) + ["_"]
+        for a, b in merges:
+            i, o = 0, []
             while i < len(w):
-                if i < len(w) - 1 and (w[i], w[i + 1]) == best:
-                    o.append(w[i] + w[i + 1]); i += 2
+                if i < len(w) - 1 and w[i] == a and w[i + 1] == b:
+                    o.append(a + b); i += 2
                 else:
                     o.append(w[i]); i += 1
-            new[tuple(o)] = n
-        words = new
-        vocab.append(best[0] + best[1])
-        merges.append({"step": step + 1, "pair": list(best), "count": pairs[best],
-                       "top_pairs": sorted([[a + "+" + b, c] for (a, b), c in pairs.items()], key=lambda z: -z[1])[:6],
-                       "words": {"".join(w).rstrip("_"): list(w) for w in words},
-                       "vocab_size": len(vocab), "corpus_tokens": sum(len(w) * n for w, n in words.items())})
-    out["bpe.json"] = {"corpus": tiny, "start_vocab": start_vocab,
-                       "start_tokens": sum((len(w) + 1) for w in tiny.split()), "merges": merges}
+            w = o
+        return w
 
-    # ---------------- embeddings
-    groups = {"parts": ["gasket", "washer", "seal", "valve", "whistle", "handle", "lid"],
-              "firms": ["supplier", "vendor", "seller", "manufacturer", "dealer"],
-              "documents": ["invoice", "bill", "receipt", "quotation", "challan"],
-              "money": ["rupee", "price", "payment", "cost", "discount"],
-              "places": ["Pune", "Mumbai", "Rajkot", "Nagpur", "Kolkata"],
-              "festivals": ["Diwali", "Holi", "Navratri", "Christmas"]}
-    E = model.model.embed_tokens.weight
-    words_l, grp = [], []
-    for g, ws in groups.items():
-        for w in ws:
-            words_l.append(w); grp.append(g)
+    tiny_text = "battery batteries pack packs battery pack charger chargers battery packs pack battery"
+    wc = {}
+    for w in tiny_text.split():
+        wc[w] = wc.get(w, 0) + 1
+    hand = bpe_train(wc, 10, keep_steps=10)
+    hand["corpus"] = tiny_text
+    hand["merges"] = [list(m) for m in hand["merges"]]
+    cwc = {}
+    for w in corpus.split():
+        cwc[w] = cwc.get(w, 0) + 1
+    t2 = time.time()
+    learnt = bpe_train(cwc, 300, keep_steps=0)
+    learnt_secs = round(time.time() - t2, 1)
+    m300 = learnt["merges"]
+    probe = ["Manchester", "battery", "packs", "BAT-500", "5,400", "Brightcell", "e-bike", "Voltway", "approval", "Aiko"]
+    out["bpe.json"] = {
+        "hand": hand,
+        "learnt": {"on": "northbridge_corpus.md, split on spaces, '_' marks the end of a word", "distinct_words": len(cwc),
+                   "start_vocab": len(learnt["start_vocab"]), "start_tokens": learnt["start_tokens"],
+                   "first_merges": [["".join(m), list(m)] for m in m300[:40]],
+                   "sizes": [s for s in learnt["sizes"] if s["merges"] in (1, 10, 25, 50, 100, 150, 200, 250, 300)],
+                   "seconds": learnt_secs,
+                   "cuts_after": {str(n): {w: bpe_apply(w, m300[:n]) for w in probe} for n in (0, 50, 100, 300)},
+                   "question_after_300": [p for w in QUESTION.split() for p in bpe_apply(w, m300)],
+                   "question_qwen": [p[0] for p in cut(tok, QUESTION)],
+                   "merge_rank": {w: next((i + 1 for i, m in enumerate(m300) if "".join(m) in (w, w + "_")), None)
+                                  for w in ["the", "battery", "Manchester", "BAT-500", "stores,", "Voltway", "packs"]}}}
 
-    def static(w):
-        t = tok(" " + w).input_ids
-        return E[t].mean(0).numpy(), [show(i) for i in t]
+    # ---------------- the cut-off: where is the model's "now"?
+    def year_probs(prompt):
+        base = tok(prompt, add_special_tokens=False).input_ids
+        lp = {}
+        for y in YEARS:
+            full = tok(prompt + str(y), add_special_tokens=False).input_ids
+            assert full[:len(base)] == base
+            seq, s = list(base), 0.0
+            for t_ in full[len(base):]:
+                p = torch.softmax(model(torch.tensor([seq])).logits[0, -1], -1)
+                s += float(torch.log(p[t_]))
+                seq.append(t_)
+            lp[y] = s
+        tot = sum(np.exp(v) for v in lp.values())
+        rows = [{"year": y, "p_raw": R(np.exp(v), 6), "p_among": R(np.exp(v) / tot, 4)} for y, v in lp.items()]
+        return {"prompt": prompt, "years": rows, "top": max(rows, key=lambda r: r["p_raw"])["year"],
+                "mass_2026_on": R(sum(r["p_among"] for r in rows if r["year"] >= 2026), 4)}
 
-    def contextual(w, layer):
-        pre = ids("Purchase note: the")
-        full = ids("Purchase note: the " + w)
-        hs = model(full, output_hidden_states=True).hidden_states[layer][0]
-        return hs[pre.shape[1]:].mean(0).numpy()
+    def chat_greedy(msgs, n=40):
+        t_ = tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
+        x = tok(t_, return_tensors="pt", add_special_tokens=False).input_ids
+        o = model.generate(x, attention_mask=torch.ones_like(x), do_sample=False, max_new_tokens=n,
+                           pad_token_id=tok.eos_token_id, temperature=None, top_p=None, top_k=None)
+        return tok.decode(o[0, x.shape[1]:], skip_special_tokens=True)
 
-    def analyse(V):
-        V = np.array(V)
-        Vn = V / np.linalg.norm(V, axis=1, keepdims=True)
-        C = Vn @ Vn.T
-        same = np.array([[grp[i] == grp[j] and i != j for j in range(len(grp))] for i in range(len(grp))])
-        diff = np.array([[grp[i] != grp[j] for j in range(len(grp))] for i in range(len(grp))])
-        Xc = V - V.mean(0)
-        U, S, Vt = np.linalg.svd(Xc, full_matrices=False)
-        xy = Xc @ Vt[:2].T
-        nn = {}
-        for i, w in enumerate(words_l):
-            order = [j for j in np.argsort(-C[i]) if j != i][:4]
-            nn[w] = [[words_l[j], round(float(C[i, j]), 3)] for j in order]
-        nn_hit = float(np.mean([grp[words_l.index(nn[w][0][0])] == grp[i] for i, w in enumerate(words_l)]))
-        return {"xy": [[round(float(a), 4), round(float(b), 4)] for a, b in xy], "nn": nn,
-                "within": round(float(C[same].mean()), 4), "between": round(float(C[diff].mean()), 4),
-                "nn_same_group": round(nn_hit, 3), "pca_var": [round(float(v), 4) for v in (S[:2] ** 2 / (S ** 2).sum())],
-                "cos": [[round(float(v), 3) for v in row] for row in C]}
+    out["cutoff.json"] = {
+        "model": INSTRUCT,
+        "year_probs": [year_probs(p) for p in ("The current year is ", "Copyright © ", "As of today, in the year ")],
+        "asked": {
+            "year_no_prompt": chat_greedy([{"role": "user", "content": "What year is it now? Answer with the year only."}]),
+            "cutoff_no_prompt": chat_greedy([{"role": "user", "content": "Without looking anything up: what is the most recent month and year that your training data covers? Answer with the month and year only."}]),
+            "date_with_app_prompt": chat_greedy([{"role": "system", "content": system},
+                                                 {"role": "user", "content": "What is today's date? Answer with the date only."}])},
+        "note": "p_among = the probability of each year renormalised over 2015-2030; each year is 4 digit tokens, so p_raw is the product of 4 next-token probabilities"}
 
-    st = [static(w) for w in words_l]
-    emb = {"words": words_l, "groups": grp, "pieces": {w: s[1] for w, s in zip(words_l, st)},
-           "static": analyse([s[0] for s in st]), "layers": {}}
-    for L in (4, 8, 12, 16):
-        emb["layers"][str(L)] = analyse([contextual(w, L) for w in words_l])
-    g1 = tok(" gasket").input_ids
-    emb["gasket_vector_first8"] = [round(float(v), 4) for v in E[g1[0]][:8]]
-    emb["gasket_token_ids"] = g1
-    En = E / E.norm(dim=1, keepdim=True)
-    vnn = {}
-    for w in ["gasket", "supplier", "invoice", "Diwali", "Pune"]:
-        t = tok(" " + w).input_ids
-        if len(t) == 1:
-            sims = En @ En[t[0]]
-            top = torch.topk(sims, 9)
-            vnn[w] = [[show(i), round(float(s), 3)] for s, i in zip(top.values[1:], top.indices[1:])]
-    emb["vocab_neighbours"] = vnn
-    out["embeddings.json"] = emb
-
-    # ---------------- attention (real) on the Rasoi sentence
-    x = ids(SENT)
-    o = model(x, output_attentions=True, output_hidden_states=True)
-    toks = [show(i) for i in x[0]]
-    att = [[[[round(float(v), 3) for v in row] for row in head] for head in layer[0]] for layer in o.attentions]
-    T = len(toks)
-    offs = tok(SENT, return_offsets_mapping=True)["offset_mapping"]
-    g_end = SENT.index("gaskets") + len("gaskets")
-    gi = next(i for i, (a, b) in enumerate(offs) if b == g_end)            # the last piece of "gaskets"
-    n0, n1 = SENT.index("20,000"), SENT.index("20,000") + 6
-    digits = [i for i, (a, b) in enumerate(offs) if a >= n0 - 1 and b <= n1 and b > a]
-    heads = []
-    for L, layer in enumerate(o.attentions):
-        A = layer[0].numpy()
-        for H in range(A.shape[0]):
-            prev = float(np.mean([A[H, i, i - 1] for i in range(1, T)]))
-            sink = float(np.mean([A[H, i, 0] for i in range(1, T)]))
-            g2d = float(A[H, gi, digits].sum())
-            heads.append({"layer": L, "head": H, "prev_token": round(prev, 3), "first_token": round(sink, 3),
-                          "gaskets_to_number": round(g2d, 3)})
-    out["attention.json"] = {"sentence": SENT, "tokens": toks, "layers": len(att), "heads": len(att[0]),
-                             "gaskets_index": gi, "number_indices": digits, "att": att,
-                             "top_prev_token": sorted(heads, key=lambda h: -h["prev_token"])[:5],
-                             "top_gaskets_to_number": sorted(heads, key=lambda h: -h["gaskets_to_number"])[:5],
-                             "mean_first_token": round(float(np.mean([h["first_token"] for h in heads])), 3)}
-
-    # ---------------- logit lens: follow the last token through the stack
-    pre = "Kavita needs 20,000 gaskets before the Diwali"
-    o = model(ids(pre), output_hidden_states=True)
-    lens = []
-    for L, h in enumerate(o.hidden_states):
-        v = h[0, -1]
-        vv = v if L == len(o.hidden_states) - 1 else model.model.norm(v)
-        p = torch.softmax(model.lm_head(vv), -1)
-        tp = torch.topk(p, 3)
-        lens.append({"layer": L, "norm": round(float(h[0, -1].norm()), 2),
-                     "top3": [[show(i), round(float(s), 4)] for s, i in zip(tp.values, tp.indices)]})
-    out["logit_lens.json"] = {"prompt": pre, "tokens": [show(i) for i in ids(pre)[0]], "lens": lens}
-
-    # ---------------- surprise (cross-entropy) per token
-    def surprise(s):
-        x = ids(s)
-        lg = model(x).logits[0]
-        lp = torch.log_softmax(lg[:-1], -1)
-        nll = [-float(lp[i, x[0, i + 1]]) for i in range(x.shape[1] - 1)]
-        return {"text": s, "tokens": [show(i) for i in x[0]], "nll": [round(v, 3) for v in nll],
-                "p": [round(float(np.exp(-v)), 4) for v in nll],
-                "mean_nll": round(float(np.mean(nll)), 3), "perplexity": round(float(np.exp(np.mean(nll))), 2)}
-    out["surprise.json"] = {"sentences": [surprise(SENT), surprise("Kavita needs 20,000 gaskets before the Diwali elephant."),
-                                          surprise("PO/2026/01182 was released to Deccan Polymers, Rajkot.")],
-                            "uniform_nll": round(float(np.log(cfg.vocab_size)), 3)}
-
-    # ---------------- sampling
-    sp = "Kavita needs 20,000 gaskets before the Diwali run, so she"
-    smp = {"prompt": sp, "runs": []}
-    for T_ in (0, 0.7, 1.0, 1.5):
-        for s in range(3 if T_ else 1):
-            smp["runs"].append({"temperature": T_, "seed": s, "top_p": 1.0, "text": gen(sp, 16, T_, seed=s)})
-    for s in range(3):
-        smp["runs"].append({"temperature": 1.0, "seed": s, "top_p": 0.9, "text": gen(sp, 16, 1.0, 0.9, seed=s)})
-    smp["dist"] = dist(sp)
-    out["samples.json"] = smp
-
-    # ---------------- chat format with the instruct model
-    from l2.brain import FOLLOW_UP, messages
-    itok = AutoTokenizer.from_pretrained(INSTRUCT)
-    imodel = AutoModelForCausalLM.from_pretrained(INSTRUCT, torch_dtype=torch.float32).eval()
-    msgs = messages()
-    s = itok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
-    iid = itok(s, return_tensors="pt").input_ids
-    ans = gen(None, 60, 0, mdl=imodel, input_ids=iid)
-    hot = [gen(None, 60, 0.8, seed=k, mdl=imodel, input_ids=iid) for k in range(5)]
-    msgs2 = msgs + [{"role": "assistant", "content": ans}, {"role": "user", "content": FOLLOW_UP}]
-    s2 = itok.apply_chat_template(msgs2, tokenize=False, add_generation_prompt=True)
-    iid2 = itok(s2, return_tensors="pt").input_ids
-    ans2 = gen(None, 60, 0, mdl=imodel, input_ids=iid2)
-    out["chat_template.json"] = {"model": INSTRUCT, "messages": msgs, "template": s, "n_tokens": int(iid.shape[1]),
-                                 "pieces": [p["text"] if p["text"] is not None else p["raw"] for p in pieces(itok, iid[0])],
-                                 "answer_greedy": ans, "answers_t08": hot, "turn2_template": s2,
-                                 "turn2_n_tokens": int(iid2.shape[1]), "turn2_answer": ans2}
-
-    # ---------------- the hand-worked attention example
-    names = ["Kavita", "needs", "20,000", "gaskets"]
+    # ---------------- the four-token attention example, by hand
+    names = ["Emma", "needs", "2,000", "packs"]
     Q = np.array([[1, 0], [1, 1], [0, 1], [0, 2]], float)
     K = np.array([[2, 0], [0, 1], [1, 3], [1, 1]], float)
     V = np.array([[4, 0], [0, 1], [0, 8], [2, 2]], float)
@@ -345,93 +286,158 @@ def qwen() -> dict:
     Ss = S / np.sqrt(2)
     M = np.where(np.tril(np.ones((4, 4))) > 0, Ss, -np.inf)
     W = np.exp(M - M.max(1, keepdims=True)); W = W / W.sum(1, keepdims=True)
-    Y = W @ V
-    ex = np.exp(Ss[3]);
+    ex = np.exp(Ss[3])
     out["hand_attention.json"] = {"tokens": names, "Q": Q.tolist(), "K": K.tolist(), "V": V.tolist(),
                                   "scores": S.tolist(), "scaled": np.round(Ss, 3).tolist(),
                                   "exp_last": np.round(ex, 3).tolist(), "exp_sum_last": round(float(ex.sum()), 3),
-                                  "weights": np.round(W, 3).tolist(), "outputs": np.round(Y, 3).tolist(),
+                                  "weights": np.round(W, 3).tolist(), "outputs": np.round(W @ V, 3).tolist(),
                                   "sqrt_d": round(float(np.sqrt(2)), 4)}
+
+    # ---------------- what NB2 computes live, recorded for its replay fallback (the notebook's own functions)
+    def next_token(id_list, k=10):
+        logits = model(torch.tensor([id_list])).logits[0, -1]
+        p = torch.softmax(logits, -1)
+        top = torch.topk(logits, 60)
+        return {"top": [[show(i), int(i), R(l, 3), R(p[i], 5)] for l, i in zip(top.values[:k], top.indices[:k])],
+                "logits60": [[show(i), R(l, 3)] for l, i in zip(top.values, top.indices)]}
+
+    def greedy(id_list, n=60):
+        seq, steps, past, x = list(id_list), [], None, torch.tensor([id_list])
+        for _ in range(n):
+            o = model(x, past_key_values=past, use_cache=True)
+            past, lg = o.past_key_values, o.logits[0, -1]
+            p = torch.softmax(lg, -1)
+            nid = int(lg.argmax())
+            v, ix = p.topk(5)
+            steps.append([show(nid), nid, R(p[nid], 4), [[show(i), R(q, 4)] for q, i in zip(v, ix)]])
+            if nid == tok.convert_tokens_to_ids("<|im_end|>"):
+                break
+            seq.append(nid)
+            x = torch.tensor([[nid]])
+        return steps
+
+    def sample(id_list, T, seed, n=60):
+        g = torch.Generator().manual_seed(seed)
+        seq, past, x, outt = list(id_list), None, torch.tensor([id_list]), []
+        for _ in range(n):
+            o = model(x, past_key_values=past, use_cache=True)
+            past = o.past_key_values
+            nid = int(torch.multinomial(torch.softmax(o.logits[0, -1] / T, -1), 1, generator=g))
+            if nid == tok.convert_tokens_to_ids("<|im_end|>"):
+                break
+            outt.append(nid)
+            x = torch.tensor([[nid]])
+        return tok.decode(outt)
+
+    E = model.model.embed_tokens.weight
+    En = E / E.norm(dim=1, keepdim=True)
+    clean = torch.tensor([bool(re.fullmatch(r" [A-Za-z]{3,}", show(i))) for i in range(E.shape[0])])
+
+    def neighbours(word, k=8):
+        wid = tok(word, add_special_tokens=False).input_ids[0]
+        sim = En @ En[wid]
+        sim[~clean] = -2
+        sim[wid] = -2
+        res, seen = [], {word.strip().lower()}
+        for s, i in zip(*sim.topk(40)):
+            t_ = show(i)
+            if t_.strip().lower() in seen:
+                continue
+            seen.add(t_.strip().lower())
+            res.append([t_, R(s, 3)])
+            if len(res) == k:
+                break
+        return res
+
+    def cos(a, b):
+        ia, ib = tok(a, add_special_tokens=False).input_ids[0], tok(b, add_special_tokens=False).input_ids[0]
+        return R(En[ia] @ En[ib], 3)
+
+    o = model(torch.tensor([ids]), output_attentions=True, output_hidden_states=True)
+    last = len(ids) - 1
+    att_last = [[[R(w, 4) for w in o.attentions[l][0, h, last, :].tolist()] for h in range(cfg.num_attention_heads)]
+                for l in range(cfg.num_hidden_layers)]
+    lens = []
+    for l in range(1, len(o.hidden_states)):
+        h_ = o.hidden_states[l][0, last]
+        if l < len(o.hidden_states) - 1:
+            h_ = model.model.norm(h_)
+        p = torch.softmax(model.lm_head(h_), -1)
+        v, ix = p.topk(3)
+        lens.append([l, [[show(i), R(q, 4)] for q, i in zip(v, ix)]])
+    g_steps = greedy(ids)
+    _, ids_f = chat_ids(system + "\n" + FACT)
+    f_steps = greedy(ids_f)
+    raw_ids = tok(RAW, add_special_tokens=False).input_ids
+    out["nb_qwen.json"] = {
+        "model": INSTRUCT, "system": system, "question": QUESTION, "raw_prompt": RAW, "fact": FACT,
+        "ids": ids, "ids_facts": ids_f, "pieces": [[p[0], p[1], p[2]] for p in pieces],
+        "next_answer": next_token(ids), "next_raw": next_token(raw_ids),
+        "battery_first8": [R(v, 4) for v in E[tok(" battery", add_special_tokens=False).input_ids[0]][:8]],
+        "neighbours": {w.strip(): neighbours(w) for w in (" battery", " Manchester")},
+        "cos": {f"{a.strip()}|{b.strip()}": cos(a, b) for a, b in ((" battery", " charger"), (" battery", " Monday"),
+                                                                  (" Manchester", " Leeds"), (" Manchester", " battery"))},
+        "att_last": att_last, "lens_last": lens,
+        "greedy": g_steps, "greedy_text": "".join(s[0] for s in g_steps),
+        "samples_t07": [sample(ids, 0.7, s) for s in range(3)],
+        "greedy_facts": f_steps, "greedy_facts_text": "".join(s[0] for s in f_steps)}
+    print("greedy:", out["nb_qwen.json"]["greedy_text"])
+    print("facts:", out["nb_qwen.json"]["greedy_facts_text"])
+    print("cut-off:", out["cutoff.json"]["asked"], [y["top"] for y in out["cutoff.json"]["year_probs"]])
     return out
 
 
 @app.function(cpu=2, memory=4096, timeout=3000)
 def tiny() -> dict:
-    import sys
+    import re
     import time
 
     import torch
     sys.path.insert(0, "/")
     torch.set_num_threads(2)
     from l2.tinygpt import train, sample  # noqa
-    text = pathlib.Path("/l2/rasoi_corpus.md").read_text()
+    text = pathlib.Path("/l2/northbridge_corpus.md").read_text()
     lines = []
+    prompts = ["Stores, 26 Oct 2026: BAT-500 in Manchester stores,",
+               "From: Emma Clarke\nTo: Daniel Okafor\nDate: 26 Oct 2026\nSubject:",
+               "6.2 ", "Approval, 26 Oct 2026: PR/2026/04417 is"]
     m0, enc, dec, c0 = train(text, steps=0, log=lines.append)
-    before = sample(m0, enc, dec, "Stores, 26 Oct 2026: ", 120, 1.0, 0)
+    before = {p: sample(m0, enc, dec, p, 160, 0.8, 0) for p in prompts}
     t0 = time.time()
     model, enc, dec, curve = train(text, steps=1500, log=lines.append)
     secs = time.time() - t0
-    prompts = ["Stores, 26 Oct 2026: GSK-SIL-05L in Pune stores,", "From: Kavita Joshi\nTo: Rohit Mehta\nSubject:",
-               "6.2 ", "Approval, 26 Oct 2026: PR/2026/04417 is"]
     samples = {p: {str(T): sample(model, enc, dec, p, 220, T, 0) for T in (0.5, 0.8, 1.2)} for p in prompts}
-    stock = [sample(model, enc, dec, "Stores, 26 Oct 2026: GSK-SIL-05L in Pune stores,", 40, 0.8, s) for s in range(8)]
+    stock = [sample(model, enc, dec, prompts[0], 40, 0.8, s) for s in range(10)]
+    figs = []
+    for s in stock:
+        m = re.match(r"\s*([\d,]+) on hand", s[len(prompts[0]):])
+        figs.append(int(m.group(1).replace(",", "")) if m else None)
+    months = {"Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
+    dates = sorted({(months[m], int(d)) for d, m in re.findall(r"\b(\d{1,2}) (Aug|Sep|Oct|Nov|Dec) 2026\b", text)})
     n_params = sum(p.numel() for p in model.parameters())
     return {"tinygpt.json": {"config": {"vocab": model.c.vocab_size, "block": model.c.block_size, "layers": model.c.n_layer,
                                         "heads": model.c.n_head, "d_model": model.c.n_embd, "steps": 1500, "batch": 32,
                                         "lr": 2e-3},
-                             "params": n_params, "corpus_chars": len(text), "train_seconds_cpu2": round(secs, 1),
-                             "curve": curve, "log": lines, "sample_untrained": before, "samples": samples,
-                             "stock_samples": stock}}
-
-
-@app.function(cpu=4, memory=12288, timeout=1200)
-def extra() -> dict:
-    """Follow-ups after the first run: the stock prompt with its trailing space (Qwen writes the space as its own
-    token, so the first run's top guess was ' '), the probability of ' cook'+'ers', and two single-token table rows."""
-    import torch
-    from transformers import AutoModelForCausalLM, AutoTokenizer
-    torch.set_grad_enabled(False)
-    tok = AutoTokenizer.from_pretrained(BASE)
-    model = AutoModelForCausalLM.from_pretrained(BASE, torch_dtype=torch.float32).eval()
-    ids = lambda s: tok(s, return_tensors="pt").input_ids
-    stock = "Stock report, Rasoi Steel Works, Pune.\nItem: GSK-SIL-05L, silicone gasket, 5 litre.\nOn hand in Pune stores: "
-    p = torch.softmax(model(ids(stock)).logits[0, -1], -1)
-    top = torch.topk(p, 12)
-    out = {"stock_prompt": stock, "stock_top": [{"text": tok.decode([int(i)]), "p": round(float(v), 5)} for v, i in zip(top.values, top.indices)]}
-    samples = []
-    for s in range(10):
-        torch.manual_seed(s)
-        x = ids(stock)
-        o = model.generate(x, attention_mask=torch.ones_like(x), do_sample=True, temperature=1.0, top_k=0, max_new_tokens=7,
-                           pad_token_id=tok.eos_token_id)
-        samples.append({"seed": s, "text": tok.decode(o[0, x.shape[1]:], skip_special_tokens=True)})
-    out["stock_samples"] = samples
-    x = ids(stock)
-    o = model.generate(x, attention_mask=torch.ones_like(x), do_sample=False, max_new_tokens=7, pad_token_id=tok.eos_token_id)
-    out["stock_greedy"] = tok.decode(o[0, x.shape[1]:], skip_special_tokens=True)
-    pr = "Rasoi Steel Works makes pressure"
-    p1 = torch.softmax(model(ids(pr)).logits[0, -1], -1)
-    cook, ers = tok(" cook").input_ids[0], tok("ers").input_ids[0]
-    p2 = torch.softmax(model(ids(pr + " cook")).logits[0, -1], -1)
-    out["cookers"] = {"p_cook": round(float(p1[cook]), 5), "rank_cook": int((p1 > p1[cook]).sum()) + 1,
-                      "p_ers_after_cook": round(float(p2[ers]), 5), "p_cookers": round(float(p1[cook] * p2[ers]), 5)}
-    E = model.model.embed_tokens.weight
-    out["rows"] = {}
-    for w in (" supplier", " Pune"):
-        t = tok(w).input_ids
-        out["rows"][w] = {"ids": t, "first8": [round(float(v), 4) for v in E[t[0]][:8]]}
-    return {"extra.json": out}
+                             "params": n_params, "corpus_chars": len(text), "corpus_words": len(text.split()),
+                             "distinct_chars": len(set(text)), "uniform_loss": round(float(torch.log(torch.tensor(float(model.c.vocab_size)))), 4),
+                             "train_seconds_cpu2": round(secs, 1), "curve": curve, "log": lines,
+                             "sample_untrained": before[prompts[0]], "samples_untrained": before, "samples": samples,
+                             "stock_prompt": prompts[0], "stock_samples": stock, "stock_figures": figs,
+                             "stock_5400": figs.count(5400),
+                             "corpus_first_day": f"{dates[0][1]} {[k for k, v in months.items() if v == dates[0][0]][0]} 2026",
+                             "corpus_last_day": f"{dates[-1][1]} {[k for k, v in months.items() if v == dates[-1][0]][0]} 2026"}}
 
 
 @app.local_entrypoint()
 def main(only: str = ""):
+    sys.path.insert(0, str(COURSE / "ledgerline"))
+    from ledgerline.course.l2.brain import SYSTEM_BRAIN, QUESTION as Q, FACT as F  # the app's prompt (stdlib import)
+    assert Q == QUESTION and F == FACT
     calls = []
     if only in ("", "qwen"):
-        calls.append(qwen.spawn())
+        calls.append(qwen.spawn(SYSTEM_BRAIN))
     if only in ("", "tiny"):
         calls.append(tiny.spawn())
-    if only in ("", "extra"):
-        calls.append(extra.spawn())
     logs = HERE / "logs"
     logs.mkdir(exist_ok=True)
     for c in calls:

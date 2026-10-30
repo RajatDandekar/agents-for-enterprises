@@ -7,7 +7,7 @@ from PIL import Image
 
 HERE = pathlib.Path(__file__).resolve().parents[1]
 FIGS = HERE / "figs"
-srcs = sorted(FIGS.glob("*.png")) + [HERE.parents[1] / "figures" / "ask_rasoi_architecture.png"]
+srcs = sorted(FIGS.glob("*.png"))
 for p in srcs:
     im = Image.open(p).convert("RGB")
     if im.width > 2000:
