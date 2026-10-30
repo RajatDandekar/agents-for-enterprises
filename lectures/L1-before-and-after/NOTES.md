@@ -1,6 +1,6 @@
 # Lecture 1 · The Before and the After: speaker notes (v4, Northbridge)
 
-Sat 31 Oct 2026, 7:00–9:00 AM IST. 110 slides: 13 part slides and 14 "Ask the class" slides go by fast; about 83 content plates.
+Sat 31 Oct 2026, 7:00–9:00 AM IST. 111 slides: 13 part slides and 14 "Ask the class" slides go by fast; about 83 content plates.
 Slide numbers below are the deck's counter (bottom right). `[click]` = one step. Timings are targets; the running clock is in brackets.
 
 Everything on a plate is either Northbridge seed data (WORLD_V4.md), a run of ours (experiments/logs, experiments/production),
@@ -170,76 +170,78 @@ Do not redeploy it during class (a new container re-seeds every player's Northbr
 - Turn 3: "Yes, go ahead"; the write lands in Daniel's inbox; the receipt is read back from Ledgerline: WAITING FOR APPROVAL. "Failure 4, fixed." If one model call is visibly slow in the recording, say so: that is why production teams trace latency.
 The standalone version is flow3d/index.html (?autoplay). Without WebGL the slide shows a poster.
 
-**73 · The pieces.** The PaperBanana overview. "Count your list against this. Who had the harness? Who had MCP?" (answer to question 11: C).
+**73 · How it works, underneath: the film.** Explain the pieces first, then play the film (2:45) as the recap. Press "Present full screen" (or the video's own controls); it never autoplays, and clicks or keys inside it do not change slide. Narration: Daniel (ElevenLabs); music: "Observatory", Out To The World (Epidemic Sound). If you play it here, come back to it after slide 79 ("So this is an agent") as the recap.
 
-**74 · One tool per activity.** Click check_stock, create_purchase_order. "A tool is a job, not a screen. The ember edge means it saves something, so it previews first."
+**74 · The pieces.** The PaperBanana overview. "Count your list against this. Who had the harness? Who had MCP?" (answer to question 11: C).
 
-**75 · A tool is a contract (tool.json).** [click] JSON schema definition, [click ×3] name/description, input schema with confirm, output schema with the real status. "That output field is failure 4, fixed."
+**75 · One tool per activity.** Click check_stock, create_purchase_order. "A tool is a job, not a screen. The ember edge means it saves something, so it previews first."
 
-**76 · The LLM chooses.** The recorded decisions. "This is the Thought–Action–Observation loop from slide 4. The tool result is the observation." [click] [click] the certification question: it read policy and wrote nothing.
+**76 · A tool is a contract (tool.json).** [click] JSON schema definition, [click ×3] name/description, input schema with confirm, output schema with the real status. "That output field is failure 4, fixed."
 
-**77 · MCP, the plug.** [click ×2] tools/list, then tools/call. "Lecture 4 builds this; Lecture 9 goes deep."
+**77 · The LLM chooses.** The recorded decisions. "This is the Thought–Action–Observation loop from slide 4. The tool result is the observation." [click] [click] the certification question: it read policy and wrote nothing.
 
-**78 · So this is an agent.** [click ×4] model + tools + loop + a person. Read the definition. Compare with the class list from question 12.
+**78 · MCP, the plug.** [click ×2] tools/list, then tools/call. "Lecture 4 builds this; Lecture 9 goes deep."
+
+**79 · So this is an agent.** [click ×4] model + tools + loop + a person. Read the definition. Compare with the class list from question 12.
 
 ## Part 10 · In production (8:42–8:51)
 
-All numbers on these plates come from window.PROD (experiments/production/figdata_production.js, from logs/stacks_r1-3.json and logs/ablation_*.json, run 30 Oct 2026). Screenshots are real Langfuse pages of those runs.
+All numbers on these plates come from window.PROD (experiments/production/figdata_production.js, from logs/stacks_r1-3.json and logs/ablation_*.json, run 30 Oct 2026). Model and token costs are in US dollars, as OpenRouter billed them; Northbridge's own money (orders, limits) stays in £. Screenshots are real Langfuse pages of those runs.
 
-**79 · Part Ten.** "A demo runs on one laptop. This is what a production team does with the same agent."
+**80 · Part Ten.** "A demo runs on one laptop. This is what a production team does with the same agent."
 
-**80 · Same agent, three runtimes.** The figure: same toolbox over MCP, three runtimes, one model API, traces into Langfuse, the same checks on Ledgerline.
+**81 · Same agent, three runtimes.** The figure: same toolbox over MCP, three runtimes, one model API, traces into Langfuse, the same checks on Ledgerline.
 
-**81 · Who makes these, and what for.** [click ×3] OpenAI Agents SDK, LangGraph, Langfuse, each mapped to the lecture where they build the piece by hand.
+**82 · Who makes these, and what for.** [click ×3] OpenAI Agents SDK, LangGraph, Langfuse, each mapped to the lecture where they build the piece by hand.
 
-**82 · Does the runtime matter?** [click] define never-event (NE1–NE6 in the logs: unapproved, duplicate, uncertified supplier, duplicate supplier, "sent" when not released, more goods than arrived). Read the table row by row: all three 15/15 with 0 never-events. Median tokens: harness 17,141, Agents SDK 15,550, LangGraph 14,629. Cost per mission £0.0115 / £0.0122 / £0.0122. p50 / p95: 36.0 / 68.1 s, 38.7 / 62.2 s, 34.0 / 57.6 s. [click] "The gap between stacks is smaller than the spread between runs of the same stack." [click] Daniel's mission (M3): in 5 of 9 runs his assistant reached for create_purchase_order after approving (a line in our own prompt, written for Emma), and Ledgerline refused every save with ERR-SEC-0001. Six of the nine M3 runs also hit the 12-call cap while checking the lithium-cell rule; they still passed on Ledgerline's state. "Least privilege in the ERP held, not the prompt. None of the three frameworks stopped it." Pick a framework for what it gives around the loop (sessions, checkpoints, handoffs, guardrails, an auditable graph), not for accuracy.
+**83 · Does the runtime matter?** [click] define never-event (NE1–NE6 in the logs: unapproved, duplicate, uncertified supplier, duplicate supplier, "sent" when not released, more goods than arrived). Read the table row by row: all three 15/15 with 0 never-events. Median tokens: harness 17,141, Agents SDK 15,550, LangGraph 14,629. Cost per mission, as OpenRouter billed it: $0.0145 / $0.0154 / $0.0154. p50 / p95: 36.0 / 68.1 s, 38.7 / 62.2 s, 34.0 / 57.6 s. [click] "The gap between stacks is smaller than the spread between runs of the same stack." [click] Daniel's mission (M3): in 5 of 9 runs his assistant reached for create_purchase_order after approving (a line in our own prompt, written for Emma), and Ledgerline refused every save with ERR-SEC-0001. Six of the nine M3 runs also hit the 12-call cap while checking the lithium-cell rule; they still passed on Ledgerline's state. "Least privilege in the ERP held, not the prompt. None of the three frameworks stopped it." Pick a framework for what it gives around the loop (sessions, checkpoints, handoffs, guardrails, an auditable graph), not for accuracy.
 
-**83 · Reading a trace.** The real, public Langfuse trace of mission M4 on our harness (Gemini 3.8 Flash). One view per click: the tree (header: time, cost, tokens, user, and our two scores erp_check and never_events); the release_purchase_order span (arguments in, Ledgerline's receipt out: "this is how you audit 'did it really happen' without trusting the reply"); the timeline (tools take milliseconds, the model takes the seconds: "cut model calls or pick a faster model, don't optimise the ERP"); one model call (what it saw and the tools it chose, with tokens and cost: "this is where you debug why").
+**84 · Reading a trace.** The real, public Langfuse trace of mission M4 on our harness (Gemini 3.8 Flash). One view per click: the tree (header: time, cost, tokens, user, and our two scores erp_check and never_events); the release_purchase_order span (arguments in, Ledgerline's receipt out: "this is how you audit 'did it really happen' without trusting the reply"); the timeline (tools take milliseconds, the model takes the seconds: "cut model calls or pick a faster model, don't optimise the ERP"); one model call (what it saw and the tools it chose, with tokens and cost: "this is where you debug why").
 
-**84 · Failure 4, for real.** Llama 4 Maverick, M4. Emma says "Yes, go ahead"; it replies "The order PO/2026/01190 is RELEASED." No order existed (2 of 3 runs of M4: NE5). [click] The tree: model calls and no tool span; it wrote its tool calls as text, in 12 of 15 missions. [click] "The reply looked perfect. The check on Ledgerline's state caught it. If we had graded the reply, it would have passed." Tie it back to failure 4, slide 12.
+**85 · Failure 4, for real.** Llama 4 Maverick, M4. Emma says "Yes, go ahead"; it replies "The order PO/2026/01190 is RELEASED." No order existed (2 of 3 runs of M4: NE5). [click] The tree: model calls and no tool span; it wrote its tool calls as text, in 12 of 15 missions. [click] "The reply looked perfect. The check on Ledgerline's state caught it. If we had graded the reply, it would have passed." Tie it back to failure 4, slide 12.
 
-**85 · Which model? An ablation.** Click the four metrics; the sentences on the left are filled from the data. Five of six models passed 15/15 with no never-event (GPT-6 Luna: median 14,838 tokens, £0.00045 a mission, 19.3 / 42.2 s). Llama 4 Maverick passed 4/15, with 2 never-events (NE5). Teaching point on GPT-6 Luna, from an earlier sweep, before we fixed the tool (not in the final numbers): it passed the warehouse name "Manchester stores" instead of the code to receive_goods; the tool's next step failed, Luna told Aiko the receipts were not recorded, but Ledgerline had saved them against a warehouse that does not exist. Only the read-back check caught it. "The check on the ERP's state caught what the reply hid, and we fixed the tool." Cost: at the same pass rate, gpt-oss-120b costs about 1/50 of the course default. Caveats aloud: 15 missions per model, read differences under ~2× as noise; a p95 is partly which provider OpenRouter routed you to. And: in our first sweep a leaked example request number made the test too easy. "Your eval can be wrong too. Read the transcripts."
+**86 · Which model? An ablation.** Click the four metrics; the sentences on the left are filled from the data. Five of six models passed 15/15 with no never-event (GPT-6 Luna: median 14,838 tokens, $0.00057 a mission, 19.3 / 42.2 s). Llama 4 Maverick passed 4/15, with 2 never-events (NE5). Teaching point on GPT-6 Luna, from an earlier sweep, before we fixed the tool (not in the final numbers): it passed the warehouse name "Manchester stores" instead of the code to receive_goods; the tool's next step failed, Luna told Aiko the receipts were not recorded, but Ledgerline had saved them against a warehouse that does not exist. Only the read-back check caught it. "The check on the ERP's state caught what the reply hid, and we fixed the tool." Cost, in US dollars as billed: at the same pass rate, gpt-oss-120b costs about $0.00028 a mission, about 1/50 of the course default ($0.0145). Caveats aloud: 15 missions per model, read differences under ~2× as noise; a p95 is partly which provider OpenRouter routed you to. And: in our first sweep a leaked example request number made the test too easy. "Your eval can be wrong too. Read the transcripts."
 
-**86 · Ask the class 13: what would you look at first?** Most say pass rate. For Northbridge the first answer is never-events, then where the data goes, then cost.
+**87 · Ask the class 13: what would you look at first?** Most say pass rate. For Northbridge the first answer is never-events, then where the data goes, then cost.
 
 ## Part 11 · The 2026 agent stack (8:50–8:54)
 
-**87 · Part Eleven.**
+**88 · Part Eleven.**
 
-**88 · The stack.** Nine clicks, one layer each, bottom up: model, gateway, harness, tools and MCP, knowledge, workflows, trust, observability and evals, durable execution and deployment. For each: read the question it answers in quotes, name two tools, say the lecture. The tenth click shows Ask Northbridge on every layer. Anyone can click a layer afterwards.
+**89 · The stack.** Nine clicks, one layer each, bottom up: model, gateway, harness, tools and MCP, knowledge, workflows, trust, observability and evals, durable execution and deployment. For each: read the question it answers in quotes, name two tools, say the lecture. The tenth click shows Ask Northbridge on every layer. Anyone can click a layer afterwards.
 
-**89 · Ask Northbridge, whole.** The master architecture. "Every lecture's last slide lights up its piece of this."
+**90 · Ask Northbridge, whole.** The master architecture. "Every lecture's last slide lights up its piece of this."
 
 ## Part 12 · Twelve lectures (8:54–8:57, fast)
 
-**90 · Part Twelve.** "One slide per lecture. I'll go quickly; the slides stay on the hub."
+**91 · Part Twelve.** "One slide per lecture. I'll go quickly; the slides stay on the hub."
 
-**91–102 · Lectures 1–12.** For each: the story beat, the project, the assignment, in one breath. Slow down on L7 (Trust: Henrik's "can we switch it on?") and L8 (the frameworks the class just saw).
+**92–103 · Lectures 1–12.** For each: the story beat, the project, the assignment, in one breath. Slow down on L7 (Trust: Henrik's "can we switch it on?") and L8 (the frameworks the class just saw).
 
 ## Part 13 · Your capstone (8:57–8:59)
 
-**103 · Part Thirteen.**
+**104 · Part Thirteen.**
 
-**104 · Your domain, your agent.** [click ×4] the path A1 → demo day. [click] the two options: your own domain from modules/TEMPLATE, or a kit. "Keep it fictional; never bring an employer's real data."
+**105 · Your domain, your agent.** [click ×4] the path A1 → demo day. [click] the two options: your own domain from modules/TEMPLATE, or a kit. "Keep it fictional; never bring an employer's real data."
 
-**105 · Graded out of 100, and demo day.** The seven lines; the two overriding rules. [click] the 8-minute slot on Sun 6 Dec.
+**106 · Graded out of 100, and demo day.** The seven lines; the two overriding rules. [click] the 8-minute slot on Sun 6 Dec.
 
-**106 · Ask the class 14: one job you would hand to an agent tomorrow.** "That may be your capstone."
+**107 · Ask the class 14: one job you would hand to an agent tomorrow.** "That may be your capstone."
 
 ## Close (8:59–9:00)
 
-**107 · What this course gives you.** [click ×4] role, skills, portfolio, judgement.
+**108 · What this course gives you.** [click ×4] role, skills, portfolio, judgement.
 
-**108 · NB1.** Runs in Colab with no key. (Check the cell names against the rebuilt NB1 before class.)
+**109 · NB1.** Runs in Colab with no key. (Check the cell names against the rebuilt NB1 before class.)
 
-**109 · A1.** Due before Lecture 3, Sat 7 Nov, 7 AM IST.
+**110 · A1.** Due before Lecture 3, Sat 7 Nov, 7 AM IST.
 
-**110 · Next time: The Brain.** "Tomorrow we take the tools away, and it makes up the stock figure. Then we open the model."
+**111 · Next time: The Brain.** "Tomorrow we take the tools away, and it makes up the stock figure. Then we open the model."
 
 ---
 
 ### If time runs short
-Skip in this order: 29 (why one record), 74 (tool grid), 91–102 (say "the lecture slides are on the hub"), 57, 27’s sources.
+Skip in this order: 29 (why one record), 75 (tool grid), 92–103 (say "the lecture slides are on the hub"), 57, 27’s sources.
 
 ### Sources on the plates (for questions)
 - ReAct: Yao et al., arXiv 2210.03629 (6 Oct 2022). Function calling: OpenAI, 13 Jun 2023. Computer use: Anthropic, 22 Oct 2024. MCP: Anthropic, 25 Nov 2024; donated to the Agentic AI Foundation (Linux Foundation) 9 Dec 2025 with 97M+ monthly SDK downloads and 10,000+ active public servers. Claude Code: 24 Feb 2025.

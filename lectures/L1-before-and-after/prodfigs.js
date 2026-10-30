@@ -8,7 +8,9 @@ const P = window.PROD;
 const BASE = 'experiments/production/';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmt = (n) => Number(n).toLocaleString('en-GB');
-const pence = (gbp) => { const p = gbp * 100; return (p >= 1 ? p.toFixed(2) : p.toFixed(3)) + 'p'; };
+/* model costs are shown in US dollars, as OpenRouter billed them (Northbridge's own money stays in £ elsewhere) */
+const usd = (v) => '$' + (v >= 0.01 ? v.toFixed(4) : Number(v.toPrecision(2)).toString());
+const perM = (x) => x.cost_usd_total / x.n;   /* billed USD per mission */
 const todo = (el, what) => { el.innerHTML = `<div class="todo-card"><span class="todo-k">TODO(v4 data)</span><div>${what}</div><div class="todo-s">Fills from <code>experiments/production/figdata_production.js</code> (window.PROD).</div></div>`; return { step() {} }; };
 const shotOf = (trace, view) => ((P && P.shots) || []).find((s) => s.trace === trace && s.view === view);
 const img = (s, alt) => s ? `<img class="lf-img" src="${BASE}${esc(s.file)}" alt="${esc(alt || s.what)}" onerror="this.outerHTML='<div class=&quot;todo-card&quot;><span class=&quot;todo-k&quot;>Screenshot being retaken</span><div>${esc(s.file)}</div></div>'">` : '';
@@ -18,9 +20,9 @@ FIGS.prodruns = (el) => {
   if (!P || !P.stacks) return todo(el, 'The same missions on three runtimes.');
   const S = P.stacks;
   el.innerHTML = `<table class="t pr"><thead><tr><th>Runtime</th><th class="n">Passed</th><th class="n">Never-events</th><th class="n">Median tokens</th><th class="n">Model calls</th><th class="n">Cost per mission</th><th class="n">Time p50 · p95</th></tr></thead>
-    <tbody>${S.map((s, i) => `<tr class="r${i}"><td><b>${esc(s.name)}</b><span class="pr-v">${esc(s.version)}</span></td><td class="n a">${s.passed}/${s.n}</td><td class="n ${s.never_events ? 'b' : 'a'}">${s.never_events}</td><td class="n">${fmt(s.median_tokens)}</td><td class="n">${s.median_model_calls}</td><td class="n">${pence(s.cost_gbp_per_mission)}</td><td class="n">${s.p50_s.toFixed(0)} s · ${s.p95_s.toFixed(0)} s</td></tr>`).join('')}</tbody></table>
+    <tbody>${S.map((s, i) => `<tr class="r${i}"><td><b>${esc(s.name)}</b><span class="pr-v">${esc(s.version)}</span></td><td class="n a">${s.passed}/${s.n}</td><td class="n ${s.never_events ? 'b' : 'a'}">${s.never_events}</td><td class="n">${fmt(s.median_tokens)}</td><td class="n">${s.median_model_calls}</td><td class="n">${usd(perM(s))}</td><td class="n">${s.p50_s.toFixed(0)} s · ${s.p95_s.toFixed(0)} s</td></tr>`).join('')}</tbody></table>
     <div class="pr-same"><span class="k">The same for every run</span>${(P.meta.same_for_every_run || []).map((x) => `<span class="sk-t">${esc(x)}</span>`).join('')}<span class="sk-t">model ${esc(S[0].model)}</span></div>
-    <p class="tiny" style="margin-top:10px">5 missions × 3 runs each = ${S[0].n} per runtime, ${esc((P.meta.run_dates || []).join(', '))}. Passed = every code check on Ledgerline’s tables true and no never-event. Cost = OpenRouter’s billed cost × £${P.meta.rate_gbp_per_usd}/$. Pinned: openai-agents ${esc(P.meta.versions['openai-agents'])}, langgraph ${esc(P.meta.versions.langgraph)}, langfuse ${esc(P.meta.versions.langfuse)}.</p>`;
+    <p class="tiny" style="margin-top:10px">5 missions × 3 runs each = ${S[0].n} per runtime, ${esc((P.meta.run_dates || []).join(', '))}. Passed = every code check on Ledgerline’s tables true and no never-event. Cost = what OpenRouter billed, in US dollars, per mission. Pinned: openai-agents ${esc(P.meta.versions['openai-agents'])}, langgraph ${esc(P.meta.versions.langgraph)}, langfuse ${esc(P.meta.versions.langfuse)}.</p>`;
   const rs = [...el.querySelectorAll('tbody tr')];
   return { step(k) { rs.forEach((r, i) => (r.style.opacity = i <= k ? 1 : 0.12)); } };
 };
@@ -36,7 +38,7 @@ FIGS.prodtrace = (el) => {
   const set = (v) => {
     const s = shotOf(src, v) || shotOf('agents_sdk', v);
     view.innerHTML = s ? img(s) : (t.svg || '');
-    cap.innerHTML = s ? `${esc(s.what)} · mission ${esc(t.mission)}, ${esc(t.model)}, run ${t.run}: ${t.wall_s} s, ${fmt(t.tokens)} tokens, ${pence(t.cost_gbp)}` : '';
+    cap.innerHTML = s ? `${esc(s.what)} · mission ${esc(t.mission)}, ${esc(t.model)}, run ${t.run}: ${t.wall_s} s, ${fmt(t.tokens)} tokens, ${t.cost_usd != null ? usd(t.cost_usd) : usd(t.cost_gbp / (P.meta.rate_gbp_per_usd || 0.79))}` : '';
     bs.forEach((b) => b.classList.toggle('on', b.dataset.v === v));
   };
   bs.forEach((b) => b.addEventListener('click', () => set(b.dataset.v)));
@@ -64,8 +66,8 @@ FIGS.prodfail = (el) => {
 if (P && P.ablation) document.addEventListener('DOMContentLoaded', () => {
   const A = P.ablation.filter((a) => a.status === 'run'), clean = A.filter((a) => a.passed === a.n && !a.never_events);
   const worst = A.slice().sort((x, y) => x.pass_rate - y.pass_rate)[0], def = A.find((a) => /course default/.test(a.kind)) || A[0];
-  const cheap = clean.slice().sort((x, y) => x.cost_gbp_per_mission - y.cost_gbp_per_mission)[0];
-  const r = def.cost_gbp_per_mission / cheap.cost_gbp_per_mission;
+  const cheap = clean.slice().sort((x, y) => perM(x) - perM(y))[0];
+  const r = perM(def) / perM(cheap);
   const luna = A.find((a) => /luna/i.test(a.model));
   const lunaTxt = !luna ? '' : luna.passed < luna.n
     ? `${luna.label} passed ${luna.passed} of ${luna.n}. Its failure was our bug: receive_goods accepted the warehouse name “Manchester stores” instead of its code. Only the read-back check on Ledgerline caught it. The check on the ERP’s state caught what the reply hid.`
@@ -82,7 +84,7 @@ FIGS.prodablation = (el) => {
   const A = P.ablation.filter((a) => a.status === 'run');
   const M = [
     ['pass', 'Passed and never-events', (a) => a.pass_rate, (a) => `${a.passed}/${a.n}${a.never_events ? ` · <b class="b">${a.never_events} never-event${a.never_events > 1 ? 's' : ''}</b>` : ''}`, 1],
-    ['cost', 'Cost per mission', (a) => a.cost_gbp_per_mission, (a) => pence(a.cost_gbp_per_mission), null],
+    ['cost', 'Cost per mission ($)', (a) => perM(a), (a) => usd(perM(a)), null],
     ['lat', 'Time per mission, p50 (p95)', (a) => a.p50_s, (a) => `${a.p50_s.toFixed(0)} s (${a.p95_s.toFixed(0)} s)`, null],
     ['tok', 'Median tokens per mission', (a) => a.median_tokens, (a) => fmt(a.median_tokens), null],
   ];

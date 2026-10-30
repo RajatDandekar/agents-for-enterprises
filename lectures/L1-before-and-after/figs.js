@@ -479,6 +479,20 @@ FIGS.mvideo = (el) => {
   return { step(k, instant) { if (instant && !v.paused) v.pause(); } };
 };
 
+/* ---------- The film of the request flow (films/, 2:45): no autoplay, a Present button for full screen,
+   and clicks or keys inside it never change slide. ---------- */
+FIGS.film = (el) => {
+  el.innerHTML = `<figure class="film"><video controls preload="metadata" playsinline poster="films/poster.jpg">
+      <source src="films/l1_how_it_works.mp4" type="video/mp4"><source src="films/l1_how_it_works.webm" type="video/webm"></video>
+    <figcaption><span class="ctl"><button class="film-present" type="button">Present full screen</button></span>
+      <span class="film-cr">How a request flows through Ask Northbridge, 2:45. Narration: Daniel (ElevenLabs). Music: “Observatory”, Out To The World (Epidemic Sound).</span></figcaption></figure>`;
+  const v = el.querySelector('video'), b = el.querySelector('.film-present');
+  const stop = (e) => e.stopPropagation();
+  ['click', 'pointerdown', 'touchstart', 'keydown'].forEach((ev) => { v.addEventListener(ev, stop); b.addEventListener(ev, stop); });
+  b.addEventListener('click', () => { const f = v.requestFullscreen || v.webkitRequestFullscreen; if (f) f.call(v); else if (v.webkitEnterFullscreen) v.webkitEnterFullscreen(); v.play().catch(() => {}); });
+  return { step(k, instant) { if (instant && !v.paused) v.pause(); } };
+};
+
 /* The 3D request animation (FIGS.flow3d) is registered by flow3d/deck.js, owned by the flow3d builder. */
 
 /* ---------- The capstone, as a path (A1 → A12) ---------- */
