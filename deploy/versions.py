@@ -6,7 +6,7 @@
 Why hashes: "we changed one word in the prompt" is a release. If the hash moves and the version number does not,
 the build fails, so a changed prompt can never reach prod without passing the regression gate (Lecture 6) first.
 The workflow is pinned the same way for a different reason: Temporal replays a running workflow's history through
-the CURRENT workflow code. Changing that code under a workflow that has waited two days for Rohit can break its
+the CURRENT workflow code. Changing that code under a workflow that has waited two days for Daniel can break its
 replay. Changes go behind workflow.patched("...") or under a new workflow name (see runbook.md, "Rolling back").
 """
 from __future__ import annotations
@@ -25,14 +25,14 @@ def _h(x) -> str:
 
 
 def current() -> dict:
-    from bahi.agent import loop, naive
-    from bahi.agent.tools import CORE, TOOLS
+    from ledgerline.agent import loop, naive
+    from ledgerline.agent.tools import CORE, TOOLS
 
-    wf = (ROOT / "bahi" / "bahi" / "durable" / "workflow.py").read_text()
-    acts = (ROOT / "bahi" / "bahi" / "durable" / "activities.py").read_text()
+    wf = (ROOT / "ledgerline" / "ledgerline" / "durable" / "workflow.py").read_text()
+    acts = (ROOT / "ledgerline" / "ledgerline" / "durable" / "activities.py").read_text()
     return {"prompts": {"toolloop_system": _h(loop.SYSTEM), "naive_system": _h(naive.SYSTEM)},
             "tools": {n: _h(TOOLS[n].schema()) for n in CORE},
-            "workflow": {"PurchaseOrder": _h(wf)}, "activities": {"bahi": _h(acts)}}
+            "workflow": {"PurchaseOrder": _h(wf)}, "activities": {"ledgerline": _h(acts)}}
 
 
 def check(pinned: dict) -> list[str]:

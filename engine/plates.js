@@ -8,7 +8,7 @@ const NS = 'http://www.w3.org/2000/svg';
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const svgEl = (tag, attrs = {}, parent) => { const n = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v); if (parent) parent.appendChild(n); return n; };
 const txt = (parent, x, y, s, style, anchor = 'start') => { const t = svgEl('text', { x, y, 'text-anchor': anchor, style }, parent); t.textContent = s; return t; };
-const fmt = (n) => n.toLocaleString('en-IN');
+const fmt = (n) => n.toLocaleString('en-GB');
 
 /* ---------- legacy window renderer ---------- */
 const TREE = `<div>▸ Masters</div><div>&nbsp;&nbsp;Item</div><div>&nbsp;&nbsp;Supplier</div><div>▾ Purchase</div><div class="TREQ">&nbsp;&nbsp;Request entry</div><div class="gr">&nbsp;&nbsp;Request approval</div><div class="TPO">&nbsp;&nbsp;Order entry</div><div>&nbsp;&nbsp;Order history</div><div class="gr">&nbsp;&nbsp;Order release</div><div>▸ Inventory</div><div>▸ Reports</div>`;
@@ -16,11 +16,11 @@ function winHTML(sc, opts = {}) {
   const fields = (sc.fields || []).map(([l, v, k = '', req]) => `<label class="${req ? 'req' : ''}">${l}</label><span class="in ${k}">${v}${k.includes('code') && !k.includes('ro') ? '<span class="f2">F2</span>' : ''}</span>`).join('');
   const list = sc.list ? `<div class="lst"><div class="hd"><span>Item code</span><span>Description</span><span>UOM</span></div>${sc.list.map((r, i) => `<div class="${i === 0 ? 'sel' : ''}"><span>${r[0]}</span><span style="font-family:Tahoma,sans-serif">${r[1]}</span><span>${r[2]}</span></div>`).join('')}</div>` : '';
   return `<div class="win" style="height:${opts.h || 470}px">
-    <div class="tb">Bahi ERP 7.2 — ${sc.title}<span class="sp"></span><span style="font-weight:400;font-size:13px">${sc.code}</span><span class="bx">_</span><span class="bx">□</span><span class="bx">×</span></div>
+    <div class="tb">Ledgerline ERP 7.2 — ${sc.title}<span class="sp"></span><span style="font-weight:400;font-size:13px">${sc.code}</span><span class="bx">_</span><span class="bx">□</span><span class="bx">×</span></div>
     <div class="mn">File Edit View Masters Purchase Inventory Reports Help</div>
     <div class="bd"><div class="tree">${TREE.replace(sc.treeOn ? `class="${sc.treeOn}"` : 'XX', 'class="on"')}</div><div class="fm">${fields}${list}</div></div>
     <div class="bt">${(sc.buttons || []).map((b) => `<span class="${b === sc.hot ? 'hot' : ''}">${b}</span>`).join('')}</div>
-    <div class="sb"><span class="${sc.err ? 'er' : ''}">${sc.status || 'Ready'}</span><span>${sc.user || 'KJOSHI'}</span><span>RSW-PUN-01</span></div></div>`;
+    <div class="sb"><span class="${sc.err ? 'er' : ''}">${sc.status || 'Ready'}</span><span>${sc.user || 'ECLARKE'}</span><span>NBC-MAN-01</span></div></div>`;
 }
 
 

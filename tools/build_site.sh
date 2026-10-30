@@ -8,7 +8,7 @@ GH="https://github.com/RajatDandekar/agents-for-enterprises/blob/main"
 rm -rf "$OUT" && mkdir -p "$OUT"
 cp -R "$ROOT/engine" "$OUT/engine"
 cp -R "$ROOT/figures" "$OUT/figures"
-mkdir -p "$OUT/bahi/bahi/experience" && cp -R "$ROOT/bahi/bahi/experience/shots" "$OUT/bahi/bahi/experience/shots"
+mkdir -p "$OUT/ledgerline/ledgerline/experience" && cp -R "$ROOT/ledgerline/ledgerline/experience/shots" "$OUT/ledgerline/ledgerline/experience/shots"
 for d in "$ROOT"/lectures/L*/; do
   n="$(basename "$d")"; mkdir -p "$OUT/lectures/$n"
   for f in index.html figs.js figdata.js; do [ -f "$d$f" ] && cp "$d$f" "$OUT/lectures/$n/"; done

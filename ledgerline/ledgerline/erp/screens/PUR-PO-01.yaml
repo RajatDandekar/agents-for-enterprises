@@ -1,0 +1,36 @@
+code: PUR-PO-01
+title: PURCHASE ORDER ENTRY
+menu: Purchase > Order entry
+roles: [PUR-EXEC, PUR-SR, SYS-ADMIN]
+help: >-
+  Enter the source request, supplier and item, then press Fetch: it brings in the contract rate, tax code,
+  payment terms and the request's cost centre, date and quantity. Save gives the order number.
+  Orders without a request (type DIR) are for £50,000 or less.
+fields:
+  - {name: po_no, label: PO NO, type: str, readonly: true}
+  - {name: po_type, label: PO TYPE, type: str, req: true, default: STD, help: STD/DIR}
+  - {name: pr_no, label: PR NO, type: str, req: false, lookup: pr_search}
+  - {name: sup_cd, label: SUP CD, type: str, req: true, lookup: sup_search}
+  - {name: itm_cd, label: ITEM CD, type: str, req: true, lookup: itm_search}
+  - {name: qty, label: QTY, type: int, req: true}
+  - {name: rate, label: RATE, type: float, req: true}
+  - {name: tax_cd, label: TAX CD, type: str, req: true, lookup: tax_list}
+  - {name: pt_cd, label: PAY TERM, type: str, readonly: true}
+  - {name: cc_cd, label: CC CD, type: str, req: true, lookup: cc_list}
+  - {name: need_dt, label: NEED DT, type: date, req: true}
+  - {name: whs_cd, label: WHS CD, type: str, req: false, lookup: whs_list}
+  - {name: fetch_tok, label: (hidden), type: str, req: false}
+  - {name: status, label: STATUS, type: str, readonly: true}
+tasks:
+  - {button: Fetch, service: po_fetch, sends: [sup_cd, itm_cd, pr_no], fills: [rate, tax_cd, pt_cd, whs_cd, fetch_tok, cc_cd, need_dt, qty]}
+  - button: Save
+    service: po_save
+    sends: [po_type, pr_no, sup_cd, itm_cd, qty, rate, tax_cd, cc_cd, need_dt, whs_cd, fetch_tok]
+    fills: {doc_no: po_no, status: status}
+    needs: [Fetch]
+  - {button: Close, service: null}
+state:
+  - {rule: "Save needs Fetch for the same supplier and item", error: ERR-SCR-0221}
+  - {rule: "Fetch defaults the tax code to the plant's state; a the Netherlands supplier needs -INTER", error: ERR-PO-0412}
+  - {rule: "Direct order above £50,000", error: ERR-PO-0610}
+  - {rule: "Closed cost centre: saved as Draft (DR); the message only says SAVED", error: W-CC-114}

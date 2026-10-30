@@ -10,7 +10,7 @@ tool = {"type": "function", "function": {"name": "stk_query", "description": "ST
 for m in ["gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-2.5-pro", "gemini-3-flash-preview", "gemini-3-pro-preview", "gemini-3.8-flash"]:
     try:
         t = time.time()
-        r = c.chat.completions.create(model=m, messages=[{"role": "user", "content": "How many GSK-SIL-05L do we have?"}], tools=[tool])
+        r = c.chat.completions.create(model=m, messages=[{"role": "user", "content": "How many BAT-500 do we have?"}], tools=[tool])
         print(m, "OK", round(time.time() - t, 2), r.choices[0].message.tool_calls[0].function.arguments if r.choices[0].message.tool_calls else r.choices[0].message.content[:80], r.usage.prompt_tokens, r.usage.completion_tokens)
     except Exception as e:
         print(m, "ERR", str(e)[:160])

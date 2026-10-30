@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/app/static/app.css"><script src="/app/static/app.js"></script>
+<title>Ledgerline chat</title></head><body><main id="m"></main>
+<script>
+const W = 'emma';
+let conv = H.qs.get('conv') || (()=>{ try { return sessionStorage.getItem('ledgerline-l5-conv'); } catch(e) { return null; } })();
+const m = document.getElementById('m');
+function lineHTML(t) {
+  const cls = t.kind === 'refused' ? 'refused' : t.kind === 'approval' ? 'approval' : '';
+  let s = '<div class="l ' + cls + '">' + H.esc(t.line);
+  if (t.read_back) s += '<br><span class="rb">read back: ' + H.esc(t.read_back.doc) + ' · ' + H.esc(t.read_back.status_code) + (t.read_back.warning ? ' · ' + H.esc(t.read_back.warning) : '') + '</span>';
+  if (t.ledgerline && t.ledgerline.length) s += '<br><span class="rows">Ledgerline: ' + H.esc(t.ledgerline.slice(0, 6).join(', ')) + (t.ledgerline.length > 6 ? ' +' + (t.ledgerline.length - 6) : '') + '</span>';
+  return s + '</div>';
+}
+function msgHTML(x) {
+  if (x.role === 'event') return '<div class="msg ev">' + H.esc(x.text) + '</div>';
+  const parts = String(x.text).split('\n'), st = parts.filter(p => p.startsWith('Ledgerline status')), body = parts.filter(p => !p.startsWith('Ledgerline status')).join('\n');
+  return '<div class="msg ' + (x.role === 'user' ? 'u' : 'ag') + '"><div class="k">' + (x.role === 'user' ? 'You' : 'Agent') + '</div>' + H.esc(body.trim()) + st.map(s => '<span class="st">' + H.esc(s) + '</span>').join('') + '</div>';
+}
+async function render() {
+  const s = await H.api('/api/chat/' + conv, {}, W);
+  document.getElementById('msgs').innerHTML = s.transcript.map(msgHTML).join('');
+  document.getElementById('tr').innerHTML = '<h3>What the agent did · as ' + H.esc(s.acts_as.acts_as) + '</h3>' + s.trace.map(lineHTML).join('') +
+    (s.waiting_on ? '<div class="l approval">waiting on ' + H.esc(s.waiting_on.id) + ' · ' + H.esc(s.waiting_on.doc_no) + ' · ' + H.esc(s.waiting_on.status) + '</div>' : '');
+  const ms = document.getElementById('msgs'); ms.scrollTop = ms.scrollHeight;
+}
+async function start() {
+  let me;
+  try { me = await H.api('/api/me', {}, W); } catch (e) { H.signin(m, W, 'ECLARKE', 'emma@123', start); return; }
+  if (!document.querySelector('header')) H.header(['chat', 'Chat'], me);
+  if (!conv) { conv = (await H.api('/api/chat', { method: 'POST' }, W)).conv; try { sessionStorage.setItem('ledgerline-l5-conv', conv); } catch (e) {} }
+  m.innerHTML = '<div class="grid"><div class="thread"><div class="msgs" id="msgs"></div><div class="compose"><textarea id="t" placeholder="What do you need?"></textarea><button class="go" id="send">Send</button></div></div><div class="trace" id="tr"></div></div>';
+  document.getElementById('send').onclick = async () => {
+    const t = document.getElementById('t'), text = t.value.trim(); if (!text) return;
+    t.value = ''; document.getElementById('send').disabled = true;
+    try { await H.api('/api/chat/' + conv + '/message', { method: 'POST', body: JSON.stringify({ text }) }, W); } catch (e) { alert(e.message); }
+    document.getElementById('send').disabled = false; render();
+  };
+  await render(); setInterval(render, 4000);
+}
+start();
+</script></body></html>

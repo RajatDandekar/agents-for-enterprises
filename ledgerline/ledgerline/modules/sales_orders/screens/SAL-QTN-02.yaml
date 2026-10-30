@@ -1,0 +1,30 @@
+code: SAL-QTN-02
+title: QUOTATION
+menu: Sales > Quotation > Create
+roles: [SAL-EXEC, SAL-MGR, PLANT-HEAD]
+fields:
+  - {name: cust_cd, label: CUST CD, type: str, req: true}
+  - {name: itm_cd, label: ITEM CD, type: str, req: true}
+  - {name: qty, label: QTY, type: int, req: true}
+  - {name: list_cd, label: LIST CD, type: str, req: false, help: from customer master}
+  - {name: rate, label: RATE, type: float, req: false, help: blank = today's list price}
+  - {name: disc_pct, label: DISC %, type: float, req: false}
+  - {name: tax_cd, label: TAX CD, type: str, req: true, help: Fetch offers VAT5-UK}
+  - {name: valid_to, label: VALID TO, type: date, req: false}
+  - {name: fetch_tok, label: (hidden), type: str, req: false}
+tasks:
+  - button: Price
+    service: so_qtn_fetch
+    sends: [cust_cd, itm_cd]
+    fills: [list_cd, rate, tax_cd, fetch_tok]
+  - button: Save
+    service: so_qtn_save
+    sends: [cust_cd, itm_cd, qty, list_cd, rate, disc_pct, tax_cd, valid_to, fetch_tok]
+    fills: [qtn_no, status]
+    needs: [Price]
+  - button: Approve Disc
+    service: so_disc_approve
+    sends: [qtn_no, decision, comment]
+    fills: [status]
+state:
+  - {rule: "Save needs Price for the same CUST CD and ITEM CD", error: ERR-SCR-0221}

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/app/static/app.css"><script src="/app/static/app.js"></script>
+<title>Ledgerline approvals</title></head><body><main id="m"></main>
+<script>
+const W = 'daniel', m = document.getElementById('m');
+async function render(me) {
+  const r = await H.api('/api/inbox', {}, W);
+  m.innerHTML = '<p class="note">Waiting for your signature: ' + r.items.length + '. Each tap runs in your own Ledgerline session, with your limit.</p>' +
+    r.items.map(i => '<div class="card" id="' + H.esc(i.id) + '"><span class="tag">' + H.esc(i.kind) + '</span><span class="tag g">' + H.esc(i.rule || '') + '</span>' +
+      '<h3>' + H.esc(i.title || i.doc_no) + '</h3><div>' + H.esc(i.summary || '') + '</div>' +
+      '<div class="meta">' + H.esc(i.id || '') + ' · raised by ' + H.esc(i.requested_by || '') + (i.value != null ? ' · ' + H.inr(i.value) + ' gross' : '') + (i.route && i.route.note ? ' · ' + H.esc(i.route.note) : '') + '</div>' +
+      (i.id ? '<div class="acts"><button class="go" data-d="approve" data-i="' + H.esc(i.id) + '">Approve</button><button class="no" data-d="reject" data-i="' + H.esc(i.id) + '">Reject</button><span class="err"></span></div>' : '') + '</div>').join('');
+  m.querySelectorAll('button[data-i]').forEach(b => b.onclick = async () => {
+    b.parentElement.querySelectorAll('button').forEach(x => x.disabled = true);
+    try { const r = await H.api('/api/inbox/' + b.dataset.i, { method: 'POST', body: JSON.stringify({ decision: b.dataset.d }) }, W);
+      b.parentElement.querySelector('.err').textContent = r.result.item.status + (r.conversation ? ' · Emma now sees: ' + r.conversation.reply.split('\n')[0] : '');
+    } catch (e) { b.parentElement.querySelector('.err').textContent = e.message; }
+  });
+}
+async function start() {
+  let me;
+  try { me = await H.api('/api/me', {}, W); } catch (e) { H.signin(m, W, 'DOKAFOR', 'daniel@123', start); return; }
+  if (!document.querySelector('header')) H.header(['inbox', 'Approvals'], me);
+  render(me);
+}
+start();
+</script></body></html>

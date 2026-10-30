@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/app/static/app.css"><script src="/app/static/app.js"></script>
+<title>Ledgerline audit</title></head><body><main id="m"></main>
+<script>
+const W = 'emma', m = document.getElementById('m');
+async function render() {
+  const conv = H.qs.get('conv') || '';
+  const r = await H.api('/api/audit' + (conv ? '?conv=' + encodeURIComponent(conv) : ''), {}, W);
+  const s = r.summary;
+  m.innerHTML = '<p class="note">' + s.entries + ' agent entries · ' + s.ledgerline_rows + ' Ledgerline audit rows joined to them · ' + s.ledgerline_writes + ' writes · users seen in Ledgerline: ' + H.esc(s.users_in_ledgerline.join(', ')) + ' · ' + s.refusals + ' refusals · ' + s.read_backs + ' read-backs</p>' +
+    '<table><thead><tr><th>#</th><th>Time</th><th>Who</th><th>Step</th><th>What</th><th>Read back</th><th>Ledgerline rows (user · service · rc)</th></tr></thead><tbody>' +
+    r.entries.map(e => '<tr class="' + e.kind + '"><td class="m">' + e.seq + '</td><td class="m">' + H.esc(e.t.slice(11, 19)) + '</td><td class="m">' + H.esc(e.actor) + (e.acts_as && e.acts_as !== e.actor ? '<br>as ' + H.esc(e.acts_as) : '') + '</td><td class="m">' + H.esc(e.kind) + (e.tool ? '<br>' + H.esc(e.tool) : '') + '</td><td>' +
+      H.esc(e.saw || e.what || e.text || '').slice(0, 260) + '</td><td class="m">' + (e.read_back ? H.esc(e.read_back.doc + ' ' + e.read_back.status_code) : '') + '</td><td class="m">' +
+      (e.ledgerline || []).map(b => H.esc(b.user + ' ' + b.svc + ' ' + b.rc + (b.err ? ' ' + b.err : ''))).join('<br>') + '</td></tr>').join('') + '</tbody></table>';
+}
+async function start() {
+  let me;
+  try { me = await H.api('/api/me', {}, W); } catch (e) { H.signin(m, W, 'ECLARKE', 'emma@123', start); return; }
+  if (!document.querySelector('header')) H.header(['audit', 'Audit'], me);
+  render();
+}
+start();
+</script></body></html>

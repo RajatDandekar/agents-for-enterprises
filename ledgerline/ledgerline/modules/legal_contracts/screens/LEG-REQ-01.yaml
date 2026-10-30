@@ -1,0 +1,30 @@
+code: LEG-REQ-01
+title: CONTRACT REQUEST
+menu: Legal > Contracts > Request
+roles: [PUR-EXEC, PUR-SR, PUR-MGR]
+fields:
+  - {name: q, label: PARTY NAME LIKE, type: str, req: false, help: "three Shaktis on the register"}
+  - {name: party_cd, label: PARTY CD, type: str, req: true}
+  - {name: name, label: NEW PARTY NAME, type: str, req: false}
+  - {name: pan, label: PAN, type: str, req: false}
+  - {name: vat_no, label: VAT number, type: str, req: false}
+  - {name: ct_type, label: CT TYPE, type: str, req: true, help: "NDA/MSA/SLA"}
+  - {name: paper, label: PAPER, type: str, req: true, help: "OURS/THEIRS"}
+  - {name: tmpl_cd, label: TEMPLATE, type: str, req: false, help: "OURS only"}
+  - {name: doc_ref, label: THEIR DOC REF, type: str, req: false}
+  - {name: term_months, label: TERM (MTHS), type: int, req: false}
+  - {name: juris, label: JURIS, type: str, req: false}
+  - {name: fwd_to, label: FWD TO, type: str, req: false}
+tasks:
+  - {button: Find Party, service: ct_party_find, sends: [q, vat_no], fills: [party_cd]}
+  - {button: Party Save, service: ct_party_save, sends: [party_cd, name, pan, vat_no], fills: [party_cd]}
+  - {button: Fetch, service: ct_fetch, sends: [party_cd, tmpl_cd], fills: [term_months, juris, fetch_tok]}
+  - button: Save
+    service: ct_save
+    sends: [ct_type, party_cd, paper, tmpl_cd, doc_ref, term_months, juris, fwd_to, fetch_tok]
+    fills: [ct_no, status]
+    needs: [Fetch]
+  - {button: Resubmit, service: ct_submit, sends: [ct_no, fwd_to], fills: [status]}
+state:
+  - {rule: "Save needs Fetch for the same PARTY CD and TEMPLATE", error: ERR-SCR-0221}
+  - {rule: "A party without PAN and VAT number saves the request as PK; the reply only says SAVED", error: W-CT-117}

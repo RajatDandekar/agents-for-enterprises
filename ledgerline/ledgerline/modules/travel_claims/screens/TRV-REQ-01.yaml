@@ -1,0 +1,29 @@
+code: TRV-REQ-01
+title: TRIP REQUEST
+menu: Admin > Travel > Trip Request
+roles: [PUR-EXEC, PUR-SR, PUR-MGR, PLANT-HEAD, STORES, TRV-DESK, FIN-CTRL]
+fields:
+  - {name: q, label: CITY LIKE, type: str, req: false, help: "Eindhoven and Rajahmundry both start RAJ"}
+  - {name: to_cd, label: TO CITY, type: str, req: true}
+  - {name: trav_id, label: TRAVELLER, type: str, req: false, help: blank = you}
+  - {name: purpose, label: PURPOSE, type: str, req: true}
+  - {name: out_dt, label: OUT DT, type: date, req: true}
+  - {name: back_dt, label: BACK DT, type: date, req: true}
+  - {name: mode, label: MODE, type: str, req: true, help: "FLT-Y/FLT-J/TRN-2A/TRN-3A/BUS"}
+  - {name: cc_cd, label: CC CD, type: str, req: true, help: Fetch fills your default}
+  - {name: adv_amt, label: ADVANCE, type: float, req: false}
+  - {name: urgent, label: URGENT, type: str, req: false, help: Y/N}
+  - {name: fetch_tok, label: (hidden), type: str, req: false}
+tasks:
+  - {button: Find City, service: tv_ent_get, sends: [q], fills: [to_cd]}
+  - {button: Fetch, service: tv_ent_get, sends: [to_cd, trav_id], fills: [cc_cd, fetch_tok]}
+  - button: Save
+    service: tv_trip_save
+    sends: [purpose, to_cd, out_dt, back_dt, mode, cc_cd, adv_amt, urgent, trav_id, fetch_tok]
+    fills: [trip_no, status]
+    needs: [Fetch]
+  - {button: Approve, service: tv_approve, sends: [trip_no, decision, comment], fills: [status]}
+  - {button: Cancel Trip, service: tv_cancel, sends: [trip_no, reason], fills: [status]}
+state:
+  - {rule: "Save needs Fetch for the same TRAVELLER and TO CITY", error: ERR-SCR-0221}
+  - {rule: "Departure < 2 days away and URGENT blank: saved, but parked for the desk's next-day batch (WL)", error: W-TV-148}

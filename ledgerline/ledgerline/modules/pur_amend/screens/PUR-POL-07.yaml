@@ -1,0 +1,28 @@
+code: PUR-POL-07
+title: PURCHASE ORDER LIST
+menu: Purchase > Orders > Order List
+roles: [PUR-EXEC, PUR-SR, PUR-MGR, PLANT-HEAD, STORES]
+fields:
+  - {name: q, label: SUP NAME LIKE, type: str, req: false, help: "'Voltway' also finds Voltway Paints & Coatings"}
+  - {name: sup_cd, label: SUP CD, type: str, req: false}
+  - {name: itm_cd, label: ITEM CD, type: str, req: false}
+  - {name: status, label: STATUS, type: str, req: false, help: "RL for released"}
+  - {name: po_no, label: PO NO, type: str, req: true, help: pick a row}
+  - {name: rows, label: SCHEDULE GRID, type: grid, readonly: true}
+tasks:
+  - button: Search
+    service: pa_po_list
+    sends: [q, sup_cd, itm_cd, status]
+    fills: [po_no]
+  - button: Open
+    service: pa_po_get
+    sends: [po_no]
+    fills: []
+    needs: [Search]
+  - button: Schedule
+    service: pa_sched_get
+    sends: [po_no]
+    fills: [rows]
+    needs: [Search]
+state:
+  - {rule: "The list shows every order of the supplier; the item column tells cargo e-bike from city e-bike", error: none}

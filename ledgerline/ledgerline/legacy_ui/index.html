@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ledgerline ERP 7.2</title>
+<!-- The legacy client of Ledgerline ERP 7.2 (fictional), the way it has looked since about 2001.
+     It knows nothing about purchasing: it reads the screen definitions from /screens and, when a button is
+     pressed, posts the fields that button sends to /svc/<service>, with X-Screen and X-Task headers so the
+     server's live run records which screen and button made each call. Add ?tenant=<name> for a private sandbox. -->
+<style>
+:root{--face:#D4D0C8;--shadow:#808080;--dark:#404040;--hi:#FFFFFF;--title1:#0A246A;--title2:#A6CAF0;--desk:#3A6EA5;--sel:#0A246A}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--desk);font:12px/1.3 Tahoma,Verdana,"Segoe UI",sans-serif;color:#000;overflow:auto}
+.win{background:var(--face);border:2px solid;border-color:var(--hi) var(--dark) var(--dark) var(--hi);box-shadow:1px 1px 0 #000;display:flex;flex-direction:column}
+.tb{background:linear-gradient(90deg,var(--title1),var(--title2));color:#fff;font-weight:700;padding:3px 4px 3px 6px;display:flex;gap:8px;align-items:center;user-select:none}
+.tb .sp{flex:1}.tb .cd{font-weight:400;font-size:11px;opacity:.9}
+.tb .bx{width:16px;height:14px;background:var(--face);border:1px solid;border-color:var(--hi) var(--dark) var(--dark) var(--hi);color:#000;font:bold 9px/11px Tahoma,sans-serif;text-align:center;cursor:default}
+.mn{display:flex;gap:2px;padding:1px 4px;border-bottom:1px solid var(--shadow);position:relative}
+.mn>div{padding:2px 7px;cursor:default;position:relative}
+.mn>div:hover,.mn>div.open{background:var(--sel);color:#fff}
+.dd{display:none;position:absolute;left:0;top:100%;background:var(--face);border:2px solid;border-color:var(--hi) var(--dark) var(--dark) var(--hi);min-width:180px;z-index:20;color:#000;padding:2px}
+.mn>div.open .dd{display:block}
+.dd div{padding:3px 18px;white-space:nowrap}.dd div:hover{background:var(--sel);color:#fff}.dd .gr{color:var(--shadow)}.dd hr{border:0;border-top:1px solid var(--shadow);border-bottom:1px solid var(--hi);margin:3px 2px}
+#main{position:relative;margin:24px auto;width:min(1040px,calc(100vw - 32px));min-height:640px}
+.bd{display:flex;flex:1;min-height:520px}
+.tree{width:200px;flex:none;background:#fff;border:2px inset var(--hi);margin:6px 0 6px 6px;padding:4px 2px;line-height:1.6;white-space:nowrap;overflow:auto}
+.tree .grp{font-weight:700;cursor:default;padding-left:2px}
+.tree .it{padding:0 4px 0 18px;cursor:pointer}
+.tree .it:hover{text-decoration:underline}
+.tree .it.on{background:var(--sel);color:#fff}
+.tree .it.gr{color:#9a9a9a;cursor:not-allowed;text-decoration:none}
+.pane{flex:1;display:flex;flex-direction:column;min-width:0;padding:6px}
+.hdr{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--shadow);padding:2px 2px 4px;margin-bottom:8px}
+.hdr b{font-size:13px}.hdr span{color:#333;font-size:11px}
+.fm{display:grid;grid-template-columns:150px 1fr 150px 1fr;gap:6px 10px;align-content:start}
+.fm label{text-align:right;padding-top:3px}
+.fm label.req::after{content:" *";color:#c00}
+.fm .cell{display:flex;gap:3px;align-items:center}
+.fm input{font:12px Tahoma,sans-serif;background:#fff;border:2px inset var(--hi);padding:2px 4px;height:22px;width:100%;min-width:0}
+.fm input.code{font:bold 12px "Courier New",monospace;text-transform:uppercase}
+.fm input[readonly]{background:var(--face)}
+.fm .f2{font:10px Tahoma,sans-serif;border:1px solid;border-color:var(--hi) var(--dark) var(--dark) var(--hi);background:var(--face);padding:1px 4px;cursor:pointer;flex:none}
+.fm .f2:active{border-color:var(--dark) var(--hi) var(--hi) var(--dark)}
+.grid{margin-top:12px;background:#fff;border:2px inset var(--hi);max-height:230px;overflow:auto}
+.grid table{border-collapse:collapse;width:100%}
+.grid th{background:var(--face);border:1px solid;border-color:var(--hi) var(--dark) var(--dark) var(--hi);text-align:left;font-weight:700;padding:2px 6px;position:sticky;top:0}
+.grid td{padding:1px 6px;font:12px "Courier New",monospace;white-space:nowrap;cursor:default}
+.grid tr.sel td{background:var(--sel);color:#fff}
+.btns{display:flex;gap:8px;justify-content:flex-end;padding:8px 10px}
+button.w{font:12px Tahoma,sans-serif;background:var(--face);border:2px solid;border-color:var(--hi) var(--dark) var(--dark) var(--hi);padding:3px 12px;min-width:76px;cursor:pointer;color:#000}
+button.w:active{border-color:var(--dark) var(--hi) var(--hi) var(--dark)}
+button.w:focus{outline:1px dotted #000;outline-offset:-5px}
+button.w:disabled{color:var(--shadow);text-shadow:1px 1px 0 var(--hi)}
+.sb{border-top:1px solid var(--shadow);display:flex;font-size:11px}
+.sb span{border:1px inset var(--hi);padding:2px 6px;white-space:nowrap}
+.sb #msg{flex:1;overflow:hidden;text-overflow:ellipsis}
+.sb #msg.er{color:#c00;font-weight:700}
+.busy *{cursor:wait!important}
+.dlg{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:30;min-width:360px;max-width:min(760px,calc(100vw - 32px))}
+.dlg .in{padding:12px}
+.hidden{display:none!important}
+#login .fm{grid-template-columns:130px 1fr}
+#login .logo{display:flex;gap:12px;align-items:center;padding:12px 14px 4px}
+#login .logo .mk{width:44px;height:44px;background:#8b1e14;color:#f6e7c8;font:bold 22px/44px Georgia,serif;text-align:center;border:2px outset #b44}
+#login .logo b{font-size:16px}
+#log{position:fixed;right:12px;bottom:12px;width:min(760px,calc(100vw - 24px));z-index:25}
+#log .grid{max-height:260px;margin:6px}
+#log td{font-size:11px}
+.about{line-height:1.6}
+@media (max-width:760px){.fm{grid-template-columns:110px 1fr}.tree{width:150px}}
+@media (max-width:560px){#main{margin:8px auto;width:calc(100vw - 16px);min-height:0}.bd{flex-direction:column;min-height:0}
+  .tree{width:auto;margin:6px 6px 0;max-height:150px;columns:2;column-gap:8px}.tree .grp{break-after:avoid}
+  .fm{grid-template-columns:96px 1fr;gap:5px 6px}.fm label{font-size:11px}.btns{flex-wrap:wrap;justify-content:flex-start}
+  .mn{flex-wrap:wrap}.sb span:not(#msg){display:none}.dlg{min-width:0;width:calc(100vw - 16px)}#login .fm{grid-template-columns:96px 1fr}}
+</style>
+</head>
+<body>
+
+<!-- Sign-in dialog: screen SYS-LGN-01 -->
+<div class="win dlg" id="login">
+  <div class="tb">Ledgerline ERP 7.2 — Sign In<span class="sp"></span><span class="cd">SYS-LGN-01</span><span class="bx">×</span></div>
+  <div class="logo"><div class="mk">ब</div><div><b>Ledgerline ERP 7.2</b><br>Ledgerline Systems Pvt. Ltd. · licensed to Northbridge Cycles</div></div>
+  <div class="in"><div class="fm" id="loginfm"></div></div>
+  <div class="btns" id="loginbtns"></div>
+  <div class="sb"><span id="loginmsg">Ready</span><span>26-10-2026</span></div>
+</div>
+
+<!-- Main window -->
+<div class="win hidden" id="main">
+  <div class="tb"><span id="wtitle">Ledgerline ERP 7.2</span><span class="sp"></span><span class="cd" id="wcode"></span><span class="bx">_</span><span class="bx">□</span><span class="bx">×</span></div>
+  <div class="mn" id="menubar">
+    <div>File<div class="dd"><div data-act="signout">Sign out</div><hr><div class="gr">Print setup…</div><div data-act="signout">Exit</div></div></div>
+    <div>Edit<div class="dd"><div data-act="clear">Clear screen</div><div class="gr">Copy</div><div class="gr">Paste</div></div></div>
+    <div>View<div class="dd"><div data-act="log">Service log</div><div data-act="refresh">Refresh menu</div></div></div>
+    <div>Masters<div class="dd" data-grp="Masters"></div></div>
+    <div>Purchase<div class="dd" data-grp="Purchase"></div></div>
+    <div>Inventory<div class="dd" data-grp="Inventory"></div></div>
+    <div>Reports<div class="dd"><div class="gr">(no reports licensed)</div></div></div>
+    <div>Help<div class="dd"><div data-act="help">Help on this screen (F1)</div><div data-act="about">About Ledgerline ERP</div></div></div>
+  </div>
+  <div class="bd">
+    <div class="tree" id="tree"></div>
+    <div class="pane">
+      <div class="hdr"><b id="stitle">Welcome</b><span id="smenu"></span></div>
+      <div class="fm" id="form"></div>
+      <div class="grid hidden" id="grid"></div>
+      <div style="flex:1"></div>
+      <div class="btns" id="btns"></div>
+    </div>
+  </div>
+  <div class="sb"><span id="msg">Ready</span><span id="suser"></span><span id="sou">NBC-MAN-01</span><span id="sscr">—</span><span>26-10-2026</span></div>
+</div>
+
+<!-- F2 lookup -->
+<div class="win dlg hidden" id="lookup">
+  <div class="tb"><span id="lktitle">Lookup</span><span class="sp"></span><span class="bx" data-close="lookup">×</span></div>
+  <div class="in"><div class="fm" style="grid-template-columns:90px 1fr auto"><label>Search</label><div class="cell"><input id="lkq"></div><button class="w" id="lkgo">Search</button></div>
+  <div class="grid" id="lkgrid" style="max-height:300px"></div></div>
+  <div class="btns"><button class="w" id="lkok">OK</button><button class="w" data-close="lookup">Cancel</button></div>
+</div>
+
+<!-- Help -->
+<div class="win dlg hidden" id="help">
+  <div class="tb"><span id="hptitle">Help</span><span class="sp"></span><span class="bx" data-close="help">×</span></div>
+  <div class="in about" id="hpbody"></div>
+  <div class="btns"><button class="w" data-close="help">OK</button></div>
+</div>
+
+<!-- Service log (a teaching aid: what the client sent, as the server recorded it) -->
+<div class="win hidden" id="log">
+  <div class="tb">Service log — live run<span class="sp"></span><span class="bx" data-close="log">×</span></div>
+  <div class="grid" id="loggrid"></div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const BASE = location.pathname.replace(/\/legacy\/?$/, '').replace(/\/$/, '');
+const TENANT = new URLSearchParams(location.search).get('tenant');
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const S = { screens: {}, token: null, user: null, role: null, cur: null, form: {}, grids: {}, sel: {}, done: new Set() };
+// Embedded in the Northbridge Experience (an iframe): tell the mission panel about screens, sign-ins and replies.
+const EMBED = window.parent !== window;
+const tell = (ev) => { if (EMBED) try { window.parent.postMessage({ ledgerline: ev }, location.origin); } catch (e) { /* not ours */ } };
+
+async function http(method, path, body, screen, task) {
+  const h = { 'Content-Type': 'application/json' };
+  if (S.token) h.Authorization = 'Bearer ' + S.token;
+  if (TENANT) h['X-Tenant'] = TENANT;
+  if (screen) h['X-Screen'] = screen;
+  if (task) h['X-Task'] = task;
+  document.body.classList.add('busy');
+  try {
+    const r = await fetch(BASE + path, { method, headers: h, body: body === undefined ? undefined : JSON.stringify(body) });
+    let d = null;
+    try { d = await r.json(); } catch (e) { d = { rc: 'E', err_cd: 'HTTP-' + r.status, msg: 'NO REPLY FROM SERVER' }; }
+    if (r.status === 504) d = { rc: 'E', err_cd: 'HTTP-504', msg: 'NO REPLY FROM SERVER' };
+    if (r.status === 401 && d && d.detail) d = { rc: 'E', err_cd: 'ERR-SEC-0010', msg: 'SESSION EXPIRED, SIGN IN AGAIN' };
+    if (method === 'POST') tell({ kind: 'reply', path, screen: screen || null, task: task || null, rc: d && d.rc, err_cd: d && d.err_cd, msg: d && d.msg });
+    return d;
+  } catch (e) {
+    return { rc: 'E', err_cd: 'ERR-NET-0001', msg: 'SERVER NOT REACHABLE' };
+  } finally { document.body.classList.remove('busy'); }
+}
+
+function status(env, el = $('msg')) {
+  if (env && env.rc === 'E') { el.textContent = `${env.err_cd}: ${env.msg}`; el.className = 'er'; }
+  else { el.textContent = (env && env.msg) || 'Ready'; el.className = ''; }
+}
+const allowed = (sc) => !sc.roles || sc.roles.includes('ALL') || sc.roles.includes(S.role) || S.role === 'SYS-ADMIN';
+const show = (v) => (v === null || v === undefined) ? '' : (typeof v === 'number' && Number.isInteger(v) === false ? String(v) : String(v));
+
+/* ---------------- form rendering (screen format: modules/README.md) ---------------- */
+const isCode = (f) => /_(cd|type)$/.test(f.name) || !!f.lookup || f.name === 'decision';
+const isHidden = (f) => f.label === '(hidden)';
+const isGrid = (f) => f.type === 'grid';
+function renderForm(sc, host) {
+  host.innerHTML = '';
+  for (const f of sc.fields || []) {
+    if (isHidden(f)) continue;
+    if (isGrid(f)) {
+      const g = document.createElement('div'); g.className = 'grid'; g.id = 'g_' + f.name; g.style.gridColumn = '1 / -1';
+      g.innerHTML = `<div style="padding:4px 6px;color:#555">${esc(f.label)}</div>`; host.append(g); continue;
+    }
+    const lab = document.createElement('label');
+    lab.textContent = f.label; if (f.req) lab.className = 'req';
+    lab.htmlFor = 'f_' + f.name; if (f.help) lab.title = f.help;
+    const cell = document.createElement('div'); cell.className = 'cell';
+    const inp = document.createElement('input');
+    inp.id = 'f_' + f.name; inp.name = f.name; inp.autocomplete = 'off';
+    if (f.name === 'password') inp.type = 'password';
+    if (isCode(f)) inp.className = 'code';
+    if (f.type === 'date') inp.placeholder = 'DD-MM-YYYY';
+    if (f.help) inp.title = f.help;
+    if (f.readonly) { inp.readOnly = true; inp.tabIndex = -1; }
+    inp.value = show(S.form[f.name]);
+    inp.addEventListener('input', () => { S.form[f.name] = isCode(f) ? inp.value.toUpperCase() : inp.value; });
+    if (f.lookup) {
+      inp.addEventListener('keydown', (e) => { if (e.key === 'F2') { e.preventDefault(); openLookup(f); } });
+      cell.append(inp);
+      const b = document.createElement('span'); b.className = 'f2'; b.textContent = 'F2'; b.title = 'Look up (' + f.lookup + ')';
+      b.addEventListener('click', () => openLookup(f)); cell.append(b);
+    } else cell.append(inp);
+    host.append(lab, cell);
+  }
+}
+function syncInputs() { for (const [k, v] of Object.entries(S.form)) { const i = $('f_' + k); if (i) i.value = show(v); } }
+
+/* result grids: grid fields on the screen, or a generic one for a task that returns rows */
+function gridSpecs() {
+  const gs = (S.cur && S.cur.fields || []).filter(isGrid);
+  return gs.length ? gs : [{ name: '__rows', label: 'RESULTS' }];
+}
+function renderGrid() {
+  const g0 = $('grid'); g0.classList.add('hidden'); g0.innerHTML = '';
+  for (const gf of gridSpecs()) {
+    const host = gf.name === '__rows' ? g0 : $('g_' + gf.name), rows = S.grids[gf.name] || [];
+    if (!host) continue;
+    if (!rows.length) { if (gf.name !== '__rows') host.innerHTML = `<div style="padding:4px 6px;color:#555">${esc(gf.label)}</div>`; continue; }
+    host.classList.remove('hidden');
+    const cols = gf.columns || Object.keys(rows[0]).slice(0, 7), sel = S.sel[gf.name] ?? 0;
+    host.innerHTML = `<table><tr>${cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr>${rows.map((r, i) => `<tr data-i="${i}" class="${i === sel ? 'sel' : ''}">${cols.map((c) => `<td>${esc(typeof r === 'object' ? r[c] : r)}</td>`).join('')}</tr>`).join('')}</table>`;
+    host.querySelectorAll('tr[data-i]').forEach((tr) => {
+      tr.addEventListener('click', () => { S.sel[gf.name] = +tr.dataset.i; renderGrid(); });
+      tr.addEventListener('dblclick', () => { S.sel[gf.name] = +tr.dataset.i; pickRow(gf); });
+    });
+  }
+}
+function pickRow(gf) {
+  gf = gf || gridSpecs().find((g) => (S.grids[g.name] || []).length);
+  const rows = gf ? S.grids[gf.name] || [] : [], i = gf ? S.sel[gf.name] ?? 0 : -1;
+  if (!rows.length || i < 0) { status({ rc: 'E', err_cd: 'ERR-SCR-0101', msg: 'SELECT A ROW FIRST' }); return; }
+  const r = rows[i], names = new Set((S.cur.fields || []).map((f) => f.name));
+  const pairs = gf.pick ? (typeof gf.pick === 'object' ? Object.entries(gf.pick) : [[gf.pick, gf.pick]])
+    : Object.keys(r).filter((k) => names.has(k)).map((k) => [k, k]);
+  pairs.forEach(([col, fld]) => { S.form[fld] = r[col]; });
+  syncInputs(); status({ rc: 'S', msg: pairs.map(([c, f]) => `${f.toUpperCase()} = ${r[c]}`).join(', ') || 'Ready' });
+}
+
+/* ---------------- screens ---------------- */
+function openScreen(code) {
+  const sc = S.screens[code];
+  if (!sc) return;
+  if (!allowed(sc)) { status({ rc: 'E', err_cd: 'ERR-SEC-0001', msg: 'ACCESS DENIED' }); return; }
+  S.cur = sc; S.grids = {}; S.sel = {}; S.done = new Set();
+  S.form = {};
+  (sc.fields || []).forEach((f) => { if ('default' in f) S.form[f.name] = String(f.default); });
+  $('wtitle').textContent = 'Ledgerline ERP 7.2 — ' + sc.title; $('wcode').textContent = sc.code; $('sscr').textContent = sc.code;
+  $('stitle').textContent = sc.title; $('smenu').textContent = sc.menu || '';
+  renderForm(sc, $('form')); renderGrid();
+  const bt = $('btns'); bt.innerHTML = '';
+  (sc.tasks || []).forEach((t) => {
+    const b = document.createElement('button'); b.className = 'w'; b.textContent = t.button;
+    b.addEventListener('click', () => press(t)); bt.append(b);
+  });
+  document.querySelectorAll('.tree .it').forEach((x) => x.classList.toggle('on', x.dataset.code === code));
+  status({ rc: 'S', msg: 'Ready' });
+  tell({ kind: 'screen', code });
+  const first = $('form').querySelector('input:not([readonly])'); if (first) first.focus();
+}
+
+async function press(t) {
+  const sc = S.cur;
+  if (t.service === null || t.service === undefined) {
+    if (t.button === 'Close') { closeScreen(); return; }
+    if (t.button === 'Select') { pickRow(); return; }
+    return;
+  }
+  const body = {};
+  (t.sends || []).forEach((k) => { const v = S.form[k]; if (v !== undefined && v !== null && String(v).trim() !== '') body[k] = String(v).trim(); });
+  const env = await http('POST', '/svc/' + t.service, body, sc.code, t.button);
+  if (env.rc !== 'E' && env.data && typeof env.data === 'object') {
+    const fills = t.fills || [], pairs = Array.isArray(fills) ? fills.map((f) => [f, f]) : Object.entries(fills);
+    let gridded = false;
+    pairs.forEach(([src, fld]) => {
+      const v = env.data[src]; if (v === undefined || v === null) return;
+      if (Array.isArray(v)) { S.grids[fld] = v; S.sel[fld] = 0; gridded = true; } else S.form[fld] = v;
+    });
+    if (!gridded && Array.isArray(env.data.rows)) { const g = gridSpecs()[0]; S.grids[g.name] = env.data.rows; S.sel[g.name] = 0; }
+    S.done.add(t.button);
+  }
+  syncInputs(); renderGrid(); status(env);
+  if (!$('log').classList.contains('hidden')) refreshLog();
+}
+
+function closeScreen() {
+  S.cur = null; $('form').innerHTML = ''; $('btns').innerHTML = ''; $('grid').classList.add('hidden');
+  $('stitle').textContent = 'Welcome, ' + (S.name || S.user); $('smenu').textContent = 'Choose a screen from the menu.';
+  $('wtitle').textContent = 'Ledgerline ERP 7.2'; $('wcode').textContent = ''; $('sscr').textContent = '—';
+  document.querySelectorAll('.tree .it').forEach((x) => x.classList.remove('on'));
+}
+
+function buildMenu() {
+  const groups = {};
+  Object.values(S.screens).forEach((sc) => {
+    const parts = (sc.menu || '').split('>').map((x) => x.trim()), g = parts[0], item = parts.slice(1).join(' › ');
+    if (!item || g === 'File') return;
+    (groups[g] = groups[g] || []).push({ item, sc });
+  });
+  const first = ['Masters', 'Purchase', 'Inventory'];
+  const order = [...first.filter((g) => groups[g]), ...Object.keys(groups).filter((g) => !first.includes(g)).sort()];
+  $('tree').innerHTML = order.map((g) => `<div class="grp">▾ ${esc(g)}</div>` +
+    groups[g].map(({ item, sc }) => `<div class="it ${allowed(sc) ? '' : 'gr'}" data-code="${sc.code}" title="${sc.code}${allowed(sc) ? '' : ' · not in your role'}">${esc(item)}</div>`).join('')).join('');
+  $('tree').querySelectorAll('.it').forEach((x) => x.addEventListener('click', () => openScreen(x.dataset.code)));
+  document.querySelectorAll('.dd[data-grp]').forEach((dd) => {
+    const g = groups[dd.dataset.grp] || [];
+    dd.innerHTML = g.map(({ item, sc }) => `<div class="${allowed(sc) ? '' : 'gr'}" data-code="${sc.code}">${esc(item)}</div>`).join('') || '<div class="gr">(empty)</div>';
+    dd.querySelectorAll('[data-code]').forEach((x) => x.addEventListener('click', () => openScreen(x.dataset.code)));
+  });
+}
+
+/* ---------------- sign in ---------------- */
+function showLogin() {
+  S.token = null; S.user = null; S.role = null;
+  $('main').classList.add('hidden'); $('login').classList.remove('hidden');
+  const sc = S.screens['SYS-LGN-01'];
+  S.form = {}; (sc.fields || []).forEach((f) => { if ('default' in f) S.form[f.name] = String(f.default); });
+  renderForm(sc, $('loginfm'));
+  const bt = $('loginbtns'); bt.innerHTML = '';
+  (sc.tasks || []).forEach((t) => { const b = document.createElement('button'); b.className = 'w'; b.textContent = t.button; b.addEventListener('click', () => (t.service === 'login' ? signIn(t) : null)); bt.append(b); });
+  $('f_user_id').focus();
+}
+async function signIn(t) {
+  const body = {}; (t.sends || []).forEach((k) => { if (S.form[k]) body[k] = S.form[k]; });
+  const env = await http('POST', '/login', body);
+  if (env.rc !== 'S') { status(env, $('loginmsg')); return; }
+  S.token = env.token; S.user = env.user_id; S.role = env.role_cd; S.name = env.name;
+  $('login').classList.add('hidden'); $('main').classList.remove('hidden');
+  $('suser').textContent = S.user; $('sou').textContent = env.ou_cd;
+  buildMenu(); closeScreen(); status({ rc: 'S', msg: env.msg });
+  tell({ kind: 'signin', user: S.user });
+}
+
+/* ---------------- F2 lookup ---------------- */
+let LK = null;
+const QUERY_SVCS = { itm_search: 'q', sup_search: 'q' };
+async function openLookup(f) {
+  LK = { f, rows: [], sel: -1 };
+  $('lktitle').textContent = 'Lookup — ' + f.label + ' (' + f.lookup + ')';
+  $('lkq').value = S.form[f.name] || '';
+  $('lkq').parentElement.parentElement.classList.toggle('hidden', !QUERY_SVCS[f.lookup]);
+  $('lkgrid').innerHTML = ''; $('lookup').classList.remove('hidden');
+  if (!QUERY_SVCS[f.lookup]) runLookup(); else $('lkq').focus();
+}
+async function runLookup() {
+  const f = LK.f, key = QUERY_SVCS[f.lookup], body = key ? { [key]: $('lkq').value || ' ' } : {};
+  const env = await http('POST', '/svc/' + f.lookup, body, S.cur ? S.cur.code : null, 'F2 ' + f.name);
+  if (env.rc === 'E') { status(env); $('lookup').classList.add('hidden'); return; }
+  LK.rows = (env.data && env.data.rows) || []; LK.sel = LK.rows.length ? 0 : -1;
+  const cols = LK.rows.length ? Object.keys(LK.rows[0]).slice(0, 6) : [];
+  const g = $('lkgrid');
+  g.innerHTML = LK.rows.length ? `<table><tr>${cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr>${LK.rows.map((r, i) => `<tr data-i="${i}" class="${i === LK.sel ? 'sel' : ''}">${cols.map((c) => `<td>${esc(r[c])}</td>`).join('')}</tr>`).join('')}</table>` : '<div style="padding:6px">0 ROWS FOUND</div>';
+  g.querySelectorAll('tr[data-i]').forEach((tr) => {
+    tr.addEventListener('click', () => { LK.sel = +tr.dataset.i; g.querySelectorAll('tr').forEach((x) => x.classList.toggle('sel', x === tr)); });
+    tr.addEventListener('dblclick', () => { LK.sel = +tr.dataset.i; lookupOk(); });
+  });
+  if (!$('log').classList.contains('hidden')) refreshLog();
+}
+function lookupOk() {
+  if (!LK || LK.sel < 0) { $('lookup').classList.add('hidden'); return; }
+  const r = LK.rows[LK.sel], n = LK.f.name;
+  const col = n in r ? n : ('doc_no' in r ? 'doc_no' : Object.keys(r)[0]);
+  S.form[n] = r[col]; syncInputs(); $('lookup').classList.add('hidden');
+}
+$('lkgo').addEventListener('click', runLookup);
+$('lkq').addEventListener('keydown', (e) => { if (e.key === 'Enter') runLookup(); });
+$('lkok').addEventListener('click', lookupOk);
+
+/* ---------------- service log ---------------- */
+async function refreshLog() {
+  const rows = await http('GET', '/live-run?since=0');
+  if (!Array.isArray(rows)) return;
+  $('loggrid').innerHTML = `<table><tr><th>#</th><th>Screen</th><th>Task</th><th>Service</th><th>rc</th><th>Message</th><th>Stored procedures</th></tr>${rows.slice(-60).reverse().map((r) => `<tr><td>${r.seq}</td><td>${esc(r.screen || '')}</td><td>${esc(r.task || '')}</td><td>${esc(r.svc)}</td><td>${esc(r.rc)}</td><td>${esc(r.err_cd ? r.err_cd + ' ' + r.msg : r.msg)}</td><td>${esc((r.sps || []).join(' → '))}</td></tr>`).join('')}</table>`;
+}
+
+/* ---------------- menus, dialogs, keys ---------------- */
+document.querySelectorAll('.mn>div').forEach((m) => m.addEventListener('click', (e) => {
+  const was = m.classList.contains('open');
+  document.querySelectorAll('.mn>div').forEach((x) => x.classList.remove('open'));
+  if (!was && e.target === m) m.classList.add('open');
+}));
+document.addEventListener('click', (e) => { if (!e.target.closest('.mn')) document.querySelectorAll('.mn>div').forEach((x) => x.classList.remove('open')); });
+document.querySelectorAll('[data-act]').forEach((x) => x.addEventListener('click', async (e) => {
+  e.stopPropagation(); document.querySelectorAll('.mn>div').forEach((m) => m.classList.remove('open'));
+  const a = x.dataset.act;
+  if (a === 'signout') { await http('POST', '/logout'); showLogin(); tell({ kind: 'signout' }); }
+  else if (a === 'clear' && S.cur) openScreen(S.cur.code);
+  else if (a === 'log') { $('log').classList.toggle('hidden'); refreshLog(); }
+  else if (a === 'refresh') buildMenu();
+  else if (a === 'help') showHelp();
+  else if (a === 'about') { $('hptitle').textContent = 'About Ledgerline ERP'; $('hpbody').innerHTML = 'Ledgerline ERP 7.2 (build 4471)<br>© 1998–2026 Ledgerline Systems Pvt. Ltd.<br>412 screens · purchasing sandbox<br>Licensed to Northbridge Cycles, Manchester.<br><i>All names are fictional.</i>'; $('help').classList.remove('hidden'); }
+}));
+function showHelp() {
+  const sc = S.cur || S.screens['SYS-LGN-01'];
+  $('hptitle').textContent = 'Help — ' + sc.title + ' (' + sc.code + ')';
+  $('hpbody').textContent = sc.help || 'No help for this screen.';
+  $('help').classList.remove('hidden');
+}
+document.querySelectorAll('[data-close]').forEach((x) => x.addEventListener('click', () => $(x.dataset.close).classList.add('hidden')));
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'F1') { e.preventDefault(); showHelp(); }
+  if (e.key === 'Escape') ['lookup', 'help'].forEach((d) => $(d).classList.add('hidden'));
+  if (e.key === 'Enter' && !$('login').classList.contains('hidden') && !e.target.closest('#lookup')) {
+    const t = (S.screens['SYS-LGN-01'].tasks || []).find((x) => x.service === 'login'); if (t) signIn(t);
+  }
+});
+
+/* ---------------- boot ---------------- */
+(async () => {
+  const sc = await http('GET', '/screens');
+  if (!sc || sc.rc === 'E') { $('loginmsg').textContent = 'ERR-NET-0001: SERVER NOT REACHABLE'; $('loginmsg').className = 'er'; return; }
+  S.screens = sc;
+  window.ledgerline = S; // for the curious: inspect the client's state in the browser console
+  showLogin();
+})();
+})();
+</script>
+</body>
+</html>

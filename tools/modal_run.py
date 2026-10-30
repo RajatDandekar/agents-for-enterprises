@@ -4,10 +4,10 @@
     /Users/raj/.venv/bin/modal run tools/modal_run.py --nb lectures/L1/NB1_the_form_and_its_nine_jobs.ipynb
     /Users/raj/.venv/bin/modal run tools/modal_run.py --nb lectures/L1/NB1.ipynb --mode replay   # prove it runs with no key
 
-The whole course folder is mounted at /course with PYTHONPATH=/course/bahi. Every file the run creates or
+The whole course folder is mounted at /course with PYTHONPATH=/course/ledgerline. Every file the run creates or
 changes under /course (executed notebooks, cassettes, experiment logs, figures) is copied back here.
-The Gemini key is read from BAHI_ENV_FILE (default: the working key noted in memory) and sent as a Modal
-secret; it is never printed. --mode sets BAHI_LLM_MODE (auto, record, replay, live).
+The Gemini key is read from LEDGER_ENV_FILE (default: the working key noted in memory) and sent as a Modal
+secret; it is never printed. --mode sets LEDGER_LLM_MODE (auto, record, replay, live).
 """
 import hashlib
 import os
@@ -18,7 +18,7 @@ import sys
 import modal
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-ENV_FILE = os.environ.get("BAHI_ENV_FILE", "/Users/raj/Claude_Brain/wm-lecture6-ijepa/.env")
+ENV_FILE = os.environ.get("LEDGER_ENV_FILE", "/Users/raj/Claude_Brain/wm-lecture6-ijepa/.env")
 SKIP_DIRS = {".git", "qa", "archive", "node_modules", "__pycache__", ".ipynb_checkpoints", "site-dist", ".venv"}
 
 
@@ -43,7 +43,7 @@ image = (
         "rank_bm25", "scikit-learn", "langgraph>=0.2", "langchain-core", "fastmcp", "mcp", "temporalio",
         "nbformat", "nbclient", "ipykernel", "ipywidgets", "tabulate", "langfuse", "fastembed", "jsonschema",
     )
-    .env({"PYTHONPATH": "/course/bahi", "BAHI_IN_MODAL": "1"})
+    .env({"PYTHONPATH": "/course/ledgerline", "LEDGER_IN_MODAL": "1"})
     .add_local_dir(ROOT, "/course", ignore=lambda p: any(part in SKIP_DIRS for part in pathlib.Path(p).parts)
                    or str(p).endswith((".mp4", ".mov", ".zip", ".env")))
 )
@@ -78,7 +78,7 @@ def _changed(before):
 
 @app.function(secrets=[secret], timeout=3600, cpu=2, memory=4096)
 def run(kind: str, path: str, args: str = "", mode: str = "auto", timeout: int = 1800) -> dict:
-    os.environ["BAHI_LLM_MODE"] = mode
+    os.environ["LEDGER_LLM_MODE"] = mode
     before = _snap()
     full = os.path.join("/course", path)
     log = ""

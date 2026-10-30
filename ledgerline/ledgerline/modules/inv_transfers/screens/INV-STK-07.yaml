@@ -1,0 +1,21 @@
+code: INV-STK-07
+title: STOCK BY LOCATION
+menu: Inventory > Enquiry > Stock by Location
+roles: [STORES, PUR-EXEC, PUR-SR, PUR-MGR, PLANT-HEAD]
+fields:
+  - {name: itm_cd, label: ITEM CD, type: str, req: true, help: "F4: BAT-500 and BAT-500-R both say 5 L"}
+  - {name: whs_cd, label: WHS CD, type: str, req: false, help: blank = all locations}
+  - {name: grid, label: ON HAND / ALLOC / QC HOLD / FREE / IN TRANSIT, type: grid, readonly: true}
+  - {name: status, label: TN STATUS, type: str, req: false}
+  - {name: to_whs, label: TO WHS, type: str, req: false}
+tasks:
+  - button: Show
+    service: tr_stk_enq
+    sends: [itm_cd, whs_cd]
+    fills: [grid]
+  - button: Notes
+    service: tr_list
+    sends: [itm_cd, status, to_whs]
+    fills: [grid]
+state:
+  - {rule: "FREE excludes QC HOLD; the grid shows both, the transfer screen only checks ON HAND", error: W-TR-215}

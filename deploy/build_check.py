@@ -12,7 +12,7 @@ import modal
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 image = modal.Image.from_dockerfile(ROOT / "deploy" / "Dockerfile", context_dir=ROOT)
-app = modal.App("bahi-agent-build-check", image=image)
+app = modal.App("ledgerline-agent-build-check", image=image)
 
 
 @app.function(timeout=900, cpu=2, memory=2048)
@@ -21,7 +21,7 @@ def smoke() -> dict:
     import subprocess
     import sys
 
-    env = {**os.environ, "BAHI_ENV": "dev", "BAHI_TEMPORAL": "time_skipping", "BAHI_ADMIN_TOKEN": "build-check",
+    env = {**os.environ, "LEDGER_ENV": "dev", "LEDGER_TEMPORAL": "time_skipping", "LEDGER_ADMIN_TOKEN": "build-check",
            "SMOKE_LOG": "/tmp/smoke.json", "PYTHONPATH": "/app"}
     p = subprocess.run([sys.executable, "/app/deploy/smoke.py"], cwd="/app", env=env, capture_output=True, text=True,
                        timeout=600)
