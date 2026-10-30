@@ -15,7 +15,7 @@ for d in "$ROOT"/lectures/L*/; do
   for f in "$d"*.js "$d"*.css; do [ -f "$f" ] && cp "$f" "$OUT/lectures/$n/"; done   # figs.js, figdata.js, deck css/js
   for sub in figs shots; do [ -d "$d$sub" ] && rsync -a --exclude '*.json' "$d$sub/" "$OUT/lectures/$n/$sub/"; done
   # the 3D figure (code, trace, poster; not its QA renders or scripts)
-  [ -d "$d"flow3d ] && rsync -a --exclude qa --exclude '*.py' --exclude '*.md' "$d"flow3d/ "$OUT/lectures/$n/flow3d/"
+  [ -d "$d"flow3d ] && rsync -a --exclude qa --exclude '*.py' --exclude '*.md' --exclude 'envision_amaranth_cove.mp3' "$d"flow3d/ "$OUT/lectures/$n/flow3d/"
   # recorded production data a deck charts (not the logs or superseded sweeps)
   if [ -d "$d"experiments/production ]; then
     mkdir -p "$OUT/lectures/$n/experiments/production"

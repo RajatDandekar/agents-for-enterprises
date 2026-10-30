@@ -179,6 +179,36 @@ const CSS = `
 @keyframes f3dbar{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
 .f3d-speak.paused i{animation:none;transform:scaleY(.35)}
 .f3d-speak[hidden]{display:none}
+.f3d-btns button.b-present{background:#0b57d0;color:#fff;font-weight:620;padding:0 calc(18px*var(--u))}
+.f3d-btns button.b-present:hover{background:#0a4ab3;color:#fff}
+.f3d-btns button.b-music.on{background:#e6f1ff;color:#0b57d0}
+.f3d.deck .b-auto{display:none}
+.f3d.deck .b-replay span{display:none}
+.f3d-leg span{white-space:nowrap}
+.f3d-sub,.f3d-punch,.f3d-card-title,.f3d-card-end,.f3d-hint{display:none}
+.f3d.present .f3d-rail,.f3d.present .f3d-hud,.f3d.present .f3d-foot,.f3d.present .f3d-fix{display:none}
+.f3d.present{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;z-index:2147483000;transform:none!important}
+.f3d.present .f3d-vig{background:radial-gradient(110% 85% at 50% 48%,rgba(255,255,255,0) 55%,rgba(196,214,238,.55) 100%)}
+.f3d.present .f3d-sub{display:block;position:absolute;left:50%;bottom:calc(64px*var(--u));translate:-50% 0;max-width:min(78%,calc(1300px*var(--u)));z-index:4;text-align:center;pointer-events:none;
+  font:480 calc(34px*var(--u))/1.32 var(--f3d-font);letter-spacing:-.005em;color:#fff;background:rgba(18,24,38,.74);border-radius:calc(14px*var(--u));
+  padding:calc(12px*var(--u)) calc(24px*var(--u));box-shadow:0 10px 40px rgba(18,19,23,.18);opacity:0;transition:opacity .35s ease}
+.f3d.present .f3d-sub.on{opacity:1}
+.f3d.present .f3d-punch{display:flex;flex-direction:column;align-items:flex-start;position:absolute;left:calc(70px*var(--u));top:calc(64px*var(--u));z-index:4;pointer-events:none;
+  padding:calc(22px*var(--u)) calc(34px*var(--u));border-radius:calc(26px*var(--u));background:rgba(255,255,255,.78);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  box-shadow:0 20px 60px rgba(11,87,208,.18);border:1px solid rgba(255,255,255,.95);opacity:0;transform-origin:0 0}
+.f3d-punch b{font:640 calc(112px*var(--u))/1 var(--f3d-font);letter-spacing:-.04em;color:#0b57d0}
+.f3d-punch.ember b{color:#c4511f}.f3d-punch.green b{color:#1e8e5a}
+.f3d-punch span{margin-top:calc(10px*var(--u));font:500 calc(28px*var(--u))/1.25 var(--f3d-font);color:#45474d}
+.f3d.present .f3d-card-title,.f3d.present .f3d-card-end{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:absolute;inset:0;z-index:5;pointer-events:none;opacity:0;
+  background:radial-gradient(60% 60% at 50% 45%,rgba(255,255,255,.92) 0%,rgba(236,244,255,.9) 60%,rgba(214,232,255,.94) 100%)}
+.f3d-card-title .kk{font:600 calc(20px*var(--u))/1.2 var(--f3d-font);letter-spacing:.14em;text-transform:uppercase;color:#0b57d0;margin-bottom:calc(22px*var(--u))}
+.f3d-card-title h1,.f3d-card-end h1{margin:0;font:520 calc(92px*var(--u))/1.04 var(--f3d-font);letter-spacing:-.035em;color:#121317;max-width:80%}
+.f3d-card-title p,.f3d-card-end p{margin:calc(24px*var(--u)) 0 0;font:400 calc(32px*var(--u))/1.4 var(--f3d-font);color:#45474d;max-width:70%}
+.f3d-card-end .cr{margin-top:calc(46px*var(--u));font:400 calc(18px*var(--u))/1.5 var(--f3d-font);color:#6b6e76}
+.f3d.present .f3d-hint{display:block;position:absolute;right:calc(28px*var(--u));top:calc(22px*var(--u));z-index:6;font:500 calc(16px*var(--u))/1 var(--f3d-font);color:#6b6e76;
+  background:rgba(255,255,255,.7);padding:calc(8px*var(--u)) calc(14px*var(--u));border-radius:999px;opacity:0;transition:opacity .8s ease;pointer-events:none}
+.f3d.present .f3d-hint.on{opacity:1}
+.f3d.present canvas{cursor:none}
 .f3d-btns svg{width:calc(16px*var(--u));height:calc(16px*var(--u))}
 .f3d-prog{display:flex;gap:calc(4px*var(--u))}
 .f3d-prog i{width:calc(18px*var(--u));height:calc(5px*var(--u));border-radius:3px;background:rgba(18,19,23,.12);cursor:pointer}
@@ -196,6 +226,9 @@ function injectCSS() {
   const s = document.createElement('style'); s.id = 'flow3d-css'; s.textContent = CSS; document.head.appendChild(s);
 }
 const ICON = {
+  present: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/></svg>',
+  music: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12V3.5l7-1.5V10.5"/><circle cx="4.3" cy="12" r="1.8" fill="currentColor"/><circle cx="11.3" cy="10.5" r="1.8" fill="currentColor"/></svg>',
+  musicOff: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12V3.5l7-1.5V10.5"/><circle cx="4.3" cy="12" r="1.8" fill="currentColor"/><circle cx="11.3" cy="10.5" r="1.8" fill="currentColor"/><path d="M2 2l12 12"/></svg>',
   narr: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M3.5 2.8v10.4L11 8z"/><rect x="12" y="4" width="1.6" height="8" rx=".8"/></svg>',
   voiceOn: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6h2.2L8 3.2v9.6L4.7 10H2.5z" fill="currentColor"/><path d="M10.6 5.6a3.4 3.4 0 0 1 0 4.8M12.4 3.8a6 6 0 0 1 0 8.4"/></svg>',
   voiceOff: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6h2.2L8 3.2v9.6L4.7 10H2.5z" fill="currentColor"/><path d="m10.5 6 3.5 4M14 6l-3.5 4"/></svg>',
@@ -290,13 +323,20 @@ export function mountFlow3D(el, opts = {}) {
       <b>Recorded run.</b> ${esc(T.meta.model)} · cassette ${esc(T.meta.cassette)} · recorded ${esc(T.meta.recorded_live || T.meta.recorded_at)} · sandbox clock ${esc(T.meta.sandbox_clock)} · numbers from <code>flow3d/trace.json</code></div>
       <div class="f3d-ctl ctl"><div class="f3d-btns">
         <button class="b-prev" aria-label="Previous stage">${ICON.prev}</button>
+        <button class="b-present" aria-label="Present full screen with narration and music" hidden>${ICON.present}<span>Present</span></button>
         <button class="b-narr" aria-label="Play every stage with narration" hidden>${ICON.narr}<span>Play with narration</span></button>
-        <button class="b-voice on" aria-label="Narration on or off" aria-pressed="true" hidden>${ICON.voiceOn}<span>Voice on</span></button>
+        <button class="b-voice on" aria-label="Narration on or off" aria-pressed="true" hidden>${ICON.voiceOn}<span>Voice</span></button>
+        <button class="b-music on" aria-label="Music on or off" aria-pressed="true" hidden>${ICON.music}<span>Music</span></button>
         <button class="b-auto" aria-label="Autoplay">${ICON.play}<span>Autoplay</span></button>
         <button class="b-replay" aria-label="Replay this stage">${ICON.replay}<span>Replay</span></button>
         <button class="b-next" aria-label="Next stage">${ICON.next}</button></div>
         <div class="f3d-prog">${S.map((_, i) => `<i data-k="${i}"></i>`).join('')}</div></div></div>
-    ${T.meta.fixture ? '<div class="f3d-fix">Fixture, not a recorded run</div>' : ''}`;
+    ${T.meta.fixture ? '<div class="f3d-fix">Fixture, not a recorded run</div>' : ''}
+    <div class="f3d-sub" aria-live="polite"></div>
+    <div class="f3d-punch"><b></b><span></span></div>
+    <div class="f3d-card-title"><div class="kk">Agentic Systems Engineering · Lecture 1</div><h1></h1><p></p></div>
+    <div class="f3d-card-end"><h1></h1><p></p><div class="cr"></div></div>
+    <div class="f3d-hint">Space pause · \u2190 \u2192 skip · Esc exit</div>`;
   const $ = (q) => el.querySelector(q);
   const hud = { pill: $('.f3d-pill'), turn: $('.f3d-turn'), h2: $('.f3d-hud h2'), p: $('.f3d-hud p'), chips: $('.f3d-chips') };
   const msgsEl = $('.f3d-msgs'), railEl = $('.f3d-rail'), hudEl = $('.f3d-hud'), footEl = $('.f3d-foot');
@@ -662,8 +702,10 @@ export function mountFlow3D(el, opts = {}) {
     left: orbit(-9.6, 2.8, -3.0, 29, 24, -3),
   };
   const cam = { pos: V(0, 0, 0), tgt: V(0, 0, 0) };
-  const ZOOM = opts.zoom || (mode === 'deck' ? 1.1 : 1);
-  function shotAt(keys, t) { // keys: [[time, shot], ...]
+  const ZOOM0 = opts.zoom || (mode === 'deck' ? 1.1 : 1);
+  let ZOOM = ZOOM0, camFrom = null;
+  function shotAt(keys, t) { // keys: [[time, shot], ...]; in a live sequence the first key is where the camera really is
+    if (camFrom) keys = [[keys[0][0], camFrom], ...keys.slice(1)];
     let a = keys[0], b = keys[0];
     for (let i = 0; i < keys.length; i++) { if (t >= keys[i][0]) { a = keys[i]; b = keys[i + 1] || keys[i]; } }
     if (t < keys[0][0]) { a = keys[0]; b = keys[0]; }
@@ -967,7 +1009,8 @@ export function mountFlow3D(el, opts = {}) {
 
   function runStage(k, t) {
     const s = S[k];
-    shotAt(s.cap.shot, t);
+    // in the presented sequence the fast, silent stages hold one wide, slow framing instead of flying in
+    shotAt(present && seq && !spoken(k) && k > 0 ? [[0, prevShot(k)], [6.0, 'mid']] : s.cap.shot, t);
     switch (s.kind) {
       case 'overview': ['harness', 'llm', 'toolbox', 'erp'].forEach((x) => F.active.add(x)); break;
       case 'arrive': {
@@ -1092,7 +1135,7 @@ export function mountFlow3D(el, opts = {}) {
         }
         R.ctx.glow(seg(t, 0, 1.0)); tokenStream(R.ctx, t, 0, 0.8, 30, 0.6);
         F.llmHeat = seg(t, 0.5, 1.0) * (1 - seg(t, 3.6, 4.2));
-        const plain = s.text.replace(/\*\*/g, '').replace(/^\s*[*-]\s+/gm, '').split(/\n+/).map((x) => x.trim()).filter(Boolean).join(' \u00b7 ');
+        const plain = s.text.replace(/\*\*/g, '').replace(/`/g, '').replace(/^\s*[*-]\s+/gm, '').split(/\n+/).map((x) => x.trim()).filter(Boolean).join(' \u00b7 ');
         if (t > 1.0) {
           F.hide.add('llm');
           note(V(P.llm.x + 1.8, P.llm.y + 0.3, P.llm.z + 1.2), `<div class="f3d-note sky" style="max-width:calc(420px*var(--u))"><div class="k">Tokens out <b>${fmt(e.tokens_out)} \u00b7 ${secs(e.seconds)} \u00b7 no tool call</b></div><div class="t" style="color:#121317">${esc(plain.slice(0, Math.round(plain.length * seg(t, 1.0, 2.8))).slice(0, 210))}${plain.length > 210 && t > 2.4 ? '\u2026' : ''}</div></div>`, seg(t, 1.0, 1.2), [0, 0.5]);
@@ -1214,10 +1257,19 @@ export function mountFlow3D(el, opts = {}) {
     const z = er.width / W, m = 26 * z;
     const box = { l: er.left + m, r: er.right - m, t: er.top + m, b: er.bottom - m };
     // the free stage: right of the chat rail, below the title, above the footer
-    const rr0 = railEl.getBoundingClientRect(), hr = hudEl.getBoundingClientRect(), fr = footEl.getBoundingClientRect();
-    const free = { l: Math.max(box.l, rr0.right + 10 * z), r: box.r, t: Math.max(box.t, hr.bottom + 8 * z), b: Math.min(box.b, fr.top - 6 * z) };
-    const hits = (l, r, t, b) => [rr0, hr, fr].some((o) => l < o.right && r > o.left && t < o.bottom && b > o.top);
-    for (const L of labelList) {
+    const vis = (e) => (e && e.getClientRects().length ? e.getBoundingClientRect() : null);
+    const rr0 = vis(railEl), hr = vis(hudEl), fr = vis(footEl);
+    const free = present
+      ? { l: box.l, r: box.r, t: box.t, b: er.bottom - er.height * 0.2 }      // the bottom fifth is for the subtitles
+      : { l: Math.max(box.l, rr0 ? rr0.right + 10 * z : box.l), r: box.r, t: Math.max(box.t, hr ? hr.bottom + 8 * z : box.t), b: Math.min(box.b, fr ? fr.top - 6 * z : box.b) };
+    const obs = [rr0, hr, fr].filter(Boolean);
+    if (present) obs.push({ left: er.left, right: er.right, top: er.bottom - er.height * 0.2, bottom: er.bottom });
+    const pr = present && +punchEl.style.opacity > 0.05 ? punchEl.getBoundingClientRect() : null;   // the big number owns its corner
+    if (pr) obs.push(pr);
+    const hits = (l, r, t, b) => obs.some((o) => l < o.right && r > o.left && t < o.bottom && b > o.top);
+    const order = [...labelList.filter((L) => L.kind === 'note'), ...labelList.filter((L) => L.kind !== 'note')];
+    const noteRects = [];
+    for (const L of order) {
       const outer = L.o.element;
       if (!L.o.visible || outer.style.display === 'none') continue;
       if (parseFloat(L.inner.style.opacity || '1') < 0.03) { outer.style.display = 'none'; continue; }
@@ -1228,6 +1280,7 @@ export function mountFlow3D(el, opts = {}) {
       const l = Math.min(ri.left, ro.left) - tx * z, rr = Math.max(ri.right, ro.right) - tx * z;
       const t = Math.min(ri.top, ro.top) - ty * z, b = Math.max(ri.bottom, ro.bottom) - ty * z;
       if (L.kind === 'note') {
+        if (pr && l < pr.right && rr > pr.left && t < pr.bottom && b > pr.top) { outer.style.display = 'none'; continue; }
         const B = (rr - l <= free.r - free.l && b - t <= free.b - free.t) ? free : box;
         if (rr - l > B.r - B.l || b - t > B.b - B.t) { outer.style.display = 'none'; continue; }
         let dx = 0, dy = 0;
@@ -1235,51 +1288,117 @@ export function mountFlow3D(el, opts = {}) {
         if (t < B.t) dy = B.t - t; else if (b > B.b) dy = B.b - b;
         const nx = dx / z, ny = dy / z;
         if (Math.abs(nx - tx) > 0.5 || Math.abs(ny - ty) > 0.5) { L._tx = nx; L._ty = ny; outer.style.translate = `${nx.toFixed(1)}px ${ny.toFixed(1)}px`; }
-      } else if (l < box.l || rr > box.r || t < box.t || b > box.b || hits(l, rr, t, b)) {
+        if (parseFloat(L.inner.style.opacity || '1') > 0.3) noteRects.push({ left: l + dx, right: rr + dx, top: t + dy, bottom: b + dy });
+      } else if (l < box.l || rr > box.r || t < box.t || b > box.b || hits(l, rr, t, b)
+                 || (L.kind === 'tag' && noteRects.some((o) => l < o.right && rr > o.left && t < o.bottom && b > o.top))) {
         outer.style.display = 'none';
       }
     }
   }
 
   /* ---------- layout ---------- */
-  let W = 0, Hh = 0;
+  let W = 0, Hh = 0, present = false;
   function resize() {
     W = el.clientWidth; Hh = el.clientHeight; if (!W || !Hh) return;
-    const u = mode === 'deck' ? W / 1660 : W / 1920; el.style.setProperty('--u', u.toFixed(4));
+    const u = present ? Math.min(W / 1920, Hh / 1080) : mode === 'deck' ? W / 1660 : W / 1920; el.style.setProperty('--u', u.toFixed(4));
     const rect = el.getBoundingClientRect(); const zoom = rect.width / W || 1;
     renderer.setPixelRatio(Math.min(2, (window.devicePixelRatio || 1) * zoom));
     renderer.setSize(W, Hh, false); renderer.domElement.style.width = '100%'; renderer.domElement.style.height = '100%';
     labels.setSize(W, Hh);
     camera.aspect = W / Hh;
     // centre the picture in the space right of the chat rail and below the title
-    const rail = 452 * u, top = (mode === 'deck' ? 250 : 150) * u;
-    camera.setViewOffset(W, Hh, -rail / 2, -top / 2 + 40 * u, W, Hh);
+    const rail = present ? 0 : 452 * u, top = present ? -60 * u : (mode === 'deck' ? 250 : 150) * u;
+    camera.setViewOffset(W, Hh, -rail / 2, -top / 2 + (present ? 0 : 40 * u), W, Hh);
     camera.updateProjectionMatrix();
   }
   const ro = new ResizeObserver(() => { resize(); draw(); }); ro.observe(el);
 
   /* ---------- time ---------- */
-  let k = 0, t = 0, playing = false, auto = false, hold = 0, last = performance.now(), clk = 0, raf = 0, dead = false;
-  /* narration: one clip per stage (narration.json + audio/), Rajat's recorded voice */
-  let NAR = null, voiceOn = true, narrPlay = false, paused = false, clip = null, clipK = -1, rate = 1;
+  let k = 0, t = 0, playing = false, auto = false, hold = 0, last = performance.now(), clk = 0, raf = 0, dead = false, dtCap = 0.05;
+  /* narration (narration.json + audio/): a professional narrator over a quiet music bed.
+     seq = the narrated sequence; in present mode it opens on a title card and closes on an end card. */
+  let NAR = null, voiceOn = true, musicOn = true, seq = false, paused = false, clip = null, clipK = -1, rate = 1;
+  let phase = null, phaseT = 0, music = null, musicVol = 0, musicFade = 1, seqT0 = 0, seqWall = 0;
   const audios = [];
-  const speakEl = $('.f3d-speak'), bNarr = $('.b-narr'), bVoice = $('.b-voice');
-  function stopClip() { if (clip) { clip.pause(); } clip = null; clipK = -1; rate = 1; }
+  const speakEl = $('.f3d-speak'), bNarr = $('.b-narr'), bVoice = $('.b-voice'), bMusic = $('.b-music'), bPresent = $('.b-present');
+  const subEl = $('.f3d-sub'), punchEl = $('.f3d-punch'), titleEl = $('.f3d-card-title'), endEl = $('.f3d-card-end'), hintEl = $('.f3d-hint');
+  const NS = (n) => (NAR && NAR.stages[n]) || {};
+  const spoken = (n) => !!(NAR && voiceOn && NS(n).say && audios[n]);
+  const SILENT_RATE = 3, NARR_HOLD = 0.6, SILENT_HOLD = 0.3;
+  const narrRate = (n) => Math.max(0.6, Math.min(1.6, S[n].dur / Math.max(0.1, (NS(n).duration || 1) * 0.95)));
+  function stopClip() { if (clip) clip.pause(); clip = null; clipK = -1; }
   function playClip(n) {
     stopClip();
-    if (!NAR || !voiceOn || !audios[n]) return;
+    if (!spoken(n)) return false;
     clip = audios[n]; clipK = n;
     try { clip.currentTime = 0; } catch (e) {}
-    const d = NAR.stages[n].duration || clip.duration || S[n].dur;
-    rate = Math.max(0.55, Math.min(1, S[n].dur / Math.max(0.1, d * 0.92)));   // stretch the motion towards the voice
-    const pr = clip.play(); if (pr && pr.catch) pr.catch((e) => { console.warn('flow3d narration', e.name); });
+    if (clip.currentTime > 0.05) { const a = new Audio(clip.src); a.preload = 'auto'; audios[n] = clip = a; }
+    const pr = clip.play(); if (pr && pr.catch) pr.catch((e) => console.warn('flow3d narration', e.name));
+    return true;
   }
   const clipDone = () => !clip || clip.ended || (clip.paused && !paused);
+  /* the planned length of the narrated sequence, by the same rules the loop follows */
+  function plan(withCards = present) {
+    const out = [];
+    if (withCards && NAR) out.push({ part: 'title', s: NAR.title.seconds });
+    for (let n = withCards ? 1 : 0; n < S.length; n++) {
+      const sp = NAR && NS(n).say;
+      out.push({ part: n, s: sp ? Math.max(S[n].dur / narrRate(n), NS(n).duration) + NARR_HOLD : S[n].dur / SILENT_RATE + SILENT_HOLD });
+    }
+    if (withCards && NAR) out.push({ part: 'end', s: NAR.end.seconds });
+    return { parts: out, total: Math.round(out.reduce((a, x) => a + x.s, 0) * 10) / 10 };
+  }
+  function startStage(n) {
+    k = n; t = 0; hold = 0; playing = true;
+    camFrom = seq ? [cam.pos.clone(), cam.tgt.clone()] : null;
+    if (seq) rate = spoken(n) ? narrRate(n) : (NAR && NS(n).say ? 1 : SILENT_RATE);
+    else rate = spoken(n) ? narrRate(n) : 1;
+    playClip(n);
+  }
+  function startMusic(fromStart) {
+    if (!music || !musicOn) return;
+    if (fromStart) { try { music.currentTime = 0; } catch (e) {} }
+    musicVol = 0; music.volume = 0; musicFade = 1;
+    const pr = music.play(); if (pr && pr.catch) pr.catch((e) => console.warn('flow3d music', e.name));
+  }
+  function stopMusic() { if (music) music.pause(); }
   function syncButtons() {
-    bNarr.classList.toggle('on', narrPlay);
-    bNarr.innerHTML = narrPlay ? `${paused ? ICON.play : ICON.pause}<span>${paused ? 'Resume' : 'Pause'}</span>` : `${ICON.narr}<span>Play with narration</span>`;
+    bNarr.classList.toggle('on', seq && !present);
+    bNarr.innerHTML = seq && !present ? `${paused ? ICON.play : ICON.pause}<span>${paused ? 'Resume' : 'Pause'}</span>` : `${ICON.narr}<span>${mode === 'deck' ? 'Narrate' : 'Play with narration'}</span>`;
     bVoice.classList.toggle('on', voiceOn); bVoice.setAttribute('aria-pressed', String(voiceOn));
-    bVoice.innerHTML = `${voiceOn ? ICON.voiceOn : ICON.voiceOff}<span>${voiceOn ? 'Voice on' : 'Voice off'}</span>`;
+    bVoice.innerHTML = `${voiceOn ? ICON.voiceOn : ICON.voiceOff}<span>Voice</span>`;
+    bMusic.classList.toggle('on', musicOn); bMusic.setAttribute('aria-pressed', String(musicOn));
+    bMusic.innerHTML = `${musicOn ? ICON.music : ICON.musicOff}<span>Music</span>`;
+  }
+  /* present-mode overlays: title card, subtitles synced to the voice, the number punch, end card */
+  let subKey = '', punchKey = '';
+  function overlays() {
+    if (!present) return;
+    const a = (x0, x1, y) => clamp01((y - x0) / (x1 - x0));
+    if (phase === 'title') {
+      const d = NAR.title.seconds; titleEl.style.opacity = (a(0, 0.9, phaseT) * (1 - a(d - 0.9, d, phaseT))).toFixed(3);
+    } else titleEl.style.opacity = '0';
+    endEl.style.opacity = phase === 'end' || phase === 'done' ? a(0, 1.2, phaseT).toFixed(3) : '0';
+    // subtitles: the sentence being spoken
+    let sub = '';
+    if (phase === 'stage' && clip && clipK === k && !clip.ended) {
+      const ct = clip.currentTime;
+      const c = (NS(k).cues || []).find((x) => ct >= x.t - 0.05 && ct <= x.end + 0.35);
+      sub = c ? c.text : '';
+    }
+    if (sub !== subKey) { subKey = sub; if (sub) subEl.textContent = sub; subEl.classList.toggle('on', !!sub); }
+    // the key number punches in at its word and stays about four seconds
+    const pu = NS(k).punch;
+    let op = 0, sc = 0.86;
+    if (phase === 'stage' && pu && clip && clipK === k && pu.t !== undefined) {
+      const dt = clip.ended ? 99 : clip.currentTime - pu.t;
+      op = dt < 0 ? 0 : Math.min(a(0, 0.35, dt), 1 - a(4.0, 4.6, dt)); sc = 0.86 + 0.14 * eo(a(0, 0.45, dt));
+    }
+    if (pu && pu.value + k !== punchKey) {
+      punchKey = pu.value + k; punchEl.querySelector('b').textContent = pu.value; punchEl.querySelector('span').textContent = pu.label;
+      punchEl.classList.toggle('ember', /£50,000/.test(pu.value)); punchEl.classList.toggle('green', /^PR\//.test(pu.value));
+    }
+    punchEl.style.opacity = op.toFixed(3); punchEl.style.transform = `scale(${sc.toFixed(3)})`;
   }
   function draw() {
     if (!W) resize();
@@ -1288,7 +1407,7 @@ export function mountFlow3D(el, opts = {}) {
     runStage(k, t);
     applyFrame(clk);
     camera.position.copy(cam.pos);
-    if (!still) { camera.position.x += Math.sin(clk * 0.21) * 0.35; camera.position.y += Math.sin(clk * 0.17) * 0.18; }
+    if (!still) { const dz = present ? 0.5 : 1; camera.position.x += Math.sin(clk * 0.21) * 0.35 * dz; camera.position.y += Math.sin(clk * 0.17) * 0.18 * dz; }
     camera.lookAt(cam.tgt);
     renderHUD(k); renderRail(k, t);
     renderer.render(scene, camera);
@@ -1298,70 +1417,151 @@ export function mountFlow3D(el, opts = {}) {
     const speaking = !!clip && clipK === k && !clip.ended;
     if (speakEl.hidden === speaking) speakEl.hidden = !speaking;
     speakEl.classList.toggle('paused', paused);
+    overlays();
   }
+  function endSeq() { seq = false; phase = present ? 'done' : null; stopClip(); camFrom = null; syncButtons(); }
   function loop(now) {
     if (dead) return;
-    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const dt = Math.min(dtCap, (now - last) / 1000); last = now;
     if (!still) clk += dt;
     // the slide was left (deck): silence
-    if ((clip || narrPlay) && !el.getClientRects().length) { stopClip(); narrPlay = false; paused = false; syncButtons(); }
-    if (playing && !paused) {
-      t += dt * (clipK === k ? rate : 1);
-      if (t >= S[k].dur) {
-        t = S[k].dur;
-        if (narrPlay) {
-          if (clipDone()) { hold += dt; if (hold > 0.9) { hold = 0; if (k < S.length - 1) { k++; t = 0; playClip(k); } else { narrPlay = false; playing = false; syncButtons(); } } }
-        } else if (auto) { hold += dt; if (hold > 1.6) { hold = 0; k = (k + 1) % S.length; t = 0; } } else playing = false;
+    if ((clip || seq) && !el.getClientRects().length) { stopClip(); stopMusic(); seq = false; paused = false; phase = null; syncButtons(); }
+    if (!paused) {
+      if (seq) seqWall += dt;
+      if (phase === 'title') {
+        phaseT += dt;
+        if (phaseT >= NAR.title.seconds) { phase = 'stage'; startStage(1); }
+      } else if (phase === 'end') {
+        phaseT += dt;
+        if (phaseT >= NAR.end.seconds) endSeq();
+      } else if (phase === 'done') phaseT += dt;
+      if (playing && phase !== 'title') {
+        t += dt * rate;
+        if (t >= S[k].dur) {
+          t = S[k].dur;
+          if (seq && phase === 'stage') {
+            if (clipDone()) {
+              hold += dt;
+              if (hold > (NS(k).say && voiceOn ? NARR_HOLD : SILENT_HOLD)) {
+                if (k < S.length - 1) startStage(k + 1);
+                else if (present) { phase = 'end'; phaseT = 0; playing = false; stopClip(); }
+                else { endSeq(); musicFade = 0; }
+              }
+            }
+          } else if (auto) { hold += dt; if (hold > 1.6) { hold = 0; k = (k + 1) % S.length; t = 0; } } else playing = false;
+        }
       }
+    }
+    // music: about 22 dB under the voice, ducked a little while a clip speaks, up a little between clips
+    if (music) {
+      const speaking = !!clip && !clip.paused && !clip.ended;
+      const target = musicOn && (seq || phase === 'end') && !paused ? (speaking ? 0.065 : 0.11) * musicFade : 0;
+      musicVol += (target - musicVol) * Math.min(1, dt * 2.2);
+      music.volume = Math.max(0, Math.min(1, musicVol));
+      if (!seq && phase !== 'end' && phase !== 'done' && musicVol < 0.003 && !music.paused) music.pause();
     }
     draw();
     raf = requestAnimationFrame(loop);
   }
+  function enterPresent() {
+    if (!NAR) return;
+    present = true; el.classList.add('present'); ZOOM = 0.9;
+    const fs = el.requestFullscreen ? el.requestFullscreen({ navigationUI: 'hide' }) : null;
+    if (fs && fs.catch) fs.catch(() => {});        // without full screen the figure still fills the window (CSS)
+    hintEl.classList.add('on'); setTimeout(() => hintEl.classList.remove('on'), 3500);
+    resize();
+    if (auto) api.autoplay(false);
+    seq = true; paused = false; phase = 'title'; phaseT = 0; seqWall = 0; camFrom = null;
+    stopClip(); k = 0; t = S[0].dur; playing = false;
+    startMusic(true); syncButtons();
+  }
+  function exitPresent() {
+    if (!present) return;
+    present = false; el.classList.remove('present'); ZOOM = ZOOM0;
+    seq = false; paused = false; phase = null; camFrom = null; stopClip(); stopMusic();
+    subEl.classList.remove('on'); punchEl.style.opacity = '0';
+    if (document.fullscreenElement === el && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+    resize(); syncButtons(); api.seek(k, 'end');
+  }
+  const onFs = () => { if (present && document.fullscreenElement !== el) exitPresent(); };
+  document.addEventListener('fullscreenchange', onFs);
   const api = {
     get stage() { return k; }, get count() { return S.length; }, stages: S.map((s) => ({ kind: s.kind, title: s.cap.h.replace(/<[^>]+>/g, ''), dur: s.dur })),
     go(n, instant = false) {
-      k = Math.max(0, Math.min(S.length - 1, n)); t = instant ? S[k].dur : 0; playing = !instant; hold = 0; paused = false;
-      if (instant) { stopClip(); if (narrPlay) { narrPlay = false; } } else playClip(k);
+      n = Math.max(0, Math.min(S.length - 1, n)); paused = false;
+      if (instant) { stopClip(); seq = false; phase = present ? 'stage' : null; k = n; t = S[k].dur; playing = false; camFrom = null; }
+      else if (seq || present) { phase = 'stage'; startStage(n); }
+      else { k = n; t = 0; hold = 0; playing = true; camFrom = null; rate = spoken(n) ? narrRate(n) : 1; playClip(n); }
       syncButtons(); draw();
     },
-    next() { api.go(k + 1); }, prev() { api.go(k - 1, true); }, replay() { api.go(k, false); },
-    autoplay(on = !auto) { if (on) { narrPlay = false; stopClip(); syncButtons(); } auto = on; el.querySelector('.b-auto').classList.toggle('on', auto); el.querySelector('.b-auto').innerHTML = `${auto ? ICON.pause : ICON.play}<span>${auto ? 'Pause' : 'Autoplay'}</span>`; if (auto) { playing = true; if (t >= S[k].dur) { k = (k + 1) % S.length; t = 0; } } else playing = false; },
-    /* every stage in order with its clip; again = pause or resume */
+    next() { api.go(k + 1); }, prev() { api.go(k - 1, !(seq || present)); }, replay() { api.go(k, false); },
+    autoplay(on = !auto) { if (on) { seq = false; stopClip(); syncButtons(); } auto = on; el.querySelector('.b-auto').classList.toggle('on', auto); el.querySelector('.b-auto').innerHTML = `${auto ? ICON.pause : ICON.play}<span>${auto ? 'Pause' : 'Autoplay'}</span>`; if (auto) { playing = true; if (t >= S[k].dur) { k = (k + 1) % S.length; t = 0; } } else playing = false; },
+    /* every stage in order with its clip (silent stages fast); again = pause or resume */
     narrate(from) {
       if (!NAR) return false;
-      if (narrPlay) { api.togglePause(); return true; }
+      if (seq) { api.togglePause(); return true; }
       if (auto) api.autoplay(false);
-      voiceOn = true; narrPlay = true; paused = false;
-      k = from !== undefined ? from : (k >= S.length - 1 ? 0 : k); t = 0; hold = 0; playing = true; playClip(k); syncButtons(); return true;
+      seq = true; paused = false; phase = 'stage'; seqWall = 0; musicFade = 1;
+      startStage(from !== undefined ? from : (k >= S.length - 1 ? 0 : k)); startMusic(true); syncButtons(); return true;
     },
+    present() { enterPresent(); }, exitPresent() { exitPresent(); }, get presenting() { return present; },
     togglePause() {
-      if (!narrPlay && !clip && !playing) return false;
+      if (!seq && !clip && !playing && phase !== 'end') return false;
       paused = !paused;
       if (clip) { if (paused) clip.pause(); else if (!clip.ended) { const pr = clip.play(); if (pr && pr.catch) pr.catch(() => {}); } }
+      if (music && musicOn && (seq || phase === 'end')) { if (paused) music.pause(); else { const pr = music.play(); if (pr && pr.catch) pr.catch(() => {}); } }
       if (!paused && t < S[k].dur) playing = true;
       syncButtons(); return true;
     },
     voice(on = !voiceOn) { voiceOn = on; if (!on) stopClip(); syncButtons(); },
-    get narrating() { return narrPlay || (!!clip && !clip.ended); }, get paused() { return paused; },
-    audioState() { return audios.map((a, i) => ({ k: i, readyState: a.readyState, duration: a.duration, error: a.error && a.error.code, src: a.currentSrc.split('/').pop() })).concat([{ current: clipK, time: clip ? clip.currentTime : null, playing: !!clip && !clip.paused }]); },
+    music(on = !musicOn) { musicOn = on; if (on && seq && music && music.paused) startMusic(false); syncButtons(); },
+    get narrating() { return seq || (!!clip && !clip.ended); }, get paused() { return paused; },
+    plan(withCards = true) { return plan(withCards); },
+    setDtCap(x) { dtCap = x; },
+    audioState() {
+      return { clips: audios.map((a, i) => (a ? { k: i, readyState: a.readyState, duration: a.duration, error: a.error && a.error.code } : null)).filter(Boolean),
+        music: music ? { readyState: music.readyState, duration: music.duration, paused: music.paused, volume: +music.volume.toFixed(3), time: +music.currentTime.toFixed(2), error: music.error && music.error.code } : null,
+        current: clipK, time: clip ? clip.currentTime : null, playing: !!clip && !clip.paused, stage: k, phase, seq, paused, wall: +seqWall.toFixed(1),
+        sub: subEl.classList.contains('on') ? subEl.textContent : '', punch: +(+punchEl.style.opacity || 0).toFixed(2) };
+    },
     seek(n, sec) { stopClip(); k = Math.max(0, Math.min(S.length - 1, n)); t = sec === 'end' || sec === undefined ? S[k].dur : Math.min(sec, S[k].dur); playing = false; draw(); },
+    /* QA: freeze present mode at a moment: part = 'title' | 'end' | stage number, sec into it, clipTime for the overlays */
+    presentAt(part, sec = 0, clipTime) {
+      if (!present) { present = true; el.classList.add('present'); ZOOM = 0.9; resize(); }
+      seq = false; stopClip(); camFrom = null; paused = false;
+      if (part === 'title' || part === 'end') { phase = part; phaseT = sec; k = part === 'title' ? 0 : S.length - 1; t = S[k].dur; }
+      else { phase = 'stage'; k = part; t = Math.min(sec, S[k].dur); }
+      if (clipTime !== undefined && audios[k]) { clip = audios[k]; clipK = k; try { clip.currentTime = clipTime; } catch (e) {} }
+      draw(); return api.audioState();
+    },
     render() { draw(); }, resize() { resize(); draw(); },
-    destroy() { dead = true; stopClip(); cancelAnimationFrame(raf); ro.disconnect(); renderer.dispose(); removeEventListener('keydown', onKey, true); el.innerHTML = ''; },
+    destroy() { dead = true; stopClip(); stopMusic(); cancelAnimationFrame(raf); ro.disconnect(); renderer.dispose(); removeEventListener('keydown', onKey, true); document.removeEventListener('fullscreenchange', onFs); el.innerHTML = ''; },
   };
-  // in the deck, Space pauses and resumes the narration instead of stepping the deck (capture phase runs before plates.js)
+  // keys, in the capture phase so plates.js never sees them while the narration or the present mode owns the slide
   function onKey(e) {
-    if (mode !== 'deck' || e.key !== ' ' || !el.getClientRects().length || !api.narrating) return;
-    e.preventDefault(); e.stopImmediatePropagation(); api.togglePause();
+    if (!el.getClientRects().length) return;
+    if (present) {
+      if (e.key === ' ') { e.preventDefault(); e.stopImmediatePropagation(); api.togglePause(); }
+      else if (['ArrowRight', 'PageDown', 'Enter'].includes(e.key)) { e.preventDefault(); e.stopImmediatePropagation(); if (phase === 'title') { phase = 'stage'; startStage(1); } else if (k < S.length - 1) api.go(k + 1); }
+      else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); e.stopImmediatePropagation(); if (k > 1) api.go(k - 1); }
+      else if (e.key === 'Escape') { e.stopImmediatePropagation(); exitPresent(); }
+      return;
+    }
+    if (mode === 'deck' && e.key === ' ' && api.narrating) { e.preventDefault(); e.stopImmediatePropagation(); api.togglePause(); }
   }
   addEventListener('keydown', onKey, true);
+  // a click in present mode pauses; it must never reach the deck's click-to-step
+  el.addEventListener('click', (e) => { if (present) { e.stopPropagation(); if (!e.target.closest('button')) api.togglePause(); } });
   el.querySelector('.b-prev').addEventListener('click', (e) => { e.stopPropagation(); api.prev(); });
   el.querySelector('.b-next').addEventListener('click', (e) => { e.stopPropagation(); api.next(); });
   el.querySelector('.b-replay').addEventListener('click', (e) => { e.stopPropagation(); api.replay(); });
   el.querySelector('.b-auto').addEventListener('click', (e) => { e.stopPropagation(); api.autoplay(); });
   bNarr.addEventListener('click', (e) => { e.stopPropagation(); api.narrate(); });
   bVoice.addEventListener('click', (e) => { e.stopPropagation(); api.voice(); });
+  bMusic.addEventListener('click', (e) => { e.stopPropagation(); api.music(); });
+  bPresent.addEventListener('click', (e) => { e.stopPropagation(); enterPresent(); });
   prog.forEach((p) => p.addEventListener('click', (e) => { e.stopPropagation(); api.go(+p.dataset.k); }));
-  // narration.json must belong to this trace and have one clip per stage; otherwise the figure stays silent
+  // narration.json must belong to this trace and list every stage; otherwise the figure stays silent
   if (opts.narration !== false) {
     const src = typeof opts.narration === 'object' ? Promise.resolve(opts.narration) : fetch(new URL('narration.json', HERE)).then((r) => (r.ok ? r.json() : null));
     src.then((n) => {
@@ -1370,14 +1570,21 @@ export function mountFlow3D(el, opts = {}) {
         if (n) console.warn('flow3d: narration.json does not match this trace; narration off'); return;
       }
       NAR = n;
-      n.stages.forEach((x, i) => { const a = new Audio(); a.preload = 'auto'; a.src = new URL(x.audio, HERE).href; audios[i] = a; });
-      bNarr.hidden = false; bVoice.hidden = false; syncButtons();
+      n.stages.forEach((x, i) => { if (!x.say || !x.audio) return; const a = new Audio(); a.preload = 'auto'; a.src = new URL(x.audio, HERE).href; audios[i] = a; });
+      if (n.music && n.music.file) { music = new Audio(); music.preload = 'auto'; music.src = new URL(n.music.file, HERE).href; music.volume = 0; }
+      titleEl.querySelector('h1').textContent = n.title.h; titleEl.querySelector('p').textContent = n.title.sub;
+      endEl.querySelector('h1').textContent = n.end.h; endEl.querySelector('p').textContent = n.end.sub;
+      endEl.querySelector('.cr').textContent = `Every number from one recorded run · Narration: ${(n.voice || '').split(' - ')[0]} (ElevenLabs) · ${n.music ? n.music.credit : ''}`;
+      if (n.music) { const pv = el.querySelector('.f3d-prov'); pv.insertAdjacentHTML('beforeend', ` · ${esc(n.music.credit)}`); }
+      [bNarr, bVoice, bMusic, bPresent].forEach((b) => (b.hidden = false)); syncButtons();
     }).catch(() => {});
   }
   resize();
   if (opts.stage !== undefined) api.seek(opts.stage, opts.t); else draw();
   if (!still) raf = requestAnimationFrame(loop);
   if (opts.autoplay) api.autoplay(true);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { railKey = ''; draw(); });
+  new ResizeObserver(() => { railKey = ''; }).observe(railEl);
   return api;
 }
 

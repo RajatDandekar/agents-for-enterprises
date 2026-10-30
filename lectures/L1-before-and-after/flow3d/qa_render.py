@@ -22,6 +22,47 @@ image = (
     .add_local_dir(ENGINE, "/engine")
 )
 app = modal.App("flow3d-qa", image=image)
+RANGE_SERVER = r"""
+import http.server, os, re, sys
+class H(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, *a): pass
+    def send_head(self):
+        rng = self.headers.get("Range")
+        path = self.translate_path(self.path)
+        if not rng or not os.path.isfile(path):
+            return super().send_head()
+        size = os.path.getsize(path)
+        m = re.match(r"bytes=(\d*)-(\d*)", rng)
+        a = int(m.group(1) or 0); b = int(m.group(2)) if m.group(2) else size - 1
+        b = min(b, size - 1)
+        f = open(path, "rb"); f.seek(a)
+        self.send_response(206)
+        self.send_header("Content-Type", self.guess_type(path))
+        self.send_header("Accept-Ranges", "bytes")
+        self.send_header("Content-Range", f"bytes {a}-{b}/{size}")
+        self.send_header("Content-Length", str(b - a + 1))
+        self.end_headers()
+        self._left = b - a + 1
+        return f
+    def copyfile(self, src, dst):
+        left = getattr(self, "_left", None)
+        if left is None:
+            return super().copyfile(src, dst)
+        while left > 0:
+            chunk = src.read(min(65536, left))
+            if not chunk: break
+            dst.write(chunk); left -= len(chunk)
+os.chdir(sys.argv[2])
+http.server.ThreadingHTTPServer(("127.0.0.1", int(sys.argv[1])), H).serve_forever()
+"""
+
+
+def serve(port, root):
+    """A static server that answers byte-range requests, as Vercel does, so audio can seek."""
+    pathlib.Path("/tmp/range_server.py").write_text(RANGE_SERVER)
+    return subprocess.Popen(["python", "/tmp/range_server.py", str(port), root], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
 ARGS = ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--enable-webgl"]
 
 DECK_PAGE = """<!doctype html><html><head><meta charset="utf-8">
@@ -140,46 +181,98 @@ def deck_check() -> dict:
 
 @app.function(timeout=1800, cpu=4, memory=8192)
 def audio_check() -> dict:
-    """Narration in headless Chromium: the clips load, the button (a real click = user gesture) starts clip 0,
-    Space pauses and resumes audio and animation together, a manual step plays that stage's clip; standalone and deck."""
+    """The presented sequence, end to end in headless Chromium at 1920x1080: every clip and the music load, the
+    Present click (a real user gesture) starts title card -> stages -> end card, Space pauses voice, music and
+    animation together and resumes them, and the wall-clock runtime is compared with the plan."""
     from playwright.sync_api import sync_playwright
-    import os
-    if not os.path.exists("/flow3d/_engine"):
-        os.symlink("/engine", "/flow3d/_engine")
-    (pathlib.Path("/flow3d") / "_deckn.html").write_text(DECK_PAGE.replace("still: true", "still: false"))
-    srv = subprocess.Popen(["python", "-m", "http.server", "8096", "--directory", "/flow3d"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    srv = serve(8096, "/flow3d")
     time.sleep(1.2)
-    res, logs = {}, []
+    rep, logs = {}, []
     with sync_playwright() as p:
         b = p.chromium.launch(args=ARGS)
-        for name, url, vp in [("standalone", "index.html", (1920, 1080)), ("deck", "_deckn.html", (1920, 1080))]:
-            pg = b.new_page(viewport={"width": vp[0], "height": vp[1]})
-            pg.on("console", lambda m, n=name: logs.append(f"{n} {m.type}: {m.text}") if m.type in ("error", "warning") else None)
-            pg.on("pageerror", lambda e, n=name: logs.append(f"{n} pageerror: {e}"))
-            pg.goto(f"http://127.0.0.1:8096/{url}", wait_until="networkidle")
-            pg.wait_for_function("window.__flow3dReady === true", timeout=120000)
-            pg.wait_for_function("!document.querySelector('.b-narr').hidden", timeout=60000)
-            pg.wait_for_timeout(4000)
-            r = {"loaded": pg.evaluate("flow3d.audioState()")}
-            pg.click(".b-narr")
-            pg.wait_for_timeout(3000)
-            r["after_click"] = pg.evaluate("[flow3d.stage, flow3d.audioState().pop()]")
-            pg.keyboard.press(" ")
-            pg.wait_for_timeout(1200)
-            a = pg.evaluate("[flow3d.paused, flow3d.audioState().pop()]")
-            pg.wait_for_timeout(1000)
-            r["paused"] = a + [pg.evaluate("flow3d.audioState().pop().time")]
-            pg.keyboard.press(" ")
-            pg.wait_for_timeout(1500)
-            r["resumed"] = pg.evaluate("[flow3d.paused, flow3d.audioState().pop()]")
-            pg.evaluate("flow3d.go(14)")
+        pg = b.new_page(viewport={"width": 1920, "height": 1080})
+        pg.on("console", lambda m: logs.append(f"{m.type}: {m.text}") if m.type in ("error", "warning") else None)
+        pg.on("pageerror", lambda e: logs.append(f"pageerror: {e}"))
+        pg.goto("http://127.0.0.1:8096/index.html", wait_until="networkidle")
+        pg.wait_for_function("window.__flow3dReady === true", timeout=120000)
+        pg.wait_for_function("!document.querySelector('.b-present').hidden", timeout=60000)
+        pg.wait_for_function("flow3d.audioState().clips.every(c => c.readyState >= 4) && flow3d.audioState().music.readyState >= 4", timeout=60000)
+        rep["loaded"] = pg.evaluate("flow3d.audioState()")
+        rep["plan"] = pg.evaluate("flow3d.plan(true)")
+        pg.evaluate("flow3d.setDtCap(1)")   # SwiftShader draws ~5 fps: let the clock run in real time
+        pg.click(".b-present")
+        t0 = time.time()
+        samples, paused_test = [], None
+        while time.time() - t0 < 260:
             pg.wait_for_timeout(2000)
-            r["manual_step_14"] = pg.evaluate("[flow3d.stage, flow3d.audioState().pop()]")
-            res[name] = r
-            pg.close()
+            st = pg.evaluate("flow3d.audioState()")
+            st["wall_real"] = round(time.time() - t0, 1)
+            samples.append(st)
+            if paused_test is None and st["phase"] == "stage" and st["playing"] and st["stage"] >= 2:
+                pg.keyboard.press(" ")
+                pg.wait_for_timeout(600)
+                a = pg.evaluate("flow3d.audioState()")
+                pg.wait_for_timeout(2000)
+                b2 = pg.evaluate("flow3d.audioState()")
+                pg.keyboard.press(" ")
+                pg.wait_for_timeout(1200)
+                c = pg.evaluate("flow3d.audioState()")
+                paused_test = {"paused": a["paused"], "clip_stopped": a["time"] == b2["time"], "music_stopped": a["music"]["time"] == b2["music"]["time"] and b2["music"]["paused"],
+                               "anim_stage_same": a["stage"] == b2["stage"], "resumed": (not c["paused"]) and c["playing"] and not c["music"]["paused"]}
+                t0 += 2.6   # the pause is not part of the runtime
+            if st["phase"] in ("done",) or (st["phase"] is None and not st["seq"]):
+                break
+        rep["pause_resume"] = paused_test
+        rep["fullscreen"] = pg.evaluate("!!document.fullscreenElement")
+        first = {}
+        for x in samples:
+            first.setdefault(x["phase"], x["wall_real"])
+        rep["phase_first_seen_s"] = first
+        rep["runtime_real_s"] = next((x["wall_real"] for x in samples if x["phase"] == "done"), None)
+        rep["subtitles_seen"] = sorted({x["sub"] for x in samples if x["sub"]})[:20]
+        rep["punch_seen"] = any(x["punch"] > 0.5 for x in samples)
+        rep["music_volumes"] = sorted({x["music"]["volume"] for x in samples})
+        rep["samples"] = samples
         b.close()
     srv.terminate()
-    return {"qa/audio_check.json": json.dumps({"results": res, "logs": logs}, indent=1).encode()}
+    rep["logs"] = logs
+    return {"qa/audio_check.json": json.dumps(rep, indent=1).encode()}
+
+
+@app.function(timeout=1800, cpu=4, memory=8192)
+def present_shots(width: int = 1920, height: int = 1080) -> dict:
+    """Full-screen present mode frozen at its key moments, for looking at: title, punches, end card."""
+    from playwright.sync_api import sync_playwright
+    srv = serve(8095, "/flow3d")
+    time.sleep(1.2)
+    out, logs = {}, []
+    with sync_playwright() as p:
+        b = p.chromium.launch(args=ARGS)
+        pg = b.new_page(viewport={"width": width, "height": height})
+        pg.on("pageerror", lambda e: logs.append(f"pageerror: {e}"))
+        pg.goto("http://127.0.0.1:8095/index.html", wait_until="networkidle")
+        pg.wait_for_function("window.__flow3dReady === true", timeout=120000)
+        pg.wait_for_function("!document.querySelector('.b-present').hidden", timeout=60000)
+        pg.wait_for_function("flow3d.audioState().clips.every(c => c.readyState >= 1)", timeout=60000)
+        nar = json.loads(pathlib.Path("/flow3d/narration.json").read_text())
+        durs = [x["dur"] for x in pg.evaluate("flow3d.stages")]
+        at = lambda k, ct: round(min(durs[k], ct * max(0.6, min(1.6, durs[k] / (nar["stages"][k]["duration"] * 0.95)))), 2)  # the animation time at that clip time
+        moments = [("title", "title", 2.2, None), ("s01-message", 1, at(1, 2.0), 2.0)]
+        for st in nar["stages"]:
+            if st.get("punch"):
+                ct = st["punch"]["t"] + 1.2
+                moments.append((f"s{st['k']:02d}-punch", st["k"], at(st["k"], ct), ct))
+        moments += [("s05-erp", 5, at(5, 6.0), 6.0), ("s20-receipt", 20, at(20, 6.5), 6.5), ("end", "end", 3.0, None)]
+        for name, part, sec, ct in moments:
+            pg.evaluate(f"flow3d.presentAt({json.dumps(part)}, {sec}, {json.dumps(ct)})")
+            pg.wait_for_timeout(900)
+            pg.evaluate(f"flow3d.presentAt({json.dumps(part)}, {sec}, {json.dumps(ct)})")
+            pg.wait_for_timeout(600)
+            out[f"qa/present-{width}x{height}-{name}.png"] = pg.screenshot()
+        b.close()
+    srv.terminate()
+    out[f"qa/present_log_{width}x{height}.txt"] = "\n".join(logs).encode()
+    return out
 
 
 @app.function(timeout=1800, cpu=4, memory=8192)
@@ -231,7 +324,14 @@ def render(shots: list, poster: str = "", deck: bool = False) -> dict:
 
 
 @app.local_entrypoint()
-def main(shots: str = "", poster: str = "", deck: int = 0, plates: int = 0, check: int = 0, audio: int = 0):
+def main(shots: str = "", poster: str = "", deck: int = 0, plates: int = 0, check: int = 0, audio: int = 0, present: str = ""):
+    if present:
+        w, h = (int(x) for x in present.split("x"))
+        files = present_shots.remote(w, h)
+        for rel, data in files.items():
+            (HERE / rel).write_bytes(data)
+            print("wrote", rel)
+        return
     if check or audio:
         files = deck_check.remote() if check else audio_check.remote()
         for rel, data in files.items():
