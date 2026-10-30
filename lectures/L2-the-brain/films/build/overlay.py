@@ -284,7 +284,7 @@ def draw_tag(cv, e, t, fr, P):
     x, y = p[0] + e.get("dx", 0), p[1] + e.get("dy", -16)
     place = e.get("place", "bc")
     rect = (x - w / 2, y - h, x + w / 2, y) if place == "bc" else (x - w / 2, y, x + w / 2, y + h)
-    if rect[0] < 4 or rect[2] > 1916 or rect[1] < 4 or rect[3] > 1076 or not _free(rect):
+    if rect[0] < 4 or rect[2] > 1916 or rect[1] < 4 or rect[3] > 955 or not _free(rect):
         return
     _PLACED.append(rect)
     put(cv, spr, x, y, a, anchor=place)
@@ -309,10 +309,15 @@ def draw_face(cv, e, t, fr, P):
     if a <= 0:
         return
     p = P.at(e["anchor"], fr)
-    q = P.at(e["scale_pin"], fr) if e.get("scale_pin") else None
-    if p is None or q is None:
-        return
-    tile_w = 2.1 * math.hypot(p[0] - q[0], p[1] - q[1])
+    if e.get("scale_pin"):
+        q = P.at(e["scale_pin"], fr)
+        if p is None or q is None:
+            return
+        tile_w = 2.1 * math.hypot(p[0] - q[0], p[1] - q[1])
+    else:   # a fixed tile width on screen (px), for tiles that export only one pin
+        if p is None:
+            return
+        tile_w = e.get("tile_px", 160)
     if tile_w < e.get("min_px", 40):
         return
     text = e["text"]
@@ -339,7 +344,7 @@ def draw_face(cv, e, t, fr, P):
     w, h = img.size[0] - 2 * pad, img.size[1] - 2 * pad
     cx, cy = p[0] + e.get("dx", 0), p[1] + e.get("dy", 0)
     rect = (cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2)
-    if rect[0] < 4 or rect[2] > 1916 or rect[1] < 4 or rect[3] > 1076 or not _free(rect):
+    if rect[0] < 4 or rect[2] > 1916 or rect[1] < 4 or rect[3] > 955 or not _free(rect):   # 955: keep clear of subtitles
         return
     _PLACED.append(rect)
     put(cv, _cache[key], cx, cy, a, anchor="c")

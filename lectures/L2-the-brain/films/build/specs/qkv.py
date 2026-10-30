@@ -65,7 +65,7 @@ def elements(tl):
     # b4: the query goes out; the dot product, close up
     E.append({"type": "pin", "anchor": "q99_top", "text": "The query of position 100", "accent": "q",
               "t0": w("b4", "sends"), "t1": w("b4", "multiply") - 0.9, "dx": 80, "dy": -80})
-    E.append({"type": "chip", "x": 96, "y": 130, "t0": w("b4", "multiply"), "t1": w("b4", "score") - 0.3, "accent": "q",
+    E.append({"type": "chip", "x": 96, "y": 800, "t0": w("b4", "multiply"), "t1": w("b4", "score") - 0.3, "accent": "q",
               "lines": [{"text": "Dot product", "size": 24, "c": "slate"},
                         {"text": "q · k = q1×k1 + q2×k2 + … + q64×k64", "size": 32, "wt": 600, "mono": True}]})
     E.append({"type": "pin", "anchor": "ghostq_top", "text": "query", "sub": "position 100", "accent": "q",

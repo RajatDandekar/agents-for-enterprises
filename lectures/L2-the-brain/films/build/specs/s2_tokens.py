@@ -81,8 +81,8 @@ def elements(tl):
               "lines": [{"text": "Northbridge = 2 tokens", "size": 30, "wt": 600}, {"text": "a rarer word is cut into known pieces", "size": 22, "c": "slate"}]})
     hits = [w("b3", "five", 2), w("b3", "comma"), w("b3", "four", 1), w("b3", "zero"), w("b3", "zero", 1)]
     for k, c in enumerate(CUT):
-        E.append({"type": "tag", "anchor": f"num{k}_front", "text": c["text"], "t0": hits[k] - 0.1, "t1": en("b3") + 0.5,
-                  "size": 30, "place": "tc", "dy": 8, "hl": "deep", "mono": True, "maxdepth": 6})
+        E.append({"type": "face", "anchor": f"num{k}_front", "text": c["text"], "t0": hits[k] - 0.1, "t1": en("b3") + 0.5,
+                  "tile_px": 150, "dy": -84, "max": 56, "c": "ink"})
         E.append({"type": "tag", "anchor": f"num{k}_front", "text": f"id {c['id']}", "t0": hits[k] + 0.2, "t1": en("b3") + 0.5,
                   "size": 18, "place": "tc", "dy": 56, "maxdepth": 6})
     E.append({"type": "chip", "x": 96, "y": 130, "t0": w("b3", "number", 1), "t1": en("b3") + 0.5, "accent": "deep",
