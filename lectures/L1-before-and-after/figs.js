@@ -400,6 +400,85 @@ FIGS.agentdef = (el) => {
   return { step(k) { ps.forEach((p, i) => show(p, i <= k)); show(d, k >= 4); } };
 };
 
+/* ---------- What a screen is: the real order-entry screen with its four parts lit one per step (shot 11, after Fetch) ---------- */
+FIGS.screenparts = (el) => {
+  const R = [[0.004, 0.075, 0.2, 0.955, 'Menu of screens'], [0.205, 0.125, 0.995, 0.43, 'Fields and codes'], [0.745, 0.898, 0.985, 0.945, 'Buttons'], [0.0, 0.962, 1, 0.998, 'Status bar']];
+  el.innerHTML = `<div class="sp"><img src="${shot('11')}" alt="Ledgerline purchase order entry screen">${R.map(([l, t, r, b, n], i) => `<div class="sp-r r${i}" style="left:${l * 100}%;top:${t * 100}%;width:${(r - l) * 100}%;height:${(b - t) * 100}%"><span>${i + 1} · ${n}</span></div>`).join('')}</div>`;
+  const rs = [...el.querySelectorAll('.sp-r')];
+  return { step(k) { rs.forEach((r, i) => r.classList.toggle('on', i === k - 1)); } };
+};
+
+/* ---------- What a button really does: press → service call (real request) → black box → reply (real) → the screen fills.
+   Uses window.L1.button when the experiments builder adds a captured press ({shot_before, shot_after, box, service, request, reply});
+   until then the real po_fetch request and reply from services_blackbox.json on shot 11, with the fetched fields shown empty before. ---------- */
+/* a compact view of an envelope: top-level keys on one line, data two keys per line (values unchanged) */
+const cJ = (o) => {
+  const kv = (k, v) => `<span class="jk">"${esc(k)}"</span>: ${esc(JSON.stringify(v))}`;
+  const top = Object.entries(o).filter(([k]) => k !== 'data').map(([k, v]) => kv(k, v)).join(', ');
+  const d = Object.entries(o.data || {}), rows = [];
+  for (let i = 0; i < d.length; i += 2) rows.push('   ' + d.slice(i, i + 2).map(([k, v]) => kv(k, v)).join(', '));
+  return `{ ${top},\n  <span class="jk">"data"</span>: {\n${rows.join(',\n')} } }`;
+};
+FIGS.buttonsvc = (el) => {
+  const B = D.button || null;
+  const call = B ? { service: B.service, request: B.request, reply: B.reply } : (D.blackbox || []).find((c) => c.service === 'po_fetch');
+  if (!call) return todo(el, 'A real button press: the screen, the service call it makes, and the reply that fills the screen.');
+  const box = (B && B.box) || [0.7485, 0.9058, 0.072, 0.035];
+  const masks = B ? [] : [[0.36, 0.264, 0.234, 0.033], [0.36, 0.307, 0.234, 0.033, 1], [0.36, 0.351, 0.234, 0.033], [0.758, 0.219, 0.234, 0.033], [0.758, 0.263, 0.21, 0.033], [0.758, 0.307, 0.21, 0.033], [0.758, 0.351, 0.21, 0.033]];
+  const before = B ? `figs/legacy/${B.shot_before}` : shot('11'), after = B ? `figs/legacy/${B.shot_after}` : shot('11');
+  const req = { ...call.request }, rep = JSON.parse(JSON.stringify(call.reply)); if (rep.data && rep.data.fetch_tok) rep.data.fetch_tok = '…';
+  el.innerHTML = `<div class="bs">
+    <div class="bs-l"><div class="bs-scr"><img class="bs-img" src="${before}" alt="Ledgerline order entry, before Fetch">
+      ${masks.map(([l, t, w, h, g]) => `<div class="bs-m${g ? ' g' : ''}" style="left:${l * 100}%;top:${t * 100}%;width:${w * 100}%;height:${h * 100}%"></div>`).join('')}
+      <div class="bs-btn" style="left:${box[0] * 100}%;top:${box[1] * 100}%;width:${box[2] * 100}%;height:${box[3] * 100}%"></div></div>
+      <div class="bs-cap"></div></div>
+    <div class="bs-r">
+      <div class="bs-c bs-q"><div class="bb-h">1 · The press becomes a service call</div><div class="mono bs-sv">${esc(call.service)}</div><pre class="json">${J(req)}</pre></div>
+      <div class="bs-a">↓</div>
+      <div class="bs-c bs-x"><div class="bb-name mono">${esc(call.service)}</div><div class="bb-sub">2 · runs inside Ledgerline: a black box</div></div>
+      <div class="bs-a">↓</div>
+      <div class="bs-c bs-p"><div class="bb-h">3 · The reply comes back</div><pre class="json">${cJ(rep)}</pre></div>
+    </div></div>
+    <p class="tiny bs-note">${B ? 'A captured press in the legacy client on Modal (experiments/logs).' : 'The request and reply are the real ones from experiments/logs/services_blackbox.json. Before the press, the fields Fetch fills are shown empty.'}</p>`;
+  const img = el.querySelector('.bs-img'), ms = [...el.querySelectorAll('.bs-m')], btn = el.querySelector('.bs-btn'), cap = el.querySelector('.bs-cap');
+  const [q, x, p] = ['.bs-q', '.bs-x', '.bs-p'].map((c) => el.querySelector(c)), arrows = [...el.querySelectorAll('.bs-a')];
+  const d = rep.data || {};
+  const C = [
+    'Emma has typed the request number, the supplier and the item. Now she presses <b>Fetch</b>.',
+    `The press sends those three fields to one ERP operation, a <span class="term">service</span> called <code>${esc(call.service)}</code>.`,
+    'The service runs inside Ledgerline. We never need to see inside: an input goes in, an output comes out.',
+    `The reply fills the screen: rate ${esc(d.rate)}, tax code <code>${esc(d.tax_cd)}</code>, cost centre <code>${esc(d.cc_cd)}</code>. Two of those are traps you will meet in mission 4.`,
+    '<b>Why this matters for agents:</b> an agent calls the same services directly, with no screen in between. Every button is a tool waiting to be described.',
+  ];
+  return { step(k) {
+    const done = k >= 3;
+    img.src = done ? after : before; ms.forEach((m) => (m.style.opacity = done ? 0 : 1));
+    el.querySelector('.bs-scr').classList.toggle('filled', done);
+    btn.classList.toggle('press', k === 0 || k === 1);
+    [q, x, p].forEach((c, i) => { c.style.opacity = k >= i + 1 ? 1 : 0.08; c.classList.toggle('lit', k === i + 1); });
+    arrows.forEach((a, i) => (a.style.opacity = k >= i + 2 ? 1 : 0.08));
+    q.classList.toggle('agent', k >= 4);
+    cap.innerHTML = C[Math.min(k, C.length - 1)];
+  } };
+};
+
+/* ---------- A mission's screen recording (figs/missions/, recorded by the L1 experiments builder in the 1998 client).
+   <video> with controls, no autoplay. Until the file lands, a placeholder over the mission's first legacy screenshot. ---------- */
+FIGS.mvideo = (el) => {
+  const n = el.dataset.m, file = el.dataset.file || `m${n}`, first = el.dataset.fallback || { 1: '03', 2: '05', 3: '07', 4: '09', 5: '17' }[n];
+  const src = `figs/missions/${file}.mp4`, poster = `figs/missions/${file}.jpg`;
+  const cap = el.dataset.cap || `Mission ${n}, played in the 1998 client. Press play; it does not start by itself.`;
+  el.innerHTML = `<figure class="mv"><video controls preload="metadata" playsinline poster="${poster}"><source src="${src}" type="video/mp4"><source src="${src.replace(/\.mp4$/, '.webm')}" type="video/webm"></video><figcaption>${esc(cap)}</figcaption></figure>`;
+  const v = el.querySelector('video');
+  ['click', 'pointerdown', 'touchstart', 'keydown'].forEach((ev) => v.addEventListener(ev, (e) => e.stopPropagation()));
+  v.querySelector('source').addEventListener('error', async () => {
+    /* a browser without H.264 (open-source Chromium) also lands here: keep the video and its poster if the file exists */
+    try { const r = await fetch(src, { method: 'HEAD' }); if (r.ok) return; } catch (e) {}
+    el.innerHTML = `<figure class="mv"><div class="mv-ph"><img src="${shot(first)}" alt=""><div class="todo-card"><span class="todo-k">TODO(video)</span><div>Screen recording in the 1998 client.</div><div class="todo-s">Plays from <code>${esc(src)}</code> once it lands.</div></div></div></figure>`;
+  });
+  return { step(k, instant) { if (instant && !v.paused) v.pause(); } };
+};
+
 /* The 3D request animation (FIGS.flow3d) is registered by flow3d/deck.js, owned by the flow3d builder. */
 
 /* ---------- The capstone, as a path (A1 → A12) ---------- */

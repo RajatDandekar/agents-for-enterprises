@@ -171,6 +171,14 @@ const CSS = `
   font:540 calc(15px*var(--u))/1 var(--f3d-font);color:#121317}
 .f3d-btns button:hover{background:#e6f1ff;color:#0b57d0}
 .f3d-btns button.on{background:#0b57d0;color:#fff}
+.f3d-btns button.b-voice.on{background:#e6f1ff;color:#0b57d0}
+.f3d-btns button[hidden]{display:none}
+.f3d-speak{display:inline-flex;align-items:center;gap:calc(6px*var(--u));color:#0b57d0;font:560 calc(14px*var(--u))/1 var(--f3d-font)}
+.f3d-speak i{width:calc(4px*var(--u));height:calc(14px*var(--u));border-radius:2px;background:#3c90ff;animation:f3dbar 1s ease-in-out infinite}
+.f3d-speak i:nth-child(2){animation-delay:.15s}.f3d-speak i:nth-child(3){animation-delay:.3s}
+@keyframes f3dbar{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
+.f3d-speak.paused i{animation:none;transform:scaleY(.35)}
+.f3d-speak[hidden]{display:none}
 .f3d-btns svg{width:calc(16px*var(--u));height:calc(16px*var(--u))}
 .f3d-prog{display:flex;gap:calc(4px*var(--u))}
 .f3d-prog i{width:calc(18px*var(--u));height:calc(5px*var(--u));border-radius:3px;background:rgba(18,19,23,.12);cursor:pointer}
@@ -188,6 +196,9 @@ function injectCSS() {
   const s = document.createElement('style'); s.id = 'flow3d-css'; s.textContent = CSS; document.head.appendChild(s);
 }
 const ICON = {
+  narr: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M3.5 2.8v10.4L11 8z"/><rect x="12" y="4" width="1.6" height="8" rx=".8"/></svg>',
+  voiceOn: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6h2.2L8 3.2v9.6L4.7 10H2.5z" fill="currentColor"/><path d="M10.6 5.6a3.4 3.4 0 0 1 0 4.8M12.4 3.8a6 6 0 0 1 0 8.4"/></svg>',
+  voiceOff: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6h2.2L8 3.2v9.6L4.7 10H2.5z" fill="currentColor"/><path d="m10.5 6 3.5 4M14 6l-3.5 4"/></svg>',
   prev: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3 5 8l5 5"/></svg>',
   next: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 3 5 5-5 5"/></svg>',
   play: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2.8v10.4L13 8z"/></svg>',
@@ -274,11 +285,13 @@ export function mountFlow3D(el, opts = {}) {
     <div class="f3d-vig"></div>
     <aside class="f3d-rail"><header><b><i></i>Ask Northbridge</b><span>${esc(T.meta.user_name || 'Emma Clarke')} · purchase executive · Northbridge Cycles</span></header>
       <div class="f3d-msgs"></div><div class="f3d-input">Message Ask Northbridge</div></aside>
-    <div class="f3d-hud"><div class="f3d-kick"><span class="f3d-pill"></span><span class="f3d-turn"></span></div><h2></h2><p></p><div class="f3d-chips"></div></div>
+    <div class="f3d-hud"><div class="f3d-kick"><span class="f3d-pill"></span><span class="f3d-turn"></span><span class="f3d-speak" hidden><i></i><i></i><i></i><span>Narration</span></span></div><h2></h2><p></p><div class="f3d-chips"></div></div>
     <div class="f3d-foot"><div class="f3d-prov"><div class="f3d-leg"><span><i></i>AI side: harness, model, toolbox</span><span><i style="background:#c4511f"></i>Ledgerline ERP 7.2 (black box)</span><span><i style="background:#1e8e5a"></i>checked</span></div>
       <b>Recorded run.</b> ${esc(T.meta.model)} · cassette ${esc(T.meta.cassette)} · recorded ${esc(T.meta.recorded_live || T.meta.recorded_at)} · sandbox clock ${esc(T.meta.sandbox_clock)} · numbers from <code>flow3d/trace.json</code></div>
       <div class="f3d-ctl ctl"><div class="f3d-btns">
         <button class="b-prev" aria-label="Previous stage">${ICON.prev}</button>
+        <button class="b-narr" aria-label="Play every stage with narration" hidden>${ICON.narr}<span>Play with narration</span></button>
+        <button class="b-voice on" aria-label="Narration on or off" aria-pressed="true" hidden>${ICON.voiceOn}<span>Voice on</span></button>
         <button class="b-auto" aria-label="Autoplay">${ICON.play}<span>Autoplay</span></button>
         <button class="b-replay" aria-label="Replay this stage">${ICON.replay}<span>Replay</span></button>
         <button class="b-next" aria-label="Next stage">${ICON.next}</button></div>
@@ -1247,6 +1260,27 @@ export function mountFlow3D(el, opts = {}) {
 
   /* ---------- time ---------- */
   let k = 0, t = 0, playing = false, auto = false, hold = 0, last = performance.now(), clk = 0, raf = 0, dead = false;
+  /* narration: one clip per stage (narration.json + audio/), Rajat's recorded voice */
+  let NAR = null, voiceOn = true, narrPlay = false, paused = false, clip = null, clipK = -1, rate = 1;
+  const audios = [];
+  const speakEl = $('.f3d-speak'), bNarr = $('.b-narr'), bVoice = $('.b-voice');
+  function stopClip() { if (clip) { clip.pause(); } clip = null; clipK = -1; rate = 1; }
+  function playClip(n) {
+    stopClip();
+    if (!NAR || !voiceOn || !audios[n]) return;
+    clip = audios[n]; clipK = n;
+    try { clip.currentTime = 0; } catch (e) {}
+    const d = NAR.stages[n].duration || clip.duration || S[n].dur;
+    rate = Math.max(0.55, Math.min(1, S[n].dur / Math.max(0.1, d * 0.92)));   // stretch the motion towards the voice
+    const pr = clip.play(); if (pr && pr.catch) pr.catch((e) => { console.warn('flow3d narration', e.name); });
+  }
+  const clipDone = () => !clip || clip.ended || (clip.paused && !paused);
+  function syncButtons() {
+    bNarr.classList.toggle('on', narrPlay);
+    bNarr.innerHTML = narrPlay ? `${paused ? ICON.play : ICON.pause}<span>${paused ? 'Resume' : 'Pause'}</span>` : `${ICON.narr}<span>Play with narration</span>`;
+    bVoice.classList.toggle('on', voiceOn); bVoice.setAttribute('aria-pressed', String(voiceOn));
+    bVoice.innerHTML = `${voiceOn ? ICON.voiceOn : ICON.voiceOff}<span>${voiceOn ? 'Voice on' : 'Voice off'}</span>`;
+  }
   function draw() {
     if (!W) resize();
     resetFrame();
@@ -1261,16 +1295,23 @@ export function mountFlow3D(el, opts = {}) {
     scaleLabels();
     labels.render(scene, camera);
     fitLabels();
+    const speaking = !!clip && clipK === k && !clip.ended;
+    if (speakEl.hidden === speaking) speakEl.hidden = !speaking;
+    speakEl.classList.toggle('paused', paused);
   }
   function loop(now) {
     if (dead) return;
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     if (!still) clk += dt;
-    if (playing) {
-      t += dt;
+    // the slide was left (deck): silence
+    if ((clip || narrPlay) && !el.getClientRects().length) { stopClip(); narrPlay = false; paused = false; syncButtons(); }
+    if (playing && !paused) {
+      t += dt * (clipK === k ? rate : 1);
       if (t >= S[k].dur) {
         t = S[k].dur;
-        if (auto) { hold += dt; if (hold > 1.6) { hold = 0; k = (k + 1) % S.length; t = 0; } } else playing = false;
+        if (narrPlay) {
+          if (clipDone()) { hold += dt; if (hold > 0.9) { hold = 0; if (k < S.length - 1) { k++; t = 0; playClip(k); } else { narrPlay = false; playing = false; syncButtons(); } } }
+        } else if (auto) { hold += dt; if (hold > 1.6) { hold = 0; k = (k + 1) % S.length; t = 0; } } else playing = false;
       }
     }
     draw();
@@ -1278,18 +1319,61 @@ export function mountFlow3D(el, opts = {}) {
   }
   const api = {
     get stage() { return k; }, get count() { return S.length; }, stages: S.map((s) => ({ kind: s.kind, title: s.cap.h.replace(/<[^>]+>/g, ''), dur: s.dur })),
-    go(n, instant = false) { k = Math.max(0, Math.min(S.length - 1, n)); t = instant ? S[k].dur : 0; playing = !instant; hold = 0; draw(); },
+    go(n, instant = false) {
+      k = Math.max(0, Math.min(S.length - 1, n)); t = instant ? S[k].dur : 0; playing = !instant; hold = 0; paused = false;
+      if (instant) { stopClip(); if (narrPlay) { narrPlay = false; } } else playClip(k);
+      syncButtons(); draw();
+    },
     next() { api.go(k + 1); }, prev() { api.go(k - 1, true); }, replay() { api.go(k, false); },
-    autoplay(on = !auto) { auto = on; el.querySelector('.b-auto').classList.toggle('on', auto); el.querySelector('.b-auto').innerHTML = `${auto ? ICON.pause : ICON.play}<span>${auto ? 'Pause' : 'Autoplay'}</span>`; if (auto) { playing = true; if (t >= S[k].dur) { k = (k + 1) % S.length; t = 0; } } else playing = false; },
-    seek(n, sec) { k = Math.max(0, Math.min(S.length - 1, n)); t = sec === 'end' || sec === undefined ? S[k].dur : Math.min(sec, S[k].dur); playing = false; draw(); },
+    autoplay(on = !auto) { if (on) { narrPlay = false; stopClip(); syncButtons(); } auto = on; el.querySelector('.b-auto').classList.toggle('on', auto); el.querySelector('.b-auto').innerHTML = `${auto ? ICON.pause : ICON.play}<span>${auto ? 'Pause' : 'Autoplay'}</span>`; if (auto) { playing = true; if (t >= S[k].dur) { k = (k + 1) % S.length; t = 0; } } else playing = false; },
+    /* every stage in order with its clip; again = pause or resume */
+    narrate(from) {
+      if (!NAR) return false;
+      if (narrPlay) { api.togglePause(); return true; }
+      if (auto) api.autoplay(false);
+      voiceOn = true; narrPlay = true; paused = false;
+      k = from !== undefined ? from : (k >= S.length - 1 ? 0 : k); t = 0; hold = 0; playing = true; playClip(k); syncButtons(); return true;
+    },
+    togglePause() {
+      if (!narrPlay && !clip && !playing) return false;
+      paused = !paused;
+      if (clip) { if (paused) clip.pause(); else if (!clip.ended) { const pr = clip.play(); if (pr && pr.catch) pr.catch(() => {}); } }
+      if (!paused && t < S[k].dur) playing = true;
+      syncButtons(); return true;
+    },
+    voice(on = !voiceOn) { voiceOn = on; if (!on) stopClip(); syncButtons(); },
+    get narrating() { return narrPlay || (!!clip && !clip.ended); }, get paused() { return paused; },
+    audioState() { return audios.map((a, i) => ({ k: i, readyState: a.readyState, duration: a.duration, error: a.error && a.error.code, src: a.currentSrc.split('/').pop() })).concat([{ current: clipK, time: clip ? clip.currentTime : null, playing: !!clip && !clip.paused }]); },
+    seek(n, sec) { stopClip(); k = Math.max(0, Math.min(S.length - 1, n)); t = sec === 'end' || sec === undefined ? S[k].dur : Math.min(sec, S[k].dur); playing = false; draw(); },
     render() { draw(); }, resize() { resize(); draw(); },
-    destroy() { dead = true; cancelAnimationFrame(raf); ro.disconnect(); renderer.dispose(); el.innerHTML = ''; },
+    destroy() { dead = true; stopClip(); cancelAnimationFrame(raf); ro.disconnect(); renderer.dispose(); removeEventListener('keydown', onKey, true); el.innerHTML = ''; },
   };
+  // in the deck, Space pauses and resumes the narration instead of stepping the deck (capture phase runs before plates.js)
+  function onKey(e) {
+    if (mode !== 'deck' || e.key !== ' ' || !el.getClientRects().length || !api.narrating) return;
+    e.preventDefault(); e.stopImmediatePropagation(); api.togglePause();
+  }
+  addEventListener('keydown', onKey, true);
   el.querySelector('.b-prev').addEventListener('click', (e) => { e.stopPropagation(); api.prev(); });
   el.querySelector('.b-next').addEventListener('click', (e) => { e.stopPropagation(); api.next(); });
   el.querySelector('.b-replay').addEventListener('click', (e) => { e.stopPropagation(); api.replay(); });
   el.querySelector('.b-auto').addEventListener('click', (e) => { e.stopPropagation(); api.autoplay(); });
+  bNarr.addEventListener('click', (e) => { e.stopPropagation(); api.narrate(); });
+  bVoice.addEventListener('click', (e) => { e.stopPropagation(); api.voice(); });
   prog.forEach((p) => p.addEventListener('click', (e) => { e.stopPropagation(); api.go(+p.dataset.k); }));
+  // narration.json must belong to this trace and have one clip per stage; otherwise the figure stays silent
+  if (opts.narration !== false) {
+    const src = typeof opts.narration === 'object' ? Promise.resolve(opts.narration) : fetch(new URL('narration.json', HERE)).then((r) => (r.ok ? r.json() : null));
+    src.then((n) => {
+      if (!n || !Array.isArray(n.stages) || n.stages.length !== S.length || n.stages.some((x, i) => x.kind !== S[i].kind)
+          || (n.trace_recorded_live && T.meta.recorded_live && n.trace_recorded_live !== T.meta.recorded_live)) {
+        if (n) console.warn('flow3d: narration.json does not match this trace; narration off'); return;
+      }
+      NAR = n;
+      n.stages.forEach((x, i) => { const a = new Audio(); a.preload = 'auto'; a.src = new URL(x.audio, HERE).href; audios[i] = a; });
+      bNarr.hidden = false; bVoice.hidden = false; syncButtons();
+    }).catch(() => {});
+  }
   resize();
   if (opts.stage !== undefined) api.seek(opts.stage, opts.t); else draw();
   if (!still) raf = requestAnimationFrame(loop);

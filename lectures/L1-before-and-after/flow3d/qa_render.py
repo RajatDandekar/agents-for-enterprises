@@ -75,6 +75,16 @@ def plates_check() -> dict:
         pg.wait_for_timeout(5000)
         out["qa/plates-back2.png"] = pg.screenshot()
         logs.append("canvas: " + str(pg.evaluate("!!document.querySelector('[data-fig=flow3d] canvas')")))
+        pg.wait_for_function("!document.querySelector('.b-narr').hidden", timeout=60000)
+        before = pg.evaluate("[deckApi.cur, document.querySelectorAll('.slide.active .step.shown').length]")
+        pg.click(".b-narr")
+        pg.wait_for_timeout(2500)
+        speaking = pg.evaluate("!document.querySelector('.f3d-speak').hidden")
+        pg.keyboard.press(" ")
+        pg.wait_for_timeout(800)
+        after = pg.evaluate("[deckApi.cur, document.querySelectorAll('.slide.active .step.shown').length, document.querySelector('.f3d-speak').classList.contains('paused')]")
+        logs.append(f"narration: speaking={speaking} deck before={before} after Space={after} (same slide and steps, paused=True expected)")
+        out["qa/plates-narration.png"] = pg.screenshot()
         b.close()
     srv.terminate()
     out["qa/plates_log.txt"] = "\n".join(logs).encode()
@@ -113,6 +123,7 @@ def deck_check() -> dict:
         pg.on("pageerror", lambda e: logs.append(f"pageerror: {e}"))
         pg.goto("http://127.0.0.1:8097/_deck.html", wait_until="networkidle")
         pg.wait_for_function("window.__flow3dReady === true", timeout=120000)
+        pg.wait_for_function("!document.querySelector('.b-narr').hidden", timeout=60000)
         pg.wait_for_timeout(1000)
         stages = pg.evaluate("flow3d.stages")
         for k, st in enumerate(stages):
@@ -125,6 +136,50 @@ def deck_check() -> dict:
         b.close()
     srv.terminate()
     return {"qa/deck_check.json": json.dumps({"stages": len(stages), "page_errors": logs, "problems": rep}, indent=1).encode()}
+
+
+@app.function(timeout=1800, cpu=4, memory=8192)
+def audio_check() -> dict:
+    """Narration in headless Chromium: the clips load, the button (a real click = user gesture) starts clip 0,
+    Space pauses and resumes audio and animation together, a manual step plays that stage's clip; standalone and deck."""
+    from playwright.sync_api import sync_playwright
+    import os
+    if not os.path.exists("/flow3d/_engine"):
+        os.symlink("/engine", "/flow3d/_engine")
+    (pathlib.Path("/flow3d") / "_deckn.html").write_text(DECK_PAGE.replace("still: true", "still: false"))
+    srv = subprocess.Popen(["python", "-m", "http.server", "8096", "--directory", "/flow3d"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    time.sleep(1.2)
+    res, logs = {}, []
+    with sync_playwright() as p:
+        b = p.chromium.launch(args=ARGS)
+        for name, url, vp in [("standalone", "index.html", (1920, 1080)), ("deck", "_deckn.html", (1920, 1080))]:
+            pg = b.new_page(viewport={"width": vp[0], "height": vp[1]})
+            pg.on("console", lambda m, n=name: logs.append(f"{n} {m.type}: {m.text}") if m.type in ("error", "warning") else None)
+            pg.on("pageerror", lambda e, n=name: logs.append(f"{n} pageerror: {e}"))
+            pg.goto(f"http://127.0.0.1:8096/{url}", wait_until="networkidle")
+            pg.wait_for_function("window.__flow3dReady === true", timeout=120000)
+            pg.wait_for_function("!document.querySelector('.b-narr').hidden", timeout=60000)
+            pg.wait_for_timeout(4000)
+            r = {"loaded": pg.evaluate("flow3d.audioState()")}
+            pg.click(".b-narr")
+            pg.wait_for_timeout(3000)
+            r["after_click"] = pg.evaluate("[flow3d.stage, flow3d.audioState().pop()]")
+            pg.keyboard.press(" ")
+            pg.wait_for_timeout(1200)
+            a = pg.evaluate("[flow3d.paused, flow3d.audioState().pop()]")
+            pg.wait_for_timeout(1000)
+            r["paused"] = a + [pg.evaluate("flow3d.audioState().pop().time")]
+            pg.keyboard.press(" ")
+            pg.wait_for_timeout(1500)
+            r["resumed"] = pg.evaluate("[flow3d.paused, flow3d.audioState().pop()]")
+            pg.evaluate("flow3d.go(14)")
+            pg.wait_for_timeout(2000)
+            r["manual_step_14"] = pg.evaluate("[flow3d.stage, flow3d.audioState().pop()]")
+            res[name] = r
+            pg.close()
+        b.close()
+    srv.terminate()
+    return {"qa/audio_check.json": json.dumps({"results": res, "logs": logs}, indent=1).encode()}
 
 
 @app.function(timeout=1800, cpu=4, memory=8192)
@@ -176,12 +231,12 @@ def render(shots: list, poster: str = "", deck: bool = False) -> dict:
 
 
 @app.local_entrypoint()
-def main(shots: str = "", poster: str = "", deck: int = 0, plates: int = 0, check: int = 0):
-    if check:
-        files = deck_check.remote()
+def main(shots: str = "", poster: str = "", deck: int = 0, plates: int = 0, check: int = 0, audio: int = 0):
+    if check or audio:
+        files = deck_check.remote() if check else audio_check.remote()
         for rel, data in files.items():
             (HERE / rel).write_bytes(data)
-        print(files["qa/deck_check.json"].decode()[:6000])
+        print(list(files.values())[0].decode()[:8000])
         return
     files = plates_check.remote() if plates else render.remote([s for s in shots.split(",") if s.strip()], poster, bool(deck))
     for rel, data in files.items():

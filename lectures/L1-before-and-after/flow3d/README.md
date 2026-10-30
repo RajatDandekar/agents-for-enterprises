@@ -5,12 +5,26 @@ A three.js scene that shows one real Ask Northbridge conversation, step by step:
 | File | What it is |
 |---|---|
 | `flow3d.js` | The ES module. `mountFlow3D(el, { trace, mode: 'deck' or 'standalone' })` returns `{ go(k, instant), next(), prev(), replay(), autoplay(on), seek(k, seconds), count, stages }`. |
+| `narration.json`, `audio/stage-XX.mp3`, `make_narration.py` | The narration script, its 21 clips in Rajat's voice, and the script that checks and synthesizes them. |
 | `deck.js` | Registers `FIGS.flow3d` for the plate engine (classic script). |
 | `index.html` | Full-screen standalone demo for class. Keys: Right arrow or Space = next, Left = back, R = replay, A = autoplay, F = full screen. URL options: `?autoplay`, `?stage=5`, `?stage=5&t=2.4`, `?still`. |
 | `trace.json` / `trace.js` | The recorded run (same data; `trace.js` sets `window.FLOW3D_TRACE` so the deck also works without fetch). |
 | `poster.png` | 1920x1080 still of the overview, shown when WebGL or the module is missing, and in `?print=1`. |
 | `capture_trace.py` | Records the trace on Modal from the real L1 assistant. |
 | `qa_render.py` | Renders stages headless on Modal (Chromium + SwiftShader) into `qa/`. |
+
+## Presenting it in class (narrated)
+
+The figure carries Rajat's own narration: one clip per stage, in his cloned voice (ElevenLabs voice `lZORFNDokoBmfd0S06vf`, model `eleven_multilingual_v2`). There are 21 clips, 4 min 32 s of speech. A full narrated run takes about **5 minutes**, because each stage lasts at least as long as its clip, followed by a 0.9 s pause.
+
+- **Play the whole story:** on the 3D slide, click **Play with narration** (bottom right). It plays every stage in order from the current one, or from the start if you are on the last stage. The animation slows down (to no less than 0.55x) so the motion keeps pace with the voice, and the next stage starts when the clip ends.
+- **Pause:** press **Space**, or click the same button (now **Pause**/**Resume**). Audio and animation stop and start together. In the deck, Space only pauses the narration while it is playing; otherwise Space steps the deck as usual.
+- **Step by hand:** the arrow keys and clicks step stages as before. With **Voice on**, each forward step plays that stage's clip. Stepping back, or entering the slide, is silent.
+- **Silent mode:** the **Voice on/off** toggle mutes the clips. **Autoplay** is the silent loop. When you leave the slide, the narration stops.
+- **Standalone** (`flow3d/index.html`): N = play with narration, Space = pause/resume while narrating (next otherwise), V = voice on/off.
+- **Browser autoplay rules:** these are met because narration starts from a click or a key press. Before class, open the slide once with the projector's audio on.
+
+The script is in `narration.json`. `text` is what is said; `say` is the same words spelled for the voice, e.g. "M C P", "P R D zero seven". `make_narration.py` checks every number in the script against `trace.json`, then synthesizes only the clips whose words changed, into `audio/stage-XX.mp3`. If the trace is re-recorded, its numbers or stage list change. The figure then switches narration off by itself: the stage kinds and `trace_recorded_live` must match. In that case, edit `narration.json` and run `python3 lectures/L1-before-and-after/flow3d/make_narration.py`. The key is read from `cobol-mainframes/.env`.
 
 ## Slide snippet for `lectures/L1-before-and-after/index.html`
 
@@ -77,4 +91,4 @@ The stage list is built from `trace.json`: one stage per turn arrival, the first
 - Recorded with `sh tools/mrun.sh tools/modal_run.py --script lectures/L1-before-and-after/flow3d/capture_trace.py --mode auto`. The script runs `ledgerline.course.l1.AskNorthbridge` (gemini:gemini-3.8-flash, toolbox over in-memory MCP) as ECLARKE. It wraps the LLM and the tool calls to log tokens, seconds, the guard check, the MCP frame and each Ledgerline service call.
 - The cassettes are `ledgerline/ledgerline/cassettes/L1v4_flow3d.jsonl` and `L1v4_flow3d_measure.jsonl`. The current trace was recorded fresh at 2026-10-30 04:15 UTC, after the tool descriptions and policy documents were finalised: 13 model calls, 52,273 tokens in, 675 out. The second holds two extra calls that split the context by difference: the request without tools, and the system prompt with a one-character user turn.
 - `--mode replay` rebuilds the same trace with no key, and only if every request still hashes the same. A clean replay proves the trace matches the current prompt and tool schemas.
-- QA: `/Users/raj/.venv/bin/modal run lectures/L1-before-and-after/flow3d/qa_render.py --check 1` applies the deck-QA rules (text outside the 1600x900 frame less 20 px, clipped boxes, text under 12 px) to every stage, sampled each second; `--plates 1` drives it through the real plate engine; plain `qa_render.py` renders every stage's end state, `--shots "3:2.2,4:4.4"` (stage:seconds), `--deck 1` (1600x900 deck mode), and `--poster "0:end"` (rewrites poster.png).
+- QA: `/Users/raj/.venv/bin/modal run lectures/L1-before-and-after/flow3d/qa_render.py --check 1` applies the deck-QA rules (text outside the 1600x900 frame less 20 px, clipped boxes, text under 12 px) to every stage, sampled each second; `--plates 1` drives it through the real plate engine, including Space pausing the narration without stepping the deck; `--audio 1` checks that every clip loads and that play, pause, resume and a manual step work, in standalone and deck mode; plain `qa_render.py` renders every stage's end state, `--shots "3:2.2,4:4.4"` (stage:seconds), `--deck 1` (1600x900 deck mode), and `--poster "0:end"` (rewrites poster.png).

@@ -22,7 +22,7 @@
 </head>
 <body>
 <div id="stage"></div>
-<div id="hint">Right arrow or space: next · Left: back · R: replay · A: autoplay · F: full screen</div>
+<div id="hint">N: play with narration · Space: pause or next · Right/Left: step · R: replay · V: voice on/off · F: full screen</div>
 <script type="module">
 import { mountFlow3D, loadTrace } from './flow3d.js';
 const q = new URLSearchParams(location.search);
@@ -39,7 +39,10 @@ window.flow3d = f;
 window.__flow3dReady = true;
 if (q.has('still')) document.getElementById('hint').remove(); else setTimeout(() => { const h = document.getElementById('hint'); if (h) h.style.opacity = 0; }, 6000);
 addEventListener('keydown', (e) => {
-  if (['ArrowRight', ' ', 'PageDown', 'Enter'].includes(e.key)) { e.preventDefault(); f.next(); }
+  if (e.key === ' ' && f.narrating) { e.preventDefault(); f.togglePause(); }
+  else if (e.key === 'n' || e.key === 'N') f.narrate();
+  else if (e.key === 'v' || e.key === 'V') f.voice();
+  else if (['ArrowRight', ' ', 'PageDown', 'Enter'].includes(e.key)) { e.preventDefault(); f.next(); }
   else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); f.prev(); }
   else if (e.key === 'r' || e.key === 'R') f.replay();
   else if (e.key === 'a' || e.key === 'A') f.autoplay();
