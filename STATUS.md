@@ -3,7 +3,15 @@
 ## v4 (2026-10-30): the Northbridge world; Lecture 1 rebuilt. Read WORLD_V4.md first.
 - **World:** Northbridge Cycles (e-bikes, Manchester) on Ledgerline ERP 7.2; package `ledgerline` (was `bahi`). Map in `tools/world_v4.py`; `--check` flags leftovers (food, rupee, litre, GST ...).
 - **Rollout:** L1 and L2 are done in v4. L3–L12 notebooks install the frozen tag `v3.1` (Rasoi world) until each is rebuilt; L3 (Sat 7 Nov) is next.
-- **L2 (2026-10-30):** 65 slides, QA 0. Nine sections follow one question through Qwen2.5-0.5B-Instruct, with one persistent 3D scene (`brain3d/`, 29 steps, real trace). NB2: 32 cells, replay 0 errors.
+- **L2 (2026-10-31, after Rajat's third-round review):** 73 slides, QA 0; unlocked on the site (`tools/unlocked.txt`). Nine sections follow Emma's question through Qwen2.5-0.5B-Instruct, with one persistent 3D scene (`brain3d/`, real trace). NB2: 32 cells, replay 0 errors.
+  - 13 films (overture, s1_game "Next-token prediction" … s9_fix, qkv, structure, finale), all live; the music is L1's track, mixed quieter.
+  - The rework removed the duplicate slides, temperature from slide 4, the 494M, "what would it say now" and softmax slides; simplified BPE; made attention about the mechanism only; added section-specific questions and a clear tiny-GPT story.
+  - **Brain Lab** (Modal app `northbridge-brainlab`, https://rajatworkspace--northbridge-brainlab.us-east.modal.run; src `ledgerline/ledgerline/brainlab/`, deploy `deploy/brainlab_modal.py`, README there).
+    - Each student gets their own badge and lab with Qwen2.5-0.5B-Instruct.
+    - The lab shows the training data as tokens and lets students choose steps, learning rate, LoRA size, distractor facts and temperature.
+    - Students see the loss live and the probability of each answer token before and after training, and can compare training with putting the facts in the prompt.
+    - Tests: API 40/40 fake + 37/37 GPU, Playwright 24/24, a 30-student load test (median 33 s, taught 150/150, new wording 108/150).
+    - On slides 57 and 70. It warms itself at 00:30 UTC on Sun 1 Nov; the GPU cap is $30/day. Before class, `admin --cmd purge-all` empties the wall (on 31 Oct it held only "Rajat").
 - **Films (2026-10-30, quality bar = Vizuara "Inside Rubin", see FILM_STYLE.md):** narrated Blender Cycles films rendered on Modal. Narration is Daniel (ElevenLabs), music from Epidemic Sound.
   - L1: `films/l1_how_it_works` (2:45) on slide 73, about $31 of Modal.
   - L2: 11 films in `films/` (overture; s1_game … s9_fix; qkv at 2:26), one at the end of each section, all checked loading on the live site.
