@@ -23,7 +23,7 @@ for d in "$ROOT"/lectures/L*/; do
     [ -d "$d$fig3d" ] && rsync -a --exclude qa --exclude '*.py' --exclude '*.md' --exclude 'envision_amaranth_cove.mp3' "$d$fig3d/" "$OUT/lectures/$n/$fig3d/"
   done
   # finished lecture films (mp4, webm, posters); not their build folders or licensed music sources
-  [ -d "$d"films ] && rsync -a --exclude build --exclude music --exclude '*.md' --exclude '*.json' --exclude '*.py' "$d"films/ "$OUT/lectures/$n/films/"
+  [ -d "$d"films ] && rsync -a --exclude build --exclude music --exclude archive_v4 --exclude '*.md' --exclude '*.json' --exclude '*.py' "$d"films/ "$OUT/lectures/$n/films/"
   # recorded production data a deck charts (not the logs or superseded sweeps)
   if [ -d "$d"experiments/production ]; then
     mkdir -p "$OUT/lectures/$n/experiments/production"

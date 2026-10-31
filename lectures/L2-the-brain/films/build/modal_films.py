@@ -388,3 +388,140 @@ def plate(film: str = "qkv", per_chunk: int = 30, frames: int = 0):
     print(concat.remote(film, list(range(0, n, per_chunk))))
     fr = [0, 120, 300, 450, 580, 620] + [int(i * (n - 1) / 5) for i in range(1, 6)] + [n - 1]
     print("sheet ->", _save(sheet.remote(film, fr, "plate", 4, 640), f"{film}_plate.jpg"))
+
+
+@app.local_entrypoint()
+def comp_as(film: str = "finale", out: str = "", per_chunk: int = 300):
+    """Like comp, but saves films/<out>.mp4/.webm/.jpg (e.g. finale_v5) so the current film stays until the new one
+    is verified. Added 31 Oct for the finale v5; comp's behaviour is unchanged."""
+    import glob
+    out = out or f"{film}_new"
+    tl = json.load(open(os.path.join(BUILD, "timeline", f"{film}.json")))
+    frames = tl["frames"]
+    starts = list(range(0, frames, per_chunk))
+    for r in comp_chunk.starmap([(film, s, min(frames - 1, s + per_chunk - 1)) for s in starts], order_outputs=False):
+        print(r, flush=True)
+    audio = {}
+    for b in tl["blocks"]:
+        audio["narr/" + os.path.basename(b["audio"])] = open(os.path.join(BUILD, b["audio"]), "rb").read()
+    for p in glob.glob(os.path.join(FILMS, "music", "*.mp3")) + glob.glob(os.path.join(BUILD, "sfx", "*.mp3")):
+        audio[("music/" if "/music/" in p else "sfx/") + os.path.basename(p)] = open(p, "rb").read()
+    res = comp_final.remote(film, starts, audio)
+    print(json.dumps(res, indent=1))
+    for key, ext in (("mp4", "mp4"), ("webm", "webm"), ("jpg", "jpg")):
+        data = fetch.remote([res[key]])[0]
+        open(os.path.join(FILMS, f"{out}.{ext}"), "wb").write(data)
+        print("->", os.path.join(FILMS, f"{out}.{ext}"), round(len(data) / 1e6, 2), "MB")
+
+
+# ------------------------------------------------------------------------------------------------ detached full render (added for params / s8)
+@app.function(image=blender_image, volumes={"/vol": vol}, cpu=2, memory=4096, timeout=6 * 3600)
+def full_job(film: str, samples: int = 96, per_chunk: int = 24, res_pct: int = 100, resume: bool = False) -> dict:
+    """The same steps as `full`, but run remotely, so the laptop can let go (spawn it with `modal run --detach`)."""
+    import time
+    t = time.time()
+    frames = build.remote(film)["frames"]
+    ranges = [(film, a, min(frames - 1, a + per_chunk - 1), samples, res_pct) for a in range(0, frames, per_chunk)]
+    vol.reload()
+    have = set(os.listdir(f"{VOL}/chunks/{film}")) if (resume and os.path.isdir(f"{VOL}/chunks/{film}")) else set()
+    todo = [r for r in ranges if f"c_{r[1]:05d}.mp4" not in have]
+    done = [r for r in render_chunk.starmap(todo, order_outputs=False)]
+    plate = concat.remote(film, [r[1] for r in ranges])
+    return {"film": film, "frames": frames, "chunks": len(ranges), "rendered": len(done), "plate": plate, "seconds": round(time.time() - t)}
+
+
+@app.local_entrypoint()
+def full_spawn(film: str = "qkv", samples: int = 96, per_chunk: int = 24, resume: bool = False):
+    """MODAL_PROFILE=rajatworkspace ~/.venv/bin/modal run --detach modal_films.py::full_spawn --film <film>"""
+    call = full_job.spawn(film, samples, per_chunk, 100, resume)
+    print("spawned", film, call.object_id)
+
+
+@app.local_entrypoint()
+def full_poll(call_id: str = "", film: str = ""):
+    """Check a spawned full_job; when it is done, save a plate contact sheet."""
+    try:
+        res = modal.FunctionCall.from_id(call_id).get(timeout=1)
+    except TimeoutError:
+        print("running")
+        return
+    print(json.dumps(res))
+    n = res["frames"]
+    fr = [int(i * (n - 1) / 11) for i in range(12)]
+    print("sheet ->", _save(sheet.remote(res["film"], fr, "plate", 4, 640), f"{res['film']}_plate.jpg"))
+
+
+@app.function(image=blender_image, volumes={"/vol": vol}, cpu=2, memory=4096, timeout=4 * 3600)
+def patch_job(film: str, starts: list, samples: int = 96, per_chunk: int = 24) -> dict:
+    """Rebuild the film and re-render only the chunks that start at `starts`, then re-concat the plate."""
+    frames = build.remote(film)["frames"]
+    todo = [(film, a, min(frames - 1, a + per_chunk - 1), samples, 100) for a in starts]
+    done = list(render_chunk.starmap(todo, order_outputs=False))
+    plate = concat.remote(film, list(range(0, frames, per_chunk)))
+    return {"film": film, "frames": frames, "rendered": len(done), "plate": plate}
+
+
+@app.local_entrypoint()
+def patch_spawn(film: str = "", starts: str = "", samples: int = 96):
+    """modal run --detach modal_films.py::patch_spawn --film <film> --starts 1752,1776"""
+    call = patch_job.spawn(film, [int(x) for x in starts.split(",")], samples)
+    print("spawned", film, call.object_id)
+
+
+@app.local_entrypoint()
+def restill(film: str = "qkv", frames: str = "0", tag: str = "r1"):
+    """Re-composite stills already rendered on the volume (no build, no GPU): after a spec-only change."""
+    fr = [int(x) for x in frames.split(",")]
+    for x, data in zip(fr, comp_stills.remote(film, fr)):
+        print("still ->", _save(data, f"{film}_{tag}_{x:04d}.jpg"))
+
+
+@app.function(image=comp_image, volumes={"/vol": vol}, cpu=8, memory=16384, timeout=3600)
+def finale_webm_fn(film: str, kbps: int) -> dict:
+    """Re-encode out/<film>.webm at a lower video bitrate (from the composited parts + the mp4's final mix)."""
+    vol.reload()
+    parts = sorted(p for p in os.listdir(f"{VOL}/comp/{film}") if p.startswith("v_"))
+    with open("/tmp/parts.txt", "w") as fh:
+        fh.writelines(f"file '{VOL}/comp/{film}/{p}'\n" for p in parts)
+    _sh(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", "/tmp/parts.txt", "-c", "copy", "/tmp/v.mp4"])
+    mp4 = f"{VOL}/out/{film}.mp4"
+    dur = _sh(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", mp4]).stdout.strip()
+    out = f"{VOL}/out/{film}.webm"
+    _sh(["ffmpeg", "-y", "-loglevel", "error", "-i", "/tmp/v.mp4", "-i", mp4, "-map", "0:v", "-map", "1:a", "-c:v", "libvpx-vp9",
+         "-b:v", f"{kbps}k", "-deadline", "good", "-cpu-used", "3", "-row-mt", "1", "-c:a", "libopus", "-b:a", "128k", "-t", dur, out])
+    vol.commit()
+    return {"webm": out, "mb": round(os.path.getsize(out) / 1e6, 2)}
+
+
+@app.local_entrypoint()
+def finale_webm(film: str = "finale", out: str = "", kbps: int = 820):
+    """Added 31 Oct (finale v5): a smaller webm copy, saved as films/<out>.webm."""
+    res = finale_webm_fn.remote(film, kbps)
+    print(res)
+    data = fetch.remote([res["webm"]])[0]
+    open(os.path.join(FILMS, f"{out or film}.webm"), "wb").write(data)
+    print("->", os.path.join(FILMS, f"{out or film}.webm"), round(len(data) / 1e6, 2), "MB")
+
+
+@app.function(image=comp_image, volumes={"/vol": vol}, cpu=8, memory=8192, timeout=3600)
+def rewebm(film: str, mb: float = 24.0) -> bytes:
+    """Re-encode out/<film>.webm from out/<film>.mp4 (VP9 two-pass + Opus) to fit `mb` megabytes."""
+    import subprocess
+    vol.reload()
+    src, dst = f"{VOL}/out/{film}.mp4", f"{VOL}/out/{film}.webm"
+    dur = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", src],
+                               capture_output=True, text=True).stdout.strip())
+    vk = int((mb * 8e6 / dur - 128e3) / 1000 * 0.97)
+    base = ["ffmpeg", "-y", "-loglevel", "error", "-i", src, "-c:v", "libvpx-vp9", "-b:v", f"{vk}k", "-deadline", "good",
+            "-cpu-used", "2", "-row-mt", "1", "-passlogfile", f"/tmp/{film}_vp9"]
+    _sh(base + ["-pass", "1", "-an", "-f", "webm", "/dev/null"])
+    _sh(base + ["-pass", "2", "-c:a", "libopus", "-b:a", "128k", dst])
+    vol.commit()
+    return open(dst, "rb").read()
+
+
+@app.local_entrypoint()
+def webm_fit(film: str = "", mb: float = 24.0):
+    data = rewebm.remote(film, mb)
+    open(os.path.join(FILMS, f"{film}.webm"), "wb").write(data)
+    print("->", os.path.join(FILMS, f"{film}.webm"), round(len(data) / 1e6, 2), "MB")

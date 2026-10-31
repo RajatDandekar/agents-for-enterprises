@@ -1,0 +1,70 @@
+{
+ "film": "next_token",
+ "title": "From the last vector to the next token",
+ "kicker": "Lecture 2  ·  Section 6",
+ "section": 6,
+ "note": "text = subtitles; say = spelled for the voice. Numbers from brain3d/trace.json, films/qkv_data.json and build/data/next_token_*.json (capture_next_gen.py).",
+ "blocks": [
+  {
+   "id": "b1",
+   "shot": "recap",
+   "text": "So far: Emma's text became 100 tokens. Each token became a vector of 896 numbers. 24 blocks updated every vector, in one pass. And we keep just one: the last position's final vector.",
+   "say": "So far: Emma's text became one hundred tokens. Each token became a vector of eight hundred and ninety-six numbers. Twenty-four blocks updated every vector, in one pass. And we keep just one: the last position's final vector."
+  },
+  {
+   "id": "b2",
+   "shot": "question",
+   "text": "Now: how does that vector become the next token?",
+   "say": "Now: how does that vector become the next token?"
+  },
+  {
+   "id": "b3",
+   "shot": "norm",
+   "text": "First, a final RMSNorm. It divides all 896 numbers by their root mean square, here 1.89, then multiplies each by a learned gain. Same direction, fixed scale.",
+   "say": "First, a final RMS Norm. It divides all eight hundred and ninety-six numbers by their root mean square, here one point eight nine, then multiplies each by a learned gain. Same direction, fixed scale."
+  },
+  {
+   "id": "b4",
+   "shot": "dot",
+   "text": "Then, scoring. The model's table has one row per token: 151,936 rows of 896 numbers. Multiply the vector with a row, number by number, and add it up: one dot product, one score. For We, it comes to 20.84.",
+   "say": "Then, scoring. The model's table has one row per token: one hundred and fifty-one thousand, nine hundred and thirty-six rows of eight hundred and ninety-six numbers. Multiply the vector with a row, number by number, and add it up: one dot product, one score. For We, it comes to twenty point eight four."
+  },
+  {
+   "id": "b5",
+   "shot": "tied",
+   "text": "And this table? We have met it before. It is the embedding table from section 3. The same table that reads tokens in now scores them on the way out: tied weights.",
+   "say": "And this table? We have met it before. It is the embedding table from section three. The same table that reads tokens in now scores them on the way out: tied weights."
+  },
+  {
+   "id": "b6",
+   "shot": "logits",
+   "text": "That gives one score per row, called a logit. Only five pass 18. We: 20.84. As: 18.88. Manchester: 18.62.",
+   "say": "That gives one score per row, called a logit. Only five pass eighteen. We: twenty point eight four. As: eighteen point eight eight. Manchester: eighteen point six two."
+  },
+  {
+   "id": "b7",
+   "shot": "softmax",
+   "text": "Softmax turns them into probabilities. Raise e to each logit: for We, 1.13 billion. Divide by the sum over every row: 2.0 billion. We gets 56 percent. As, 8. Manchester, 6. All together, one.",
+   "say": "Softmax turns them into probabilities. Raise e to each logit: for We, one point one three billion. Divide by the sum over every row: two point oh billion. We gets fifty-six percent. As, eight. Manchester, six. All together, one."
+  },
+  {
+   "id": "b8",
+   "shot": "wheel",
+   "text": "Then one token is picked. Greedy takes the top one: We, every time. Sampling spins a weighted wheel. Five real spins: As. City. We. We. We. In a thousand spins, We wins 582.",
+   "say": "Then one token is picked. Greedy takes the top one: We, every time. Sampling spins a weighted wheel. Five real spins: As. City. We. We. We. In a thousand spins, We wins five hundred and eighty-two."
+  },
+  {
+   "id": "b9",
+   "shot": "temperature",
+   "text": "Temperature divides the logits first. At 0.7, the gaps grow: We rises to 82 percent. At 1.2, they shrink: We falls to 41. And temperature zero is greedy.",
+   "say": "Temperature divides the logits first. At zero point seven, the gaps grow: We rises to eighty-two percent. At one point two, they shrink: We falls to forty-one. And temperature zero is greedy."
+  },
+  {
+   "id": "b10",
+   "shot": "pick",
+   "text": "Our run is greedy, so the choice is We. It joins the end of the text, and the whole machine runs again.",
+   "say": "Our run is greedy, so the choice is We. It joins the end of the text, and the whole machine runs again."
+  }
+ ],
+ "tail": 4.0
+}
