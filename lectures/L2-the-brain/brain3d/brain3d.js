@@ -210,7 +210,7 @@ const ICON = {
 
 /* ------------------------------------------------------------------ the sections (titles match STORY_V4.md) */
 export const SECTION_TITLES = [
-  'The game: predict the next token',
+  'Next-token prediction',
   'What you send, cut into tokens',
   'Each token becomes a vector',
   'Attention: tokens look back',
@@ -221,7 +221,7 @@ export const SECTION_TITLES = [
   'Why it made the number up, and what fixes it',
 ];
 export const SECTION_STATES = [3, 4, 4, 8, 4, 5, 5, 4, 4];
-const SHORT = ['The game', 'Tokens', 'Vectors', 'Attention', 'The blocks', 'The choice', 'The loop', 'Training', 'Why, and the fix'];
+const SHORT = ['Next token', 'Tokens', 'Vectors', 'Attention', 'The blocks', 'The choice', 'The loop', 'Training', 'Why, and the fix'];
 
 /* ------------------------------------------------------------------ the numbers, read from the trace */
 function readTrace(T) {

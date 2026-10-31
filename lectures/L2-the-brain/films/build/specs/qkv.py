@@ -9,7 +9,7 @@ TOK = D["tokens"]
 W, DOT, SC = QK["weights"], QK["dots"], QK["scores"]
 MAN, MAN_SYS, STORES, BATT, LAST = 92, 21, 93, 86, 99
 POSTER = 100.5
-MUSIC = "tried_and_true_imprismed.mp3"
+MUSIC = "observatory_out_to_the_world.mp3"
 MUSIC_GAIN = 0.34  # one bed level for the whole L2 series
 MUSIC_OFFSET = 0.0
 
@@ -34,7 +34,7 @@ def elements(tl):
     E.append({"type": "title", "kicker": "Lecture 2  ·  Attention, up close", "title": "Query, key and value", "t0": 0.4, "t1": st("b1") + 4.0})
     # token names, pinned under each tile, in every shot where the row is seen (not in the two macro close-ups)
     wins = [(st("b1") + 1.2, en("b1") + 0.4), (st("b2") - 0.2, en("b2") + 0.4), (w("b4", "sends") - 0.2, w("b4", "multiply") - 0.9),
-            (w("b4", "score") - 0.1, en("b7") + 0.4)]
+            (w("b4", "score") - 0.1, en("b7") + 0.4), (st("b8") - 0.2, en("b8") + 0.6)]
     # the hero tokens' words, laid over their tile faces (sized to the tile; hidden when small or overlapping)
     hero = [(LAST, "⏎"), (MAN, "Manchester"), (MAN_SYS, "Manchester"), (STORES, "stores"), (BATT, "battery"), (87, "packs")]
     for k, (a, b) in enumerate(wins):
@@ -43,7 +43,7 @@ def elements(tl):
             E.append({"type": "face", "anchor": f"tok{i}_top", "scale_pin": f"tok{i}_front", "text": word, "t0": t0, "t1": b,
                       "c": "ink", "glyph_font": "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if word == "⏎" else None,
                       "max": 60})
-    E.append({"type": "pin", "anchor": f"tok{LAST}_top", "text": "Position 100", "sub": "the answer starts here",
+    E.append({"type": "pin", "anchor": f"tok{LAST}_top", "text": "The last token", "sub": "the answer starts after it",
               "t0": w("b1", "end"), "t1": en("b1") + 0.3, "dx": 70, "dy": -120})
     # b2: three vectors
     for kind, word, title, sub, acc, dx in (("q", "query", "Query", "what am I looking for?", "q", -90),
@@ -52,7 +52,7 @@ def elements(tl):
         E.append({"type": "pin", "anchor": f"{kind}{LAST}_top", "text": title, "sub": sub, "accent": acc,
                   "t0": w("b2", word), "t1": en("b2") + 0.3, "dx": dx, "dy": -120 if kind != "k" else -210})
     # b3: made by three learned matrices
-    E.append({"type": "pin", "anchor": "slab_top", "text": "The token's vector", "sub": "896 numbers, as block 24 reads it",
+    E.append({"type": "pin", "anchor": "slab_top", "text": "The token's vector", "sub": "896 numbers",
               "t0": w("b3", "own"), "t1": en("b3") + 0.3, "dx": -140, "dy": -40})
     for kind, nm in (("wq", "W_Q"), ("wk", "W_K"), ("wv", "W_V")):
         E.append({"type": "pin", "anchor": f"{kind}_top", "text": nm, "sub": "learned: 896 in, 64 out", "accent": kind[1],
@@ -60,15 +60,15 @@ def elements(tl):
                   "dx": {"wq": -90, "wk": 40, "wv": 90}[kind], "dy": {"wq": -110, "wk": -200, "wv": -110}[kind]})
     q3 = ", ".join(f"{x:.2f}" for x in QK["q"][:3])
     E.append({"type": "chip", "x": 96, "y": 150, "t0": w("b3", "sixty-four"), "t1": en("b3") + 0.5, "accent": "q",
-              "lines": [{"text": "Block 24, head 2", "size": 24, "c": "slate"}, {"text": "q, k, v: 64 numbers each", "size": 32, "wt": 600},
+              "lines": [{"text": "One attention unit", "size": 24, "c": "slate"}, {"text": "q, k, v: 64 numbers each", "size": 32, "wt": 600},
                         {"text": f"q = {q3}, …", "size": 24, "mono": True, "c": "q"}]})
     # b4: the query goes out; the dot product, close up
-    E.append({"type": "pin", "anchor": "q99_top", "text": "The query of position 100", "accent": "q",
+    E.append({"type": "pin", "anchor": "q99_top", "text": "The query of the last token", "accent": "q",
               "t0": w("b4", "sends"), "t1": w("b4", "multiply") - 0.9, "dx": 80, "dy": -80})
     E.append({"type": "chip", "x": 96, "y": 800, "t0": w("b4", "multiply"), "t1": w("b4", "score") - 0.3, "accent": "q",
               "lines": [{"text": "Dot product", "size": 24, "c": "slate"},
                         {"text": "q · k = q1×k1 + q2×k2 + … + q64×k64", "size": 32, "wt": 600, "mono": True}]})
-    E.append({"type": "pin", "anchor": "ghostq_top", "text": "query", "sub": "position 100", "accent": "q",
+    E.append({"type": "pin", "anchor": "ghostq_top", "text": "query", "sub": "the last token", "accent": "q",
               "t0": w("b4", "multiply") - 0.3, "t1": w("b4", "score") - 0.3, "dx": -70, "dy": 60, "size": 26})
     E.append({"type": "pin", "anchor": "k92_top", "text": "key", "sub": "Manchester", "accent": "k",
               "t0": w("b4", "multiply") - 0.1, "t1": w("b4", "score") - 0.3, "dx": 60, "dy": 60, "size": 26})
@@ -86,8 +86,8 @@ def elements(tl):
                   "t0": t1, "t1": (w("b4", "score") - 0.3) if last else t1 + (t_b - t_a) / 8 - 0.02, "fin": 0.0, "fout": 0.0 if not last else 0.3,
                   "dx": 70, "dy": -20, "accent": "sky", "mono": True, "size": 34})
     E.append({"type": "chip", "x": 96, "y": 130, "t0": w("b4", "score") + 0.3, "t1": en("b4") + 0.3, "accent": "sky",
-              "lines": [{"text": "One dot product per position", "size": 32, "wt": 600},
-                        {"text": "100 positions, 100 scores", "size": 24, "c": "slate"}]})
+              "lines": [{"text": "One dot product per token", "size": 32, "wt": 600},
+                        {"text": "100 tokens, 100 scores", "size": 24, "c": "slate"}]})
     # b5: scores
     E.append({"type": "chip", "x": 96, "y": 130, "t0": w("b5", "eight"), "t1": en("b5") + 0.3, "accent": "sky",
               "lines": [{"text": "score = q · k ÷ 8", "size": 34, "wt": 600, "mono": True},
@@ -101,7 +101,7 @@ def elements(tl):
                   "sub": (sub + "  ·  " if sub else "") + f"q · k = {DOT[pos]:.1f}", "t0": t0, "t1": t1,
                   "dx": 70 if pos != BATT else -70, "dy": -60, "accent": "sky", "size": 32})
     E.append({"type": "chip", "x": 1824, "y": 130, "anchor": "tr", "t0": w("b5", "place"), "t1": en("b5") + 0.3, "accent": "k",
-              "lines": [{"text": "This head looks for a place", "size": 30, "wt": 600},
+              "lines": [{"text": "This attention unit looks for a place", "size": 30, "wt": 600},
                         {"text": f"battery gets {W[BATT] * 100:.1f}% here", "size": 24, "c": "slate"}]})
     # b6: softmax
     E.append({"type": "chip", "x": 96, "y": 130, "t0": w("b6", "softmax"), "t1": en("b6") + 0.3, "accent": "sky",
@@ -113,27 +113,28 @@ def elements(tl):
               "accent": "sky", "lines": [{"text": f"{SC[MAN]:.2f} − {SC[MAN_SYS]:.2f} = {lead:.2f} points", "size": 28, "wt": 600, "mono": True},
                                          {"text": f"{W[MAN] * 100:.1f}% ÷ {W[MAN_SYS] * 100:.1f}% = {W[MAN] / W[MAN_SYS]:.1f} times", "size": 28, "wt": 600, "mono": True}]})
     t_soft = w("b6", "softmax") + 1.5
-    for pos, nm in ((MAN, "Manchester"), (MAN_SYS, "Manchester, system prompt"), (LAST, "itself, position 100"), (STORES, "stores")):
+    for pos, nm in ((MAN, "Manchester"), (MAN_SYS, "Manchester, system prompt"), (LAST, "the last token itself"), (STORES, "stores")):
         E.append({"type": "pin", "anchor": f"m{pos}_top", "text": f"{W[pos] * 100:.1f}%", "sub": nm, "t0": t_soft + (0.4 if pos != MAN else 0),
                   "t1": w("b6", "sixty-five") - 1.0, "size": 30 if pos == MAN else 24, "dx": 50, "dy": -70 if pos == MAN else -40, "mono": True})
-    E.append({"type": "pin", "anchor": f"m{MAN}_top", "text": f"{W[MAN] * 100:.0f}%", "sub": "of this head's attention",
+    E.append({"type": "pin", "anchor": f"m{MAN}_top", "text": f"{W[MAN] * 100:.0f}%", "sub": "of the attention",
               "t0": w("b6", "sixty-five"), "t1": en("b6") + 0.3, "dx": 80, "dy": -60, "size": 48})
     # b7: values
-    E.append({"type": "pin", "anchor": "outp_top", "text": "New vector", "sub": "64 numbers, the head's output", "accent": "sky",
+    E.append({"type": "pin", "anchor": "outp_top", "text": "New vector", "sub": "64 numbers, attention's output", "accent": "sky",
               "t0": w("b7", "new"), "t1": en("b7") + 0.4, "dx": 80, "dy": -90})
     E.append({"type": "chip", "x": 96, "y": 130, "t0": w("b7", "added"), "t1": en("b7") + 0.4, "accent": "v",
-              "lines": [{"text": "out = sum of weight × value, over all 100 positions", "size": 26, "c": "slate"},
+              "lines": [{"text": "out = sum of weight × value, over all 100 tokens", "size": 26, "c": "slate"},
                         {"text": f"= {W[MAN]:.3f} × v(Manchester) + {W[MAN_SYS]:.3f} × v(Manchester, system)", "size": 28, "wt": 600, "mono": True},
-                        {"text": f"+ {W[LAST]:.3f} × v(position 100) + {W[STORES]:.3f} × v(stores) + …", "size": 28, "wt": 600, "mono": True}]})
+                        {"text": f"+ {W[LAST]:.3f} × v(last token) + {W[STORES]:.3f} × v(stores) + …", "size": 28, "wt": 600, "mono": True}]})
     # b8
-    E.append({"type": "pin", "anchor": "tower_pin_f24", "text": "Block 24", "sub": "head 2 of 14", "accent": "sky",
-              "t0": w("b8", "passes") + 1.2, "t1": en("b8") + 0.3, "dx": 70, "dy": -40})
-    E.append({"type": "chip", "x": 96, "y": 130, "t0": w("b8", "fourteen"), "t1": en("b8") + 0.4, "accent": "sky",
-              "lines": [{"text": "14 heads × 24 blocks", "size": 34, "wt": 600}, {"text": "= 336 heads, each with its own query, key and value", "size": 24, "c": "slate"}]})
+    E.append({"type": "pin", "anchor": f"tok{LAST}_top", "text": "The last token, updated", "sub": "it now carries mostly Manchester",
+              "accent": "sky", "t0": w("b8", "back") + 1.0, "t1": en("b8") + 0.3, "dx": 70, "dy": -130})
+    E.append({"type": "chip", "x": 96, "y": 130, "t0": w("b8", "query"), "t1": en("b8") + 0.4, "accent": "sky",
+              "lines": [{"text": "Attention", "size": 34, "wt": 600},
+                        {"text": "query asks · keys answer · values are mixed by the weights", "size": 24, "c": "slate"}]})
     E.append({"type": "end", "t0": en("b8") + 0.8, "kicker": "Agentic Systems Engineering  ·  Lecture 2", "title": "Query, key and value",
-              "sub": "Qwen2.5-0.5B-Instruct, block 24, head 2, on Emma's question",
+              "sub": "One attention unit of Qwen2.5-0.5B-Instruct, on Emma's question",
               "credits": ["Dr. Rajat Dandekar  ·  Vizuara", "Every number is from one recorded run of the model (qkv_data.json)",
-                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Tried-And-True”, Imprismed (Epidemic Sound)"]})
+                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Observatory”, Out To The World (Epidemic Sound)"]})
     return E
 
 
@@ -156,6 +157,6 @@ def sfx(tl):
           ("tick.mp3", w("b5", "seven"), 0.3), ("tick.mp3", w("b5", "five"), 0.3), ("tick.mp3", w("b5", "four"), 0.3), ("tick.mp3", w("b5", "one"), 0.3),
           ("fill.mp3", w("b6", "softmax") + 0.6, 0.4), ("chime.mp3", w("b6", "sixty-five"), 0.35),
           ("rise.mp3", w("b7", "values"), 0.35), ("merge.mp3", w("b7", "added") - 0.8, 0.5),
-          ("beam.mp3", w("b8", "passes"), 0.35), ("tile.mp3", w("b8", "passes") + 1.2, 0.4),
+          ("tile.mp3", w("b8", "back") + 0.9, 0.4), ("beam.mp3", w("b8", "means") - 0.2, 0.3),
           ("resolve.mp3", blk["b8"]["speech_end"] + 0.6, 0.45)]
     return S

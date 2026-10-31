@@ -31,7 +31,7 @@ One three.js scene for the whole of Lecture 2. It follows one sentence, Emma's q
 3. Use one slide per section. Each slide has a full-bleed figure with `data-section="N"` and that section's number of empty steps. With no steps shown, the slide shows the section's first state; after k steps it shows state k. A forward step plays that state's animation (3 to 8 s). Entering the slide or stepping back jumps to the state's end state, and the camera glides on from wherever it was.
 
 ```html
-<section class="slide" data-plate="The game: predict the next token">
+<section class="slide" data-plate="Next-token prediction">
   <div class="fig" data-fig="brain3d" data-section="1" style="left:0;top:0;width:1600px;height:900px"></div>
   <span class="step"></span><span class="step"></span>
 </section>
@@ -39,7 +39,7 @@ One three.js scene for the whole of Lecture 2. It follows one sentence, Emma's q
 
 | Section | `data-plate` title (as in STORY_V4) | `.step` spans | States, in order (k = steps shown) |
 |---|---|---|---|
-| 1 | The game: predict the next token | **2** | 0 the sealed box, the text goes in · 1 the bars come out: "We" 56% · 2 a few tokens later, the first digit: 1 34%, 2 21%, 5 12% |
+| 1 | Next-token prediction | **2** | 0 the sealed box, the text goes in · 1 the bars come out: "We" 56% · 2 a few tokens later, the first digit: 1 34%, 2 21%, 5 12% |
 | 2 | What you send, cut into tokens | **3** | 0 the box opens, 100 token tiles drop in · 1 ids and roles (system 72, question 15, markers 13) · 2 how words and numbers are cut · 3 counted in tokens (100 in, 20 out, 32,768 window) |
 | 3 | Each token becomes a vector | **3** | 0 the tiles rise into columns of numbers · 1 the first 8 of 896 values of " battery" and " Manchester" · 2 the embedding map (PCA, 46 words) · 3 nearest neighbours of " battery" and " Manchester" |
 | 4 | Attention: tokens look back | **7** | Query, key, value in block 24, head 2 (the real head with 65% on " Manchester"): 0 the last position's query column, every earlier token's key column, and the first 8 of 64 numbers of q, k(Manchester) and v(Manchester) · 1 q·k ÷ √64 as bars on the tiles: " Manchester" 7.81, the system prompt's " Manchester" 5.45, ⏎ 5.00 · 2 softmax: the bars become weights (65%, 6%, 4%…) and the arcs grow · 3 the value columns of the top tokens fly to the last position and add up to the head's output · then the old states: 4 all heads and blocks averaged · 5 block 16, head 0 → " battery" 9% · 6 block 12, head 13 rests on the first token · 7 only backwards: " battery" cannot see what comes after it |

@@ -101,12 +101,12 @@ FIGS.coldshot = (el) => {
 /* Repeated cold-open runs of Ask Northbridge (experiments builder). */
 FIGS.coldruns = (el) => {
   const L = L2(); if (!L || !L.cold) return NEEDFD(el, 'The same question asked of Ask Northbridge again and again.', 'experiments/logs/cold_open.json');
-  const C = L.cold, chip = (n) => `<span class="tchip ${n === C.true_answer ? 'c1' : 'dg'}" style="font-size:24px;padding:10px 14px">${n === null ? 'declined' : fmt(n)}</span>`;
-  el.innerHTML = `<div class="card"><span class="tag nt">${C.summary.n} runs · the app’s settings · ${esc(C.model)}</span><div class="chips">${C.summary.figures.map(chip).join('')}</div></div>
-   <div class="card r1 tr" style="margin-top:12px"><span class="tag nt">${C.summary_t1.n} more · temperature 1.0</span><div class="chips">${C.summary_t1.figures.map(chip).join('')}</div>
-   <div class="ftiny">${C.summary.correct + C.summary_t1.correct} of ${C.summary.n + C.summary_t1.n} said ${fmt(C.true_answer)}. Every run gave a figure.</div></div>
-   <div class="card bf r2 tr" style="margin-top:12px;font-size:19px"><span class="tag bf">Emma: “${esc(C.follow_up.question)}”</span><div>“${esc(C.follow_up.reply)}”</div></div>`;
-  return { step(k) { el.querySelector('.r1').classList.toggle('fade-hide', k < 1); el.querySelector('.r2').classList.toggle('fade-hide', k < 2); } };
+  const C = L.cold, all = [...C.summary.figures, ...C.summary_t1.figures], ok = all.filter((n) => n === C.true_answer).length;
+  const chip = (n) => `<span class="tchip ${n === C.true_answer ? 'c1' : 'dg'}" style="font-size:24px;padding:10px 14px">${n === null ? 'declined' : fmt(n)}</span>`;
+  el.innerHTML = `<div class="card"><span class="tag nt">the same question · ${all.length} runs · ${esc(C.model)}</span><div class="chips">${all.map(chip).join('')}</div>
+   <div class="ftiny">${ok} of ${all.length} said ${fmt(C.true_answer)}. Every run gave a figure.</div></div>
+   <div class="card r1 tr" style="margin-top:14px;font-size:19px"><span class="tag nt">the same question, with no system prompt at all</span><div>“${esc(C.no_system.reply.split('\n')[0])}”</div></div>`;
+  return { step(k) { el.querySelector('.r1').classList.toggle('fade-hide', k < 1); } };
 };
 
 /* The model we open: config facts (Hugging Face config.json and model card), plus what it answered in our trace. */
@@ -130,7 +130,7 @@ FIGS.nextbars = (el) => {
     head.innerHTML = `<span class="mono">Emma: ${esc(q)} ↵ Ask Northbridge: ${esc(a)}</span><span class="cursor">▍</span>`;
     barList(list, (rows || []).slice(0, 5).map((t) => [t.text, t.p]), { w: 400, label: 170, hi: 0 });
     const s = (rows || []).slice(0, 5).reduce((x, t) => x + t.p, 0);
-    foot.innerHTML = `Top 5 of ${fmt(T.meta.vocab)} possible next tokens. Together they hold ${pct(s)} of the probability; the other ${fmt(T.meta.vocab - 5)} share the rest.`;
+    foot.innerHTML = `Top 5 of about ${fmt(Math.floor(T.meta.tokenizer_len / 1000))},000 possible next tokens. Together they hold ${pct(s)} of the probability; all the others share the rest.`;
   };
   draw();
   return { step() {} };
@@ -470,18 +470,43 @@ FIGS.chatreplay = (el) => {
    bos_token_id 151,643 = <|endoftext|> is the first special token (config.json), so ids 0..151,642 are learned pieces. */
 FIGS.vocabrows = (el) => {
   const L = L2(), T = TR(), cd = (L && L.card) || (T && T.model_card); if (!cd) return NEEDFD(el, 'The vocabulary sizes.', 'experiments/logs/model_card.json');
-  const rows = cd.vocab, tok = cd.tokenizer_len, learned = 151643, special = tok - learned, pad = rows - tok;
+  const tok = cd.tokenizer_len, learned = 151643, special = tok - learned;
   const idOf = (t) => (T ? (T.tokens.find((x) => x.text === t) || {}).id : null);
-  const W = 1400, wS = 44, wP = 52;
-  el.innerHTML = `<div class="vr-bar"><span class="vr-a" style="width:${W - wS - wP}px">learned pieces · ids 0 – ${fmt(learned - 1)}</span><span class="vr-b r1 tr" style="width:${wS}px"></span><span class="vr-c r2 tr" style="width:${wP}px"></span></div><div class="ftiny" style="text-align:right">the two segments on the right are drawn wider than to scale</div>
-   <div class="vr-legend">
-     <div class="card"><b class="a">${fmt(learned)}</b><span class="lb">learned pieces</span><span>Byte-pair encoding, learnt from text (Section 2). Ids 0 to ${fmt(learned - 1)}.</span></div>
-     <div class="card r1 tr"><b style="color:var(--gold)">+ ${special}</b><span class="lb">special tokens</span><span>Markers, not text: &lt;|endoftext|&gt; ${fmt(learned)}, &lt;|im_start|&gt; ${fmt(idOf('<|im_start|>') || 151644)}, &lt;|im_end|&gt; ${fmt(idOf('<|im_end|>') || 151645)}, and ${special - 3} more for tools and images.</span></div>
-     <div class="card r1 tr"><b>= ${fmt(tok)}</b><span class="lb">in the tokenizer</span><span>Every id the tokenizer can ever produce.</span></div>
-     <div class="card r2 tr"><b style="color:var(--before)">+ ${pad}</b><span class="lb">unused rows</span><span>Never produced, never trained on. They pad the table to ${fmt(rows)} = ${fmt(rows / 128)} × 128.</span></div>
-   </div>
-   <div class="card af r3 tr" style="margin-top:14px;font-size:20px"><b>${fmt(rows)} rows × ${fmt(cd.d_model)} numbers = ${fmt(rows * cd.d_model)} numbers</b> in the embedding table, ${pct(rows * cd.d_model / cd.params)} of the whole model. Why a multiple of 128? GPU matrix units run fastest on sizes in blocks of 64 or 128, so model makers round the table up. Qwen does not say which reason it had.</div>`;
+  el.innerHTML = `<div class="vr-eq">
+     <div class="card"><b class="a">${fmt(learned)}</b><span class="lb">pieces learned by BPE</span><span>“␣battery”, “␣Manchester”, “-b”, “5”, “,” … every piece the merging produced.</span></div>
+     <div class="vr-op">+</div>
+     <div class="card r1 tr"><b style="color:var(--gold)">${special}</b><span class="lb">special markers</span><span>Not text: &lt;|im_start|&gt; (${fmt(idOf('<|im_start|>') || 151644)}) and &lt;|im_end|&gt; (${fmt(idOf('<|im_end|>') || 151645)}) mark where each chat message starts and ends.</span></div>
+     <div class="vr-op r2 tr">=</div>
+     <div class="card af r2 tr"><b>${fmt(tok)}</b><span class="lb">the vocabulary</span><span>Every token the model can read or write. Each has an id: its place in this list.</span></div></div>
+   <div class="ftiny r3 tr" style="margin-top:18px">Inside the model the list has ${fmt(cd.vocab)} slots: the last ${fmt(cd.vocab - tok)} are spare, never used, so the table is a round ${fmt(cd.vocab / 128)} × 128 (computer hardware works fastest on such sizes). That is where the 151,936 you may see elsewhere comes from.</div>`;
   return { step(k) { el.querySelectorAll('.r1').forEach((x) => x.classList.toggle('fade-hide', k < 1)); el.querySelectorAll('.r2').forEach((x) => x.classList.toggle('fade-hide', k < 2)); el.querySelectorAll('.r3').forEach((x) => x.classList.toggle('fade-hide', k < 3)); } };
+};
+
+/* BPE, very simply: four Northbridge words, one click per merge. Computed here; ties go to the pair seen first. */
+FIGS.bpesimple = (el) => {
+  const W = [['battery', 3], ['batteries', 1], ['pack', 2], ['packs', 1]];
+  const states = [W.map(([w]) => [...w])], merges = [], counts = [];
+  for (let m = 0; m < 9; m++) {
+    const st = states[states.length - 1], pc = new Map();
+    W.forEach(([, n], wi) => { const t = st[wi]; for (let i = 0; i < t.length - 1; i++) { const k = t[i] + '|' + t[i + 1]; pc.set(k, (pc.get(k) || 0) + n); } });
+    const ranked = [...pc.entries()].sort((a, b) => b[1] - a[1]);
+    counts.push(ranked);
+    const [best, n] = ranked[0]; if (n < 2) break;
+    const [a, b] = best.split('|');
+    states.push(st.map((t) => { const o = []; for (let i = 0; i < t.length; i++) { if (i < t.length - 1 && t[i] === a && t[i + 1] === b) { o.push(a + b); i++; } else o.push(t[i]); } return o; }));
+    merges.push({ a, b, n });
+  }
+  const letters = [...new Set(W.flatMap(([w]) => [...w]))];
+  el.innerHTML = `<div class="bs-words"></div><div class="bs-side"><div class="bs-h">Pairs, counted</div><div class="bs-pairs"></div><div class="bs-h" style="margin-top:14px">The vocabulary</div><div class="chips bs-vocab"></div></div>`;
+  const words = el.querySelector('.bs-words'), pairs = el.querySelector('.bs-pairs'), vocab = el.querySelector('.bs-vocab');
+  return { step(k) {
+    const m = Math.min(k, merges.length), st = states[m], mg = merges[m - 1];
+    words.innerHTML = W.map(([w, n], wi) => `<div class="bw"><span class="lab">${w} <b>× ${n}</b></span><span class="chips">${st[wi].map((t) => `<span class="tchip${mg && t === mg.a + mg.b ? ' new' : ''}" style="font-size:22px;padding:9px 11px">${esc(t)}</span>`).join('')}</span></div>`).join('') +
+      `<div class="bs-step">${mg ? `Merge ${m}: <b>${esc(mg.a)}</b> + <b>${esc(mg.b)}</b> → <b class="a">${esc(mg.a + mg.b)}</b>, the most frequent pair (${mg.n} times).` : 'Start: every word is a row of single letters.'} ${m < merges.length ? 'Next click: merge the top pair on the right.' : 'Done: “battery” and “pack” are single pieces now.'}</div>`;
+    const nx = counts[m] || [];
+    pairs.innerHTML = m < merges.length ? nx.slice(0, 6).map(([p, c], i) => `<div class="pb${i === 0 ? ' hi' : ''}" style="margin:3px 0"><span class="pt" style="width:120px">${esc(p.replace('|', ' + '))}</span><span class="pbv">${c}×</span></div>`).join('') : '<div class="ftiny">no pair appears more than once</div>';
+    vocab.innerHTML = letters.map((l) => `<span class="tchip sm">${l}</span>`).join('') + merges.slice(0, m).map((x, i) => `<span class="tchip sm${i === m - 1 ? ' new' : ''}">${esc(x.a + x.b)}</span>`).join('');
+  } };
 };
 
 /* =============================== attention, from first principles ===============================*/
@@ -581,13 +606,57 @@ FIGS.params = (el) => {
   return { step(k) { el.querySelectorAll('.r1').forEach((x) => x.classList.toggle('fade-hide', k < 1)); el.querySelectorAll('.r2').forEach((x) => x.classList.toggle('fade-hide', k < 2)); } };
 };
 
+
+/* =============================== training, as one story ===============================*/
+/* The data: what the tiny GPT read. Stats from L2.tiny; the excerpt is verbatim from
+   ledgerline/ledgerline/course/l2/northbridge_corpus.md (made by course/l2/corpus.py). */
+FIGS.corpus = (el) => {
+  const L = L2(), G = L && L.tiny; if (!G) return NEEDFD(el, 'The Northbridge corpus.', 'experiments/logs/tinygpt.json');
+  el.innerHTML = `<div class="counts"><div class="cnt a"><b>${fmt(G.corpus_chars)}</b>characters</div><div class="cnt"><b>${fmt(G.corpus_words)}</b>words</div><div class="cnt"><b>${G.distinct_chars}</b>different characters</div><div class="cnt"><b>${esc(G.corpus_first_day)} – ${esc(G.corpus_last_day)}</b>dates in the text</div></div>
+   <div class="tpltext r1 tr" style="margin-top:14px;font-size:15.5px;line-height:1.55">Stores, 3 Oct 2026: MNT-RCK-02 in Manchester stores, 10,200 on hand, using 4,000 a day, 2 days of cover.
+
+Order, 22 Sep 2026: PO/2026/01105 to Voltway Cells for 200 BAT-500, £28,560 gross. Status released, sent to the supplier.
+
+9.1 Every order must carry the document number Ledgerline gives it and must be in status Released before the supplier is told to deliver.
+
+<span class="us">Daniel, we need 2,000 battery packs, BAT-500, for the spring launch run. Manchester stores has 5,400 and we use about 600 a day, so nine days of cover. …</span></div>
+   <div class="ftiny r1 tr">Four real lines from the corpus. The last one, Emma’s e-mail, carries the true stock figure, 5,400.</div>`;
+  return { step(k) { el.querySelectorAll('.r1').forEach((x) => x.classList.toggle('fade-hide', k < 1)); } };
+};
+
+/* Training vs. context: the same fact, learnt or given. */
+FIGS.contrast = (el) => {
+  const L = L2(); if (!L || !L.tiny || !L.facts) return NEEDFD(el, 'Training versus the prompt.', 'experiments/logs');
+  const G = L.tiny, F = L.facts;
+  el.innerHTML = `<div class="grid2">
+   <div class="card bf"><span class="tag bf">5,400 was in the training text</span><h3>Learnt in training</h3>Our tiny GPT, asked for the Manchester stock line, ten times:<div class="chips" style="margin:10px 0">${G.stock_figures.map((n) => `<span class="tchip dg">${fmt(n)}</span>`).join('')}</div><span class="small">${G.stock_5400} of ${G.stock_figures.length} said 5,400. It learnt the pattern of a stock line, not the number.</span></div>
+   <div class="card af r1 tr"><span class="tag af">5,400 put in the prompt</span><h3>Given in the context</h3>One line added: <span class="mono" style="font-size:15px">${esc(F.line)}</span><div style="margin:10px 0;font-size:20px">“${esc(F.runs[0].reply)}”</div><span class="small">${esc(L.cold.model)}: ${F.correct} of ${F.runs.length} runs said 5,400. Qwen2.5-0.5B: “${esc(F.qwen_greedy)}”</span></div></div>`;
+  return { step(k) { el.querySelector('.r1').classList.toggle('fade-hide', k < 1); } };
+};
+
+/* The Brain Lab: a link and QR code once the URL is set (data-url on the figure). */
+FIGS.brainlab = (el) => {
+  const url = el.dataset.url || '';
+  if (!url) { el.innerHTML = `<div class="todo-card f3"><span class="todo-k">TODO(lab url)</span><div>The <b>Brain Lab</b> link and its QR code go here: chat with a model before training, train it on your own facts, chat again, then compare with putting the facts in the prompt.</div><div class="todo-s">Set data-url on this figure when the Brain Lab is deployed.</div></div>`; return { step() {} }; }
+  el.innerHTML = `<div class="bl"><div class="bl-qr"></div><div><a class="live" href="${esc(url)}" target="_blank" rel="noopener">Open the Brain Lab <code>${esc(url.replace(/^https?:\/\//, ''))}</code></a></div></div>`;
+  try { new window.QRCode(el.querySelector('.bl-qr'), { text: url, width: 240, height: 240 }); } catch (e) {}
+  el.querySelector('.live').addEventListener('click', stop);
+  return { step() {} };
+};
+
+/* Explore it yourself: the standalone 3D scene in the slide (keys 1-9 jump between sections, arrows step). */
+FIGS.explore3d = (el) => {
+  el.innerHTML = `<iframe src="brain3d/index.html?section=1" title="The Brain, in 3D" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:20px;background:#f4f8ff;box-shadow:var(--shadow)"></iframe>`;
+  return { step() {} };
+};
+
 /* =============================== films ===============================
    films/<name>.mp4 + .webm + .jpg from the L2 film builder (films/FILMS.md). Never autoplay. Present = full screen. */
 FIGS.film = (el) => {
   const n = el.dataset.name, base = 'films/' + n;
   const todo = () => { el.innerHTML = `<div class="todo-card f3"><span class="todo-k">TODO(film)</span><div>The narrated film <b>${esc(n)}</b> plays here: ${esc(el.dataset.what || '')}</div><div class="todo-s">Lands as films/${esc(n)}.mp4, .webm and .jpg (films/FILMS.md).</div></div>`; };
   /* Show the player straight away (poster first); fall back to the placeholder only if no source can load. */
-  el.innerHTML = `<video class="film" controls preload="metadata" playsinline poster="${base}.jpg"><source src="${base}.mp4" type="video/mp4"><source src="${base}.webm" type="video/webm"></video>
+  el.innerHTML = `<video class="film" controls preload="metadata" playsinline poster="${base}.jpg"><source src="${base}.webm" type="video/webm"><source src="${base}.mp4" type="video/mp4"></video>
     <div class="ctl film-ctl"><button>Present (full screen)</button></div>`;
   const v = el.querySelector('video'), srcs = [...v.querySelectorAll('source')];
   let failed = 0;

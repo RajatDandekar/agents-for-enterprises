@@ -12,7 +12,7 @@ T = json.load(open(os.path.join(os.path.dirname(os.path.dirname(HERE)), "brain3d
 DIAL = T["final"]["dial_last"]
 CARD = T["model_card"]
 POSTER = 49.0
-MUSIC = "tried_and_true_imprismed.mp3"
+MUSIC = "observatory_out_to_the_world.mp3"
 MUSIC_GAIN = 0.34  # one bed level for the whole L2 series
 MUSIC_OFFSET = 120.0
 _S = {}
@@ -55,7 +55,7 @@ def elements(tl):
     E.append({"type": "end", "t0": en("b5") + 0.8, "kicker": "Agentic Systems Engineering  ·  Lecture 2", "title": "From a vector to a choice",
               "sub": "Qwen2.5-0.5B-Instruct, the next token after Emma's question",
               "credits": ["Dr. Rajat Dandekar  ·  Vizuara", "Logits and probabilities from one recorded run (brain3d/trace.json)",
-                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Tried-And-True”, Imprismed (Epidemic Sound)"]})
+                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Observatory”, Out To The World (Epidemic Sound)"]})
     return E
 
 

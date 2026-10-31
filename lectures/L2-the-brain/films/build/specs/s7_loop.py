@@ -10,7 +10,7 @@ LENS = T["logit_lens"]["digits"][0]["lens"]
 SAMPLES = T["generation"]["samples_t07"]
 TRUTH = T["facts"]["truth"]
 POSTER = 37.0
-MUSIC = "tried_and_true_imprismed.mp3"
+MUSIC = "observatory_out_to_the_world.mp3"
 MUSIC_GAIN = 0.34  # one bed level for the whole L2 series
 MUSIC_OFFSET = 40.0
 DIGITS = {4, 5, 6}
@@ -117,7 +117,7 @@ def elements(tl):
     E.append({"type": "end", "t0": en("b5") + 1.0, "kicker": "Agentic Systems Engineering  ·  Lecture 2", "title": "The loop: one token at a time",
               "sub": "Qwen2.5-0.5B-Instruct, greedy, then 5 samples at temperature 0.7",
               "credits": ["Dr. Rajat Dandekar  ·  Vizuara", "Every number is from one recorded run of the model (brain3d/trace.json)",
-                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Tried-And-True”, Imprismed (Epidemic Sound)"]})
+                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Observatory”, Out To The World (Epidemic Sound)"]})
     for e in E:
         e.pop("_late", None)
         e.pop("_j", None)

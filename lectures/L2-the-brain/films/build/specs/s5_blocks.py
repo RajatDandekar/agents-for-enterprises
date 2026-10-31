@@ -10,7 +10,7 @@ T = json.load(open(os.path.join(os.path.dirname(os.path.dirname(HERE)), "brain3d
 LENS = T["logit_lens"]["last"]
 CARD = T["model_card"]
 POSTER = 57.5
-MUSIC = "tried_and_true_imprismed.mp3"
+MUSIC = "observatory_out_to_the_world.mp3"
 MUSIC_GAIN = 0.34  # one bed level for the whole L2 series
 MUSIC_OFFSET = 80.0
 CJK_URL = "https://github.com/google/fonts/raw/main/ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf"
@@ -103,7 +103,7 @@ def elements(tl):
     E.append({"type": "end", "t0": en("b5") + 0.8, "kicker": "Agentic Systems Engineering  ·  Lecture 2", "title": "A block, then 24 of them",
               "sub": "Qwen2.5-0.5B-Instruct, the logit lens at the last position of Emma's question",
               "credits": ["Dr. Rajat Dandekar  ·  Vizuara", "Every token and probability is from one recorded run (brain3d/trace.json)",
-                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Tried-And-True”, Imprismed (Epidemic Sound)"]})
+                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Observatory”, Out To The World (Epidemic Sound)"]})
     return E
 
 

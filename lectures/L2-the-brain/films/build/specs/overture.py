@@ -8,7 +8,7 @@ TOK = T["tokens"]
 META = T["meta"]
 TRUTH = T["facts"]["truth"]
 POSTER = 31.0
-MUSIC = "tried_and_true_imprismed.mp3"
+MUSIC = "observatory_out_to_the_world.mp3"
 MUSIC_GAIN = 0.42  # the overture has more music than voice
 MUSIC_OFFSET = 0.0
 
@@ -42,11 +42,13 @@ def elements(tl):
     E.append({"type": "chip", "x": 96, "y": 130, "t0": w("b2", "one"), "t1": w("b2", "twenty-four") - 0.2, "accent": "sky",
               "lines": [{"text": f"{T['prompt']['n_tokens']} tokens in", "size": 34, "wt": 600},
                         {"text": "the app's instructions, Emma's question, the chat markers", "size": 24, "c": "slate"}]})
-    E.append({"type": "chip", "x": 96, "y": 130, "t0": w("b2", "twenty-four"), "t1": w("b2", "every") - 0.2, "accent": "sky",
-              "lines": [{"text": f"{META['layers']} blocks", "size": 34, "wt": 600},
-                        {"text": f"Qwen2.5-0.5B-Instruct, {META['params']:,} weights", "size": 24, "c": "slate"}]})
-    E.append({"type": "chip", "x": 96, "y": 130, "t0": w("b2", "every"), "t1": en("b2") + 0.4, "accent": "sky",
-              "lines": [{"text": "1 token chosen from", "size": 24, "c": "slate"}, {"text": f"{META['vocab']:,}", "size": 44, "wt": 600, "mono": True}]})
+    E.append({"type": "chip", "x": 96, "y": 130, "t0": w("b2", "twenty-four"), "t1": w("b2", "end") - 0.2, "accent": "sky",
+              "lines": [{"text": f"{META['layers']} blocks, one pass", "size": 34, "wt": 600},
+                        {"text": f"all {T['prompt']['n_tokens']} tokens read together · Qwen2.5-0.5B-Instruct", "size": 24, "c": "slate"}]})
+    E.append({"type": "chip", "x": 96, "y": 130, "t0": w("b2", "end"), "t1": w("b2", "then") - 0.2, "accent": "sky",
+              "lines": [{"text": "at the end, 1 token chosen from", "size": 24, "c": "slate"}, {"text": f"{META['vocab']:,}", "size": 44, "wt": 600, "mono": True}]})
+    E.append({"type": "chip", "x": 96, "y": 130, "t0": w("b2", "then"), "t1": en("b2") + 0.4, "accent": "sky",
+              "lines": [{"text": "then the pass runs again", "size": 32, "wt": 600}, {"text": "once for every new token", "size": 24, "c": "slate"}]})
     E.append({"type": "pin", "anchor": "ans2_top", "text": "100", "sub": "a confident answer, invented", "accent": "ember",
               "t0": w("b3", "one"), "t1": w("b3", "today") - 0.2, "dx": -40, "dy": -120, "mono": True, "size": 40})
     E.append({"type": "pin", "anchor": "plaque_top", "text": f"{TRUTH:,}", "sub": "the truth, in Ledgerline", "accent": "green",
@@ -54,7 +56,7 @@ def elements(tl):
     E.append({"type": "end", "t0": en("b3") + 0.8, "kicker": "Agentic Systems Engineering  ·  Lecture 2", "title": "The Brain",
               "sub": "How an LLM works, followed through one question",
               "credits": ["Dr. Rajat Dandekar  ·  Vizuara", "Qwen2.5-0.5B-Instruct, one recorded run (brain3d/trace.json)",
-                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Tried-And-True”, Imprismed (Epidemic Sound)"]})
+                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Observatory”, Out To The World (Epidemic Sound)"]})
     return E
 
 
@@ -64,6 +66,6 @@ def sfx(tl):
     S = [("bloom.mp3", 0.2, 0.55), ("whoosh.mp3", blk["b2"]["at"] - 0.45, 0.3), ("whoosh.mp3", blk["b3"]["at"] - 0.45, 0.3)]
     for word in ("how", "battery", "manchester"):
         S.append(("tick.mp3", w("b1", word), 0.3))
-    S += [("beam.mp3", w("b2", "turn") - 0.2, 0.4), ("tile.mp3", w("b3", "one") + 0.1, 0.45), ("chime.mp3", w("b3", "truth") + 0.3, 0.4),
+    S += [("beam.mp3", w("b2", "read") - 0.2, 0.4), ("beam.mp3", w("b2", "runs") - 0.2, 0.3), ("tile.mp3", w("b3", "one") + 0.1, 0.45), ("chime.mp3", w("b3", "truth") + 0.3, 0.4),
           ("resolve.mp3", blk["b3"]["speech_end"] + 0.6, 0.5)]
     return S

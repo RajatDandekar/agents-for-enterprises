@@ -13,7 +13,7 @@ PROMPT = "Stores, 26 Oct 2026: BAT-500 in Manchester stores,"
 UNTRAINED = TG["sample_untrained"].split("stores,", 1)[1][:13]
 TRAINED = "2,400 on hand"
 POSTER = 40.0
-MUSIC = "tried_and_true_imprismed.mp3"
+MUSIC = "observatory_out_to_the_world.mp3"
 MUSIC_GAIN = 0.34  # one bed level for the whole L2 series
 MUSIC_OFFSET = 80.0
 
@@ -96,7 +96,7 @@ def elements(tl):
     E.append({"type": "end", "t0": en("b5") + 0.9, "kicker": "Agentic Systems Engineering  ·  Lecture 2", "title": "Where the weights came from",
               "sub": "The tiny GPT on Northbridge's documents, and Qwen2.5 at scale",
               "credits": ["Dr. Rajat Dandekar  ·  Vizuara", "Tiny GPT: experiments/logs/tinygpt.json · Qwen2.5 Technical Report (arXiv:2412.15115)",
-                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Tried-And-True”, Imprismed (Epidemic Sound)"]})
+                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Observatory”, Out To The World (Epidemic Sound)"]})
     return E
 
 

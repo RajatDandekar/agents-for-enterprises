@@ -13,7 +13,7 @@ HEADS = {h["looks_at"]: h for h in A["heads"]}
 ROW_B = dict((j, w) for j, w in A["rows"]["avg"][86])
 LAST, MAN, BATT, PACKS = 99, 92, 86, 87
 POSTER = 39.3  # beams lit, 65.2% on Manchester
-MUSIC = "tried_and_true_imprismed.mp3"
+MUSIC = "observatory_out_to_the_world.mp3"
 MUSIC_GAIN = 0.34  # one bed level for the whole L2 series
 MUSIC_OFFSET = 40.0
 
@@ -40,7 +40,7 @@ def elements(tl):
     st = lambda b: blk[b]["at"]  # noqa: E731
     en = lambda b: blk[b]["speech_end"]  # noqa: E731
     pc = lambda x: f"{x * 100:.1f}%"  # noqa: E731
-    E = [{"type": "title", "kicker": "Lecture 2  ·  Section 4", "title": "Attention: tokens look back", "t0": 0.4, "t1": st("b1") + 3.5}]
+    E = [{"type": "title", "kicker": "Lecture 2  ·  Section 5", "title": "Attention: tokens look back", "t0": 0.4, "t1": st("b1") + 3.5}]
     # token names under the tiles, whenever the row is seen up close
     wins = [(st("b1") + 0.6, en("b1") + 0.4), (st("b2") - 0.2, w("b2", "markers") - 0.4), (w("b2", "fifth") - 0.2, w("b3", "twelve") - 0.5),
             (st("b4") - 0.1, en("b4") + 0.4)]
@@ -97,7 +97,7 @@ def elements(tl):
     E.append({"type": "end", "t0": en("b5") + 0.8, "kicker": "Agentic Systems Engineering  ·  Lecture 2", "title": "Attention: tokens look back",
               "sub": "Qwen2.5-0.5B-Instruct, the last position of Emma's question",
               "credits": ["Dr. Rajat Dandekar  ·  Vizuara", "Every weight is from one recorded run of the model (brain3d/trace.json)",
-                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Tried-And-True”, Imprismed (Epidemic Sound)"]})
+                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Observatory”, Out To The World (Epidemic Sound)"]})
     return E
 
 

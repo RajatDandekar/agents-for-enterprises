@@ -4,8 +4,8 @@ b1 Emma's question is one bar of 15 abutting tiles; a blade of light cuts it int
 b2 the whole chat drops onto a dark table as a page of 100 tiles in its messages (system 72, Emma 15, markers 13).
 b3 macros: one tile per common word; " Manchester" (19361); " Northbridge" = " North" + "bridge"; "5,400" -> 5 , 4 0 0.
 b4 byte pair encoding on the real hand example (experiments/logs/bpe.json): battery and packs fuse merge by merge.
-b5 the vocabulary table: a rack of 151,936 rows ruled in 1,187 bands of 128; its top drawer holds the last BPE rows,
-   the 22 special tokens and the 271 padding rows no token uses.
+b5 the vocabulary table: a tall rack of rows; its top drawer holds the last learned BPE rows and the 22 special
+   tokens, then the whole table lights: one row per token the tokenizer knows (151,665).
 """
 import os
 import sys
@@ -160,28 +160,26 @@ K.plane("rack_faceplane", RW, RH, face_m, loc=(0, -RD / 2 - 0.002, RH / 2 + 0.04
 for sx in (-1, 1):
     K.rbox(f"rack_rail{sx}", (0.03, 0.03, RH + 0.12), bevel=0.008, seg=3, mat=K.M("alu"), loc=(sx * (RW / 2 + 0.03), -RD / 2, RH / 2 + 0.04), parent=rack)
 K.rbox("rack_cap", (RW + 0.14, RD + 0.06, 0.04), bevel=0.012, seg=4, mat=K.M("alu_dark"), loc=(0, 0, RH + 0.12), parent=rack)
-# the drawer: the last 20 BPE rows (sky), the 22 special tokens (violet), the 271 padding rows (dark)
-rowc = [tuple(c * 0.9 for c in K.SKY[:3])] * 20 + [tuple(K.K_COL[:3])] * 22 + [(0.05, 0.06, 0.08)] * 271
-dimg = P.rows_image("drawer_rows", rowc, px=6, width=96)
+# the drawer: the last 20 learned BPE rows (sky) and the 22 special tokens (violet)
+rowc = [tuple(c * 0.9 for c in K.SKY[:3])] * 20 + [tuple(K.K_COL[:3])] * 22
+dimg = P.rows_image("drawer_rows", rowc, px=24, width=96)
 dm = P.image_glow_mat("drawer_m", dimg, 0.0)
 drawer = K.empty("drawer", (0, -RD / 2, RH - 0.12), parent=rack)
 K.rbox("drawer_box", (RW - 0.06, 0.7, 0.1), bevel=0.01, seg=3, mat=K.M("alu_dark"), loc=(0, -0.35, 0), parent=drawer)
 K.plane("drawer_top", RW - 0.14, 0.62, dm, loc=(0, -0.35, 0.0505), rot=(-1.5708, 0, 0), parent=drawer)
 K.rbox("drawer_handle", (0.4, 0.02, 0.025), bevel=0.008, seg=3, mat=K.M("alu"), loc=(0, -0.71, 0.0), parent=drawer)
-K.empty("drawer_pin_sky", (0, -0.35 + 0.31 - 0.62 * 10 / 313, 0.06), parent=drawer)
-K.empty("drawer_pin_special", (0, -0.35 + 0.31 - 0.62 * 31 / 313, 0.06), parent=drawer)
-K.empty("drawer_pin_pad", (0, -0.35 + 0.31 - 0.62 * 180 / 313, 0.06), parent=drawer)
+K.empty("drawer_pin_sky", (0, -0.35 + 0.31 - 0.62 * 10 / 42, 0.06), parent=drawer)
+K.empty("drawer_pin_special", (0, -0.35 + 0.31 - 0.62 * 31 / 42, 0.06), parent=drawer)
 K.empty("rack_pin_top", (RW / 2, -RD / 2, RH + 0.1), parent=rack)
 K.empty("rack_pin_mid", (RW / 2, -RD / 2, RH * 0.5), parent=rack)
-K.empty("rack_pin_band", (0.05, -RD / 2 - 0.003, 0.04 + RH * 0.55 - 0.017), parent=rack)
-f_add, f_22, f_665 = w("b5", "add"), w("b5", "twenty-two"), w("b5", "sixty-five")
-f_rows, f_936, f_1187, f_128, f_no, f_271 = w("b5", "rows"), w("b5", "thirty-six"), w("b5", "eighty-seven"), w("b5", "twenty-eight"), w("b5", "no"), w("b5", "seventy-one")
+f_add, f_22, f_tk, f_665, f_keeps = w("b5", "add"), w("b5", "twenty-two"), w("b5", "tokenizer"), w("b5", "sixty-five"), w("b5", "keeps")
 f_tz = w("b4", "tokenizer")
-K.glow_keys(face_m, [(0, 0.0), (f_tz, 0.0), (f_tz + 16, 0.55)])
+K.glow_keys(face_m, [(0, 0.0), (f_tz, 0.0), (f_tz + 16, 0.3)])
 sw = face_m.node_tree.nodes["sweep"].outputs[0]
-K.keyval(sw, [(0, 0.0), (f_tz + 10, 0.0), (w("b4", "pieces", 1) + 10, 151643 / 151936), (f_1187 - 20, 151643 / 151936), (f_1187 - 6, 0.53), (f_128 + 30, 0.57)])
+K.keyval(sw, [(0, 0.0), (f_tz + 10, 0.0), (w("b4", "pieces", 1) + 10, 0.97), (f_665 - 10, 0.97), (f_665 + 14, 1.0)])
+K.glow_keys(face_m, [(f_keeps - 4, 0.3), (f_keeps + 12, 0.5)])
 K.key(drawer, "location", [(0, (0, 0.3, RH - 0.12)), (f_add - 4, (0, 0.3, RH - 0.12)), (f_add + 22, (0, -0.32, RH - 0.12))])
-K.glow_keys(dm, [(0, 0.0), (f_add, 0.0), (f_add + 16, 1.2), (f_22, 1.2), (f_22 + 10, 3.0)])
+K.glow_keys(dm, [(0, 0.0), (f_add, 0.0), (f_add + 16, 0.7), (f_22, 0.7), (f_22 + 10, 1.3)])
 
 # ---------------------------------------------------------------- cameras
 c1 = K.Cam(sc, "c_bar", lens=34, fstop=3.2).cut(0)
@@ -206,16 +204,13 @@ c8.keys([(f_tz - 12, (RACK_X + 1.9, -3.4, 1.0), (RACK_X, 0.0, 1.1)),
          (f_add - 10, (RACK_X + 1.6, -3.1, 1.3), (RACK_X, 0.0, 1.3))])
 c9 = K.Cam(sc, "c_drawer", lens=38, fstop=3.2).cut(f_add - 8)
 dz = PZ + RH - 0.12
-c9.keys([(f_add - 8, (RACK_X + 0.9, -2.0, dz + 0.95), (RACK_X, -0.5, dz)), (f_1187 - 26, (RACK_X + 0.7, -1.75, dz + 0.85), (RACK_X, -0.5, dz))])
-c10 = K.Cam(sc, "c_rack2", lens=50, fstop=2.8).cut(f_1187 - 24)
-zf = PZ + 0.04 + RH * 0.55
-c10.keys([(f_1187 - 24, (RACK_X + 0.22, -0.72, zf + 0.06), (RACK_X + 0.05, -0.16, zf)), (f_no - 14, (RACK_X + 0.12, -0.55, zf + 0.04), (RACK_X + 0.05, -0.16, zf))])
-c11 = K.Cam(sc, "c_pad", lens=45, fstop=2.8).cut(f_no - 12)
-c11.keys([(f_no - 12, (RACK_X + 0.55, -1.75, dz + 0.75), (RACK_X, -0.6, dz)), (b["b5"]["f1"] + 12, (RACK_X + 0.4, -1.55, dz + 0.65), (RACK_X, -0.6, dz))])
+c9.keys([(f_add - 8, (RACK_X + 0.9, -2.0, dz + 0.95), (RACK_X, -0.5, dz)), (f_tk - 6, (RACK_X + 0.75, -1.8, dz + 0.85), (RACK_X, -0.5, dz))])
+c10 = K.Cam(sc, "c_rack2", lens=30, fstop=4.0).cut(f_tk - 4)
+c10.keys([(f_tk - 4, (RACK_X + 1.6, -2.6, 2.0), (RACK_X, -0.2, 1.6)), (b["b5"]["f1"] + 12, (RACK_X + 2.1, -3.6, 1.5), (RACK_X, 0.0, 1.2))])
 c12 = K.Cam(sc, "c_end", lens=32, fstop=4.5).cut(b["b6"]["f0"] - 8)
 c12.keys([(b["b6"]["f0"] - 8, (0.6, -4.0, 2.2), (0.0, -0.2, 0.1)), (END, (1.6, -5.3, 2.9), (0.0, -0.2, 0.1))])
 
 pins = [f"tok{i}_front" for i in range(N)] + [f"tok{i}_top" for i in range(N)]
 pins += [f"num{k}_front" for k in range(5)] + [f"bpe_{wd}_{a}_{bb}_front" for (wd, a, bb) in life]
-pins += ["drawer_pin_sky", "drawer_pin_special", "drawer_pin_pad", "rack_pin_top", "rack_pin_mid", "rack_pin_band"]
+pins += ["drawer_pin_sky", "drawer_pin_special", "rack_pin_top", "rack_pin_mid"]
 K.finish(sc, FILM, pins, samples=int(os.environ.get("SAMPLES", "96")))

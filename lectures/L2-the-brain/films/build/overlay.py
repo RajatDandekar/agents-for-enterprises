@@ -539,49 +539,96 @@ def _sh(cmd):
     return p
 
 
+MUSIC_UNDER_DB = 26.0   # Rajat, 31 Oct: the bed sits clearly under the voice (~26 dB below it while Daniel speaks,
+MUSIC_GAP_DB = 22.0     # ~22 dB below it in the gaps), the same L1 track ("Observatory") in every film
+
+
+def _lufs(path):
+    m = subprocess.run(["ffmpeg", "-i", path, "-af", "loudnorm=print_format=json", "-f", "null", "-"],
+                       capture_output=True, text=True).stderr
+    return float(json.loads(m[m.rindex("{"):m.rindex("}") + 1])["input_i"])
+
+
+def _speech_windows(tl, merge=0.9, pre=0.15, post=0.3):
+    ws = sorted((w["s"] - pre, w["e"] + post) for w in tl["words"])
+    out = []
+    for a, b in ws:
+        if out and a - out[-1][1] < merge:
+            out[-1][1] = max(out[-1][1], b)
+        else:
+            out.append([a, b])
+    return out
+
+
 def mix_audio(film, tl, adir, out_wav, mod):
     total = tl["seconds"]
+    SR = 48000
+    # 1. the voice bus
     ins, filt, voice = [], [], []
-
-    def add(p):
-        ins.extend(["-i", p])
-        return len(ins) // 2 - 1
-    for b in tl["blocks"]:
-        i = add(os.path.join(adir, "narr", os.path.basename(b["audio"])))
+    for k, b in enumerate(tl["blocks"]):
+        ins += ["-i", os.path.join(adir, "narr", os.path.basename(b["audio"]))]
         ms = int(b["at"] * 1000)
-        filt.append(f"[{i}]aresample=48000,aformat=channel_layouts=stereo,adelay={ms}|{ms}[n{i}]")
-        voice.append(f"[n{i}]")
-    filt.append("".join(voice) + f"amix=inputs={len(voice)}:normalize=0,apad=whole_dur={total:.2f},atrim=0:{total:.2f},asplit=2[vo][sc]")
-    music = sorted(p for p in os.listdir(os.path.join(adir, "music"))) if os.path.isdir(os.path.join(adir, "music")) else []
-    mpick = getattr(mod, "MUSIC", None) or (music[0] if music else None)
-    parts = ["[vo]"]
+        filt.append(f"[{k}]aresample={SR},aformat=channel_layouts=stereo,adelay={ms}|{ms}[n{k}]")
+        voice.append(f"[n{k}]")
+    filt.append("".join(voice) + f"amix=inputs={len(voice)}:normalize=0,apad=whole_dur={total:.2f},atrim=0:{total:.2f}[v]")
+    vwav = out_wav + ".voice.wav"
+    _sh(["ffmpeg", "-y", "-loglevel", "error", *ins, "-filter_complex", ";".join(filt), "-map", "[v]", "-ar", str(SR), vwav])
+    Lv = _lufs(vwav)
+    # 2. the music bed, levelled against the voice and shaped by the speech windows
+    music = sorted(os.listdir(os.path.join(adir, "music"))) if os.path.isdir(os.path.join(adir, "music")) else []
+    mpick = getattr(mod, "MUSIC", None)
+    if mpick not in music:
+        mpick = music[0] if music else None
+    parts = [vwav]
     if mpick:
-        i = add(os.path.join(adir, "music", mpick))
         off = getattr(mod, "MUSIC_OFFSET", 0.0)
-        filt.append(f"[{i}]aresample=48000,aformat=channel_layouts=stereo,atrim=start={off},asetpts=PTS-STARTPTS,"
-                    f"aloop=loop=-1:size=2e9,atrim=0:{total:.2f},volume={getattr(mod, 'MUSIC_GAIN', 0.5)},"
-                    f"afade=t=in:st=0:d=1.5,afade=t=out:st={total - 3.5:.2f}:d=3.5[mraw]")
-        filt.append("[mraw][sc]sidechaincompress=threshold=0.015:ratio=5:attack=120:release=900:makeup=1[mus]")
-        parts.append("[mus]")
-    sfx = mod.sfx(tl) if hasattr(mod, "sfx") else []
-    for k, (name, at, gain) in enumerate(sfx):
-        p = os.path.join(adir, "sfx", name)
-        if not os.path.exists(p):
+        mraw = out_wav + ".music_raw.wav"
+        _sh(["ffmpeg", "-y", "-loglevel", "error", "-stream_loop", "-1", "-i", os.path.join(adir, "music", mpick),
+             "-af", f"atrim=start={off},asetpts=PTS-STARTPTS,atrim=0:{total:.2f},aresample={SR},aformat=channel_layouts=stereo,"
+                    f"afade=t=in:st=0:d=1.5,afade=t=out:st={max(0.0, total - 3.5):.2f}:d=3.5", "-ar", str(SR), mraw])
+        Lm = _lufs(mraw)
+        raw = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", mraw, "-f", "f32le", "-ac", "2", "-ar", str(SR), "-"],
+                             capture_output=True).stdout
+        x = np.frombuffer(raw, np.float32).reshape(-1, 2).copy()
+        t = np.arange(len(x)) / SR
+        g_sp = 10 ** (((Lv - MUSIC_UNDER_DB) - Lm) / 20)
+        g_gap = 10 ** (((Lv - MUSIC_GAP_DB) - Lm) / 20)
+        env = np.full(len(x), g_gap, np.float32)
+        for a, b in _speech_windows(tl):
+            env[(t >= a) & (t <= b)] = g_sp
+        k = int(0.4 * SR)   # 0.4 s ramps
+        env = np.convolve(env, np.ones(k, np.float32) / k, mode="same")
+        x *= env[:, None]
+        mwav = out_wav + ".music.wav"
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "f32le", "-ac", "2", "-ar", str(SR), "-i", "-",
+                        "-c:a", "pcm_s16le", mwav], input=x.astype(np.float32).tobytes(), check=True)
+        parts.append(mwav)
+    # 3. SFX, then everything together and two-pass loudnorm to -16 LUFS
+    ins, filt, lbl = [], [], []
+    for k, pth in enumerate(parts):
+        ins += ["-i", pth]
+        filt.append(f"[{k}]aresample={SR},aformat=channel_layouts=stereo[p{k}]")
+        lbl.append(f"[p{k}]")
+    n = len(parts)
+    for k, (name, at, gain) in enumerate(mod.sfx(tl) if hasattr(mod, "sfx") else []):
+        pth = os.path.join(adir, "sfx", name)
+        if not os.path.exists(pth):
             continue
-        i = add(p)
+        ins += ["-i", pth]
         ms = max(0, int(at * 1000))
-        filt.append(f"[{i}]aresample=48000,aformat=channel_layouts=stereo,volume={gain},adelay={ms}|{ms}[x{k}]")
-        parts.append(f"[x{k}]")
-    filt.append("".join(parts) + f"amix=inputs={len(parts)}:normalize=0,atrim=0:{total:.2f}[out]")
-    raw = out_wav + ".raw.wav"
-    _sh(["ffmpeg", "-y", "-loglevel", "error", *ins, "-filter_complex", ";".join(filt), "-map", "[out]", "-ar", "48000", raw])
-    # two-pass loudnorm: measure, then normalise linearly to -16 LUFS, true peak -1.5 dB
-    m = subprocess.run(["ffmpeg", "-i", raw, "-af", "loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json", "-f", "null", "-"],
+        filt.append(f"[{n}]aresample={SR},aformat=channel_layouts=stereo,volume={gain * 0.8:.3f},adelay={ms}|{ms}[x{k}]")
+        lbl.append(f"[x{k}]")
+        n += 1
+    filt.append("".join(lbl) + f"amix=inputs={len(lbl)}:normalize=0,atrim=0:{total:.2f}[out]")
+    rawmix = out_wav + ".raw.wav"
+    _sh(["ffmpeg", "-y", "-loglevel", "error", *ins, "-filter_complex", ";".join(filt), "-map", "[out]", "-ar", str(SR), rawmix])
+    m = subprocess.run(["ffmpeg", "-i", rawmix, "-af", "loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json", "-f", "null", "-"],
                        capture_output=True, text=True).stderr
     j = json.loads(m[m.rindex("{"):m.rindex("}") + 1])
     ln = (f"loudnorm=I=-16:TP=-1.5:LRA=11:measured_I={j['input_i']}:measured_TP={j['input_tp']}:measured_LRA={j['input_lra']}:"
           f"measured_thresh={j['input_thresh']}:offset={j['target_offset']}:linear=true")
-    _sh(["ffmpeg", "-y", "-loglevel", "error", "-i", raw, "-af", ln, "-ar", "48000", out_wav])
+    _sh(["ffmpeg", "-y", "-loglevel", "error", "-i", rawmix, "-af", ln, "-ar", str(SR), out_wav])
+    return {"voice_lufs": Lv, "music_db_under_voice": MUSIC_UNDER_DB, "music_db_under_voice_gaps": MUSIC_GAP_DB}
 
 
 def finish(film, parts, adir, outdir):
@@ -592,7 +639,7 @@ def finish(film, parts, adir, outdir):
     vid = f"/tmp/{film}_video.mp4"
     _sh(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", "/tmp/parts.txt", "-c", "copy", vid])
     wav = f"/tmp/{film}.wav"
-    mix_audio(film, tl, adir, wav, mod)
+    mixinfo = mix_audio(film, tl, adir, wav, mod)
     total = tl["seconds"]
     # size budget: ~24 MB for the mp4
     vbr = int(min(4000, max(900, (24e6 * 8 / total - 160e3) / 1000)))
@@ -618,7 +665,7 @@ def finish(film, parts, adir, outdir):
     loud = subprocess.run(["ffmpeg", "-i", mp4, "-af", "ebur128=peak=true", "-f", "null", "-"], capture_output=True, text=True).stderr
     summ = [l.strip() for l in loud.splitlines()[-14:] if "I:" in l or "Peak:" in l or "LRA:" in l]
     dur = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", mp4], capture_output=True, text=True).stdout.strip()
-    return {"mp4": mp4, "webm": webm, "jpg": jpg, "seconds": dur, "video_kbps": vbr, "loudness": summ,
+    return {"mp4": mp4, "webm": webm, "jpg": jpg, "seconds": dur, "video_kbps": vbr, "loudness": summ, "mix": mixinfo,
             "mp4_mb": round(os.path.getsize(mp4) / 1e6, 2), "webm_mb": round(os.path.getsize(webm) / 1e6, 2)}
 
 

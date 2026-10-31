@@ -1,229 +1,204 @@
-# Lecture 2 · The Brain: how an LLM works · speaker notes (v4.1, Northbridge)
+# Lecture 2 · The Brain: how an LLM works · speaker notes (v4.2, Northbridge)
 
-Sun 1 Nov 2026, 7:00–9:00 AM IST. 82 slides. Slide numbers are the deck's counter (bottom right). `[click]` = one step.
+Sun 1 Nov 2026, 7:00–9:00 AM IST. 73 slides. Slide numbers are the deck's counter (bottom right). `[click]` = one step.
 
-**The one idea.** We follow one sentence, Emma's question, through a real model. Every plate, the 3D scene and the films use
-that same sentence and the same recorded run. Say it at the start and at every part slide: "Same sentence, one more stage."
+**The one idea.** We follow one sentence, Emma's question, through a real model. Every plate and every film uses that same
+sentence and the same recorded run. At every part slide: "Same sentence, one more stage."
 
-**The rhythm of every section** (Rajat's order, 30 Oct):
-1. the part slide, with one plain question and "last section… now…";
-2. the theory plates, from first principles, worked on Emma's question;
-3. one broad question to the class;
-4. the interactive 3D slide: explore it while you explain (drag inside the scene does not change slide; use the arrow keys);
-5. the narrated film, at the very end, as the recap. Press **Present** for full screen; the film never autoplays.
+**The rhythm of every section** (Rajat, 30–31 Oct): part slide → theory plates (first principles, worked on Emma's question)
+→ one question to the class about what was just taught (30 seconds, one line in the chat) → the narrated film, as the recap.
+The films never autoplay: click play, or **Present** for full screen. The films replace the old per-section 3D slides; the
+3D scene appears once, near the end, as "Explore it yourself".
 
-**Time.** About 85 minutes of teaching plus up to 11 films (60–150 s each). If time runs short, play only the films for
-Sections 1, 4 (qkv), 7 and 9 and leave the rest for students: every film is a recap, nothing new is introduced in it.
+**Time.** About 80 minutes of teaching and 13 films (about 18 minutes, plus structure and finale when they land). If time
+runs short, keep overture, qkv, s8_weights and finale; the other films are recaps students can watch afterwards.
 
 **Where the numbers come from.**
-- `brain3d/trace.json`: one recorded forward pass and generation of Qwen2.5-0.5B-Instruct (Modal, CPU) with the app's own
-  brain-stage system prompt for Emma. The 3D scene, the films and the Section 1–9 plates all read it.
+- `brain3d/trace.json`: one recorded run of Qwen2.5-0.5B-Instruct (Modal, CPU) with the app's brain-stage prompt for Emma.
 - `figdata.js` (`window.L2`; every number traced in `experiments/PROVENANCE.md`): the cold-open runs of Ask Northbridge on
-  gemini-3.8-flash, the fix measured, tokens and cost, BPE, the tiny GPT, the cut-off, the model card.
-- Token prices are the provider's list prices in **US dollars** ($0.50 per million tokens in, $3.00 per million out for
-  gemini-3.8-flash). Northbridge's own money (stock, orders) stays in pounds.
-- Model sizes: the model's `config.json` and model card. Training facts: Qwen2.5 Technical Report (arXiv:2412.15115).
-- The attention plates' two-number example is chosen by hand to show the arithmetic; it is labelled so on the slide. The real
-  head follows straight after it.
+  gemini-3.8-flash, the fix, tokens and cost, the tiny GPT and its corpus, the cut-off, the model card.
+- Token prices in US dollars ($0.50 per million tokens in, $3.00 per million out). Northbridge's own money stays in pounds.
+- The attention plates' two-number example and the four-word BPE example are worked on the slide, labelled as such.
 
-Live link: `https://rajatworkspace--northbridge-experience.us-east.modal.run/after?stage=brain`. Do not redeploy during class.
+Live links: the app `https://rajatworkspace--northbridge-experience.us-east.modal.run/after?stage=brain`; the Brain Lab
+(URL to come). Do not redeploy the app during class.
 
 ---
 
-## Opening (7:00–7:12) · slides 1–9
+## Opening (7:00–7:10) · 1–9
 
-**1 · Title.** "Drop your city in the chat." Then: "Today we take one sentence and follow it through a real model, from the first letter to the last digit of the answer."
+**1 · Title.** "Drop your city in the chat."
 
-**2 · Where we are.** [click] four parts; [click] the LLM box lights up. "Today, only this box. Lecture 3 gives it knowledge, Lecture 4 gives it hands."
+**2 · Where we are.** [click] four parts; [click] the LLM box lights up. "Today, only this box."
 
-**3 · Monday, 9:05 AM: the chat.** [click] Emma's question types itself into the box, and Ask Northbridge's recorded reply streams in: "There are currently 42 City e-bike battery packs in stock across the Manchester stores: Central Warehouse 35, Assembly Store 7." Let it finish. [click] Emma asks "Where did that number come from?" It answers "the live inventory system records… updated this morning." [click] Ledgerline: **5,400**. "The number, both warehouses and the source: all made up." This is a replay of run 1 of our 8 recorded runs, not a live call.
+**3 · Monday, 9:05 AM: the chat.** [click] Emma's question types itself; the recorded reply streams in: "There are currently 42 City e-bike battery packs in stock across the Manchester stores: Central Warehouse 35, Assembly Store 7." [click] "Where did that number come from?" → "the live inventory system records… updated this morning." [click] Ledgerline: **5,400**. "The number, both warehouses and the source: all made up." (Run 1 of 16, replayed.)
 
-**4 · Was it bad luck?** Eight runs at the app's own settings: 42, 48, 48, 42, 42, 42, 54, 142. [click] Eight more at temperature 1.0: 48, 48, 45, 48, 48, 48, 48, 42. "0 of 16 said 5,400; every run gave a figure." [click] With no system prompt the same model declines: our own prompt ("help with purchasing: stock…") pushes it to answer.
+**4 · We asked again.** 16 runs: 42, 48, 48, 42, 42, 42, 54, 142, 48, 48, 45, 48, 48, 48, 48, 42. "0 of 16 said 5,400; every run gave a number." [click] With no system prompt at all, the model declines; the app's prompt is what pushes it to answer.
 
-**5 · Ask the class 1: where did that number come from?** Vote 1–4. "We settle it in Section 9."
+**5 · Ask the class 1: where did that number come from?** Vote 1–4; we settle it in Section 9.
 
 **6 · Today's question.** [click] We open a small model of the same kind and watch every step.
 
-**7 · The model we open.** Qwen2.5-0.5B-Instruct: 24 blocks, 896 numbers per token, 14 heads, about 151,000 tokens, 494 million parameters, 32,768 tokens of context. [click] [click] Its answer: "We currently have 100 city e-bike battery packs available in our Manchester stores." "It made one up too."
+**7 · The model we open.** Qwen2.5-0.5B-Instruct: 24 blocks, 896 numbers per token, 14 heads, about 151,000 tokens, 494 million parameters. [click] [click] Its answer: "We currently have 100 city e-bike battery packs…".
 
-**8 · Today's map.** Walk the figure once: tokens, vectors, attention, 24 blocks, probabilities, the next token, the loop; training underneath; Ledgerline with no connection.
+**8 · Today's map.** Next-token prediction around everything; tokens, vectors, attention, 24 blocks, probabilities, the next token, the loop; training underneath; Ledgerline with no connection.
 
-**9 · Film: Overture** (optional). The whole journey in one go, before we open each part.
+**9 · Film: Overture** (0:41).
 
-## Section 1 · The game (7:12–7:19) · slides 10–14
+## 1 · Next-token prediction (7:10–7:16) · 10–13
 
 **10 · Part: What does a language model actually do?**
 
-**11 · Guess the next token.** Definition. [click] After Emma's question: "We" 56%, "As" 7.9%, "Manchester" 6.1%. Click "at the first digit". [click] "1" 34%, "2" 21%, "5" 12%, "3" 11%. "It has no idea. Every digit is possible."
+**11 · Guess the next token.** Definition. [click] After Emma's question: "We" 56%, "As" 7.9%, "Manchester" 6.1%. Click "at the first digit". [click] "1" 34%, "2" 21%, "5" 12%. "It has no idea which digit."
 
-**12 · Ask the class 2: if it only guesses the next piece, how can it write a whole email?** Don't resolve it: Section 7 does.
+**12 · Ask the class 2: "We" got 56%. Where did the other 44% go?** To every other token in the vocabulary: "As", "Manchester", "In"… the chances always add up to 1.
 
-**13 · The 3D scene, section 1.** State 0: the sealed box, the text goes in. [click] the bars come out: "We" 56%. [click] a few tokens later, the first digit: 1 34%, 2 21%, 5 12%.
+**13 · Film 1 · Next-token prediction** (s1_game, 1:18).
 
-**14 · Film 1 · The game.**
+## 2 · Tokens (7:16–7:30) · 14–21
 
-## Section 2 · Tokens (7:19–7:33) · slides 15–23
+**14 · Part.** "Last section: it guesses the next piece. Now: what does it read?"
 
-**15 · Part.** "Last section: it guesses the next piece. Now: what does it read?"
+**15 · What the model is sent.** Two messages become one text. [click] system prompt. [click] it stops after "assistant", so the next token starts the reply.
 
-**16 · What the model is sent.** Emma sees two messages; the model sees one text. [click] system prompt. [click] the text stops right after "assistant", so the next token starts the reply.
+**16 · Cut into tokens.** Emma's question is 15 tokens; "e-bike" is three; "Manchester" is one. [click] 100 tokens in all. [click] "5,400" is five tokens.
 
-**17 · Cut into tokens.** Emma's question is 15 tokens; "e-bike" is three pieces; "Manchester" is one. [click] 72 system, 15 Emma, 13 markers, 100 in all. [click] "5,400" is five tokens, one per digit and the comma.
+**17 · Where the pieces come from (BPE, simply).** The four-line recipe on the left. Then click once per merge, nine clicks, and say each out loud:
+1. b + a (4 times: battery ×3 plus batteries ×1);
+2. ba + t;
+3. bat + t;
+4. batt + e;
+5. batte + r;
+6. batter + y (3 times): "battery" is one piece;
+7. p + a;
+8. pa + c;
+9. pac + k: "pack" is one piece.
+"batteries" stays batter · i · e · s, because it is rare. "Qwen ran this recipe on a huge amount of text until it had 151,643 pieces."
 
-**18 · Why 151,936 rows?** "You have seen 151,936 twice. Where does it come from?" [click ×3]
-- 151,643 learned pieces, ids 0 to 151,642, from byte-pair encoding (next slide).
-- \+ 22 special tokens, markers rather than text: `<|endoftext|>` is 151,643, `<|im_start|>` 151,644, `<|im_end|>` 151,645 (the ones in Emma's chat), and 19 more for tools and images. That gives 151,665, every id the tokenizer can produce.
-- \+ 271 rows nobody uses, padding the table to 151,936 = 1,187 × 128. GPU matrix units are fastest on sizes in blocks of 64 or 128, so model makers round up. Qwen does not document its reason: say "probably".
-- 151,936 × 896 = 136,134,656 numbers, 28% of the model.
-Sources: `tokenizer_len` 151,665 and `vocab` 151,936 in `experiments/logs/model_card.json`; `bos_token_id` 151,643 in config.json is the first special token.
+**18 · The model's vocabulary.** [click ×3] 151,643 learned pieces + 22 special markers (`<|im_start|>`, `<|im_end|>` in Emma's chat) = **151,665**, the vocabulary: every token it can read or write; the id is the place in the list. Footnote, only if asked: inside the model the list has 151,936 slots; the last 271 are spare padding, so the table is 1,187 × 128.
 
-**19 · BPE by hand.** The same twelve words as NB2 exercise 2. Drag the slider: merge 1 is e+r (7 times); by merge 10 "battery" is one piece and the text is 36 pieces instead of 86. [click] A word list built from Northbridge's documents misses 33% of the words in two new documents; pieces never miss. Footnote: on the whole corpus "Voltway" becomes one token at merge 127, "Manchester" at 188, "battery" at 292.
+**19 · You pay in tokens (US dollars).** 90 in, about 45 out: **$0.000179** a question, **$0.18 per 1,000**. [click] Plus 390 hidden thinking tokens: **$0.001344** a question, **$1.34 per 1,000**. [click] The same question in six languages: English 15 tokens … Greek 72.
 
-**20 · You pay in tokens (US dollars).** 90 tokens in, about 45 out: 90 × $0.50 + 45 × $3.00 per million = **$0.000179** a question, **$0.18 per 1,000**. [click] The provider's usage record also shows 390 hidden thinking tokens, billed as output: **$0.001344** a question, **$1.34 per 1,000**, more than seven times as much. [click] Emma's question in six languages: English 15 tokens, German 18, Dutch 24, Polish 27, Japanese 31, Greek 72.
+**20 · Ask the class 3: why might 5,400 cost more tokens than "five"?** "five" is one common piece; 5,400 is five tokens: one per digit, plus the comma.
 
-**21 · Ask the class 3: what goes wrong when codes are cut into pieces?** Confusing BAT-500 and BAT-50; numbers read digit by digit.
+**21 · Film 2 · Tokens** (s2_tokens, 1:49).
 
-**22 · The 3D scene, section 2.** State 0: 100 token tiles drop in. [click] ids and roles (72 · 15 · 13). [click] how words and numbers are cut. [click] counted in tokens: 100 in, 20 out, a 32,768-token window.
+## 3 · Vectors (7:30–7:38) · 22–26
 
-**23 · Film 2 · Tokens.**
+**22 · Part.**
 
-## Section 3 · Vectors (7:33–7:42) · slides 24–29
+**23 · Look up a row.** Each token's id picks a row of 896 numbers. [click] the first 16 numbers of "␣battery". [click] "Training set them. Section 8."
 
-**24 · Part.** "An id is just a label. Where does meaning come in?"
+**24 · Close in meaning, close in direction.** Cosine; the map. [click] "battery" → batteries 0.77, lithium 0.40; "Manchester" → Liverpool 0.40, Leeds.
 
-**25 · Look up a row.** The table: 151,936 rows (slide 18), 896 numbers each. [click] the row for "␣battery" (row 11602), first 16 numbers. [click] "Training set them. Section 8."
+**25 · Ask the class 4: "battery" and "batteries" have different ids. Why are their vectors close?** They appear in the same kinds of sentences, so training pushed their rows the same way.
 
-**26 · Close in meaning, close in direction.** Cosine definition; the clusters on the map. [click] Nearest rows: "battery" → batteries 0.77, Batter 0.53, lithium 0.40; "Manchester" → Liverpool 0.40, Nottingham, Leicester, Leeds, Glasgow. The 2D picture keeps only a small part of the spread; the neighbour lists are exact.
+**26 · Film 3 · Vectors** (s3_vectors, 1:22).
 
-**27 · Ask the class 4: which words mean something different at your company?** Release, draft, stores.
+## 4 · Attention (7:38–7:55) · 27–33 (the attention mechanism only)
 
-**28 · The 3D scene, section 3.** State 0: tiles rise into columns. [click] the first 8 of 896 values of "␣battery" and "␣Manchester". [click] the embedding map. [click] the neighbours.
+**27 · Part.** "Each token is a vector on its own. But 'stores' means little without 'Manchester'."
 
-**29 · Film 3 · Vectors.**
+**28 · Why a token must look at the others.** [click] "packs" needs "battery". [click] "stores" needs "Manchester". [click] "ike" needs "e" and "-b". [click] The last position must gather an amount of battery packs in Manchester.
 
-## Section 4 · Attention (7:42–8:02) · slides 30–41
+**29 · Query, key, value.** The library. [click] query; [click] key; [click] value. The figure: thickest line to Manchester, 0.59.
 
-Take this section slowly: it is the heart of the transformer and Rajat's main request.
+**30 · The same idea, in four lines.** [click ×4] q · k; ÷ √d; softmax; weighted sum of values. q, k, v come from three learnt tables.
 
-**30 · Part.** "Each token is a vector on its own. But 'stores' means little without 'Manchester'."
+**31 · Worked on Emma's tokens.** Keys: battery [0, 2], packs [0, 1], Manchester [2, 0], stores [1, 0.5]; the last position's query [2, 1]. [click] query. [click] scores 2, 1, 4, 2.5. [click] weights 0.14, 0.07, 0.59, 0.20. Hand over the slider: turn the query towards "the item" and the weight moves to "battery". [click] weighted sum [2.75, 0.91]: mostly Manchester. "Numbers chosen by hand; a real head learns 64 per token."
 
-**31 · Why a token must look at the others.** Emma's 15 real tokens and the start of the answer. [click] "packs" needs "battery": which packs? [click] "stores" needs "Manchester". [click] "ike" is only a word with "e" and "-b". [click] And the position where the answer starts must gather the most: an amount, of battery packs, in Manchester. "So every token needs a way to pull in what it needs from the tokens before it."
+**32 · Ask the class 5: which earlier word should "stores" pay the most attention to, and why?** "Manchester": it tells which stores.
 
-**32 · Query, key, value.** The library: your question is matched against the shelf labels, and you read the books that match. [click] Query: what this token is looking for; the last position asks "where, and which item?". [click] Key: what each token offers to be found by; "Manchester" says "I am a place". [click] Value: what a token passes on when chosen. Point at the figure: thickest line to Manchester (0.59). Every token makes all three.
+**33 · Film: Query, key and value** (qkv, 2:26). Includes the real head: block 24, head 2 puts 65% on "Manchester".
 
-**33 · The same idea, in four lines.** [click ×4] (1) score = q · k: multiply number by number and add; (2) divide by √d (d = 64 per head, so ÷ 8), so softmax does not pick only one; (3) softmax, the same step as Section 6; (4) the weighted sum of values. Then: q, k and v come from three learnt tables, q = x·W_Q and so on.
+## 5 · Blocks and heads (7:55–8:04) · 34–39
 
-**34 · Worked on Emma's tokens.** Two numbers per token: how much it is a place, how much it is the item. Keys: battery [0, 2], packs [0, 1], Manchester [2, 0], stores [1, 0.5]. The last position's query [2, 1]: mostly looking for a place, a little for the item. [click] the query appears. [click] scores 2, 1, 4, 2.5. [click] ÷ √2, then the weights: 0.14, 0.07, 0.59, 0.20. Now hand the slider to the room: turn the query towards "the item" and watch the weight move to "battery". [click] the weighted sum of values, [2.75, 0.91]: mostly Manchester's value. Say clearly: numbers chosen by hand to show the steps; a real head learns 64 per token.
+**34 · Part.** "One look is not enough to answer."
 
-**35 · No peeking ahead.** The causal mask on Emma's 15 tokens. [click] blue allowed, orange blocked. "During training the answer is always just out of sight; that is how it learns to guess the next token."
+**35 · One block.** MLP. [click] block. [click] 24 of them; each adds a correction.
 
-**36 · A real head.** Back to Qwen, from the last position. Block 24, head 2 (the first button): 65% on "Manchester", the hand example for real. [click] [click] Click the other heads: block 16, head 0 is the head with the most weight on "battery" (9%); block 12, head 13 rests 100% on the first token. Footnote: averaged over every block and head, 17% of the attention goes to the system prompt, 20% to Emma's words and 63% to the template markers.
+**36 · Ask the class 6: attention mixes tokens, the MLP works on each token alone. Which can connect "stores" to "Manchester"?** Attention: only it moves information between tokens.
 
-**37 · Where is the order?** "Emma approves Daniel" vs "Daniel approves Emma". [click] a sum has no order. [click] rotary positions.
+**37 · Film: Blocks and heads** (structure; lands later). **38 · Film: Attention, inside the model** (s4_attention, 1:26). **39 · Film: 24 blocks** (s5_blocks, 1:13).
 
-**38 · Ask the class 5: which earlier lines do you look back at when you read a PO line?**
+## 6 · A choice (8:04–8:10) · 40–43
 
-**39 · The 3D scene, section 4.** State 0: arcs from the last token, all heads averaged. [click] block 24, head 2 → "Manchester" 65%. [click] block 16, head 0 → "battery" 9%. [click] block 12, head 13 rests on the first token. [click] only backwards.
+**40 · Part.**
 
-**40 · Film 4 · Attention.** **41 · Film: Query, key and value**, from the idea to the real head: the recap of the whole section.
+**41 · Scores become chances, one token is picked.** Scores to chances. [click] picking. [click] the temperature dial. Click T = 0: always "1"; 1.0: "1" 34%, "2" 21%.
 
-## Section 5 · 24 blocks (8:02–8:12) · slides 42–48
+**42 · Ask the class 7: if it always takes the top token, will Emma get the same answer every time?** For Qwen, yes: greedy gives 100 every time, repeatable and still wrong. But Ask Northbridge ran at temperature 0 and still gave 42, 48, 54 and 142 (slide 4): large hosted models are not perfectly repeatable even at 0. Never rely on the dial for correctness.
 
-**42 · Part.** "One look is not enough to answer."
+**43 · Film 6 · A choice** (s6_choice, 1:14).
 
-**43 · One block.** MLP definition. [click] block definition. [click] 24 of them; vectors stay 896 wide. "Add back the input" keeps what the token already knew.
+## 7 · The loop (8:10–8:19) · 44–49
 
-**44 · Where the 494 million numbers live.** Counted from the config, table by table. [click] MLPs 313,786,368 (64%): three tables of 896 × 4,864 per block, × 24. Embedding table 136,134,656 (28%), shared with the output. [click] Attention 44,067,840 (8.9%); normalising 43,904. Total 494,032,768, the model's own count. One block holds 14,912,384 numbers, 88% of them in its MLP.
+**44 · Part.**
 
-**45 · Watch the answer form.** Drag the slider from block 1: code fragments and other languages. [click] "We" first comes out on top at block 22: 8%, then 29% at 23, 56% at 24. [click] logit lens. At the first digit, the top guess goes 4, 4, 5, then 1 across blocks 21–24.
+**45 · One token at a time.** [click] [click] Drag through the 20 tokens of "We currently have 100…".
 
-**46 · Ask the class 6: what does the extra size of big models buy, and what does it cost?**
+**46 · It sounds sure. It was not.** Digits 34%, 32%, 54%. [click] [click] Five more at T = 0.7: 300, 150, 1,000, 50, 15.
 
-**47 · The 3D scene, section 5.** State 0: one block. [click] 24 blocks. [click] the logit lens climbs. [click] "We" from block 22, 56% at block 24.
+**47 · It only sees what you send.** 32,768 tokens; each turn re-sends everything.
 
-**48 · Film 5 · 24 blocks.**
+**48 · Ask the class 8: when it picked the second "0" of "100", which tokens could it see?** The whole prompt plus "We currently have 1 0": everything before, nothing after.
 
-## Section 6 · A choice (8:12–8:21) · slides 49–54
+**49 · Film 7 · The loop** (s7_loop, 1:15).
 
-**49 · Part.** "The answer forms as a vector. A vector is not a word."
+## 8 · Training (8:19–8:38) · 50–59
 
-**50 · Softmax.** On the real top five at the first digit: relative scores 0, −0.48, −1.06, −1.09, −1.34 → shares 0.39, 0.24, 0.14, 0.13, 0.10; real p 0.34, 0.21, 0.12, 0.11, 0.09.
+**50 · Part.** "Where did the numbers in the blocks come from?"
 
-**51 · The temperature dial.** T = 0: always "1". 0.7: 45%, 22%. 1.0: 34%, 21%. 1.2: 29%, 20%.
+**51 · What we trained on.** A tiny GPT on Northbridge's own text: 122,069 characters, 19,537 words, 81 different characters, dated 3 Aug – 23 Oct 2026. [click] Four real lines: a stores line, an order, a policy clause, and Emma's e-mail with **5,400**.
 
-**52 · Ask the class 7: where would you set the dial for purchase requests?**
+**52 · How we trained it.** 4 blocks, 4 heads, 830,464 numbers, one character at a time. The task: next-token prediction at every position of 128 characters. [click] Loss = surprise; training nudges every number to lower it. [click] 1,500 steps on 2 CPUs, about 7 minutes (408 s): loss 4.60 → 0.23 train, 0.30 validation.
 
-**53 · The 3D scene, section 6.** State 0: the top vector meets 151,936 scores. [click] T = 0. [click] 0.7. [click] 1.2. [click] "We" is picked.
+**53 · The test: did it learn the stock?** Not a chat model, so we ask the way it knows: "Stores, 26 Oct 2026: BAT-500 in Manchester stores,". Before: random characters. [click] After: "2,400 on hand, using 6,000 a day, 4 days of cover." [click] Ten more: 2,400 … 4,500, none 5,400. [click] "Emma's e-mail with 5,400 is in its training text three times. It never wrote 5,400."
 
-**54 · Film 6 · A choice.**
+**54 · Three stages, then frozen.** Real models do the same at scale: up to 18 trillion tokens, then instruction and preference tuning.
 
-## Section 7 · The loop (8:21–8:31) · slides 55–61
+**55 · The last training day.** Qwen: P(2023) = 55%. [click] Qwen "October 2023", Gemini "March 2026", the tiny GPT 23 Oct 2026.
 
-**55 · Part.** "One pass, one token. Emma got a sentence."
+**56 · Learnt or given?** Left: learnt, 0 of 10. [click] Right: one line in the prompt, Gemini 3 of 3, Qwen "We have 5,400…". [click] "Training stores patterns; facts that change belong in the context."
 
-**56 · One token at a time.** [click] "That answers question 2." [click] Drag through the 20 tokens of "We currently have 100…"; orange = the digits.
+**57 · Try it: the Brain Lab.** Students open it (QR and link when it is live): chat before training, [click] train on their own facts, chat again, [click] then put the facts in the prompt instead. 5 minutes.
 
-**57 · It sounds sure. It was not.** The digits 1, 0, 0 at 34%, 32%, 54%. [click] [click] Five more at T = 0.7: 300, 150, 1,000, 50, 15.
+**58 · Ask the class 9: our tiny GPT read 5,400 three times. Why does it still write other numbers?** It learnt which characters tend to follow which; thousands of stock lines with other numbers outweigh three mentions.
 
-**58 · It only sees what you send.** Context window, 32,768 tokens. [click ×3] Each turn re-sends everything; a new chat starts empty.
+**59 · Film 8 · Where the weights came from** (s8_weights, 1:23).
 
-**59 · Ask the class 8: the answer read as fact; how would users know?**
+## 9 · The fix (8:38–8:48) · 60–65
 
-**60 · The 3D scene, section 7.** State 0: "We" joins the strip. [click] " currently", " have", " ". [click] the first digit and its lens. [click] "100" and the rest. [click] five samples.
+**60 · Part.** "Back to Monday morning."
 
-**61 · Film 7 · The loop.**
+**61 · The cold open, explained.** [click ×4] Back to question 1: the answer is 3.
 
-## Section 8 · Training (8:31–8:42) · slides 62–69
+**62 · Put the fact in the context.** [click] the line; [click] "We have 5,400…", block 10 head 13 on the "5"; [click] at T = 0.7 only 1 of 5 said 5,400; [click] Lectures 3 and 4.
 
-**62 · Part.**
+**63 · Try it live.** `/after?stage=brain`, four asks.
 
-**63 · Loss is surprise.** The tiny GPT (830,464 parameters) on 122,069 characters of Northbridge documents: 4.59 → 0.23 train, 0.30 validation, 408 s on 2 CPUs.
+**64 · Ask the class 10: with the stock line in the prompt, which earlier tokens should the first digit attend to?** The "5,400" in the stock line.
 
-**64 · Before and after training.** Step 0: random characters. [click] "2,400 on hand, using 6,000 a day, 4 days of cover." [click] Ten stock lines: 2,400 … 4,500. [click] "Emma's e-mail with 5,400 is in its training text, three times. It never wrote 5,400. Training stores patterns, not facts you can look up."
+**65 · Film 9 · Why it made it up** (s9_fix, 1:13).
 
-**65 · Three stages, then frozen.** Up to 18 trillion tokens; over a million instruction examples; preference tuning.
+## Closing (8:48–9:00) · 66–73
 
-**66 · The last training day.** Qwen: P(2023) = 55%, P(2026) = 0.04%. [click] Qwen says "October 2023", Gemini "March 2026", our tiny GPT's corpus ends 23 Oct 2026. The date the app gives comes from its prompt.
+**66 · Explore it yourself.** The 3D scene in the slide. Click into it: drag to look around, scroll to zoom, click a token; keys 1–9 jump between sections. Click outside the scene, then use the arrows to leave the slide.
 
-**67 · Ask the class 9: trained on every Northbridge document, would it know today's stock?**
+**67 · Film: The whole machine** (finale; lands later).
 
-**68 · The 3D scene, section 8.** State 0: random weights. [click] pretraining (the tiny GPT's loss). [click] instruction and preference tuning. [click] the last training day, 19 Sep 2024 (Qwen's release date), against Emma's 26 Oct 2026.
+**68 · One sentence, nine steps.** [click ×9]
 
-**69 · Film 8 · Training.**
+**69 · Two sockets.** Lecture 3 knowledge; Lecture 4 tools (Gemini called `find_item` instead of writing a number).
 
-## Section 9 · The fix (8:42–8:53) · slides 70–76
+**70 · Try it yourself.** The Brain Lab, this week.
 
-**70 · Part.** "Back to Monday morning."
-
-**71 · The cold open, explained.** [click ×4] Tokens with no stock in them; weights that know what a stock answer sounds like; digit by likely digit; it guessed the next token. Back to question 1: the answer is 3.
-
-**72 · Put the fact in the context.** [click] the Ledgerline line. [click] "We have 5,400…" (5 at 76%); block 10, head 13 puts 76% on the fact's "5"; Gemini, same line: 3 of 3. [click] At T = 0.7, only 1 of 5 samples said 5,400 (5, 5, 5, 500). "Keep the dial low and check the number: Lecture 7." [click] the two lectures that fetch facts.
-
-**73 · Try it live.** Everyone opens `/after?stage=brain`; four asks; 4 minutes.
-
-**74 · Ask the class 10: which of your questions would it answer well, which would it make up?**
-
-**75 · The 3D scene, section 9.** State 0: "100" against 5,400. [click] traced back: at the first digit the model looks back over 104 tokens, and the only digits in them are the date. [click] the stock line added. [click] the two sockets.
-
-**76 · Film 9 · Why it made it up.**
-
-## Closing (8:53–9:00) · slides 77–82
-
-**77 · The whole machine.** Section 9's end state: every stage, the whole trace in the rail, both sockets. Walk it left to right. The pill "Play the whole trace" opens the standalone autoplay.
-
-**78 · One sentence, nine steps.** [click ×9]
-
-**79 · Two sockets.** Lecture 3: knowledge, Brightcell and §6.2. Lecture 4: tools; offered find_item and check_stock, Gemini called `find_item` instead of writing a number.
-
-**80 · NB2.** Nine sections, six exercises, 32 cells replayed with 0 errors. Note: NB2's attention exercise uses "Emma needs 2,000 packs"; the deck now works the example on Emma's question.
-
-**81 · A2 · How a brain would read your work.** Due Sat 7 Nov, 7 AM IST; four parts, 10 points.
-
-**82 · Next time: The Memory.**
+**71 · NB2.** **72 · A2.** **73 · Next time: The Memory.**
 
 ---
 
-## Open items (2026-10-30)
-- **Films:** every film slide shows a TODO(film) card until `films/<name>.mp4` lands (overture, s1–s9, qkv). The figure checks for the file on load and swaps in the player; no deck change is needed when they arrive.
-- **3D interactivity:** the brain3d scene has no free orbit yet (the camera follows the stages). The deck already keeps clicks inside the scene from changing slide, so the 3D builder can add drag and zoom without a deck change.
-- **NB2 example:** NB2 section 4 and its exercise use "Emma needs 2,000 packs"; the deck's hand example is now on Emma's question (battery, packs, Manchester, stores). The experiments builder may want to align NB2.
+## Open items (2026-10-31)
+- **Films still to land:** `structure` and `finale` show a TODO(film) card until `films/<name>.mp4` exists; no deck edit needed.
+- **Brain Lab URL:** set `data-url` on the two `brainlab` figures (slides 57 and 70); the QR code then draws itself.
+- **3D scene wording:** the brain3d component still labels section 1 "The game: predict the next token" (3D builder's file).
+- **NB2:** its attention exercise uses "Emma needs 2,000 packs"; the deck works the example on Emma's question.

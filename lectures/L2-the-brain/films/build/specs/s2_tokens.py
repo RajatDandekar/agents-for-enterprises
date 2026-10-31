@@ -16,7 +16,7 @@ TOK = T["tokens"]
 CUT = T["number_cuts"]["5,400"]
 CNT = T["prompt"]["counts"]
 POSTER = 72.0
-MUSIC = "tried_and_true_imprismed.mp3"
+MUSIC = "observatory_out_to_the_world.mp3"
 MUSIC_GAIN = 0.34  # one bed level for the whole L2 series
 MUSIC_OFFSET = 40.0
 assert V["bpe_pieces"] + V["special_tokens"] == V["tokenizer_len"] and V["embedding_rows"] == 1187 * 128
@@ -103,27 +103,21 @@ def elements(tl):
               "t0": w("b4", "forty-three"), "t1": en("b4") + 0.4, "dx": 90, "dy": -60, "size": 36})
     # b5: the vocabulary table
     E.append({"type": "pin", "anchor": "drawer_pin_special", "text": f"{V['special_tokens']} special tokens", "sub": "<|im_start|>  <|im_end|>  <|endoftext|>  …",
-              "accent": "k", "t0": w("b5", "twenty-two"), "t1": w("b5", "rows") - 0.3, "dx": 120, "dy": -60, "size": 30})
-    E.append({"type": "chip", "x": 96, "y": 130, "t0": w("b5", "get"), "t1": w("b5", "rows") - 0.3, "accent": "k",
+              "accent": "k", "t0": w("b5", "twenty-two"), "t1": w("b5", "tokenizer") - 0.3, "dx": 120, "dy": -60, "size": 30})
+    E.append({"type": "pin", "anchor": "drawer_pin_sky", "text": "learned BPE pieces", "sub": "the last few of 151,643",
+              "accent": "sky", "t0": w("b5", "twenty-two") + 0.4, "t1": w("b5", "tokenizer") - 0.3, "dx": -120, "dy": -50, "size": 26})
+    E.append({"type": "chip", "x": 96, "y": 130, "t0": w("b5", "tokenizer"), "t1": en("b5") + 0.4, "accent": "k",
               "lines": [{"text": f"{V['bpe_pieces']:,} + {V['special_tokens']} = {V['tokenizer_len']:,}", "size": 34, "wt": 600, "mono": True},
                         {"text": "every token the tokenizer can produce", "size": 22, "c": "slate"}]})
-    E.append({"type": "chip", "x": 96, "y": 130, "t0": w("b5", "rows"), "t1": w("b5", "no") - 0.3, "accent": "sky",
-              "lines": [{"text": f"the model's table: {V['embedding_rows']:,} rows", "size": 32, "wt": 600},
-                        {"text": f"{V['embedding_rows']:,} = 1,187 × 128", "size": 30, "wt": 600, "mono": True},
-                        {"text": "a multiple of 128 suits the GPU", "size": 22, "c": "slate"}]})
-    E.append({"type": "pin", "anchor": "rack_pin_band", "text": "one band = 128 rows", "sub": "1,187 bands, top to bottom", "t0": w("b5", "eighty-seven"),
-              "t1": w("b5", "no") - 0.3, "dx": 140, "dy": -120, "size": 30})
-    E.append({"type": "pin", "anchor": "drawer_pin_pad", "text": f"{V['padding_rows']} padding rows", "sub": "no token ever uses them",
-              "accent": "slate", "t0": w("b5", "no"), "t1": en("b5") + 0.4, "dx": 120, "dy": -40, "size": 32})
-    E.append({"type": "pin", "anchor": "drawer_pin_special", "text": f"{V['special_tokens']} special", "accent": "k", "t0": w("b5", "no") + 0.3,
-              "t1": en("b5") + 0.4, "dx": -120, "dy": -60, "size": 24})
+    E.append({"type": "pin", "anchor": "rack_pin_mid", "text": "One row per token", "sub": "the model's table", "t0": w("b5", "keeps"),
+              "t1": en("b5") + 0.4, "dx": 90, "dy": -60, "size": 32})
     # b6
     E.append({"type": "number", "x": 960, "y": 330, "anchor": "tc", "value": "100 tokens in", "label": "what Emma's question costs, and all the model reads",
               "t0": w("b6", "hundred"), "t1": en("b6") + 0.5, "size": 92})
     E.append({"type": "end", "t0": en("b6") + 0.8, "kicker": "Agentic Systems Engineering  ·  Lecture 2", "title": "What you send, cut into tokens",
               "sub": "Qwen2.5-0.5B-Instruct's tokenizer on Emma's chat",
-              "credits": ["Dr. Rajat Dandekar  ·  Vizuara", "Tokens: brain3d/trace.json  ·  BPE: experiments/logs/bpe.json  ·  sizes: tokenizer and config",
-                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Tried-And-True”, Imprismed (Epidemic Sound)"]})
+              "credits": ["Dr. Rajat Dandekar  ·  Vizuara", "Tokens: brain3d/trace.json  ·  BPE: experiments/logs/bpe.json  ·  sizes: the tokenizer",
+                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Observatory”, Out To The World (Epidemic Sound)"]})
     return E
 
 
@@ -160,6 +154,6 @@ def sfx(tl):
     m0 = w("b4", "merging")
     for k in range(10):
         S_.append(("tile.mp3", m0 + k * 0.5 + 0.25, 0.3))
-    S_ += [("rise.mp3", w("b5", "add"), 0.35), ("chime.mp3", w("b5", "twenty-two"), 0.3), ("beam.mp3", w("b5", "eighty-seven"), 0.35),
+    S_ += [("rise.mp3", w("b5", "add"), 0.35), ("chime.mp3", w("b5", "twenty-two"), 0.3), ("beam.mp3", w("b5", "keeps"), 0.35),
            ("resolve.mp3", blk["b6"]["speech_end"] + 0.6, 0.45)]
     return S_

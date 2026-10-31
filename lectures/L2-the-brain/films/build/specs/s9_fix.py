@@ -13,7 +13,7 @@ BH = F["attention_to_fact"]["best_head"]
 DATE = [t["i"] for t in TOK if t["digit"]]
 QPOS = T["attention"]["digit"]["query_pos"]
 POSTER = 55.0
-MUSIC = "tried_and_true_imprismed.mp3"
+MUSIC = "observatory_out_to_the_world.mp3"
 MUSIC_GAIN = 0.34  # one bed level for the whole L2 series
 MUSIC_OFFSET = 120.0
 
@@ -96,7 +96,7 @@ def elements(tl):
     E.append({"type": "end", "t0": en("b5") + 1.0, "kicker": "Agentic Systems Engineering  ·  Lecture 2", "title": "The right facts, in front of the brain",
               "sub": "Next: Lecture 3, Knowledge  ·  Lecture 4, Tools",
               "credits": ["Dr. Rajat Dandekar  ·  Vizuara", "Every number is from one recorded run of Qwen2.5-0.5B-Instruct (brain3d/trace.json)",
-                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Tried-And-True”, Imprismed (Epidemic Sound)"]})
+                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Observatory”, Out To The World (Epidemic Sound)"]})
     return E
 
 

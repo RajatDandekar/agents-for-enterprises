@@ -1,4 +1,4 @@
-"""Film s1, "The game: predict the next token". Builds films/s1_game.blend.
+"""Film s1, "Next-token prediction". Builds films/s1_game.blend.
 
 One sealed machine (the model, its 24-floor stack glowing behind frosted glass) on the plinth. Emma's 100 tokens
 stand on the strip at its input slot; on the right, glass columns fill with the real next-token probabilities
@@ -66,7 +66,7 @@ for k in range(4):
     ans.append((r, fm))
 
 # ---------------------------------------------------------------- b1: the text goes in, a guess comes out
-f_in, f_out = w("b1", "text"), w("b1", "out")
+f_in, f_out = w("b1", "text"), w("b1", "predicts")
 K.key(strip, "location", [(0, (-1.6, 0, 0)), (f_in - 4, (-1.6, 0, 0)), (f_in + 40, (0, 0, 0))])
 
 
@@ -87,7 +87,7 @@ K.glow_keys(MA["slot_out"], [(0, 0.0), (f_out, 0.0), (f_out + 10, 3.5), (f_out +
 K.glow_keys(MA["led"], [(0, 1.0)])
 
 # b2: 100 tokens; the model reads them all and scores every token it knows
-f_100, f_read, f_score = w("b2", "hundred"), w("b2", "reads"), w("b2", "score")
+f_100, f_read, f_score = w("b2", "hundred"), w("b2", "pass"), w("b2", "probability")
 read_wave(f_read)
 K.glow_keys(idle, [(f_read, 1.2), (f_read + 14, 3.2), (f_score + 30, 3.2), (b["b3"]["f0"], 1.2)])
 K.glow_keys(MA["slot_out"], [(f_score, 0.6), (f_score + 12, 3.5), (b["b3"]["f0"], 1.0)])
@@ -101,7 +101,7 @@ for k, (mr, liq, lm) in enumerate(cols):
     K.glow_keys(cand_f[k], [(0, 0.0), (fill_at[k] - 2, 0.0), (fill_at[k] + 10, 0.4 + 2.6 * (p / TOP[0]["p"]) ** 0.6)])
 
 # b4: pick We; it flies to the strip; three more tokens join; the bets move to the first digit
-f_pick, f_add, f_again, f_later, f_digit = w("b4", "pick"), w("b4", "add"), w("b4", "again"), w("b4", "few"), w("b4", "digit")
+f_pick, f_add, f_again, f_later, f_digit = w("b4", "chosen"), w("b4", "added"), w("b4", "again"), w("b4", "few"), w("b4", "digit")
 shifts = [f_add - 6, f_later + 6, f_later + 34, f_later + 62]
 for k, fs in enumerate(shifts):
     K.key(strip, "location", [(fs, (-PITCH * k, 0, 0)), (fs + 16, (-PITCH * (k + 1), 0, 0))])

@@ -57,8 +57,10 @@ for k, m in TW["led"].items():
 for k, m in cells.items():
     f0 = w("b2", "twenty-four") + int((k - 1) * 1.2)
     K.glow_keys(m, [(0, 0.5), (f0 - 2, 0.5), (f0 + 8, 2.6), (END, 2.0)])
-for f0 in (w("b2", "turn"), w("b2", "every"), w("b2", "chosen"), w("b2", "thousand"), w("b2", "thirty-six"), w("b3", "comes")):
-    P.pulse(TW, f0 - 6, per_floor=1, peak=3.2, base=0.2, hold=5)
+# one pass climbs all 24 floors as "read them all, in one pass" is said; a second pass on "runs again"
+P.pulse(TW, w("b2", "read") - 4, per_floor=2, peak=3.4, base=0.4, hold=8)
+P.pulse(TW, w("b2", "runs") - 4, per_floor=1, peak=3.2, base=0.4, hold=6)
+P.pulse(TW, w("b3", "comes") - 6, per_floor=1, peak=3.2, base=0.4, hold=5)
 
 # the invented answer and the truth
 for j in range(3):

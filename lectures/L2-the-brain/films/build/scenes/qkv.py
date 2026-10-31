@@ -103,7 +103,9 @@ for j in range(N):
     beams[j][0].scale = (1, 1, 0.001)
 
 # the block stack (shot "close"): 24 floors x 14 heads, head 2 on floor 24 gets its own light
-TW = K.tower("tower", tuple(TOWER), floors=24, pitch=TW_PITCH, w=TW_W, d=TW_D, lit={(24, 2)})
+# (v4: no block stack in this film; section 4 is the attention mechanism only)
+link_m = K.light_mat("link_m", K.SKY, 0.0)
+link = K.arc("link", (X(MAN), -0.06, ZT + 0.01), (X(LAST), -0.06, ZT + 0.01), lift=0.32, r=0.006, mat=link_m)
 
 # ------------------------------------------------------------------------------------------------ timing
 b = {k: B.blocks[k] for k in ("b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8")}
@@ -271,23 +273,20 @@ for j, (bo, bm_) in beams.items():
     vis.append((f_val + 26, False))
     K.show(bo, sorted(vis))
 
-# b8: the output docks into head 2 on floor 24; the stack assembles; the heads light, then every floor
-f_pass, f_14, f_24 = w("b8", "passes"), w("b8", "fourteen"), w("b8", "twenty-four")
+# b8: the new vector goes back into the last token's tile (which glows brighter); a thread of light from Manchester's
+# tile to the last tile shows what it now carries
+f_back, f_means, f_att = w("b8", "back"), w("b8", "means"), w("b8", "attention")
 b8 = b["b8"]["f0"]
-for ch in TW["root"].children:
-    if "_post" in ch.name:
-        K.show(ch, [(0, False), (b8 - 40, True)])
-for k, fr in enumerate(TW["floors"], start=1):
-    z = fr.location.z
-    t0 = b8 - 40 + int((k - 1) * 1.2)
-    K.show(fr, [(0, False), (t0, True)])
-    K.key(fr, "location", [(0, (0, 0, z + 1.6)), (t0, (0, 0, z + 1.6)), (t0 + 22, (0, 0, z))])
-sp = TW_W * 0.9 / 14
-sock = TOWER + Vector(((2 - 6.5) * sp, -TW_D * 0.275 - 0.03, 23 * TW_PITCH + 0.09))
-K.key(outp, "location", [(f_pass - 8, OUTP), (f_pass + 34, sock)])
-K.key(outp, "scale", [(f_pass - 8, (1.0,) * 3), (f_pass + 34, (0.3,) * 3)])
-K.glow_keys(TW["heads"][(24, 2)][1], [(0, 0.0), (f_pass + 30, 0.0), (f_pass + 40, 6.0)])
-K.glow_keys(TW["idle"], [(0, 0.0), (f_14 - 4, 0.0), (f_14 + 14, 1.6), (f_24 + 30, 3.0)])
+above = Vector((X(LAST), 0.0, ZP + 0.12))
+intile = Vector((X(LAST), 0.0, ZT - 0.02))
+K.key(outp, "location", [(b8 - 6, OUTP), (f_back + 6, above), (f_back + 30, intile)])
+K.key(outp, "scale", [(b8 - 6, (1.0,) * 3), (f_back + 6, (1.0,) * 3), (f_back + 30, (0.25,) * 3), (f_back + 34, (0.001,) * 3)])
+K.glow_keys(out_m, [(f_back + 20, 5.5), (f_back + 32, 0.0)])
+K.glow_keys(faces[LAST], [(f_back + 26, 3.2), (f_back + 36, 7.0), (f_back + 70, 4.6)])
+K.glow_keys(faces[MAN], [(0, 0.0), (f_means - 10, 0.0), (f_means + 8, 2.4), (END, 2.0)])
+K.show(link, [(0, False), (f_means - 8, True)])
+K.grow(link, [(0, 0.0), (f_means - 8, 0.0), (f_means + 22, 1.0)])
+K.glow_keys(link_m, [(0, 0.0), (f_means - 8, 0.0), (f_means + 6, 3.0), (END, 2.2)])
 
 # ------------------------------------------------------------------------------------------------ cameras
 c1 = K.Cam(sc, "c_row", lens=40, fstop=2.2)
@@ -329,16 +328,15 @@ c10 = K.Cam(sc, "c_val", lens=36, fstop=3.2).cut(b["b7"]["f0"] - 8)
 c10.keys([(b["b7"]["f0"] - 8, (0.15, -2.0, 0.85), (-2.0, -0.2, 0.42)),
           (f_add7 - 16, (-0.45, -1.85, 0.72), (-1.3, -0.5, 0.45)),
           (b["b7"]["f1"] + 12, (-0.85, -1.45, 0.58), (-1.05, -0.82, ZP + 0.04))])
-c11 = K.Cam(sc, "c_up", lens=38, fstop=3.2).cut(b8 - 8)
-top = TOWER + Vector((0, 0, 23 * TW_PITCH))
-c11.keys([(b8 - 8, (-0.3, -1.9, 0.85), (-0.6, -0.4, 0.6)),
-          (f_pass + 36, (top.x + 0.2, top.y - 1.35, top.z + 0.35), (top.x - 0.35, top.y, top.z + 0.02)),
-          (f_14 + 30, (top.x + 0.7, top.y - 1.7, top.z + 0.25), (top.x - 0.1, top.y, top.z - 0.15)),
-          (END, (top.x + 1.4, top.y - 2.6, top.z + 0.1), (top.x - 0.1, top.y, top.z - 0.45))])
+c11 = K.Cam(sc, "c_back", lens=38, fstop=3.2).cut(b8 - 8)
+c11.keys([(b8 - 8, (-0.25, -1.75, 0.82), (-0.55, -0.45, 0.55)),
+          (f_back + 34, (0.55, -1.05, 0.58), (-0.3, 0.0, 0.26)),
+          (f_means + 30, (0.75, -1.35, 0.66), (-1.1, 0.0, 0.26)),
+          (END, (1.0, -1.85, 0.82), (-1.6, 0.0, 0.28))])
 
 # ------------------------------------------------------------------------------------------------ pins
 pins = ["tok%d_top" % i for i in list(range(78, N)) + [MAN_SYS]] + ["tok%d_front" % i for i in list(range(78, N)) + [MAN_SYS]]
 pins += [f"{k}{LAST}_top" for k in "qkv"] + ["slab_top", "wq_top", "wk_top", "wv_top", "ghostq_top", "k92_top",
-                                              "outp_top", "tower_pin_f24", "q99_mid", "k92_mid"]
+                                              "outp_top", "q99_mid", "k92_mid"]
 pins += [f"m{i}_top" for i in (MAN, MAN_SYS, STORES, BATT, PACKS, LAST, 82, 89, 94)]
 K.finish(sc, FILM, pins, samples=int(os.environ.get("SAMPLES", "96")))

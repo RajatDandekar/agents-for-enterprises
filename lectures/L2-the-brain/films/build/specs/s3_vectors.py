@@ -13,7 +13,7 @@ NB = T["embeddings"]["neighbours"]
 EMB = D["vectors"]["embedding"]
 BATT, MAN = 86, 92
 POSTER = 46.0
-MUSIC = "tried_and_true_imprismed.mp3"
+MUSIC = "observatory_out_to_the_world.mp3"
 MUSIC_GAIN = 0.34  # one bed level for the whole L2 series
 MUSIC_OFFSET = 60.0
 assert len(EMB[str(BATT)]) == 896 and EMB[str(BATT)][:4] == T["embeddings"]["values"][BATT]["v16"][:4]
@@ -98,7 +98,7 @@ def elements(tl):
     E.append({"type": "end", "t0": en("b6") + 0.8, "kicker": "Agentic Systems Engineering  ·  Lecture 2", "title": "Each token becomes a vector",
               "sub": "Qwen2.5-0.5B-Instruct's input embeddings on Emma's question",
               "credits": ["Dr. Rajat Dandekar  ·  Vizuara", "Vectors, map and neighbours: brain3d/trace.json, films/qkv_data.json",
-                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Tried-And-True”, Imprismed (Epidemic Sound)"]})
+                          "Narration: ElevenLabs, voice Daniel  ·  Music: “Observatory”, Out To The World (Epidemic Sound)"]})
     return E
 
 
