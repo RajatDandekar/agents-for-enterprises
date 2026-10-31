@@ -3,6 +3,12 @@
 ## v4 (2026-10-30): the Northbridge world; Lecture 1 rebuilt. Read WORLD_V4.md first.
 - **World:** Northbridge Cycles (e-bikes, Manchester) on Ledgerline ERP 7.2; package `ledgerline` (was `bahi`). Map in `tools/world_v4.py`; `--check` flags leftovers (food, rupee, litre, GST ...).
 - **Rollout:** L1 and L2 are done in v4. L3–L12 notebooks install the frozen tag `v3.1` (Rasoi world) until each is rebuilt; L3 (Sat 7 Nov) is next.
+- **L2 v5 (2026-10-31 evening, Rajat's fourth review; plan in `lectures/L2-the-brain/REWORK_V5.md`):** 102 slides, QA 0, live. Every film is preceded by its section's own question and followed by a check slide of 1–3 technical questions (answers on click).
+  - Section 2 adds the two extremes (letters 67 / words 12 + [UNK] / BPE 15), live Tiktokenizer (`?model=Qwen/Qwen2.5-72B`) and two language slides (`experiments/tok_languages.py`: Tamil 223 GPT-2 / 106 GPT-4 / 32 GPT-4o / 87 Qwen vs English 15).
+  - Section 5 splits into blocks (new `blocks` film, which replaces structure + s5_blocks) and heads (intuition slide, a real-heads gallery from `films/build/data/heads_data.json`, new `heads` film).
+  - New films: `next_token` (logits and softmax), `generation` (with the KV cache), `params` (494,032,768 numbers, opens section 8); rebuilt `s8_weights` (2:51) and `finale` (3:42, now before section 9, ends on "why?").
+  - Section 8 adds the corpus mix and "how the training data is made" slides (`gen_v5data.py` → `v5data.js`). The Brain Lab is its own hands-on part after section 9, and an A2 walkthrough with highlighted NB2 cells sits at the end.
+  - Replaced films are in `films/archive_v4/`, which the site does not publish. Film spend for the v5 round is about $120 of Modal (builder estimates).
 - **L2 (2026-10-31, after Rajat's third-round review):** 73 slides, QA 0; unlocked on the site (`tools/unlocked.txt`). Nine sections follow Emma's question through Qwen2.5-0.5B-Instruct, with one persistent 3D scene (`brain3d/`, real trace). NB2: 32 cells, replay 0 errors.
   - 13 films (overture, s1_game "Next-token prediction" … s9_fix, qkv, structure, finale), all live; the music is L1's track, mixed quieter.
   - The rework removed the duplicate slides, temperature from slide 4, the 494M, "what would it say now" and softmax slides; simplified BPE; made attention about the mechanism only; added section-specific questions and a clear tiny-GPT story.
