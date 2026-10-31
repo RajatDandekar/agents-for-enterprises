@@ -38,7 +38,7 @@ const RX = {
     return m;
   },
   nav(active) {
-    const items = [['/', '1', 'Invitation'], ['/brief', '2', 'Your brief'], ['/before', '3', 'Before'], ['/after', '4', 'After'],
+    const items = [['/', '1', 'Invitation'], ['/before', '2', 'Before'], ['/brief', '3', 'How it felt'], ['/after', '4', 'After'],
       ['/tools', '', 'Tools'], ['/studio', '', 'Studio']];
     const el = document.createElement('nav'); el.className = 'nav';
     el.innerHTML = `<span class="mark">Northbridge</span>` + items.map(([h, n, t]) =>

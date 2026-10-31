@@ -9,8 +9,12 @@ rm -rf "$OUT" && mkdir -p "$OUT"
 cp -R "$ROOT/engine" "$OUT/engine"
 cp -R "$ROOT/figures" "$OUT/figures"
 mkdir -p "$OUT/ledgerline/ledgerline/experience" && cp -R "$ROOT/ledgerline/ledgerline/experience/shots" "$OUT/ledgerline/ledgerline/experience/shots"
+# Only lectures listed in tools/unlocked.txt are published (students cannot open the rest by URL).
+UNLOCKED="$(grep -v '^#' "$ROOT/tools/unlocked.txt" | tr -s ' \n' ' ')"
 for d in "$ROOT"/lectures/L*/; do
-  n="$(basename "$d")"; mkdir -p "$OUT/lectures/$n"
+  n="$(basename "$d")"
+  case " $UNLOCKED " in *" $n "*) ;; *) continue ;; esac
+  mkdir -p "$OUT/lectures/$n"
   cp "$d"index.html "$OUT/lectures/$n/"
   for f in "$d"*.js "$d"*.css; do [ -f "$f" ] && cp "$f" "$OUT/lectures/$n/"; done   # figs.js, figdata.js, deck css/js
   for sub in figs shots; do [ -d "$d$sub" ] && rsync -a --exclude '*.json' "$d$sub/" "$OUT/lectures/$n/$sub/"; done
@@ -32,6 +36,7 @@ sed -e "s#<a href=\"lectures/\${dir}/\${nb}.ipynb\" download>Notebook</a>#<a hre
     -e "s#href=\"lectures/\${dir}/\${a}.md\"#href=\"$GH/lectures/\${dir}/\${a}.md\" target=\"_blank\" rel=\"noopener\"#" \
     -e "s#href=\"modules/README.md\"#href=\"$GH/modules/README.md\"#" \
     -e "s#href=\"lectures/L12-your-module/DEMO_DAY.md\"#href=\"$GH/lectures/L12-your-module/DEMO_DAY.md\"#" \
+    -e "s#^const UNLOCKED = \[.*\];#const UNLOCKED = [$(printf "'%s'," $UNLOCKED | sed 's/,$//')];#" \
     "$ROOT/index.html" > "$OUT/index.html"
 echo '{"cleanUrls":false,"headers":[{"source":"/(.*)","headers":[{"key":"Cache-Control","value":"public, max-age=0, must-revalidate"}]}]}' > "$OUT/vercel.json"
 echo "built $(find "$OUT" -type f | wc -l | tr -d ' ') files, $(du -sh "$OUT" | cut -f1)"

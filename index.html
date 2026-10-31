@@ -38,6 +38,7 @@ h2{font-size:clamp(26px,3.4vw,38px);font-weight:450;letter-spacing:-.018em;text-
 .links a.dark{background:var(--ink);color:#fff;border-color:var(--ink)}
 .panel{background:var(--card);border-radius:28px;padding:30px 32px;text-align:center;color:var(--ink-2);font-size:17.5px}
 .panel a{color:var(--accent-ink)}
+.lec.locked{opacity:.55;filter:saturate(.6)}.lec.locked h3,.lec.locked .s{color:var(--ink-2)}.lockpill{display:inline-flex;align-items:center;min-height:36px;padding:7px 16px;border-radius:999px;border:1px dashed var(--pill-line);font-size:14.5px;color:var(--ink-2)}
 .foot{margin:56px 0 72px;text-align:center;font-size:14.5px;color:var(--ink-3)}
 </style>
 </head>
@@ -71,8 +72,10 @@ const L = [
   ['L11', 'Running Agents in Production', 'Sat 5 Dec', 'Guardrails, Temporal for long waits, pgvector and Redis, LiteLLM budgets, managed platforms', 'L11-production', 'NB11_production', 'A11'],
   ['L12', 'Your Module', 'Sun 6 Dec', 'Demo day: your module, before and after, on the production stack you choose', 'L12-your-module', 'NB8_your_module', ''],
 ];
-document.getElementById('lecs').innerHTML = L.map(([n, t, d, sub, dir, nb, a]) => `<article class="lec"><span class="x" aria-hidden="true">${n.slice(1)}</span><span class="n">${n === 'L0' ? 'Primer' : 'Lecture ' + n.slice(1)} · ${d}</span><h3>${t}</h3><span class="s">${sub}</span>
-  <div class="links"><a class="dark" href="lectures/${dir}/index.html">Slides</a>${nb ? `<a href="lectures/${dir}/${nb}.ipynb" download>Notebook</a>` : ''}${a ? `<a href="lectures/${dir}/${a}.md">Assignment</a>` : ''}</div></article>`).join('');
+const UNLOCKED = ['L1-before-and-after'];  /* set from tools/unlocked.txt by tools/build_site.sh */
+document.getElementById('lecs').innerHTML = L.map(([n, t, d, sub, dir, nb, a]) => { const open = UNLOCKED.includes(dir);
+  return `<article class="lec${open ? '' : ' locked'}"><span class="x" aria-hidden="true">${n.slice(1)}</span><span class="n">${n === 'L0' ? 'Primer' : 'Lecture ' + n.slice(1)} · ${d}</span><h3>${t}</h3><span class="s">${sub}</span>
+  <div class="links">${open ? `<a class="dark" href="lectures/${dir}/index.html">Slides</a>${nb ? `<a href="lectures/${dir}/${nb}.ipynb" download>Notebook</a>` : ''}${a ? `<a href="lectures/${dir}/${a}.md">Assignment</a>` : ''}` : `<span class="lockpill">Opens ${d}</span>`}</div></article>`; }).join('');
 </script>
 </body>
 </html>

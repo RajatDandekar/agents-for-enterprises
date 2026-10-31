@@ -81,11 +81,11 @@ def e2e(url: str = URL, only: str = "") -> dict:
             shot(pg, "02_letter.png")
             # ---------------------------------------------------------------- 2. brief
             pg.goto(url + "/brief", wait_until="networkidle")
-            pg.wait_for_selector("#q_feel")
-            pg.fill("#q_feel", "Like asking a colleague who knows the system: I say what I need and it does the clicks.")
-            pg.fill("#q_never", "Spend money or send anything to a customer without asking me.")
-            pg.fill("#q_trust", "It shows me the real record it changed, not just 'done'.")
-            pg.fill("#q_wrong", "It says so plainly, undoes what it can, and tells a person.")
+            pg.wait_for_selector("#q_bad")
+            pg.fill("#q_bad", "Codes I had to remember and errors I could not read.")
+            pg.fill("#q_boring", "Copying the supplier code from one screen to another.")
+            pg.fill("#q_change", "Let me just say what I need.")
+            pg.fill("#q_feel", "Like asking a colleague who knows the system.")
             for t in ("I just say what I need", "It shows its work", "It asks before it acts",
                       "It never guesses a number", "It hands over to a person"):
                 pg.click(f"#picks .pill[data-p=\"{t}\"]")

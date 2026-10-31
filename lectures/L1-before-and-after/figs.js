@@ -393,9 +393,9 @@ FIGS.wire = (el) => {
 
 /* ---------- Building the definition of an agent ---------- */
 FIGS.agentdef = (el) => {
-  const parts = [['A model', 'that reads Emma’s sentence and decides what to do next', 'g1'], ['+ tools', 'one per business activity, described in JSON, run by Python', 'g3'], ['+ a loop', 'call a tool, read the result, decide again, until the job is done', 'g2'], ['+ a person', 'it acts as Emma, with her permissions, and asks before it saves', 'g4']];
+  const parts = [['An LLM', 'reads the request and decides the next step', 'g1'], ['+ tools', 'the actions it may take: look up stock, raise a request, place an order', 'g3'], ['+ a loop', 'act, read the result, decide again, until the job is done', 'g2'], ['+ rules', 'whose permissions, what needs your yes, what is never allowed', 'g4']];
   el.innerHTML = `<div class="ad">${parts.map(([h, t, g], i) => `<div class="ad-p p${i}" style="background:var(--${g})"><div class="ad-h">${h}</div><div class="ad-t">${t}</div></div>`).join('')}</div>
-    <div class="def ad-def"><b>Definition</b>An <b>AI agent</b> is a model that uses tools in a loop to finish a job for someone. An <b>enterprise</b> agent does it inside the company’s systems, as a named person, under the company’s rules.</div>`;
+    <div class="def ad-def"><b>Definition</b>An <b>AI agent</b> is an LLM that uses tools in a loop, under rules, to finish a job for someone.</div>`;
   const ps = [0, 1, 2, 3].map((i) => el.querySelector('.p' + i)), d = el.querySelector('.ad-def');
   return { step(k) { ps.forEach((p, i) => show(p, i <= k)); show(d, k >= 4); } };
 };
@@ -491,6 +491,15 @@ FIGS.film = (el) => {
   ['click', 'pointerdown', 'touchstart', 'keydown'].forEach((ev) => { v.addEventListener(ev, stop); b.addEventListener(ev, stop); });
   b.addEventListener('click', () => { const f = v.requestFullscreen || v.webkitRequestFullscreen; if (f) f.call(v); else if (v.webkitEnterFullscreen) v.webkitEnterFullscreen(); v.play().catch(() => {}); });
   return { step(k, instant) { if (instant && !v.paused) v.pause(); } };
+};
+
+/* ---------- The time gap, revealed after the class answers (before_measure.json, after_run.json) ---------- */
+FIGS.timegap = (el) => {
+  if (!V4) return todo(el, 'Before and After times from our runs.');
+  const S = D.after_summary || {}, F = D.before.first_time;
+  el.innerHTML = `<div class="tg2"><div class="tg2-c bf"><span class="k">Before, first time</span><b>≈${F.klm_minutes} min</b><span>${F.totals['screens opened']} screens · ${F.totals['codes typed']} codes · ${F.totals['error codes']} error codes · keystroke estimate</span></div>
+    <div class="tg2-c af"><span class="k">After, Ask Northbridge</span><b>${((S.seconds || 0) / 60).toFixed(1)} min</b><span>${S.messages} messages (${S.typed_messages} typed, ${S.taps} taps on “yes”) · measured</span></div></div>`;
+  return { step() {} };
 };
 
 /* The 3D request animation (FIGS.flow3d) is registered by flow3d/deck.js, owned by the flow3d builder. */

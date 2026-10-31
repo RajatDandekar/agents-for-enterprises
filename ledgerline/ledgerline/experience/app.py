@@ -40,10 +40,10 @@ PICKS = ["I just say what I need", "It shows its work", "It asks before it acts"
          "It explains problems in plain words", "It knows who I am and what I may do", "It follows the company's rules",
          "It tells me when it can't", "It hands over to a person", "It answers in seconds", "It works on my phone",
          "It gives the same answer every time"]
-QUESTIONS = [("feel", "How should using software at work feel?"),
-             ("never", "What should an assistant never do without asking you first?"),
-             ("trust", "How would you know it did the right thing?"),
-             ("wrong", "When it gets something wrong, what should happen?")]
+QUESTIONS = [("bad", "What felt bad about doing it through the screens?"),
+             ("boring", "Did it feel slow or boring? Where?"),
+             ("change", "If you could change one thing, what would it be?"),
+             ("feel", "How should doing this feel?")]
 
 
 def create_app(store: Store | None = None) -> FastAPI:
