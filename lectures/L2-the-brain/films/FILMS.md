@@ -1,29 +1,31 @@
 # Lecture 2 films (The Brain)
 
-Eleven narrated Blender Cycles films on Emma's question ("How many city e-bike battery packs do we have in Manchester stores?"), the same example the slides teach, run through Qwen2.5-0.5B-Instruct. Each film plays at the **end** of its section as the recap, after the theory. Every number on screen comes from a recorded run (`../brain3d/trace.json`, `qkv_data.json`, `../experiments/logs/`).
+Thirteen narrated Blender Cycles films on Emma's question ("How many city e-bike battery packs do we have in Manchester stores?"), the same example the slides teach, run through Qwen2.5-0.5B-Instruct. Each film plays at the **end** of its section as the recap, after the theory. Every number on screen comes from a recorded run (`../brain3d/trace.json`, `qkv_data.json`, `../experiments/logs/`).
 
 Embed with `<video controls preload="metadata" poster="films/<name>.jpg">` and two `<source>` lines (`.webm` first, then `.mp4`). Never autoplay. Files: `films/<name>.mp4` (H.264, faststart), `films/<name>.webm` (VP9 + Opus) and `films/<name>.jpg` (poster). All are 1920x1080 at 30 fps, mixed to -16 LUFS integrated, true peak about -1.5 dBFS.
 
 | Base name | Plays at the end of section | Duration | mp4 | webm |
 |---|---|---|---|---|
-| `overture` | Lecture opener (before section 1) | 0:41 (41.3 s) | 21.4 MB | 21.7 MB |
-| `s1_game` | 1 | 1:18 (77.7 s) | 24.2 MB | 24.5 MB |
-| `s2_tokens` | 2 | 1:49 (108.6 s) | 24.2 MB | 26.4 MB |
-| `s3_vectors` | 3 | 1:22 (82.5 s) | 24.1 MB | 25.8 MB |
-| `qkv` | 4, after the Q/K/V theory | 2:26 (146.2 s) | 24.3 MB | 26.1 MB |
-| `s4_attention` | 4, end | 1:26 (86.3 s) | 24.2 MB | 25.3 MB |
-| `s5_blocks` | 5 | 1:13 (72.6 s) | 24.2 MB | 25.0 MB |
-| `s6_choice` | 6 | 1:14 (73.6 s) | 23.8 MB | 25.4 MB |
-| `s7_loop` | 7 | 1:15 (74.6 s) | 24.0 MB | 23.9 MB |
-| `s8_weights` | 8 | 1:23 (83.2 s) | 24.2 MB | 26.5 MB |
-| `s9_fix` | 9 | 1:13 (72.7 s) | 24.1 MB | 24.9 MB |
+| `overture` | lecture opener | 0:46 (45.9 s) | 23.6 MB | 24.8 MB |
+| `s1_game` | 1 | 1:22 (82.5 s) | 24.2 MB | 24.5 MB |
+| `s2_tokens` | 2 | 1:34 (93.9 s) | 24.1 MB | 25.6 MB |
+| `s3_vectors` | 3 | 1:22 (82.5 s) | 24.0 MB | 25.6 MB |
+| `qkv` | 4 (end): attention, the mechanism | 2:26 (146.5 s) | 24.3 MB | 25.8 MB |
+| `structure` | 5 (start): 24 blocks, 14 heads | 1:19 (79.0 s) | 23.7 MB | 26.3 MB |
+| `s4_attention` | 5: what the real heads look at | 1:26 (86.3 s) | 24.1 MB | 25.2 MB |
+| `s5_blocks` | 5 (end) | 1:13 (72.6 s) | 24.2 MB | 24.7 MB |
+| `s6_choice` | 6 | 1:14 (73.6 s) | 23.8 MB | 25.3 MB |
+| `s7_loop` | 7 | 1:15 (74.6 s) | 24.0 MB | 23.7 MB |
+| `s8_weights` | 8 | 1:23 (83.2 s) | 24.1 MB | 26.4 MB |
+| `s9_fix` | 9 | 1:13 (72.7 s) | 24.0 MB | 24.7 MB |
+| `finale` | lecture close: the whole machine | 1:54 (114.3 s) | 24.0 MB | 25.2 MB |
 
 ## Look and sound (one series)
 
 - **World:** one shared kit, `build/kit/l2kit.py`. It is a "midnight slate" studio: a deep blue-grey sweep graded to black, one big soft key, a cool rim light, a low warm fill, and lights hidden from reflections. The set has a dark graphite plinth with an aluminium trim and ceramic token tiles with smoked-glass faces and role bands (sky for Emma, slate for system, warm grey for chat markers).
 - **Props:** vectors are dark-glass plates in machined frames whose cells glow with the real values (query sky, key violet, value warm white). Glass columns fill with light to show scores and weights. Light beams and arcs carry attention. The model is a 24-floor block stack with 14 head modules per floor. Rendered on Modal (L40S, Cycles, 96 samples, OIDN).
 - **Text:** all readable text is a 2D overlay in Google Sans Flex / Google Sans Code (`build/overlay.py`): dark-glass pinned cards, formula chips, typed titles, subtitles and an end card. Hero tokens carry their word on the tile face; small labels appear only on tiles at least ~40 px wide, never overlap, and are never truncated.
-- **Sound:** narration by ElevenLabs Daniel (`onwK4e9ZLuTAKqWW03F9`, eleven_multilingual_v2, speed 1.08). The music bed is "Tried-And-True" by Imprismed (Epidemic Sound), ducked under the voice with a sidechain compressor. It is different from L1's "Envision" and lives in `films/music/`, which is gitignored. A designed SFX set (`build/sfx/`, ElevenLabs sound generation) adds tile, rise, beam, fill, chime, tick, bloom, merge, resolve and whoosh sounds.
+- **Sound:** narration by ElevenLabs Daniel (`onwK4e9ZLuTAKqWW03F9`, eleven_multilingual_v2, speed 1.08). The music bed is L1's track, "Observatory" by Out To The World (Epidemic Sound), in every film (Rajat, 31 Oct). `overlay.mix_audio` levels it against the voice: about 26 dB under the narration while Daniel speaks and 22 dB under in the gaps, with 0.4 s ramps. The whole mix is then two-pass loudness-normalised to -16 LUFS. The file lives in `films/music/`, which is gitignored. A designed SFX set (`build/sfx/`, ElevenLabs sound generation) adds tile, rise, beam, fill, chime, tick, bloom, merge, resolve and whoosh sounds.
 
 ## How to rebuild
 ```sh
@@ -37,7 +39,7 @@ The Modal volume is `video-ad-edit:/l2films` in workspace rajatworkspace. Scenes
 
 ## The films
 
-### `overture`: The Brain (section Lecture opener (before section 1))
+### `overture`: The Brain (lecture opener)
 
 **Shots.** Emma's question lights tile by tile on the strip; a slow pass over the 24-floor stack as it runs; the ember "100" lands beside the green Ledgerline plaque "5,400".
 
@@ -47,11 +49,11 @@ The Modal volume is `video-ad-edit:/l2films` in workspace rajatworkspace. Scenes
 
 > One question. How many city e-bike battery packs do we have in Manchester stores?
 >
-> One hundred tokens go in. Twenty-four blocks of a real language model turn them over. At every step, one token is chosen from 151,936.
+> One hundred tokens go in. Twenty-four blocks of a real language model read them all, in one pass, and at the end one token is chosen, from 151,936. Then the pass runs again, for the next token.
 >
 > And out comes a confident answer: 100. The truth is 5,400. Today we open the machine, and find out where that number came from.
 
-### `s1_game`: The game: predict the next token (section 1)
+### `s1_game`: Next-token prediction (section 1)
 
 **Shots.** Sealed model enclosure (24-floor stack seen through a frosted window) fed by the 100-tile strip; next-token glass columns on a tray (We 56.4, As 7.9, Manchester 6.1, In 5.3, Our 4.2, At 2.8); the "We" tile flies to the strip, " currently", " have", " " join; digit columns (1 33.6, 2 20.8, 5 11.6, 3 11.3, 4 8.8, 6 4.4); the enclosure opens and the stack glows.
 
@@ -59,21 +61,21 @@ The Modal volume is `video-ad-edit:/l2films` in workspace rajatworkspace. Scenes
 
 **Script** (subtitles; the voice reads the same sentences with the numbers spelled out):
 
-> Here is the whole idea of a language model, as one game. Text goes in. Out comes a guess: which token comes next?
+> Here is the whole idea of a language model. Text goes in, and the model predicts the next token.
 >
-> We give it Emma's question, with the app's instructions in front: 100 tokens. The model reads them all and gives a score to every token it knows. Turned into probabilities, the top of the list looks like this.
+> It reads Emma's question, with the app's instructions in front: 100 tokens, in one pass. At the end of that pass, it gives a probability to every entry in its vocabulary, all 151,936. The top of the list looks like this.
 >
 > We: 56 percent. As: 8. Manchester: 6. In: 5. The model is not certain. It is placing bets.
 >
-> Pick one, add it to the text, and play again. A few tokens later, the answer reaches its number. Now the bets are on a digit. One: 34 percent. Two: 21. Five: 12.
+> One token is chosen and added to the text. Then the whole pass runs again, once for every new token. A few tokens later, the answer reaches its number. Now the bets are on a digit. One: 34 percent. Two: 21. Five: 12.
 >
 > Nothing here looks anything up. Every word of the answer, the number too, is a bet like this one. The rest of the lecture opens the box, to see how the bets are made.
 
 ### `s2_tokens`: What you send, cut into tokens (section 2)
 
-**Shots.** The question as one bar cut by a light blade into 15 tiles with ids; the chat as 100 tiles (72 system, 15 Emma, 13 markers); macros on Manchester (19361), North+bridge (4787, 13709), 5,400 as 5 , 4 0 0 (ids 20 11 19 15 15); the hand BPE run from bpe.json (battery and packs fusing, 86 to 36 tokens); the vocabulary rack (1,187 bands of 128 rows) with the drawer of 22 special rows and 271 padding rows.
+**Shots.** The question as one bar cut by a light blade into 15 tiles with ids; the chat as 100 tiles (72 system, 15 Emma, 13 markers); macros on Manchester (19361), North+bridge (4787, 13709), 5,400 as 5 , 4 0 0 (ids 20 11 19 15 15); the hand BPE run from bpe.json (battery and packs fusing, 86 to 36 tokens); the vocabulary: 151,643 pieces plus 22 special tokens = 151,665, one row each in the model's table.
 
-**Numbers from.** brain3d/trace.json (tokens, number_cuts); experiments/logs/bpe.json (hand BPE run); films/qkv_data.json vocab block (151,643 BPE pieces + 22 special = 151,665; config.vocab_size 151,936 = 1,187 x 128; 271 padding rows).
+**Numbers from.** brain3d/trace.json (tokens, number_cuts); experiments/logs/bpe.json (hand BPE run); films/qkv_data.json vocab block (151,643 BPE pieces + 22 special = 151,665; the film shows only these).
 
 **Script** (subtitles; the voice reads the same sentences with the numbers spelled out):
 
@@ -85,7 +87,7 @@ The Modal volume is `video-ad-edit:/l2films` in workspace rajatworkspace. Scenes
 >
 > Where do the pieces come from? From byte pair encoding. Start with single bytes, then keep merging the pair that appears most often in a huge pile of text. Qwen's tokenizer learned 151,643 pieces this way.
 >
-> Add 22 special tokens, like the markers in Emma's chat, and you get 151,665. The model's table has a few more rows: 151,936. That is 1,187 times 128, a size GPUs handle well. No token ever uses the extra 271 rows.
+> Add 22 special tokens, like the markers in Emma's chat, and the tokenizer knows 151,665 pieces. The model keeps one row in its table for each.
 >
 > So: 100 tokens in. That is what Emma's question costs, and exactly what the model reads.
 
@@ -109,31 +111,49 @@ The Modal volume is `video-ad-edit:/l2films` in workspace rajatworkspace. Scenes
 >
 > So the strip of tiles is now a row of 100 columns, each one a point in meaning. Next, those columns start to talk to each other.
 
-### `qkv`: Query, key and value (section 4, after the Q/K/V theory)
+### `qkv`: Query, key and value (section 4 (end): attention, the mechanism)
 
-**Shots.** b1 dolly along Emma's tokens to the last position (it lights); b2 query, key and value plates rise from every tile; b3 the last token's 896-number vector through three machined matrices W_Q, W_K, W_V prints q, k, v; b4 the query plate turns to face the keys, beams go out to all 100 keys; macro: query and Manchester's key open like a book, cells light pair by pair, the glass column follows the real running sum of q_i x k_i to 62.5; every column fills to its dot product; b5 scores (÷8): Manchester 7.81, Manchester in the system prompt 5.44, stores 4.54, battery 1.36; b6 softmax reallocates the light: 65.2%, 6.1%, 3.9%, 2.5%; b7 the weighted values slide into one bright output plate (64 real numbers); b8 the output docks into head 2 on floor 24 of the block stack, the 14 heads and then all 24 floors light.
+**Shots.** b1 dolly along Emma's tokens to the last token (it lights); b2 query, key and value plates rise from every tile; b3 the last token's 896-number vector through three machined matrices W_Q, W_K, W_V prints q, k, v (64 numbers each); b4 the query plate turns to face the keys and beams go out to all 100 keys; macro: query and Manchester's key open like a book, cells light pair by pair, the glass column follows the real running sum of q_i x k_i to 62.5; every column fills to its dot product; b5 scores (divided by 8): Manchester 7.81, Manchester in the system prompt 5.44, stores 4.54, battery 1.36; b6 softmax reallocates the light (65.2%, 6.1%, 3.9%, 2.5%); b7 the weighted values slide into one bright output plate; b8 the new vector drops back into the last token's tile and a light arc ties it to Manchester. No blocks, heads or positions are named (Rajat, 31 Oct): it is "one attention unit" (recorded: block 24, head 2).
 
 **Numbers from.** films/qkv_data.json (capture_trace.py --film-qkv 1 on Modal CPU: q, k, v of block 24 head 2 recomputed from the block's projections and rotary embedding; softmax(q·k/8) matches the model's own attention to 1.2e-7; vocab sizes from the tokenizer and config); brain3d/trace.json (tokens, roles).
 
 **Script** (subtitles; the voice reads the same sentences with the numbers spelled out):
 
-> Emma's question is now a row of 100 tokens. The last one sits at the very end, where the answer is about to begin. Before the model writes a word, this position has to find out which earlier tokens matter.
+> Emma's question is now a row of 100 tokens. The last one sits at the very end, where the answer is about to begin. Before the model writes a word, this last token has to find out which earlier tokens matter.
 >
 > Attention gives every token three new vectors. A query: what am I looking for? A key: what do I contain? And a value: what I will pass on, if I am chosen.
 >
-> All three are made from the token's own vector, by three learned matrices. In block 24, head 2, each one is 64 numbers long.
+> All three are made from the token's own vector, by three learned matrices. In this attention unit, each one is 64 numbers long.
 >
-> Now the last position sends out its query, to every key so far, its own included. Multiply query and key, number by number, and add it all up. That is a dot product: one score per token. When the two point the same way, the score is high.
+> Now the last token sends out its query, to every key in the row, its own included. Multiply query and key, number by number, and add it all up. That is a dot product: one score per token. When the two point the same way, the score is high.
 >
-> Divided by 8, the square root of 64, the scores come out like this. Manchester, in Emma's question: 7.8. The Manchester in the system prompt: 5.4. Stores: 4.5. And battery, only 1.4. This head is looking for a place, not an item.
+> Divided by 8, the square root of 64, the scores come out like this. Manchester, in Emma's question: 7.8. The Manchester in the system prompt: 5.4. Stores: 4.5. And battery, only 1.4. This attention unit is looking for a place, not an item.
 >
-> Softmax turns the scores into weights that add up to one. Every lead is magnified: 2.4 points ahead becomes ten times the weight. Manchester now takes 65 percent. The other 99 positions share the rest.
+> Softmax turns the scores into weights that add up to one. Every lead is magnified: 2.4 points ahead becomes ten times the weight. Manchester now takes 65 percent. The other 99 tokens share the rest.
 >
 > Then the values. Each one steps forward, scaled by its weight. Manchester, at almost full strength. The rest, faint. Added together, they make one new vector of 64 numbers.
 >
-> That is what this head passes up: mostly, what Manchester means in this sentence. The query asks, the keys answer, and the values are mixed by how well they matched. Fourteen heads do this side by side, in each of 24 blocks.
+> That new vector goes back to the last token, which now carries what it found: mostly, what Manchester means in this sentence. The query asks, the keys answer, and the values are mixed by how well they matched. That is attention.
 
-### `s4_attention`: Attention: tokens look back (section 4, end)
+### `structure`: Inside the model: 24 blocks (section 5 (start): 24 blocks, 14 heads)
+
+**Shots.** The 24-floor block stack (494,032,768 parameters); one block close up: the attention bay with 14 head modules side by side, then the feed-forward bay (896 to 4,864 to 896); Emma's 100 tokens enter at the bottom as a row of real vector cells (first 16 of 896 per token, recorded after every block in build/data/structure_data.json by build/capture_structure.py), come out changed, and climb all 24 blocks; ends on "next, what the heads look at".
+
+**Numbers from.** brain3d/trace.json, films/qkv_data.json and build/data/structure_data.json; every on-screen number was checked against them.
+
+**Script** (subtitles; the voice reads the same sentences with the numbers spelled out):
+
+> This is the inside of the model: a stack of 24 blocks, one on top of another, all built the same way.
+>
+> Each block has two parts. The first is attention, made of 14 heads working side by side. Each head lets a token look back at the tokens before it.
+>
+> The second part is the feed-forward network, 4,864 numbers wide. It works on each token's vector by itself, without looking at the others.
+>
+> Now send in Emma's question. All 100 tokens enter at the bottom, each one a vector of 896 numbers. In every block, attention lets each token gather from the ones before it, then the feed-forward part reworks each vector on its own. All 100 vectors come out changed, and climb to the next block.
+>
+> After 24 blocks, the vectors reach the top. Next, we open attention, and see what the heads look at.
+
+### `s4_attention`: Attention: tokens look back (section 5: what the real heads look at)
 
 **Shots.** Columns rise; arcs from the last position, thickness = weight averaged over all heads and blocks (33.2% on <|im_start|>, 12.5% on itself); share by role (chat markers 62.8%, Emma 19.7%, system 17.4%); three heads in their own colours (block 24 head 2 65.2% Manchester; block 16 head 0 9.1% battery; block 12 head 13 100% on position 1); the causal mask as a glass wall after " battery" (its recorded row only looks back); the 24x14 head stack.
 
@@ -151,7 +171,7 @@ The Modal volume is `video-ad-edit:/l2films` in workspace rajatworkspace. Scenes
 >
 > Fourteen heads, side by side, in each of 24 blocks. Each one mixes what it found into the column, and passes it up.
 
-### `s5_blocks`: A block, then 24 of them (section 5)
+### `s5_blocks`: A block, then 24 of them (section 5 (end))
 
 **Shots.** One block close up (14 heads, then the MLP, 4,864 wide); 23 more floors drop in; the last position's column rides up the stack with its real 896 values after each block (vectors.lens_last); a logit-lens ladder fills in the top token per block (noise to 17, "we" at 18 with 1.6%, "We" 8.0 / 29.3 / 56.4% at 22-24); a "We" tile rises on top.
 
@@ -241,15 +261,42 @@ The Modal volume is `video-ad-edit:/l2films` in workspace rajatworkspace. Scenes
 >
 > The fix is not a bigger brain. It is the right facts, in front of it. Lecture 3 gives the model knowledge. Lecture 4 gives it tools.
 
+### `finale`: The whole machine (lecture close: the whole machine)
+
+**Shots.** One journey through the whole machine on Emma's question: 100 token tiles, vectors of 896 numbers, attention (the last token's query, 65.2% on Manchester), 24 blocks in one pass, scores against all 151,936 entries and softmax (We 56.4%), one token chosen, the loop, the digits 1 0 0 against Ledgerline's 5,400, and the fix: with the stock line in the prompt, the same model answers 5,400.
+
+**Numbers from.** brain3d/trace.json, films/qkv_data.json and build/data/structure_data.json; every on-screen number was checked against them.
+
+**Script** (subtitles; the voice reads the same sentences with the numbers spelled out):
+
+> Here is the whole machine, on one question. Emma asks: how many city e-bike battery packs do we have in Manchester stores?
+>
+> First, her chat is cut into tokens. One hundred tiles, each with its own number. Manchester is a single tile.
+>
+> Each tile looks up its vector: a column of 896 numbers, learned in training.
+>
+> Then attention. The last position sends out a query, and every key answers. In block 24, head 2, 65 percent of the weight lands on Manchester.
+>
+> Attention and a small network make one block. The column climbs all 24, in one pass, and near the top, an answer starts to form.
+>
+> At the top, it is scored against all 151,936 tokens. Softmax turns the scores into probabilities. We: 56 percent. As: 8. Manchester: 6.
+>
+> One token is chosen. It joins the strip, and the whole pass runs again. One token at a time.
+>
+> Then the number. One, at 34 percent. Zero. Zero. A confident 100. Ledgerline says 5,400.
+>
+> Nothing in the prompt carried the stock, so the model made a number up. Put the stock line into the prompt, and the same model answers 5,400. That is where we go next.
+
 ## Credits
 - Dr. Rajat Dandekar, Vizuara: Agentic Systems Engineering, Lecture 2.
 - Narration: ElevenLabs, voice "Daniel".
-- Music: "Tried-And-True" by Imprismed, licensed from Epidemic Sound (not redistributed in the repo).
+- Music: "Observatory" by Out To The World, licensed from Epidemic Sound (not redistributed in the repo).
 - Model: Qwen2.5-0.5B-Instruct (Apache 2.0), revision 7ae557604adf67be50417f59c2c2f167def9a775, recorded on Modal.
 - Rendering: Blender 4.2.3 Cycles on Modal; composite with Pillow and ffmpeg on Modal.
 
 ## Known rough edges
-- All eleven films were re-composited on Sat 31 Oct, 05:00 IST, with the series label rule (hero words on tile faces; no truncated or overlapping labels), one music bed level, two-pass loudness (-16.1 LUFS) and the s4 poster at the 65.2% moment. No re-render was needed.
+- 31 Oct revision (Rajat's review): L1's music at a quieter level in every film; s1 retitled "Next-token prediction" and re-narrated (one pass, one token chosen, the pass repeats per token); s2 no longer mentions 1,187 x 128 or padding; qkv says "one attention unit" and never names blocks or heads; new films `structure` and `finale`; the overture's line now says one token is chosen at the end of the pass.
+- All films were re-composited on Sat 31 Oct, 05:00 IST, with the series label rule (hero words on tile faces; no truncated or overlapping labels), one music bed level, two-pass loudness (-16.1 LUFS) and the s4 poster at the 65.2% moment. No re-render was needed.
 - Webm copies of s2, s3, s4, s5, s6, s8 and qkv are 25 to 26.5 MB, just over the 25 MB guideline. The mp4s are all under 25 MB.
 - s3: the narration names four of battery's neighbours (batteries, lithium, capacitor, charger); the screen shows the real top 6, which also include Batter and recharge.
 - s8: the big stack's weight cells are an illustrative pattern (labelled); the tiny GPT numbers are real.

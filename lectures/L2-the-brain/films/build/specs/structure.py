@@ -45,7 +45,7 @@ def elements(tl):
                         {"text": "it never looks at the other tokens", "size": 24, "c": "slate"}]})
     E.append({"type": "pin", "anchor": "row_pin", "text": "Emma's question: 100 tokens", "sub": "one column per token  ·  first 16 of 896 numbers shown",
               "accent": "sky", "t0": w("b4", "tokens"), "t1": w("b4", "climb") - 0.2, "dx": -40, "dy": -70, "size": 28})
-    for i, nm in ((86, "battery"), (92, "Manchester"), (99, "position 100")):
+    for i, nm in ((86, "battery"), (92, "Manchester"), (99, "the last token")):
         E.append({"type": "tag", "anchor": f"row_c{i}", "text": nm, "t0": w("b4", "bottom"), "t1": w("b4", "climb") - 0.2, "size": 22,
                   "hl": "sky" if i == 99 else None, "place": "tc", "dy": 40 if i == 92 else 8, "mono": False, "maxdepth": 6})
     E.append({"type": "chip", "x": 96, "y": 130, "t0": w("b4", "every"), "t1": en("b4") + 0.4, "accent": "sky",
