@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operator · The Brain Lab</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&display=swap">
+<link rel="stylesheet" href="/sky/sky.css">
+<style>
+.box{max-width:1040px;margin:0 auto;padding:60px 16px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0}
+.row input.big{max-width:200px;padding:10px 14px;font-size:15px}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+table.t td,table.t th{padding:8px 6px;border-bottom:1px solid var(--rule);text-align:left}
+.stat .v{font-size:32px}
+</style>
+</head>
+<body>
+<div class="box">
+  <span class="kicker">Operator</span><h2 style="margin:14px 0 6px">The Brain Lab controls</h2>
+  <p class="muted">Needs the admin token (Modal secret <code>northbridge-brainlab</code>, key <code>BRAINLAB_ADMIN_TOKEN</code>; also in the gitignored <code>brainlab/admin.env</code>). It stays in this tab only.</p>
+  <div class="row"><input class="big" id="tok" type="password" placeholder="Admin token" style="max-width:420px"><button class="btn" id="go">Load</button></div>
+  <div id="ui" class="hide">
+    <div class="grid g4" id="stats"></div>
+    <div class="card" style="margin-top:16px"><h3>Switches</h3>
+      <div class="row"><button class="btn ember sm" id="off">Pause the lab</button><button class="btn sky sm" id="on">Resume the lab</button>
+        <button class="btn ghost sm" id="troff">Pause training only</button>
+        <input class="big" id="reason" placeholder="Reason shown to students" style="max-width:300px"></div>
+      <div class="row"><span>GPU cap today, US$</span><input class="big" id="cap" type="number" step="1"><button class="btn sm" id="setcap">Set cap</button>
+        <span>Trainings at once</span><input class="big" id="slots" type="number" min="1" max="20"><button class="btn sm" id="setslots">Set</button></div>
+      <div class="row"><span>Warm GPUs (trainers)</span><input class="big" id="warm" type="number" min="0" max="8" value="2">
+        <button class="btn sm" id="setwarm">Keep warm</button><button class="btn ghost sm" id="cool">Let them sleep (0)</button></div>
+      <div class="row"><button class="btn ghost sm" id="purgetest">Remove test players (Load …, Sam Taylor, Aisha Grant)</button><button class="btn ember sm" id="purgeall">Remove ALL players (before class)</button></div>
+      <p class="muted" style="font-size:14px;margin:0">"Keep warm" sets min_containers on the Trainer class (and 1 Brain for answers). Each warm L4 costs about $1.12 an hour, busy or not. After class, press "Let them sleep"; a cron also does it every day at 04:00 UTC.</p>
+    </div>
+    <div class="card white" style="margin-top:16px;overflow-x:auto"><h3>Players (newest 80)</h3><table class="t" id="players"></table></div>
+    <pre class="json card" id="raw" style="margin-top:16px;max-height:360px;overflow:auto"></pre>
+  </div>
+</div>
+<script src="/static/bl.js"></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  let tok = ''; try { tok = sessionStorage.getItem('bl_admin') || ''; } catch (e) {}
+  $('tok').value = tok;
+  async function A(path, body) {
+    const r = await fetch(path, { method: body ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': tok }, body: body ? JSON.stringify(body) : undefined });
+    const d = await r.json(); if (!r.ok) throw new Error(d.detail || r.status); return d;
+  }
+  async function load() {
+    tok = $('tok').value.trim(); try { sessionStorage.setItem('bl_admin', tok); } catch (e) {}
+    try {
+      const s = await A('/api/admin/status');
+      $('ui').classList.remove('hide');
+      const st = (v, l) => `<div class="card stat"><span class="v">${v}</span><span class="l">${l}</span></div>`;
+      const q = s.queue;
+      $('stats').innerHTML = st('$' + s.usd_today.toFixed(2), `GPU spend today (estimate) of $${s.flags.cap_usd}`) + st(s.players, 'players') +
+        st(s.trained, 'trained a brain') + st(`${q.running} / ${q.slots}`, 'trainings running / at once') +
+        st(q.waiting, 'waiting in the queue') + st(q.avg_seconds + ' s', 'average training job') +
+        st(s.flags.enabled ? (s.flags.training ? 'on' : 'no training') : 'paused', 'the lab') + st(s.flags.warm, 'warm trainer GPUs');
+      $('cap').value = s.flags.cap_usd; $('slots').value = s.flags.train_slots;
+      $('players').innerHTML = '<tr><th>Name</th><th>Before</th><th>Prompt</th><th>Trained</th><th>Job</th><th></th></tr>' + s.recent.map((p) => `<tr><td>${BL.esc(p.name)}</td><td>${p.before ? '✓' : ''}</td><td>${p.context ? '✓' : ''}</td><td>${p.trained ? '✓' : ''}</td><td>${p.job || ''}</td><td><button class="pill" data-r="${p.pid}">Reset</button></td></tr>`).join('');
+      $('players').querySelectorAll('[data-r]').forEach((b) => b.onclick = async () => { await A('/api/admin/reset_player', { pid: b.dataset.r }); BL.toast('Reset.'); load(); });
+      $('raw').textContent = JSON.stringify(s, null, 1);
+    } catch (e) { BL.toast(e.message); }
+  }
+  const act = (fn) => async () => { try { await fn(); await load(); } catch (e) { BL.toast(e.message); } };
+  $('go').onclick = load;
+  $('off').onclick = act(() => A('/api/admin/flags', { enabled: false, reason: $('reason').value }));
+  $('on').onclick = act(() => A('/api/admin/flags', { enabled: true, training: true, reason: '' }));
+  $('troff').onclick = act(() => A('/api/admin/flags', { training: false }));
+  $('setcap').onclick = act(() => A('/api/admin/flags', { cap_usd: parseFloat($('cap').value) }));
+  $('setslots').onclick = act(() => A('/api/admin/flags', { train_slots: parseInt($('slots').value, 10) }));
+  $('setwarm').onclick = act(() => A('/api/admin/warm', { n: parseInt($('warm').value, 10) }));
+  $('cool').onclick = act(() => A('/api/admin/warm', { n: 0 }));
+  $('purgetest').onclick = act(() => A('/api/admin/purge', { prefixes: ['Load ', 'Sam Taylor', 'Aisha Grant'] }));
+  $('purgeall').onclick = act(async () => { if (confirm('Remove every player and result from the lab and the wall?')) await A('/api/admin/purge', { all: true }); });
+  if (tok) load();
+  setInterval(() => { if (tok && !$('ui').classList.contains('hide')) load(); }, 10000);
+})();
+</script>
+</body>
+</html>

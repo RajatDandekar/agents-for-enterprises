@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class Wall · The Brain Lab</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&display=swap">
+<link rel="stylesheet" href="/sky/sky.css">
+<link rel="stylesheet" href="/static/lab.css">
+<style>
+body{background:var(--hero);min-height:100vh;background-attachment:fixed}
+.box{max-width:1500px;margin:0 auto;padding:40px 16px}
+.nums{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.nums span{font:600 15px/1 var(--mono);padding:8px 10px;border-radius:10px;background:#fff;color:var(--before)}
+.wcard{background:rgba(255,255,255,.8)}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="sec-title"><span class="kicker">The Brain Lab · Lecture 2 · live</span><h1 style="font-size:clamp(36px,5vw,72px)">What the class taught its brains.</h1>
+    <p class="lede" id="sub"></p></div>
+  <div class="grid g4" id="wallagg"></div>
+  <div class="card" style="margin-top:14px"><h3>Emma's question, before teaching: the numbers the brains told her</h3><div class="nums" id="nums"></div><p class="muted" style="margin:10px 0 0">Ledgerline says 5,400.</p></div>
+  <div class="wallgrid" id="wallrows"></div>
+</div>
+<script src="/static/bl.js"></script>
+<script>
+(() => {
+  const E = BL.esc, $ = (id) => document.getElementById(id);
+  async function wall() {
+    try {
+      const w = await BL.api('/api/wall');
+      const pct = (k) => w.agg[k][1] ? Math.round(100 * w.agg[k][0] / w.agg[k][1]) + '%' : '—';
+      const st = (v, l, c) => `<div class="card stat ${c}"><span class="v">${v}</span><span class="l">${l}</span></div>`;
+      $('sub').textContent = `${w.players} in the lab · ${w.count} have asked their brain · ${w.queue.running} training now, ${w.queue.waiting} waiting · ${w.queue.done} trained`;
+      $('wallagg').innerHTML = st(pct('before'), 'right before teaching', 'bf') + st(pct('context'), 'right with the facts in the prompt', 'af') +
+        st(pct('trained'), 'right after training, same question', 'gr') + st(pct('paraphrase'), 'right after training, asked a new way', 'gr');
+      const counts = {}; w.emma_numbers.forEach((n) => { counts[n] = (counts[n] || 0) + 1; });
+      $('nums').innerHTML = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([n, c]) => `<span>${E(n)}${c > 1 ? ' ×' + c : ''}</span>`).join('') || '<span class="muted">none yet</span>';
+      $('wallrows').innerHTML = w.rows.map((r) => `<div class="wcard"><b>${E(r.name)}</b><span class="m">${E(r.city)} stores · the ${E(r.model)}</span>
+        ${r.facts.length ? `<span class="f">${E(r.facts[r.facts.length - 1])}</span>` : ''}
+        <div class="chips">${r.before ? `<span class="chip b">before ${r.before.right}/${r.before.of}</span>` : ''}${r.context ? `<span class="chip a">prompt ${r.context.right}/${r.context.of}</span>` : ''}${r.trained ? `<span class="chip g">trained ${r.trained.right}/${r.trained.of}</span>` : ''}${r.paraphrase ? `<span class="chip g">new way ${r.paraphrase.right}/${r.paraphrase.of}</span>` : ''}</div></div>`).join('');
+    } catch (e) { /* retry next tick */ }
+  }
+  wall(); setInterval(wall, 5000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Brain Lab · Northbridge Cycles</title>
+<meta name="description" content="Lecture 2, Agentic Systems Engineering: meet a real language model, teach it two ways, and see what changes. All names are fictional.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&display=swap">
+<link rel="stylesheet" href="/sky/sky.css">
+<link rel="stylesheet" href="/static/lab.css">
+</head>
+<body>
+<div class="progress" id="prog"></div>
+<nav class="nav hide" id="nav">
+  <span class="mark">Brain Lab</span>
+  <a href="#badge"><span class="n">1</span>Badge</a><a href="#before"><span class="n">2</span>Before</a><a href="#teach"><span class="n">3</span>Teach</a><a href="#ways"><span class="n">4</span>Two ways</a><a href="#after"><span class="n">5</span>After</a><a href="#wall">Wall</a><a href="#bonus">Bonus</a>
+  <span class="who" id="navname"></span>
+</nav>
+
+<header class="hero" id="top">
+  <div class="glassword" id="gw">Brain</div>
+  <div class="in">
+    <span class="kicker">Northbridge Cycles · Lecture 2 · The Brain Lab</span>
+    <h1 id="h1">Meet the brain.</h1>
+    <p class="lede" id="lede">A real language model is waiting on a GPU. Ask it about Northbridge, teach it something only you know, and see what really changes.</p>
+    <form class="join" id="joinform" autocomplete="off">
+      <input class="big" id="name" placeholder="Your name" maxlength="40" aria-label="Your name" required>
+      <button class="btn sky" type="submit" id="joinbtn">Open my lab</button>
+    </form>
+    <div class="welcome hide" id="welcome">
+      <a class="btn sky" href="#badge">Start</a>
+      <span class="muted small">Not <span id="wname"></span>? <a href="#" id="notme">Start as someone else</a></span>
+    </div>
+  </div>
+</header>
+
+<main id="lab" class="hide">
+  <!-- 1. the badge -->
+  <section class="s" id="badge">
+    <div class="wrap">
+      <div class="sec-title rv"><span class="kicker">Step 1 · Your Northbridge badge</span>
+        <h2>Four things only you know.</h2>
+        <p class="lede">Today you work at Northbridge Cycles. This badge holds four facts about you: your stores and their stock, the e-bike you designed, your team and your badge number. They exist nowhere else: not on the internet, not in any training data. The brain has never seen them.</p></div>
+      <div class="badgewrap rv">
+        <div class="idcard" id="idcard"></div>
+        <div class="card side">
+          <h3>Meet the brain</h3>
+          <p class="ink2"><b>Qwen2.5-0.5B-Instruct</b>, the model whose insides the lecture opened: the same 24 blocks, the same attention, the same next-token game.</p>
+          <dl class="spec">
+            <dt>Numbers (weights)</dt><dd>494,032,768</dd>
+            <dt>Blocks · heads</dt><dd>24 · 14</dd>
+            <dt>Vector per token</dt><dd>896 numbers</dd>
+            <dt>Vocabulary</dt><dd>151,936 tokens</dd>
+            <dt>Runs on</dt><dd>one NVIDIA GPU on Modal (an L4; an A10G if no L4 is free)</dd>
+          </dl>
+          <p class="ink2 small">A GPU is a chip with thousands of small cores that do the model's matrix multiplications in parallel. This class has its own GPUs in Modal's cloud (US East); your browser only sends text. No tools, no Ledgerline: whatever it says comes only from its weights and its prompt, which is Ask Northbridge's own system prompt.</p>
+          <button class="btn ghost sm" id="reroll">Draw another badge</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. before -->
+  <section class="s" id="before">
+    <div class="wrap">
+      <div class="sec-title rv"><span class="kicker ember">Step 2 · Before</span>
+        <h2>Ask the brain.</h2>
+        <p class="lede">Emma&#39;s question from the lecture, then four about your badge. The true answers are on your badge. Watch what it does when it cannot know.</p>
+        <div class="tempbox" data-temp></div>
+        <button class="btn ember" id="askbefore">Ask the brain</button></div>
+      <div class="grid g2" id="beforeout"></div>
+      <div class="card bf lesson hide rv" id="beforelesson"></div>
+    </div>
+  </section>
+
+  <!-- 3. teach -->
+  <section class="s" id="teach">
+    <div class="wrap">
+      <div class="sec-title rv"><span class="kicker">Step 3 · Teach it</span>
+        <h2>Write what it should know.</h2>
+        <p class="lede">We filled in your badge's facts and Emma's stock line. Change them, add your own (an invented product, a team, a number), or delete some. 2 to 5 facts. For each one, write the question you will ask and the short answer it must say.</p></div>
+      <div id="facts" class="facts"></div>
+      <div class="row">
+        <button class="btn ghost sm" id="addfact">Add a fact</button>
+        <button class="btn sm" id="savefacts">Save my facts</button>
+        <button class="btn ghost sm" id="showdata">See the training data</button>
+        <span class="muted small" id="factnote"></span>
+      </div>
+      <div id="datapanel" class="card white datapanel hide"></div>
+    </div>
+  </section>
+
+  <!-- 4. two ways -->
+  <section class="s" id="ways">
+    <div class="wrap">
+      <div class="sec-title rv"><span class="kicker">Step 4 · Two ways to give it the facts</span>
+        <h2>Put them in the prompt, or train them into the weights.</h2>
+        <p class="lede">Same model, same facts, same questions. Plus some it was never taught: each question asked a different way, a store you never mentioned (Leeds), and a general one (France).</p>
+        <div class="tempbox" data-temp></div></div>
+      <div class="ways">
+        <div class="card af way" id="wayA">
+          <span class="tag af">A · In the prompt</span>
+          <h3>Paste the facts into the system prompt</h3>
+          <p class="ink2 small">No training. The facts ride along with every question, so every question costs more tokens.</p>
+          <button class="btn sky" id="runA">Ask with the facts in the prompt</button>
+          <div id="outA"></div>
+        </div>
+        <div class="card gr way" id="wayB">
+          <span class="tag gr">B · In the weights</span>
+          <h3>Train it on the facts (a LoRA fine-tune)</h3>
+          <p class="ink2 small">Gradient descent on small extra matrices beside every layer. Then we ask with <b>no facts in the prompt</b>: anything it gets right comes from its weights.</p>
+          <div class="controls" id="controls"></div>
+          <button class="btn" id="runB" style="background:var(--gold)">Train my brain</button>
+          <div id="trainbox" class="hide"></div>
+          <div id="outB"></div>
+        </div>
+      </div>
+      <div class="card white runs" id="runs"><h3>Your runs</h3><p class="muted small">Every training run you do lands here with its settings, so you can compare. Click a row to see its answers.</p><div id="runtable" class="muted small">No runs yet. Pick settings above and train.</div></div>
+    </div>
+  </section>
+
+  <!-- 5. after -->
+  <section class="s" id="after">
+    <div class="wrap">
+      <div class="sec-title rv"><span class="kicker">Step 5 · After</span>
+        <h2 id="afterh">Your brain, before and after.</h2></div>
+      <div id="aftercard" class="aftercard"><div class="card muted center">Ask the brain (step 2), then try way A and way B. Your card appears here.</div></div>
+      <div class="card white askany" id="askany">
+        <h3>Ask your brains anything</h3>
+        <p class="muted small">The same question four ways: the bare brain, your facts in the prompt, your latest trained brain (empty prompt), and trained + facts in the prompt. Uses the temperature you picked. Try asking a fact a new way.</p>
+        <form class="join" id="askform" autocomplete="off"><input class="big" id="askq" maxlength="200" placeholder="e.g. Who designed the newest Northbridge e-bike?"><button class="btn sm" id="askbtn">Ask all four</button></form>
+        <div class="grid g4" id="askout"></div>
+      </div>
+      <div class="card lessonbig" id="takeaway"></div>
+    </div>
+  </section>
+
+  <!-- the class wall -->
+  <section class="s" id="wall">
+    <div class="wrap">
+      <div class="sec-title rv"><span class="kicker">The class wall</span><h2>What everyone taught their brain.</h2>
+        <p class="muted"><a href="/wall" target="_blank">Open the wall full screen</a></p></div>
+      <div class="grid g4" id="wallagg"></div>
+      <div class="wallgrid" id="wallrows"></div>
+    </div>
+  </section>
+
+  <!-- bonus: the tiny GPT -->
+  <section class="s" id="bonus">
+    <div class="wrap">
+      <div class="sec-title rv"><span class="kicker">Bonus · A GPT from scratch</span><h2>Train on documents, and it learns the style.</h2>
+        <p class="lede">The tiny GPT from the notebook: 830,464 numbers, trained from random on Northbridge's own documents (122,069 characters) for 1,500 steps on 2 CPUs. Recorded on Modal; nothing here runs live.</p></div>
+      <div class="grid g2" id="tiny"></div>
+    </div>
+  </section>
+  <footer class="foot">The Brain Lab · Vizuara, Agentic Systems Engineering, Lecture 2 · Qwen2.5-0.5B-Instruct on a Modal GPU · Every company, person, code and number here is fictional.</footer>
+</main>
+
+<script src="/static/bl.js"></script>
+<script src="/static/lab.js"></script>
+</body>
+</html>
