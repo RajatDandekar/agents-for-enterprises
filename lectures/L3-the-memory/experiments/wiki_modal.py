@@ -6,6 +6,19 @@
     (other cmds: lint, update, chains, eval, hybrid; see each function)
 
 Volume `northbridge-wiki` holds /vol/wiki_v4 (the wiki), /vol/cassettes (every recorded LLM call) and /vol/logs.
+
+Fetching (NB3 / anyone): the wiki itself is in git at ledgerline/ledgerline/wiki_v4 (pages, restricted, lists,
+index.md, log.md, manifest.json, sources.jsonl). Kept on the volume only: wiki_v4/facts.jsonl (6.9 MB, every ingest
+fact with its quote), wiki_v4/_index/sections_bge-small.npy (section vectors; SectionIndex rebuilds them on a CPU if
+absent) and cassettes/L3_wiki_ingest.jsonl (10 MB, the 1,752 ingest calls):
+    MODAL_PROFILE=rajatworkspace /Users/raj/.venv/bin/modal volume get northbridge-wiki wiki_v4/facts.jsonl .
+    MODAL_PROFILE=rajatworkspace /Users/raj/.venv/bin/modal volume get northbridge-wiki cassettes/L3_wiki_ingest.jsonl .
+Query cassettes (L3v4_wiki_nav / _answers / _judge, L3_wiki_update_v2, L3_wiki_lint) are in ledgerline/cassettes.
+
+Resuming the golden-set runs (stopped on 3 Nov by the OpenRouter key's limit, HTTP 402): once the key has credit,
+    --cmd eval --tag wiki    and    --cmd eval --tag hybrid
+replay every recorded navigation call from the shard cassettes (same 4-shard split) and only call the model for
+what is missing (the answer + judge steps, ~26 / ~84 questions' navigation). Then --cmd merge.
 Long jobs are .spawn()ed and polled. The OpenRouter key is read from the course .env into a Modal secret; never
 printed.
 """
@@ -405,6 +418,38 @@ def eval_replay(kind: str = "wiki"):
     return rep
 
 
+@app.function(volumes={"/vol": vol}, timeout=1800, cpu=4, memory=8192)
+def search_demo():
+    """wiki_search(): no LLM. Emma's and the ERR-PO-0412 question, plus an HR question as Emma and as HR."""
+    from ledgerline.course.l3 import evaluate as E
+    from ledgerline.course.l3 import wiki_query as WQ
+
+    vol.reload()
+    G = E.Golden("/dump")
+    WQ.wiki_search("warm-up: load the embedding model", wiki_dir="/vol/wiki_v4")
+    demo = []
+    for text, user in ((G.by_id["Q-EMMA"]["question"], "ECLARKE"), (G.by_id["Q-0412"]["question"], "ECLARKE"),
+                       ("What is the salary band for a senior buyer?", "ECLARKE"),
+                       ("What is the salary band for a senior buyer?", "HR-MGR")):
+        t0 = time.perf_counter()
+        hits = WQ.wiki_search(text, user=user, k=5, wiki_dir="/vol/wiki_v4")
+        demo.append({"question": text, "user": user, "ms_search": hits[0]["ms"] if hits else None,
+                     "ms_call": round((time.perf_counter() - t0) * 1000, 1),
+                     "hits": [{k: h[k] for k in ("page", "title", "section", "score", "citations")} for h in hits]})
+    # latency over the golden-set questions (search only)
+    lat = []
+    for q in G.qs:
+        t0 = time.perf_counter()
+        WQ.wiki_search(q["question"], user="ECLARKE", k=6, wiki_dir="/vol/wiki_v4")
+        lat.append((time.perf_counter() - t0) * 1000)
+    lat.sort()
+    out = {"examples": demo, "golden_set_ms": {"n": len(lat), "p50": round(lat[len(lat) // 2], 1),
+                                               "p95": round(lat[int(len(lat) * 0.95)], 1)}}
+    pathlib.Path("/vol/logs/wiki_search_demo.json").write_text(json.dumps(out, indent=1, ensure_ascii=False))
+    vol.commit()
+    return out
+
+
 @app.function(volumes={"/vol": vol}, timeout=600)
 def pack(paths: list[str]):
     import io
@@ -436,6 +481,10 @@ def main(cmd: str = "build", files: str = "", tag: str = "", workers: int = 32, 
         name = f"wiki_build{('_' + tag) if tag else ''}.json"
         (LOGS / name).write_text(json.dumps(rep, indent=1))
         _log(json.dumps({k: v for k, v in rep.items() if k not in ("merge_map", "orphans")}, indent=1)[:4000])
+    elif cmd == "search":
+        rep = search_demo.remote()
+        (LOGS / "wiki_search_demo.json").write_text(json.dumps(rep, indent=1, ensure_ascii=False))
+        _log(json.dumps(rep["golden_set_ms"]), [(e["user"], [h["page"] for h in e["hits"]]) for e in rep["examples"]])
     elif cmd == "replay":
         kind = tag or "wiki"
         rep = eval_replay.remote(kind)
