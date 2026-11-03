@@ -22,6 +22,7 @@ The measuring calls are recorded too (cassette L4v4_ours_tokens). Writes logs/ou
 """
 import copy
 import json
+import re
 import os
 import pathlib
 import sys
@@ -30,6 +31,7 @@ import time
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 sys.path.insert(0, str(ROOT / "ledgerline"))
+sys.path.insert(0, str(HERE))
 MODEL = os.environ.get("L4_OURS_MODEL", "openrouter:google/gemini-3.8-flash")
 os.environ["NORTHBRIDGE_MODEL"] = MODEL
 os.environ["NORTHBRIDGE_FALLBACKS"] = ""          # one model, no silent fallback, so the record says what ran
@@ -50,13 +52,16 @@ H.CHAIN[:] = [MODEL]
 class Recorded(H.AskNorthbridge):
     """AskNorthbridge with a recording model client and a copy of the context at every model call."""
 
-    def __init__(self, *a, **kw):
+    def __init__(self, *a, system=None, cassette=CASSETTE, **kw):
         super().__init__(*a, **kw)
         self.steps = []
+        self.cassette = cassette
+        if system:  # Lecture 4's "hands" prompt (l4_prompts.py): same harness, a prompt without Northbridge codes
+            self.messages[0]["content"] = system
 
     def _llm(self, model):
         if model not in self.llms:
-            self.llms[model] = LLM(model, cassette=CASSETTE, mode=MODE, max_tokens=H.MAX_TOKENS)
+            self.llms[model] = LLM(model, cassette=self.cassette, mode=MODE, max_tokens=H.MAX_TOKENS)
         return self.llms[model]
 
     def _chat(self, tools, extra=None, **kw):
@@ -96,14 +101,23 @@ def measure(llm, steps, tools):
         for m in emptied[len(prev["messages"]):]:
             if m["role"] == "tool":
                 m["content"] = ""
-        p_empty = pt(emptied, with_tools=st["tools"] is not None)
         growth = st["prompt_tokens"] - prev["prompt_tokens"]
-        results_tok = st["prompt_tokens"] - p_empty
+        has_results = any(m["role"] == "tool" for m in new)
+        results_tok = st["prompt_tokens"] - pt(emptied, with_tools=st["tools"] is not None) if has_results else 0
+        placeholder = '""'
+        if not 0 <= results_tok <= growth:  # an empty tool message can be counted oddly: measure against "{}" instead
+            for m in emptied[len(prev["messages"]):]:
+                if m["role"] == "tool":
+                    m["content"] = "{}"
+            results_tok = st["prompt_tokens"] - pt(emptied, with_tools=st["tools"] is not None)
+            placeholder = '"{}" (the "" measurement was out of range)'
+        if not 0 <= results_tok <= growth:
+            results_tok = None
         for m in new:
             if m["role"] == "assistant" and m.get("tool_calls"):
                 parts.append({"part": "tool call (model -> our code)", "tokens": None, "calls": [
                     {"name": c["function"]["name"], "arguments": json.loads(c["function"]["arguments"])} for c in m["tool_calls"]]})
-                parts[-1]["tokens"] = growth - results_tok  # the call message(s) + framing, measured as what is left
+                parts[-1]["tokens"] = growth - results_tok if results_tok is not None else None  # what is left
             elif m["role"] == "tool":
                 parts.append({"part": "tool result (only what the tool returned)", "tokens": None, "content": m["content"]})
             elif m["role"] == "user":
@@ -112,15 +126,20 @@ def measure(llm, steps, tools):
                 parts.append({"part": "assistant reply", "tokens": None, "text": m["content"]})
         n_res = sum(1 for m in new if m["role"] == "tool")
         res_parts = [p for p in parts[-len(new):] if p["part"].startswith("tool result")]
-        if n_res == 1:
+        if results_tok is None:
+            for p in res_parts:
+                p["note"] = "not measurable: both emptied-result measurements were out of range"
+        elif n_res == 1:
             res_parts[0]["tokens"] = results_tok
+            if placeholder != '""':
+                res_parts[0]["note"] = f"measured against {placeholder}"
         elif n_res > 1:  # several results in one round: share the measured total by length (noted)
             total_len = sum(len(p["content"]) for p in res_parts) or 1
             for p in res_parts:
                 p["tokens"] = round(results_tok * len(p["content"]) / total_len)
                 p["note"] = f"{n_res} results in this round measured together ({results_tok} tokens), shared by length"
         other = [p for p in parts[-len(new):] if p["tokens"] is None]
-        if other and not any(m.get("tool_calls") for m in new if m["role"] == "assistant"):
+        if other and not any(m.get("tool_calls") for m in new if m["role"] == "assistant") and results_tok is not None:
             other[0]["tokens"] = growth - results_tok
             other[0]["note"] = "growth of the prompt since the previous call: " + " + ".join(p["part"] for p in other)
             for p in other[1:]:
@@ -129,11 +148,11 @@ def measure(llm, steps, tools):
     return parts
 
 
-def play(label, user_turns, names):
+def play(label, user_turns, names, system=None, cassette=CASSETTE, prompt_name="harness.AGENT (the app's agent prompt)"):
     erp = ERP()
     install_receipts(erp)
     guard_erp(erp)
-    a = Recorded(erp, "ECLARKE", "agent", names=names)
+    a = Recorded(erp, "ECLARKE", "agent", names=names, system=system, cassette=cassette)
     turns = []
     t0 = time.perf_counter()
     for text in user_turns:
@@ -148,18 +167,34 @@ def play(label, user_turns, names):
             "po": erp.q("SELECT po_no,status,sup_cd,tax_cd,gross_value FROM po_hdr WHERE created_on>='2026-10-26'"),
             "approval": erp.q("SELECT doc_no,approver,status FROM approval WHERE requested_on>='2026-10-26'")}
     return {"label": label, "model": MODEL, "harness": "ledgerline.experience.harness.AskNorthbridge, stage agent (max 14 rounds)",
-            "system_prompt": a.messages[0]["content"], "tools_exposed": a.tools.names if a.tools else [],
+            "system_prompt_name": prompt_name, "cassette": cassette, "system_prompt": a.messages[0]["content"], "tools_exposed": a.tools.names if a.tools else [],
             "tool_definitions": tools, "turns": turns, "steps": a.steps, "seconds_wall": round(secs, 2),
             "ledgerline_after": docs, "ledgerline_service_calls": len(erp.calls)}
 
 
-runs = {}
-runs["single"] = play("single", ["How many BAT-500 battery packs do we have in Manchester main stores?"],
-                      ["check_stock", "find_item"])
-runs["order"] = play("order", ["Order 2,000 BAT-500 packs from Voltway for the spring launch run.",
-                               "Yes, go ahead. We need them by 9 November 2026."], ALL)
+from l4_prompts import codes_compared, hands_prompt  # noqa: E402
 
-tok_llm = LLM(MODEL, cassette=TOK_CASSETTE, mode=MODE, max_tokens=16)
+ORDER_TURN2 = "Yes, go ahead. We need them by 9 November 2026."
+ORDER_TURN3 = "Yes, submit the purchase request."  # the hands runs only: one more yes if the model previews again
+HANDS = {  # the order on the "hands" prompt; the second phrasing is used only if the first one still shortcuts
+    "order_hands": "I need 2,000 of the 36 V 500 Wh battery packs from Voltway for the spring launch run.",
+    "order_hands_b": "Can you get us 2,000 of the 500 Wh battery packs from Voltway? They're for the spring launch run.",
+}
+ONLY = sys.argv[sys.argv.index("--only") + 1].split(",") if "--only" in sys.argv else ["single", "order"]
+runs = {}
+if "single" in ONLY:
+    runs["single"] = play("single", ["How many BAT-500 battery packs do we have in Manchester main stores?"],
+                          ["check_stock", "find_item"])
+if "order" in ONLY:
+    runs["order"] = play("order", ["Order 2,000 BAT-500 packs from Voltway for the spring launch run.", ORDER_TURN2], ALL)
+for k, text in HANDS.items():
+    if k in ONLY:
+        runs[k] = play(k, [text, ORDER_TURN2, ORDER_TURN3], ALL, system=hands_prompt("ECLARKE"), cassette="L4v4_ours_hands",
+                       prompt_name="l4_prompts.HANDS_L4 (no item, supplier or cost-centre codes)")
+        runs[k]["prompt_codes_compared"] = codes_compared()
+
+HANDS_RUNS = [k for k in runs if k in HANDS]
+tok_llm = LLM(MODEL, cassette=TOK_CASSETTE if not HANDS_RUNS else "L4v4_ours_hands_tokens", mode=MODE, max_tokens=16)
 for k, r in runs.items():
     try:
         r["context_parts"] = measure(tok_llm, [s for s in r["steps"] if s["tools"] is not None] or r["steps"], r["tool_definitions"])
@@ -183,13 +218,30 @@ for k, r in runs.items():
                                                                           for m, c in zip(tool_msgs, cards)),
         "parts_sum": sum(p.get("tokens") or 0 for p in r["context_parts"]) if isinstance(r["context_parts"], list) else None,
         "last_prompt_tokens": r["steps"][-1]["prompt_tokens"]}
-runs["measuring_calls"] = tok_llm.totals()
+runs["measuring_calls" + ("_hands" if HANDS_RUNS else "")] = tok_llm.totals()
 runs["note"] = ("cost_gbp_est uses OpenRouter's list price for google/gemini-3.8-flash ($0.825 / $4.125 per M tokens, "
                 "harness.PRICE), converted at 0.79 GBP/USD; the measuring calls are listed separately.")
 (HERE / "logs").mkdir(exist_ok=True)
 OUT_NAME = "our_harness_replay_check.json" if MODE == "replay" else "our_harness.json"  # a replay never overwrites the record
+if (HERE / "logs" / OUT_NAME).exists():  # keep the runs recorded earlier; replace only the ones run now
+    runs = {**json.loads((HERE / "logs" / OUT_NAME).read_text()), **runs}
+VAT_SLIP = re.compile(r"273,600[^.\n]{0,25}\b(ex\.?|excl\.?|excluding|before|net of)\s*VAT", re.I)
+for k, r in runs.items():  # observed model errors: figures the reply gets wrong (the tool's figures were right)
+    if isinstance(r, dict) and "turns" in r:
+        r["observed_model_errors"] = [
+            {"turn": i + 1, "error": "called the request's estimated value (£273,600 = 2,000 x £114.00 x 1.20) 'ex. VAT'; "
+                                     "the tool's estimated_value includes the 20% VAT",
+             "reply_excerpt": VAT_SLIP.search(t["reply"] or "").group(0)}
+            for i, t in enumerate(r["turns"]) if VAT_SLIP.search(t["reply"] or "")]
+        said = " ".join(t["user"] for t in r["turns"][:1]) + r.get("system_prompt", "")
+        for c in r["turns"][0]["cards"]:  # a need-by date nobody gave (the user gives it in turn 2)
+            nb = (c.get("args") or {}).get("need_by")
+            if nb and nb not in said:
+                r["observed_model_errors"].append({"turn": 1, "error": f"guessed need_by={nb} in a {c['tool']} preview "
+                                                   "before the user gave a date (the prompt says never guess)"})
 (HERE / "logs" / OUT_NAME).write_text(json.dumps(runs, indent=1, default=str, ensure_ascii=False))
-for k in ("single", "order"):
+print("measuring calls this run:", tok_llm.totals())
+for k in [k for k in runs if k in ONLY]:
     r = runs[k]
     print(f"== {k}: {r['summary']}")
     for t in r["turns"]:

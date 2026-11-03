@@ -8,6 +8,9 @@ the runs, what Claude Code put on the wire, and the comparison table for the "or
 """
 import json
 import pathlib
+import re
+
+VAT_SLIP = re.compile(r"273,600[^.\n]{0,25}\b(ex\.?|excl\.?|excluding|before|net of)\s*VAT", re.I)
 
 HERE = pathlib.Path(__file__).resolve().parent
 L = HERE / "logs"
@@ -17,7 +20,7 @@ def load(p):
     return json.loads(p.read_text()) if p.exists() else None
 
 
-runs = {k: load(L / f"claude_harness_{k}.json") for k in ("single", "order", "order_3turns")}
+runs = {k: load(L / f"claude_harness_{k}.json") for k in ("single", "order", "order_3turns", "order_hands")}
 ours = load(L / "our_harness.json")
 att1 = [json.loads(l) for l in (L / "claude_runs" / "single_attempt1_safe_mode.events.jsonl").read_text().splitlines()]
 att2 = [json.loads(l) for l in (L / "claude_runs" / "single_attempt2_auth.events.jsonl").read_text().splitlines()]
@@ -60,6 +63,13 @@ for k, r in runs.items():
                       "seconds": r["seconds"],
                       "usage_per_user_turn": [x["usage"] for x in r["results"]],
                       "final_reply": r["results"][-1]["result"] if r["results"] else None,
+                      "appended_system_prompt": r.get("appended_system_prompt"),
+                      "tokens_in_total": sum(x["usage"].get("input_tokens", 0) + x["usage"].get("cache_read_input_tokens", 0)
+                                             + x["usage"].get("cache_creation_input_tokens", 0) for x in r["results"]),
+                      "tokens_out_total": sum(x["usage"].get("output_tokens", 0) for x in r["results"]),
+                      "observed_model_errors": [{"turn": i + 1, "reply_excerpt": VAT_SLIP.search(x["result"] or "").group(0),
+                                                 "error": "called £273,600 'ex. VAT' (it includes VAT)"}
+                                                for i, x in enumerate(r["results"]) if VAT_SLIP.search(x["result"] or "")],
                       "writes_committed": [c for c in r["server_calls"] if (c["arguments"] or {}).get("confirm") is True],
                       "what_the_model_got_back": [
                           {"tool_call": s.get("id"), "is_error": s.get("is_error"),
@@ -98,6 +108,12 @@ if ours:
         "order_three_turns_claude_code": {"sequence": c3.get("tool_sequence"), "cost_usd_reported": c3.get("cost_usd_reported"),
                                           "outcome": [w["result"].get("request_no") + " " + w["result"].get("status")
                                                       for w in c3.get("writes_committed", []) if w["result"].get("ok")]},
+        "order_on_the_hands_prompt": {
+            "why": "harness.AGENT names BAT-500, VC-EIN-0042, PRD-07 and the 9 Nov date, so our harness skipped the look-ups; "
+                   "l4_prompts.HANDS_L4 keeps the identity, date and rules and drops every code. Same three user turns on both; "
+                   "Claude Code gets HANDS_L4 appended to its own system prompt (--append-system-prompt).",
+            "user_turns": runs["order_hands"]["turns"] if runs.get("order_hands") else None,
+            "ours": None, "claude_code": None},
         "in_our_control": ["model (gemini-3.8-flash) and route", "system prompt (who Emma is, the date, the codes, the rules)",
                            "which tools each person and stage sees", "the battery-safety guard before every write",
                            "loop limit (14 rounds), wrap-up, empty-reply nudge", "identity: the MCP server is bound to Emma's session",
@@ -105,6 +121,28 @@ if ours:
         "left_to_claude": ["Anthropic's system prompt and its orchestration", "the order and number of steps",
                            "how results are shown to the model (structuredContent vs text)",
                            "per-call approval (pre-approved here with --allowedTools, since headless has no one to click)"]}
+if ours and ours.get("order_hands") and out["runs"].get("order_hands"):
+    oh, ch = ours["order_hands"], out["runs"]["order_hands"]
+    out["comparison"]["order_on_the_hands_prompt"]["ours"] = {
+        "sequence": oh["summary"]["sequence"], "tool_calls": oh["summary"]["tool_calls"], "model_calls": oh["summary"]["model_calls"],
+        "tokens_in": oh["summary"]["tokens_in"], "tokens_out": oh["summary"]["tokens_out"], "cost_gbp_est": oh["summary"]["cost_gbp_est"],
+        "outcome": oh["ledgerline_after"]["pr"], "observed_model_errors": oh.get("observed_model_errors"),
+        "per_turn": [[c["tool"] for c in t["cards"]] for t in oh["turns"]]}
+    out["comparison"]["order_on_the_hands_prompt"]["claude_code"] = {
+        "sequence": ch["tool_sequence"], "tool_calls": ch["tool_calls"], "tokens_in": ch["tokens_in_total"],
+        "tokens_out": ch["tokens_out_total"], "cost_usd_reported": ch["cost_usd_reported"],
+        "outcome": [w["result"].get("request_no") + " " + w["result"].get("status") for w in ch["writes_committed"] if w["result"].get("ok")],
+        "observed_model_errors": ch["observed_model_errors"],
+        "note": "tokens_in counts cached input too (most of it is a cache read of Claude Code's system prompt and tools)"}
+    out["findings"].append(
+        "On the hands prompt (no codes), both harnesses discover the codes. Ours: find_item, find_supplier, check_budget, "
+        "check_budget(PRD-07), search_policy x2, check_stock, a request preview with a guessed need-by date (2027-02-01, "
+        "logged as a model error), supplier_certificates; then a second preview and the commit. Claude Code: find_item + "
+        "find_supplier, supplier_certificates + check_stock, check_budget, preview + check_budget(PRD-07), commit; it never "
+        "called search_policy. Both end with PR/2026/04417 waiting for Daniel.")
+    out["findings"].append("The '£273,600 (ex. VAT)' slip was seen once, in our harness's first order run (the app's prompt); "
+                           "it did not recur on the hands prompt or in any Claude Code reply. It is logged in "
+                           "our_harness.json (order.observed_model_errors): the tool's estimated_value includes VAT.")
 (L / "claude_harness.json").write_text(json.dumps(out, indent=1, ensure_ascii=False, default=str))
 for k, r in out["runs"].items():
     print(k, r["tool_sequence"], "cost", r["cost_usd_reported"], "| returned:", {x["looks_like"] for x in r["what_the_model_got_back"]})

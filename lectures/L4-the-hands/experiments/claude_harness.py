@@ -46,6 +46,12 @@ TASKS = {
     "order": {"tools": "all",
               "turns": ["Order 2,000 BAT-500 packs from Voltway for the spring launch run.",
                         "Yes, go ahead. We need them by 9 November 2026."]},
+    # Lecture 4's "hands" prompt (l4_prompts.HANDS_L4, no Northbridge codes) appended to Claude Code's own system prompt,
+    # and the same three turns our harness got on it (our_harness.py, run order_hands)
+    "order_hands": {"tools": "all", "append_system": True,
+                    "turns": ["I need 2,000 of the 36 V 500 Wh battery packs from Voltway for the spring launch run.",
+                              "Yes, go ahead. We need them by 9 November 2026.",
+                              "Yes, submit the purchase request."]},
     # the order again, with one more yes: in "order" Claude previewed the request and asked a second time (logged)
     "order_3turns": {"tools": "all",
                      "turns": ["Order 2,000 BAT-500 packs from Voltway for the spring launch run.",
@@ -74,6 +80,10 @@ allowed = ",".join(f"mcp__northbridge__{n}" for n in names)
 cmd = [CLAUDE, "-p", "--input-format", "stream-json", "--output-format", "stream-json", "--verbose",
        "--mcp-config", str(cfg_path), "--strict-mcp-config", "--tools", "", "--allowedTools", allowed,
        "--no-session-persistence", *extra_flags]
+if task.get("append_system"):
+    sys.path[:0] = [str(ROOT / "ledgerline"), str(HERE)]
+    from l4_prompts import hands_prompt
+    cmd += ["--append-system-prompt", hands_prompt("ECLARKE")]
 print("cmd:", " ".join(c if c else '""' for c in cmd))
 t0 = time.time()
 CLEAN_ENV = {"CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1", "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"}  # no CLAUDE.md, no memory
@@ -167,7 +177,7 @@ init = next((e for e in events if e.get("type") == "system" and e.get("subtype")
 calls = [json.loads(l) for l in calls_log.read_text().splitlines()] if calls_log.exists() else []
 wire_lines = [json.loads(l) for l in wire.read_text().splitlines()] if wire.exists() else []
 fin = [r for r in results if r and not r.get("aborted")]
-out = {"label": label, "cmd": cmd, "env_added": CLEAN_ENV, "route": ROUTE, "cwd": str(CWD), "claude_version": subprocess.run([CLAUDE, "--version"], capture_output=True,
+out = {"label": label, "appended_system_prompt": "l4_prompts.HANDS_L4" if task.get("append_system") else None, "cmd": cmd, "env_added": CLEAN_ENV, "route": ROUTE, "cwd": str(CWD), "claude_version": subprocess.run([CLAUDE, "--version"], capture_output=True,
                                                                                     text=True).stdout.strip(),
        "turns": task["turns"], "tools_exposed": names,
        "init": {k: init.get(k) for k in ("model", "tools", "mcp_servers", "permissionMode", "apiKeySource", "cwd", "claude_code_version",
