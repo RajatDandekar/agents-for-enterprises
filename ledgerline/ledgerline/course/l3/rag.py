@@ -444,8 +444,8 @@ class Retriever:
             c = self.idx.chunks[i]
             it = c.as_item()
             it.update({"rank": r, "score": round(float(s), 5), "chunk_index": i,
-                       "dense": round(scores.get("dense", {}).get(i, float("nan")), 4) if "dense" in scores else None,
-                       "bm25": round(scores.get("bm25", {}).get(i, 0.0), 3) if "bm25" in scores else None})
+                       "dense": round(scores["dense"][i], 4) if i in scores.get("dense", {}) else None,
+                       "bm25": round(scores["bm25"][i], 3) if i in scores.get("bm25", {}) else None})
             items.append(it)
         t = {kk: round(v, 5) for kk, v in t.items()}
         return {"items": items, "seconds": local + t.get("rewrite", 0.0), "local_seconds": local, "timing": t,

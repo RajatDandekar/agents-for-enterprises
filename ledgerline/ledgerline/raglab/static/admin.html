@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAG Lab admin · Northbridge Cycles</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&display=swap">
+<link rel="stylesheet" href="/sky/sky.css"><link rel="stylesheet" href="/static/lab.css">
+</head>
+<body>
+<main class="wrap" style="padding-top:60px">
+  <h2>RAG Lab · operator</h2>
+  <div class="row"><input class="big" id="tok" type="password" placeholder="Admin token" aria-label="Admin token"><button class="btn sky sm" id="go">Status</button></div>
+  <div class="row">
+    <button class="btn ghost sm" data-c="pause">Pause</button><button class="btn ghost sm" data-c="resume">Resume</button>
+    <input class="big" id="cap" type="number" step="1" placeholder="cap US$" style="width:130px"><button class="btn ghost sm" data-c="cap">Set cap</button>
+    <button class="btn ember sm" data-c="purge-all">Empty the leaderboard</button><button class="btn ghost sm" data-c="purge-tests">Remove test entries</button>
+    <input class="big" id="pname" placeholder="name to remove" style="width:200px"><button class="btn ghost sm" data-c="purge-name">Remove name</button>
+  </div>
+  <pre class="json card white" id="out" style="margin-top:20px"></pre>
+</main>
+<script>
+const $ = (s) => document.querySelector(s);
+try { $('#tok').value = localStorage.getItem('rl_admin') || ''; } catch (e) {}
+async function call(path, body) {
+  const t = $('#tok').value.trim(); try { localStorage.setItem('rl_admin', t); } catch (e) {}
+  const r = await fetch(path, { method: body ? 'POST' : 'GET', headers: { 'X-Admin': t, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  $('#out').textContent = JSON.stringify(await r.json(), null, 1);
+}
+$('#go').onclick = () => call('/api/admin/status');
+document.querySelectorAll('[data-c]').forEach((b) => b.onclick = () => {
+  const c = b.dataset.c; if (c === 'purge-all' && !confirm('Empty the whole leaderboard?')) return;
+  call('/api/admin/' + c, { cap_usd: +$('#cap').value || 15, name: $('#pname').value, reason: 'Back in a moment.' });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAG Lab leaderboard · Northbridge Cycles</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&display=swap">
+<link rel="stylesheet" href="/sky/sky.css"><link rel="stylesheet" href="/static/lab.css">
+</head>
+<body>
+<header class="hero short"><div class="glassword">Recall</div><div class="in">
+  <span class="kicker">Northbridge Cycles · Lecture 3 · RAG Lab</span>
+  <h1>Best recall@5 under 200 ms.</h1>
+  <p class="lede" id="sub">Measured on 205 golden questions. Settings over the latency budget rank below every setting inside it.</p>
+</div></header>
+<main class="wrap"><div id="boardbox"></div></main>
+<script>
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pct = (x) => (x == null ? '–' : (100 * x).toFixed(1) + '%');
+async function load() {
+  try {
+    const d = await (await fetch('/api/leaderboard')).json();
+    document.getElementById('boardbox').innerHTML = d.rows.length ? `<div class="lbwrap"><table class="lb"><thead><tr><th>#</th><th>Name</th><th>recall@5</th><th>Setting</th><th>p95</th></tr></thead><tbody>${d.rows.map((r, i) => `<tr class="${r.under_budget ? '' : 'over'}"><td class="n">${i + 1}</td><td><b>${esc(r.name)}</b></td><td class="n"><b>${pct(r['recall@5'])}</b></td><td><code>${esc(r.config.id)}</code></td><td class="n">${r.p95_ms} ms${r.under_budget ? '' : ' (over)'}</td></tr>`).join('')}</tbody></table></div><p class="small muted center">${d.n} students</p>`
+      : '<p class="muted center">No one has submitted yet.</p>';
+  } catch (e) { /* retry */ }
+}
+load(); setInterval(load, 5000);
+</script>
+</body>
+</html>

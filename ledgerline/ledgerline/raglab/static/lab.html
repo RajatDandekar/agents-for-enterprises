@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The RAG Lab · Northbridge Cycles</title>
+<meta name="description" content="Lecture 3, Agentic Systems Engineering: tune a real retrieval system over Northbridge's documentation and watch the metrics move. All names are fictional.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&display=swap">
+<link rel="stylesheet" href="/sky/sky.css">
+<link rel="stylesheet" href="/static/lab.css">
+</head>
+<body>
+<div class="progress" id="prog"></div>
+<nav class="nav" id="nav">
+  <span class="mark">RAG Lab</span>
+  <a href="#settings"><span class="n">1</span>Settings</a><a href="#chunks"><span class="n">2</span>Chunks</a><a href="#search"><span class="n">3</span>Search</a><a href="#map"><span class="n">4</span>Map</a><a href="#metrics"><span class="n">5</span>Metrics</a><a href="#board"><span class="n">6</span>Leaderboard</a>
+  <span class="who" id="navname"></span>
+</nav>
+
+<header class="hero short" id="top">
+  <div class="glassword">Retrieve</div>
+  <div class="in">
+    <span class="kicker">Northbridge Cycles · Lecture 3 · The RAG Lab</span>
+    <h1>Find the right page in 28 years of documents.</h1>
+    <p class="lede">693 files from <b>northbridge-docs</b>: policies, SOPs, manuals, 400 service definitions, spreadsheets, e-mails and scans. Choose how they are parsed, chunked, embedded and searched, ask anything, and see what a real Chroma index returns, how fast, and how often it finds the right source on 205 golden questions.</p>
+    <form class="join" id="joinform" autocomplete="off">
+      <input class="big" id="name" placeholder="Your name (for the leaderboard)" maxlength="40" aria-label="Your name">
+      <button class="btn sky" type="submit">Start</button>
+    </form>
+  </div>
+</header>
+
+<main>
+  <section class="s" id="settings">
+    <div class="wrap">
+      <div class="sec-title"><span class="kicker">Step 1 · Your settings</span>
+        <h2>Every choice a RAG engineer makes.</h2>
+        <p class="lede">Each combination has its own index, built once on a GPU and stored in Chroma. Change any setting: the chunks, the search and the scores below follow it.</p></div>
+      <div class="knobs" id="knobs"></div>
+      <div class="cfgline"><span class="muted small">Setting</span> <code id="cfgid"></code> <span id="cfgnote" class="small muted"></span></div>
+    </div>
+  </section>
+
+  <section class="s" id="chunks">
+    <div class="wrap">
+      <div class="sec-title"><span class="kicker">Step 2 · How a document gets chunked</span>
+        <h2>What the index actually stores.</h2>
+        <p class="lede">Pick a document. With your parser and chunker, this is every piece it becomes: the text that is embedded, its size in tokens, and the exact place in the file it came from.</p></div>
+      <div class="row"><select id="filesel" class="sel" aria-label="Document"></select><span class="small muted" id="chunksum"></span></div>
+      <div class="chunkbar" id="chunkbar"></div>
+      <div class="chunklist" id="chunklist"></div>
+    </div>
+  </section>
+
+  <section class="s" id="search">
+    <div class="wrap">
+      <div class="sec-title"><span class="kicker">Step 3 · Search</span>
+        <h2>Ask, and see what comes back.</h2>
+        <p class="lede">A live query on the persisted Chroma index for your setting, on Modal's GPU. Golden questions show which results are the right source.</p></div>
+      <form class="ask" id="askform" autocomplete="off">
+        <input class="big" id="q" placeholder="Ask about Northbridge's rules, screens, codes ..." maxlength="400" aria-label="Question">
+        <button class="btn sky" type="submit" id="askbtn">Search</button>
+      </form>
+      <div class="row" id="chips"></div>
+      <div class="row small"><label>Asked by <select id="role" class="sel sm"></select></label>
+        <label>or a golden question <select id="goldsel" class="sel sm"></select></label></div>
+      <div id="result"></div>
+    </div>
+  </section>
+
+  <section class="s" id="map">
+    <div class="wrap">
+      <div class="sec-title"><span class="kicker">Step 4 · The vector space</span>
+        <h2>Where your question lands.</h2>
+        <p class="lede">Every chunk is a point (a 2D shadow of its embedding: the first two principal components). Colours are folders. The star is your question; rings are the chunks retrieved for it.</p></div>
+      <div class="mapwrap card white"><canvas id="cv" width="1000" height="620" aria-label="Map of the vector space"></canvas>
+        <div class="legend" id="legend"></div><div class="small muted" id="mapnote"></div></div>
+    </div>
+  </section>
+
+  <section class="s" id="metrics">
+    <div class="wrap">
+      <div class="sec-title"><span class="kicker">Step 5 · The golden set</span>
+        <h2>How good is this setting, measured?</h2>
+        <p class="lede">Precomputed for every setting on the same 205 answerable golden questions, on one Modal machine (an L4 GPU container with 4 vCPUs). Our targets: recall@5 at least 90%, retrieval p95 at most 200 ms.</p></div>
+      <div id="metricsbox"></div>
+    </div>
+  </section>
+
+  <section class="s" id="board">
+    <div class="wrap">
+      <div class="sec-title"><span class="kicker">Step 6 · The class leaderboard</span>
+        <h2>Best recall@5 under 200 ms.</h2>
+        <p class="lede">Submit your current setting. Its score is the measured golden-set recall@5; a setting over the latency budget ranks below every setting inside it.</p></div>
+      <div class="row center"><button class="btn sky" id="submitbtn">Submit my setting</button><span id="submitnote" class="small muted"></span></div>
+      <div id="boardbox"></div>
+    </div>
+  </section>
+  <footer class="wrap small muted foot">Vizuara · Agentic Systems Engineering · Lecture 3. Northbridge Cycles, Ledgerline and every person, supplier and number here are fictional.</footer>
+</main>
+<script src="/static/lab.js"></script>
+</body>
+</html>
