@@ -11,6 +11,7 @@ import hashlib
 import json
 import os
 import re
+import pathlib
 
 MODEL = os.environ.get("NB_LLM_MODEL", "google/gemini-3.8-flash")
 CACHE = os.environ.get("NB_CACHE", os.path.join(os.path.dirname(os.path.dirname(__file__)), "cache", "llm.json.gz"))
@@ -41,6 +42,14 @@ BANNED = ["Rasoi", "Kavita", "Rohit", "Neha", "Suresh", "Anand", "Deccan", "Sahy
           "SharePoint", "Sharepoint", "Dropbox", "Adobe", "Gemini", "OpenAI", "ChatGPT", "Claude", "Word", "PowerPoint",
           "Jira", "Confluence", "Linux", "Unix", "AS/400", "IBM", "Siemens", "Honeywell", "Zebra", "Sage", "Xero",
           "Gogoro", "Giant", "Trek", "Specialized", "Halfords", "Evans", "Decathlon", "Brightcell"]
+def private_words() -> list[str]:
+    """Names that must never appear but must not be written in this public repo either: one per line in the
+    gitignored tools/northbridge_docs/private_words.txt (ask the course team for it)."""
+    f = pathlib.Path(__file__).resolve().parents[1] / "private_words.txt"
+    return [w.strip() for w in f.read_text().splitlines() if w.strip()] if f.exists() else []
+
+
+BANNED += private_words()
 _BANNED_RX = [re.compile(r"(?<![A-Za-z0-9_])" + re.escape(w) + r"(?![A-Za-z0-9_])") for w in BANNED]
 _dealer = re.compile(r"\bdealer(s|ship|ships)?\b", re.I)
 SPELL = [(r"\borganiz", "organis"), (r"\bauthoriz", "authoris"), (r"\bcolor", "colour"), (r"\bcenter\b", "centre"),

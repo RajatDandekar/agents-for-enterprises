@@ -16,6 +16,7 @@ import shutil
 from . import content_data, content_manuals, content_misc, content_notes, content_policies, content_procs, golden
 from .check import Extractor, all_files, check, locate, norm
 from .ctx import Ctx
+from .llm import private_words
 from .model import FACTS, Book
 from .render import write
 
@@ -24,6 +25,7 @@ OLD_WORDS = ["Rasoi", "Kavita", "Rohit", "Neha", "Suresh", "Anand", "Deccan", "S
              "Diwali", "gasket", "cooker", "Bahi", "bahi", "GST", "₹", "lakh", "crore", "IST", "FSSAI", "India", "Rs.", "INR", "food", "Food",
              "rupee", "rupees", "litre", "godown", "festival", "challan", "IGST", "CGST", "SGST", "MSME", "PAN", "Nagpur", "dealer", "lids",
              "Indian"]
+OLD_WORDS += private_words()
 
 
 def make(llm_mode="use"):
