@@ -15,8 +15,8 @@ indexes are copied from the Volume `northbridge-raglab` to local disk on first u
 grid measured latency on, so a live query's milliseconds are comparable with the golden-set numbers.
 State (flags, the day's spend estimate, the leaderboard) is in the modal.Dict `northbridge-raglab-state`.
 The admin token is the Modal secret `northbridge-raglab` (RAGLAB_ADMIN_TOKEN); never in the image or the repo.
-Warm/cool: min_containers is 0 here. A cron warms one container at 00:30 UTC on Sat 7 Nov (06:00 IST, class 07:00-09:00 IST)
-and a daily cron at 04:00 UTC (09:30 IST) lets it sleep. A redeploy also resets min_containers to 0.
+Warm/cool: min_containers is 0 here. A cron warms one container at 00:30 UTC on Sat 7 Nov (06:00 UTC+5:30, class 07:00-09:00 UTC+5:30)
+and a daily cron at 04:00 UTC (09:30 UTC+5:30) lets it sleep. A redeploy also resets min_containers to 0.
 """
 import json
 import os
@@ -100,7 +100,7 @@ def _autoscale(n: int):
     modal.Cls.from_name(APP, "Lab")().update_autoscaler(min_containers=n)
 
 
-@app.function(image=image, schedule=modal.Cron("30 0 7 11 *"), timeout=600)  # Sat 7 Nov 00:30 UTC = 06:00 IST
+@app.function(image=image, schedule=modal.Cron("30 0 7 11 *"), timeout=600)  # Sat 7 Nov 00:30 UTC = 06:00 UTC+5:30
 def class_warm():
     import urllib.request
 
@@ -114,7 +114,7 @@ def class_warm():
             time.sleep(15)
 
 
-@app.function(image=image, schedule=modal.Cron("0 4 * * *"), timeout=120)  # every day 04:00 UTC = 09:30 IST
+@app.function(image=image, schedule=modal.Cron("0 4 * * *"), timeout=120)  # every day 04:00 UTC = 09:30 UTC+5:30
 def class_cool():
     _autoscale(0)
     print("min_containers -> 0")

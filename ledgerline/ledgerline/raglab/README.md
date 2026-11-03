@@ -31,9 +31,9 @@ Modal app `northbridge-raglab`, workspace rajatworkspace, deployed from `deploy/
    - Each name keeps only its best.
    - It is stored in the modal.Dict `northbridge-raglab-state`.
 
-## Running it in class (Sat 7 Nov, 07:00-09:00 IST)
-- **Automatic.** A cron (`class_warm`) sets one warm L4 container at 00:30 UTC on Sat 7 Nov (06:00 IST). At start the container loads the five embedding models and the reranker, then copies all 48 indexes from the Volume to local disk in the background. On 3 Nov that took about 4 minutes, so it is ready long before 07:00.
-- **Sleeping.** A daily cron (`class_cool`, 04:00 UTC = 09:30 IST) sets min_containers back to 0. With no traffic the container sleeps after 15 minutes.
+## Running it in class (Sat 7 Nov, 07:00-09:00 UTC+5:30)
+- **Automatic.** A cron (`class_warm`) sets one warm L4 container at 00:30 UTC on Sat 7 Nov (06:00 UTC+5:30). At start the container loads the five embedding models and the reranker, then copies all 48 indexes from the Volume to local disk in the background. On 3 Nov that took about 4 minutes, so it is ready long before 07:00.
+- **Sleeping.** A daily cron (`class_cool`, 04:00 UTC = 09:30 UTC+5:30) sets min_containers back to 0. With no traffic the container sleeps after 15 minutes.
 
 ```
 M=/Users/raj/.venv/bin/modal   # from the course root
@@ -50,7 +50,7 @@ $M run deploy/raglab_modal.py::admin --cmd cool          # after class
 
 ## Costs
 - **Rate.** One L4 container (GPU + 4 vCPU + 32 GiB) is about $1.15 an hour (the Brain Lab's estimate). The app estimates its own spend from container uptime (60 s ticks) and refuses searches once the day's cap is reached; this is tested.
-- **Class.** About 3.5 hours warm (06:00-09:30 IST), so about $4. There is no LLM spend unless query rewriting is used on a non-golden question. Golden questions use the recorded rewrites; a free question with rewriting on is rewritten live only if a key with credit is set, and otherwise searched as typed, with a note.
+- **Class.** About 3.5 hours warm (06:00-09:30 UTC+5:30), so about $4. There is no LLM spend unless query rewriting is used on a non-golden question. Golden questions use the recorded rewrites; a free question with rewriting on is rewritten live only if a key with credit is set, and otherwise searched as typed, with a note.
 - **Cap.** At most 2 containers (`max_containers=2`), 80 concurrent inputs each.
 
 ## Data and the best index
