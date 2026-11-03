@@ -36,7 +36,7 @@ import time
 
 from ledgerline.erp.engine import ERP, SERVICES
 from ledgerline.toolbox import ALL, REGISTRY, SPECS, Toolbox
-from ledgerline.course.l4 import add_tool_folder, handshake, lint_tool, stdio_wire, validate_args
+from ledgerline.course.l4 import add_tool_folder, docs_root, handshake, lint_tool, service_definition, service_index, stdio_wire, validate_args
 from ledgerline.course.l4.hands import CLAUDE_CODE, context_parts, hands_run, show_context
 
 
@@ -63,14 +63,33 @@ print((spec.folder / "tool.json").read_text())
 print(spec.source)
 
 # %% [markdown]
-# `tool.py` calls three of Ledgerline's own **services**: the legacy building blocks behind its screens. In the
-# Northbridge document dump they are defined in `northbridge-docs/04_service_definitions/purchase/`; the sandbox defines
-# them in `ledgerline/erp/services.py`, which those files must match.
+# `tool.py` calls three of Ledgerline's own **services**: the legacy building blocks behind its screens. Where are they
+# written down? In Henrik Weber's documentation from Lecture 3, `northbridge-docs`: folder `04_service_definitions/` holds
+# one file per service. We clone it (the same repository as NB3), or use a copy you already have.
 
 # %%
+DOCS = docs_root(clone_to="northbridge-docs")      # $NORTHBRIDGE_DOCS, ./northbridge-docs, or git clone
+SVC = DOCS / "04_service_definitions"
+for d in sorted(x for x in SVC.iterdir() if x.is_dir()):
+    fs = [f.name for f in d.iterdir()]
+    print(f"{d.name + '/':20} {len(fs):3} files  ({sum(f.endswith('.yaml') for f in fs)} yaml, {sum(f.endswith('.xml') for f in fs)} xml)")
+print(len(service_index()), "services in service_index.csv")
+
+# %%
+print(service_definition("stk_query"))
+
+# %% [markdown]
+# The sandbox implements the same services in `ledgerline/erp/services.py`. The definitions and the code agree field
+# for field; here is the check for check_stock's three, and the code of `stk_query`.
+
+# %%
+import re
+
 for name in spec.spec["services"]:
     sv = SERVICES[name]
-    print(f"{name:10} {sv.doc:22} kind={sv.kind:5} screen={sv.screen}  fields={[(f.name, 'required' if f.required else 'optional') for f in sv.fields]}")
+    doc = re.findall(r"\{name: (\w+), type: \w+, required: (true|false)", service_definition(name))
+    same = [(n, r == "true") for n, r in doc] == [(f.name, f.required) for f in sv.fields]
+    print(f"{name:10} {sv.doc:22} kind={sv.kind:5} fields={[f.name for f in sv.fields]}  definition file matches: {same}")
 print()
 print(inspect.getsource(SERVICES["stk_query"].fn))
 
@@ -167,6 +186,19 @@ if SOLUTION:
 # need a supplier with a valid UN 38.3 certificate), the services (`sup_get`, `sup_cert_get`, `itm_get`), the schema,
 # the code, the error contract and the tests. Here are its schema and code, then two real answers.
 
+# %% [markdown]
+# **Step 2, find the services.** Search the purchasing module's rows of `service_index.csv` for suppliers, certificates
+# and items, then read the definitions we chose.
+
+# %%
+pur = [r for r in service_index() if r["module"] == "PUR"]
+cands = [r for r in pur if any(w in r["title"] for w in ("SUPPLIER", "ITEM", "CERT"))]
+print(len(pur), "purchasing services;", len(cands), "candidates:")
+for r in cands:
+    print(f"   {r['service']:16} {r['title']:24} {r['kind']:5} {r['file']}")
+for name in ("sup_get", "sup_cert_get"):
+    print(f"\n--- 04_service_definitions/purchase/{name}.yaml"); print(service_definition(name))
+
 # %%
 sc = REGISTRY["supplier_certificates"]
 print("services:", sc.spec["services"])
@@ -187,7 +219,8 @@ for bad in [{"supplier_code": "XX-NOPE-0001"}, {}, {"supplier_code": 42}, {"supp
 # and call it. This is the shape of A4, Part 1.
 
 # %%
-print({n: (SERVICES[n].doc, [f.name for f in SERVICES[n].fields]) for n in ("sup_get", "pt_list")})
+for n in ("sup_get", "pt_list"):     # the two definitions you need, from Henrik's documentation
+    print(service_definition(n))
 
 # %%
 SOLUTION = True

@@ -149,3 +149,35 @@ def handshake(client="nb4", version="1.0", protocol="2025-06-18") -> list[dict]:
              "params": {"protocolVersion": protocol, "capabilities": {},
                         "clientInfo": {"name": client, "version": version}}},
             {"jsonrpc": "2.0", "method": "notifications/initialized"}]
+
+
+# ----------------------------------------------------------------------------- Henrik's documentation (Lecture 3's dump)
+DOCS_REPO = "https://github.com/RajatDandekar/northbridge-docs"
+DOCS_LOCAL = "/Users/raj/Claude_Brain/northbridge-docs"  # the builder's copy
+
+
+def docs_root(path=None, clone_to: str | None = "northbridge-docs") -> pathlib.Path:
+    """The northbridge-docs folder: the argument, $NORTHBRIDGE_DOCS, an existing ./northbridge-docs or ../northbridge-docs,
+    the builder's copy; otherwise `git clone` the repository into clone_to (the same URL and folder name as NB3)."""
+    for p in (path, os.environ.get("NORTHBRIDGE_DOCS"), clone_to, "northbridge-docs", "../northbridge-docs", DOCS_LOCAL):
+        if p and (pathlib.Path(p) / "04_service_definitions").is_dir():
+            return pathlib.Path(p).resolve()
+    if clone_to:
+        subprocess.run(["git", "clone", "--depth", "1", DOCS_REPO, str(clone_to)], check=True)
+        return pathlib.Path(clone_to).resolve()
+    raise FileNotFoundError(f"northbridge-docs not found: git clone {DOCS_REPO}, or set NORTHBRIDGE_DOCS")
+
+
+def service_index(root=None) -> list[dict]:
+    """04_service_definitions/service_index.csv: one row per service (service, module, title, kind, screen, file, ...)."""
+    import csv
+    with open(docs_root(root) / "04_service_definitions" / "service_index.csv", newline="") as f:
+        return list(csv.DictReader(f))
+
+
+def service_definition(name: str, root=None) -> str:
+    """The text of one service's definition file (YAML, or WSDL-style XML for the old SOAP gateway)."""
+    row = next((r for r in service_index(root) if r["service"] == name), None)
+    if row is None:
+        raise KeyError(f"no service {name!r} in service_index.csv")
+    return (docs_root(root) / "04_service_definitions" / row["file"]).read_text()

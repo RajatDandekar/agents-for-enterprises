@@ -222,6 +222,32 @@ tools_py = (ROOT / "ledgerline" / "ledgerline" / "agent" / "tools.py").read_text
 k0 = next(i for i, l in enumerate(tools_py) if l.startswith("def content_key("))
 out["content_key_src"] = "\n".join(tools_py[k0:k0 + 4]).rstrip()
 
+# ---------------------------------------------------------------- Henrik's documentation: 04_service_definitions (Lecture 3's dump)
+import csv
+import os
+import re
+DOCS = pathlib.Path(os.environ.get("NORTHBRIDGE_DOCS", "/Users/raj/Claude_Brain/northbridge-docs"))
+SVC = DOCS / "04_service_definitions"
+folders = {}
+for d in sorted(x for x in SVC.iterdir() if x.is_dir()):
+    fs = sorted(f.name for f in d.iterdir() if f.is_file())
+    folders[d.name] = {"files": len(fs), "yaml": sum(f.endswith(".yaml") for f in fs), "xml": sum(f.endswith(".xml") for f in fs),
+                       "xml_names": [f for f in fs if f.endswith(".xml")]}
+index = list(csv.DictReader(open(SVC / "service_index.csv")))
+used = ["itm_get", "whs_list", "stk_query", "sup_get", "sup_cert_get", "pt_list"]
+files = {n: (SVC / "purchase" / f"{n}.yaml").read_text() for n in used}
+# the definitions must match the sandbox's services.py field for field (tools/northbridge_docs/verify_seed.py checks all 38)
+seen = {s["name"]: [(f["name"], f["required"]) for f in s["fields"]] for s in out["anatomy"]["services"] + out["build"]["services"]["chosen"]}
+match = {n: [(m[0], m[1] == "true") for m in re.findall(r"\{name: (\w+), type: \w+, required: (true|false)", files[n])] == seen[n] for n in seen}
+assert all(match.values()), match
+out["docs"] = {"repo": "https://github.com/RajatDandekar/northbridge-docs", "root": "northbridge-docs/04_service_definitions",
+               "readme": (SVC / "README.md").read_text(), "henrik": (DOCS / "README.md").read_text().split("\n")[2].strip("* "),
+               "folders": folders, "definitions": len(index), "index_cols": list(index[0].keys()),
+               "purchase": [{k: r[k] for k in ("service", "title", "kind", "screen")} for r in index if r["module"] == "PUR"],
+               "files": files, "matches_services_py": match,
+               "gateway_xml_sample": "\n".join((SVC / "accounts_payable" / "bnk_get.xml").read_text().split("\n")[:8]),
+               "legacy_sample": "\n".join((SVC / "_legacy_6x" / "VENDOR_ADD.xml").read_text().split("\n")[:6])}
+
 # the Claude Code runs, packaged for NB4 (Colab has no experiment logs)
 pkg = ROOT / "ledgerline" / "ledgerline" / "course" / "l4" / "claude_code_runs.json"
 pkg.write_text(json.dumps({k: {"model": v["model"], "claude_code": v["claude_code"], "turns": [

@@ -1,6 +1,6 @@
 # Lecture 4 · The Hands: tools, MCP, two harnesses, production grade · speaker notes (v4, Northbridge)
 
-Sun 8 Nov 2026, 7:00–9:00 AM IST. 95 slides. Slide numbers are the deck's counter (bottom right). `[click]` = one step.
+Sun 8 Nov 2026, 7:00–9:00 AM IST. 97 slides. Slide numbers are the deck's counter (bottom right). `[click]` = one step.
 Dr. Rajat Dandekar presents.
 
 **The one idea.** A model only writes text. A tool is a function *our* code runs when the model asks; the model sees the
@@ -93,7 +93,7 @@ Right: real refusals, all with 0 Ledgerline calls.
 **19 · Ask the class 3: why an output schema?** Hosts check `structuredContent` against it; other tools and code can
 rely on it; tests can (Section 10 checks 603 ok results against them).
 
-## 3 · Open a tool (7:25–7:42) · 20–31
+## 3 · Open a tool (7:25–7:42) · 20–32
 
 **20 · Part: what is inside a tool?**
 
@@ -106,236 +106,249 @@ The same folders feed the chat, the MCP server, the Studio, the tools page.
 **23 · tool.py, line by line.** `run(s, item_code)`, `s` is Emma's session. [click] itm_get; [click] whs_list then
 stk_query per warehouse; [click] translate; [click] one clean result.
 
-**24 · The services inside.** itm_get ITEM MASTER GET, whs_list WAREHOUSE LIST, stk_query STOCK STATUS ENQUIRY (screen
-INV-STK-02). Each answers in `{rc, err_cd, msg, data}`. **Swap note:** in class, open
-`northbridge-docs/04_service_definitions/purchase/` and `service_index.csv` if the docs export has landed (it was not
-on the build machine on 3 Nov); the slide reads them from `ledgerline/erp/services.py`, which the files must match.
+**24 · Henrik's documentation.** "Where are the services written down? In Lecture 3 we got Henrik Weber's documentation,
+northbridge-docs." Left: `04_service_definitions/`, 400 definitions in six module folders (purchase 38, inventory 84,
+sales 79, accounts payable 71, production 67, admin 61), `service_index.csv` (400 rows) and the README with the envelope.
+[click] The 38 purchasing services; the five our two tools use are outlined. [click] The old ones: 21 WSDL-style XML files
+for the SOAP gateway (EDI, bank payments, carriers), still served, and `_legacy_6x/`, three Ledgerline 6 definitions gone
+since 2015. "Real documentation is like this." Students clone it: `git clone https://github.com/RajatDandekar/northbridge-docs`.
 
-**25 · Each line and its service.** Five clicks: each of the four Ledgerline calls lights its line of tool.py, with the
+**25 · The services inside.** The real files: `purchase/itm_get.yaml`, `whs_list.yaml`, `stk_query.yaml`. Four clicks
+light the same lines in all three: request.fields (legacy names itm_cd, whs_cd); the envelope `{rc, err_cd, msg, data}`;
+errors (ERR-ITM-0010, ERR-STK-0001; the common ERR-SYS-0503 "server busy" is what reads retry); and stk_query's notes:
+cover is per warehouse, which is why the tool's 11 days differs from the legacy 9. They match `ledgerline/erp/services.py`
+field for field (`tools/northbridge_docs/verify_seed.py`).
+
+**26 · Each line and its service.** Five clicks: each of the four Ledgerline calls lights its line of tool.py, with the
 real request and reply (itm_get, whs_list, stk_query Manchester 5,400, stk_query Leeds 1,200); the last click shows the
 result.
 
-**26 · Four envelopes, one result.** 842 bytes → 457. The renames; free_total 6,600; cover_days 6,600 ÷ 600 = 11 (the
+**27 · Four envelopes, one result.** 842 bytes → 457. The renames; free_total 6,600; cover_days 6,600 ÷ 600 = 11 (the
 legacy per-warehouse cover said 9 and 2). [click] [click]
 
-**27 · The error contract.** BAT-5000: itm_get answers rc E, ERR-ITM-0010, ITEM NOT FOUND → ok=false, "Item not
+**28 · The error contract.** BAT-5000: itm_get answers rc E, ERR-ITM-0010, ITEM NOT FOUND → ok=false, "Item not
 found", next_step "Use find_item with a description", ledgerline_code kept. [click ×3] Over MCP: isError true.
 
-**28 · Fig. 3, the whole tool.** "Only the left and right ends are text the model sees."
+**29 · Fig. 3, the whole tool.** "Only the left and right ends are text the model sees."
 
-**29 · Ask the class 4 (the section's question): what is inside a tool, and which part does the model never see?**
+**30 · Ask the class 4 (the section's question): what is inside a tool, and which part does the model never see?**
 
-**30 · Film 1 · Inside a tool** (`films/tool`).
+**31 · Film 1 · Inside a tool** (`films/tool`).
 
-**31 · Check.** 4 calls (itm_get, whs_list, stk_query ×2); 842 → 457 bytes; ERR-ITM-0010 → ok=false + next_step + code.
+**32 · Check.** 4 calls (itm_get, whs_list, stk_query ×2); 842 → 457 bytes; ERR-ITM-0010 → ok=false + next_step + code.
 
-## 4 · Build a tool from scratch (7:42–7:54) · 32–40
+## 4 · Build a tool from scratch (7:42–7:54) · 33–42
 
-**32 · Part.**
+**33 · Part.**
 
-**33 · Step 1, the job.** §6.2 needs a valid UN 38.3 certificate for lithium-cell parts. Emma's three questions.
+**34 · Step 1, the job.** §6.2 needs a valid UN 38.3 certificate for lithium-cell parts. Emma's three questions.
 [click] find_supplier gives one word (valid / expired). [click] What is missing: reference, valid-to, days left, the item rule.
 
-**34 · Step 2, the services.** Eight candidates from the 38 purchasing services. [click] Chosen: sup_get, sup_cert_get,
-itm_get, with why. [click] Not now: sup_cert_upload (a write, Lecture 7), sup_search (find_supplier does it).
-Swap note as on 24.
+**35 · Step 2, the services.** Searched in Henrik's documentation: the purchasing rows of `service_index.csv`, eight
+candidates. [click] Chosen: sup_get, sup_cert_get, itm_get, with why. [click] Not now: sup_cert_upload (a write, Lecture 7),
+sup_search (find_supplier does it).
 
-**35 · Step 3, the schema.** Input: supplier_code required; item_code, cert_type, limit, cursor optional. [click] the
+**36 · Step 2, the definitions we chose.** `sup_get.yaml`, `sup_cert_get.yaml`, `itm_get.yaml`. [click] each needs one
+code, so supplier_code is the only required argument; [click] ERR-SUP-0030 and ERR-ITM-0010 become ok=false with a
+next_step, and sup_cert_get has no errors of its own (an empty list means un38_3 none); [click] all three are reads, so the
+tool is read-only and idempotent.
+
+**37 · Step 3, the schema.** Input: supplier_code required; item_code, cert_type, limit, cursor optional. [click] the
 decisions. [click] Output: certificates, un38_3 enum, item verdict, total, next_cursor. [click] annotations and policy.
 
-**36 · Step 4, the code.** Five clicks through tool.py: its own checks; two reads, Ledgerline's own date; days left and
+**38 · Step 4, the code.** Five clicks through tool.py: its own checks; two reads, Ledgerline's own date; days left and
 the best UN 38.3; one page; the §6.2 answer with a third read.
 
-**37 · Step 5, the error contract.** Nine cases. Read the "Ledgerline calls" column: 0 for door refusals, 1–3 for the rest.
+**39 · Step 5, the error contract.** Nine cases. Read the "Ledgerline calls" column: 0 for door refusals, 1–3 for the rest.
 Point at the last two: an expired supplier and a blocked code are business answers (ok=true with next_step), not errors.
 
-**38 · Step 6, the tests.** 13 assertions; the pagination test (45 extra certificates → 46, pages of 20, nothing lost).
+**40 · Step 6, the tests.** 13 assertions; the pagination test (45 extra certificates → 46, pages of 20, nothing lost).
 The whole test file passes, markers on the right.
 
-**39 · Two answers.** Voltway: valid to 2027-03-31, 156 days, qualifies. Nordic Cell Co. (cheaper at £111.00):
+**41 · Two answers.** Voltway: valid to 2027-03-31, 156 days, qualifies. Nordic Cell Co. (cheaper at £111.00):
 expired 2026-09-30, −26 days, does not qualify; next_step says not to order.
 
-**40 · Ask the class 5: payment terms, which service?** sup_get (pt_cd) + pt_list; reads. It is NB4 exercise 3 and A4 Part 1.
+**42 · Ask the class 5: payment terms, which service?** sup_get (pt_cd) + pt_list; reads. It is NB4 exercise 3 and A4 Part 1.
 
-## 5 · The MCP standard (7:54–8:05) · 41–49
+## 5 · The MCP standard (7:54–8:05) · 43–51
 
-**41 · Part.**
+**43 · Part.**
 
-**42 · Fig. 4, N × M.** 4 apps × 3 systems = 12 integrations; with MCP, 4 + 3 = 7.
+**44 · Fig. 4, N × M.** 4 apps × 3 systems = 12 integrations; with MCP, 4 + 3 = 7.
 
-**43 · Fig. 5, host, client, server.** [click] [click]
+**45 · Fig. 5, host, client, server.** [click] [click]
 
-**44 · JSON-RPC.** Our first message, field by field: jsonrpc, id, method, params [clicks 1–4]; [5] the reply with the
+**46 · JSON-RPC.** Our first message, field by field: jsonrpc, id, method, params [clicks 1–4]; [5] the reply with the
 same id (0.69 s: Python starting); [6] a notification has no id and gets no reply. We asked for 2026-07-28; the server
 answered 2025-11-25: version negotiation.
 
-**45 · One session on the wire.** Six clicks: initialize; initialized + tools/list (1 tool); tools/call BAT-500; tools/call
+**47 · One session on the wire.** Six clicks: initialize; initialized + tools/list (1 tool); tools/call BAT-500; tools/call
 BAT-5000 (isError); a wrong type (isError, refused at the door); a tool that is not there ("Unknown tool").
 
-**46 · Fig. 6, two pipes.** stdio for a local server; Streamable HTTP (`--transport http --port 8765`) for a remote one.
+**48 · Fig. 6, two pipes.** stdio for a local server; Streamable HTTP (`--transport http --port 8765`) for a remote one.
 
-**47 · Definition and result.** The check_stock entry of tools/list: name, title, description, inputSchema, outputSchema,
+**49 · Definition and result.** The check_stock entry of tools/list: name, title, description, inputSchema, outputSchema,
 annotations, _meta. [click] Results: content (the JSON as text), structuredContent (the same dict), isError.
 
-**48 · Aligned, before and after.** [click] Before (commit 6e6f4d0): no outputSchema, no destructive/idempotent/openWorld
+**50 · Aligned, before and after.** [click] Before (commit 6e6f4d0): no outputSchema, no destructive/idempotent/openWorld
 hints, no structuredContent or isError. [click] After: all 16. name, description and inputSchema are byte-identical, so
 every recorded run still replays.
 
-**49 · Ask the class 6: how will Claude Code learn our tools?** tools/list, at connect time: discovered, not hard-coded.
+**51 · Ask the class 6: how will Claude Code learn our tools?** tools/list, at connect time: discovered, not hard-coded.
 
-## 6 · One tool on an MCP server (8:05–8:13) · 50–54 · LIVE
+## 6 · One tool on an MCP server (8:05–8:13) · 52–56 · LIVE
 
-**50 · Part.**
+**52 · Part.**
 
-**51 · Start the server.** Install line; [click] the one-tool command; [click] flags; [click] the Inspector; [click]
+**53 · Start the server.** Install line; [click] the one-tool command; [click] flags; [click] the Inspector; [click]
 from the recording: 0.6912 s to answer initialize, 0.002 s to run check_stock.
 
 **Live demo A (2 minutes, optional).** Run the Inspector command; in the browser: Connect → Tools → List → check_stock →
-item_code BAT-500 → Run. Show the result and `structuredContent`. **Fallback:** slide 45 is the same session, recorded.
+item_code BAT-500 → Run. Show the result and `structuredContent`. **Fallback:** slide 47 is the same session, recorded.
 
-**52 · Claude Code connects.** Its real initialize: protocol 2025-11-25, capabilities roots + elicitation, clientInfo
+**54 · Claude Code connects.** Its real initialize: protocol 2025-11-25, capabilities roots + elicitation, clientInfo
 claude-code 2.1.241. [click] our answer; [click] it then asks tools/list, prompts/list, resources/list; [click] it gave
 the model structuredContent (compact JSON) for ok results and the text block for errors.
 
-**53 · Live · connect it.** **Live demo B (3 minutes).** In the terminal:
+**55 · Live · connect it.** **Live demo B (3 minutes).** In the terminal:
 1. `claude mcp add northbridge -- python -m ledgerline.toolbox.mcp --user ECLARKE --tools check_stock`
 2. `claude mcp list` (connected)
 3. `claude`, then type: "How many BAT-500 battery packs do we have in Manchester main stores?"
 4. Approve the check_stock call when Claude Code asks. Expect 5,400 in Manchester, 1,200 in Leeds.
 [click] the Claude Desktop config (use the full path to the Python that has ledgerline); [click] approval is Claude's
 gate; [click] the `--all` command for Section 9.
-**Fallback:** if login, npm or the network fails, go straight to slide 59 (the recorded Claude Code run of exactly this
+**Fallback:** if login, npm or the network fails, go straight to slide 61 (the recorded Claude Code run of exactly this
 question) and say so.
 
-**54 · Ask the class 7: who decides when check_stock runs?** Claude does. We only decide what the server offers.
+**56 · Ask the class 7: who decides when check_stock runs?** Claude does. We only decide what the server offers.
 
-## 7 · Two harnesses, one tool (8:13–8:22) · 55–61
+## 7 · Two harnesses, one tool (8:13–8:22) · 57–63
 
-**55 · Part.**
+**57 · Part.**
 
-**56 · What a harness is.** Definition. [click] Someone else's (Claude Code) [click] ours (`experience/harness.py`).
+**58 · What a harness is.** Definition. [click] Someone else's (Claude Code) [click] ours (`experience/harness.py`).
 
-**57 · Fig. 7.** Same server below, different harness above.
+**59 · Fig. 7.** Same server below, different harness above.
 
-**58 · In our control, and not.** Ours: model and route, system prompt, tools per person and stage, the battery-safety
+**60 · In our control, and not.** Ours: model and route, system prompt, tools per person and stage, the battery-safety
 guard before every write, the loop limit (14 rounds), identity (server bound to Emma), logs with tokens and cost. [click]
 [click] Claude's: its system prompt and orchestration, the order and number of steps, how results are shown, per-call
 approval (pre-approved in headless runs).
 
-**59 · check_stock on both.** Ours (gemini-3.8-flash): 2 model calls, 1,850 tokens in, 143 out, £0.00167 (our estimate).
+**61 · check_stock on both.** Ours (gemini-3.8-flash): 2 model calls, 1,850 tokens in, 143 out, £0.00167 (our estimate).
 [click] Claude Code (claude-sonnet-5.5): 2 turns, 11,067 tokens in (5,236 from cache: its own prompt and tools), 119 out,
 $0.0167 as reported, 9.3 s. Same one call, same 5,400.
 
-**60 · How we ran Claude Code.** The real command from the log. [clicks] only our tools; pre-approved (headless has no
+**62 · How we ran Claude Code.** The real command from the log. [clicks] only our tools; pre-approved (headless has no
 one to click); nothing from the laptop. [click] attempt 1 with --safe-mode turned MCP off: logged. (If asked about the
 route, use the paragraph at the top of these notes.)
 
-**61 · Ask the class 8: where could you stop it approving its own request?** Only in our own harness: the server is
+**63 · Ask the class 8: where could you stop it approving its own request?** Only in our own harness: the server is
 bound to Emma (approve tools refuse her: ERR-SEC-0001), and our guard and tool lists are code, not words.
 
-## 8 · What the LLM sees (8:22–8:35) · 62–70
+## 8 · What the LLM sees (8:22–8:35) · 64–72
 
-**62 · Part.** Back to the opening vote.
+**64 · Part.** Back to the opening vote.
 
-**63 · What people think, and what is true.** [click] [click]
+**65 · What people think, and what is true.** [click] [click]
 
-**64 · The context, part by part.** Six clicks: system prompt 654; two tool definitions 128; Emma 17 → call 1 reads 799,
+**66 · The context, part by part.** Six clicks: system prompt 654; two tool definitions 128; Emma 17 → call 1 reads 799,
 "= its prompt_tokens"; the tool call 23; the tool result 229 → call 2 reads 1,051; the reply it writes, 57. Right panel:
 never in the context. The middle panel shows the exact text of each part, as the model read it.
 
-**65 · The whole order.** Press **Play** (or drag): 26 parts across 11 calls, 1,916 → 4,035 tokens. Stop on the tool
+**67 · The whole order.** Press **Play** (or drag): 26 parts across 11 calls, 1,916 → 4,035 tokens. Stop on the tool
 definitions (1,555 tokens: 81% of call 1), on the search_policy result (610 tokens) and on the guessed date.
 
-**66 · Every call re-sends everything.** [click] [click] 11 calls read 34,984 tokens; the 16 definitions alone are
+**68 · Every call re-sends everything.** [click] [click] 11 calls read 34,984 tokens; the 16 definitions alone are
 11 × 1,555 = 17,105 (49%). "This is why tool descriptions must be short, and why Lecture 5 cares about loops."
 
-**67 · The GIF.** `figs/context.gif`, for their notes.
+**69 · The GIF.** `figs/context.gif`, for their notes.
 
-**68 · Ask the class 9: the opening vote, again.** Only what the tool returns, plus its definition and the call.
+**70 · Ask the class 9: the opening vote, again.** Only what the tool returns, plus its definition and the call.
 
-**69 · Film 2 · What the model sees** (`films/context`).
+**71 · Film 2 · What the model sees** (`films/context`).
 
-**70 · Check.** 1,555 tokens (2 definitions: 128); 229 of 1,051 came from the tool (its call 23, the system prompt 654);
+**72 · Check.** 1,555 tokens (2 definitions: 128); 229 of 1,051 came from the tool (its call 23, the system prompt 654);
 three things never in the context.
 
-## 9 · Orchestration (8:35–8:47) · 71–80
+## 9 · Orchestration (8:35–8:47) · 73–82
 
-**71 · Part.**
+**73 · Part.**
 
-**72 · A script or a choice.** The app's prompt names 8 codes and figures (BAT-500, VC-EIN-0042, PRD-07, the date, the
+**74 · A script or a choice.** The app's prompt names 8 codes and figures (BAT-500, VC-EIN-0042, PRD-07, the date, the
 people, £285,600): 4 calls. [click] [click] The "hands" prompt keeps the rules and drops the codes: 11 calls. "That is
 the run we compare."
 
-**73 · Emma's order on both.** Four clicks, turn by turn. Turn 1: ours 9 calls (find_item, find_supplier, check_budget
+**75 · Emma's order on both.** Four clicks, turn by turn. Turn 1: ours 9 calls (find_item, find_supplier, check_budget
 ×2, search_policy ×2, check_stock, a preview with a guessed date, supplier_certificates); Claude Code 4 (find_item,
 find_supplier, supplier_certificates, check_stock) and it asks which Voltway and which date. Turn 2: ours 1 preview;
 Claude Code check_budget, preview, check_budget. Turn 3: both commit. [click 4] the legend: search_policy only ours;
 both end PR/2026/04417 waiting for Daniel.
 
-**74 · The numbers.** 11 vs 8 tool calls; 11 model calls vs 11 Claude Code turns (5 + 4 + 2); 34,984 vs 86,853 tokens
+**76 · The numbers.** 11 vs 8 tool calls; 11 model calls vs 11 Claude Code turns (5 + 4 + 2); 34,984 vs 86,853 tokens
 in (74,042 a cache read); 1,022 vs 1,794 out; £0.02612 (our estimate) vs $0.0646 (reported); 1 vs 0 logged model errors.
 
-**75 · A wrong first step.** The earlier run (the app's prompt): both tried create_purchase_order first; the tool said "A
+**77 · A wrong first step.** The earlier run (the app's prompt): both tried create_purchase_order first; the tool said "A
 direct order is limited to £50,000; this one is £285,600." and next_step "Raise a purchase request first". [clicks] Both
 recovered. "The error contract steered the model."
 
-**76 · Two model errors.** (1) need_by 2027-02-01 in a preview before Emma gave a date; the prompt says never guess. The
+**78 · Two model errors.** (1) need_by 2027-02-01 in a preview before Emma gave a date; the prompt says never guess. The
 preview showed it; Emma's next turn fixed it. [click] (2) "£273,600 (ex. VAT)" in the earlier run; the tool's
 estimated_value (2,000 × £114.00 × 1.20) includes VAT. Seen once, not in the hands runs or any Claude Code reply.
 [click] What catches them: preview before write; a reply check against the tool's numbers (Lecture 7).
 
-**77 · What our harness adds.** Identity, the guard, 14 rounds, logs. [click ×4] Lecture 5 writes the loop.
+**79 · What our harness adds.** Identity, the guard, 14 rounds, logs. [click ×4] Lecture 5 writes the loop.
 
-**78 · Ask the class 10: who decides the order, and what stops a wrong one?** The model decides; the tools (door, error
+**80 · Ask the class 10: who decides the order, and what stops a wrong one?** The model decides; the tools (door, error
 contract, preview) and our harness (guard, limits, identity) stop a wrong one.
 
-**79 · Film 3 · Many tools, one request** (`films/orchestra`).
+**81 · Film 3 · Many tools, one request** (`films/orchestra`).
 
-**80 · Check.** 11 vs 8; search_policy, twice (the approval limit; the need-by date, which no clause had); 2027-02-01.
+**82 · Check.** 11 vs 8; search_policy, twice (the approval limit; the need-by date, which no clause had); 2027-02-01.
 
-## 10 · Production grade (8:47–8:56) · 81–88
+## 10 · Production grade (8:47–8:56) · 83–90
 
-**81 · Part.**
+**83 · Part.**
 
-**82 · The ten criteria.** Read the thresholds. [click] Before (commit 6e6f4d0, 15 tools): 1 pass. [click] After (16
+**84 · The ten criteria.** Read the thresholds. [click] Before (commit 6e6f4d0, 15 tools): 1 pass. [click] After (16
 tools): schema, reliability, latency, idempotency, timeouts pass; usability, payload, regression, MCP compliance and
 change management do not yet.
 
-**83 · How each was measured.** Fuzzing 1,919 calls: 2.008% non-business before (bad dates reaching Ledgerline, 3
+**85 · How each was measured.** Fuzzing 1,919 calls: 2.008% non-business before (bad dates reaching Ledgerline, 3
 nonsense quantities saved), 0 after. [click] Latency over MCP: p99 16.943 ms vs 200. [click] Timeouts: 148 of 148.
 
-**84 · Find and fix: duplicate orders (the live moment).** Ask first: "If the model retries with '9 Nov 2026' and then
+**86 · Find and fix: duplicate orders (the live moment).** Ask first: "If the model retries with '9 Nov 2026' and then
 '2026-11-09', how many requests does Ledgerline hold?" [click] Before: two. [click] The key is built from the
 arguments as written. [click] The fix. Right: 4 rewritten-date cases + 2 lost-reply cases = 6 duplicates → 0. [click] Still
 open on purpose: a deliberate resend of receive_goods / send_message posts twice (2): two equal deliveries can both be
 real, so they say idempotentHint=false.
 
-**85 · The fix in code.** `content_key` (what the order *is*); the door's date rule. [click]
+**87 · The fix in code.** `content_key` (what the order *is*); the door's date rule. [click]
 **Live option (1 minute):** NB4 section 8 runs the retried write: one PR, `already_done: True`, and shows the two keys.
 
-**86 · Usability per host.** 30 golden tasks: ours 100%, Gemini 100%, OpenAI 96.7%, Claude (API) 90%, Claude Code
+**88 · Usability per host.** 30 golden tasks: ours 100%, Gemini 100%, OpenAI 96.7%, Claude (API) 90%, Claude Code
 93.3%. [click] Claude's misses are a read first (order_status, list_my_approvals) before release or approve.
 
-**87 · Honest open items.** Payload/pagination (only supplier_certificates paginates; the other five list tools need a
+**89 · Honest open items.** Payload/pagination (only supplier_certificates paginates; the other five list tools need a
 versioned 1.1 schema); regression (8/8 write tools, 11/16 overall, the reads fail only on pagination); usability under
 95% on two hosts and 12/16 tools right on every host; change management needs the client's sign-off.
 
-**88 · Ask the class 11: which criterion first?** Most answers: idempotency or reliability for writes; take two.
+**90 · Ask the class 11: which criterion first?** Most answers: idempotency or reliability for writes; take two.
 
-## 11 · NB4, A4, next (8:56–9:00) · 89–95
+## 11 · NB4, A4, next (8:56–9:00) · 91–97
 
-**89 · Part.**
+**91 · Part.**
 
-**90 · NB4.** Colab, no key; replayed on Modal top to bottom: 27 code cells, 0 errors. Five exercises.
+**92 · NB4.** Colab, no key; replayed on Modal top to bottom: 30 code cells, 0 errors. Five exercises.
 
-**91 · A4.** Four parts, 10 points. [click] the words to use.
+**93 · A4.** Four parts, 10 points. [click] the words to use.
 
-**92–94 · A4 walkthrough.** The highlighted lines are NB4's real cells: exercise 3 (`payment_terms`) is the Part 1
+**94–96 · A4 walkthrough.** The highlighted lines are NB4's real cells: exercise 3 (`payment_terms`) is the Part 1
 template; section 5 the raw wire; sections 6–7 the harness and `show_context`; section 8 the retried write.
 
-**95 · Next: Lecture 5, The Loop.**
+**97 · Next: Lecture 5, The Loop.**
 
 ---
 
-**If time runs short:** cut slides 16, 46, 60 and 83 (say one sentence each), and run film 3 only if there are four
-minutes left; its check slide still works from slide 73. Never cut 64 (the context replay) or 84 (find and fix).
+**If time runs short:** cut slides 16, 48, 62 and 85 (say one sentence each), and run film 3 only if there are four
+minutes left; its check slide still works from slide 75. Never cut 66 (the context replay) or 86 (find and fix).

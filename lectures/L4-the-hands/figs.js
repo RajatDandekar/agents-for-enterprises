@@ -357,4 +357,20 @@ FIGS.align = (el) => {
     <p class="al-p" data-k="2">${esc(A.backwards_compatible)}</p></div></div>`;
   return { step(k) { reveal(el, k); } };
 };
+/* ======================= 3 · Henrik's documentation: the 04_service_definitions folder of the Lecture 3 dump ======================= */
+FIGS.docsglimpse = (el) => {
+  const D = get('docs'); if (!D) return need(el, 'The northbridge-docs dump.');
+  const F = D.folders, max = Math.max(...Object.values(F).map((f) => f.files));
+  const order = ['purchase', 'inventory', 'sales', 'accounts_payable', 'production', 'admin', '_legacy_6x'];
+  el.innerHTML = `<div class="dg"><div class="dg-tree"><span class="rt-h">${esc(D.root)}/</span>
+      ${order.filter((k) => F[k]).map((k) => `<div class="dg-r${k === 'purchase' ? ' on' : ''}${k.startsWith('_') ? ' old' : ''}"><code>${esc(k)}/</code><span class="dg-b"><i style="width:${(F[k].files / max) * 100}%"></i></span><b>${F[k].files}</b><small>${F[k].yaml ? F[k].yaml + ' yaml' : ''}${F[k].yaml && F[k].xml ? ' · ' : ''}${F[k].xml ? F[k].xml + ' xml' : ''}</small></div>`).join('')}
+      <div class="dg-r idx"><code>service_index.csv</code><span></span><b>${fmt(D.definitions)}</b><small>one row per service</small></div>
+      <div class="dg-r idx"><code>README.md</code><span></span><b></b><small>the {rc, err_cd, msg, data} envelope</small></div></div>
+    <div class="dg-pur" data-k="1"><span class="rt-h">purchase/ · the ${D.purchase.length} purchasing services</span><div class="dg-chips">${D.purchase.map((r) => `<span class="dg-c ${r.kind}${['itm_get', 'whs_list', 'stk_query', 'sup_get', 'sup_cert_get'].includes(r.service) ? ' use' : ''}">${esc(r.service)}</span>`).join('')}</div>
+      <p class="small">Outlined: the five that check_stock and supplier_certificates use. Orange: writes.</p></div>
+    <div class="dg-old" data-k="2"><span class="rt-h">The old ones, still there</span><pre>${esc(D.gateway_xml_sample.split('\n').slice(0, 4).join('\n'))}</pre>
+      <p class="small">${F.accounts_payable.xml + F.sales.xml} WSDL-style XML files for the SOAP gateway (EDI, bank payments, carriers), still served.</p>
+      <pre>${esc(D.legacy_sample.split('\n').slice(0, 3).join('\n'))}</pre><p class="small">_legacy_6x/: ${F._legacy_6x.files} Ledgerline 6 definitions, gone from the server since 2015.</p></div></div>`;
+  return { step(k) { reveal(el, k); } };
+};
 })();
