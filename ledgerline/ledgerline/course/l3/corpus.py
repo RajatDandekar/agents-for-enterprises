@@ -56,7 +56,7 @@ PARSERS = ("plain", "structured")
 CHUNKERS = ("fixed", "recursive", "structure")
 HR_ROLES = {"HR-MGR", "HR", "HR-ADMIN"}
 DEFAULT_ROLE = "PUR-EXEC"  # Emma Clarke (ECLARKE)
-PARSER_VERSION = "1"
+PARSER_VERSION = "2"
 
 FMT_CLASS = {  # the structured / semi-structured / unstructured split used by the audit
     "xlsx": "structured", "csv": "structured",
@@ -341,6 +341,8 @@ def _pdf_structured(path, rel):
                 cx, cy = (obj["x0"] + obj["x1"]) / 2, (obj["top"] + obj["bottom"]) / 2
                 return not any(b[0] - 1 <= cx <= b[2] + 1 and b[1] - 1 <= cy <= b[3] + 1 for b in boxes)
 
+            # drop watermarks ("CONFIDENTIAL", "PREVIEW" drawn large and diagonally): rotated or very large characters
+            pg = pg.filter(lambda o: o.get("object_type") != "char" or (o.get("upright", True) and o.get("size", 0) < 40))
             words = pg.extract_words(extra_attrs=["fontname", "size"], keep_blank_chars=False)
             lines = _lines_from_words([w for w in words if outside(w)])
             items = [("line", L["top"], L) for L in lines]
@@ -522,6 +524,15 @@ def _header_row(rows: list[tuple]) -> int:
     return 0
 
 
+_MONEY = re.compile(r"(?i)rate|price|value|amount|cost|basic|gross|limit|budget|committed|available|_gbp|vat$|tax_amt")
+
+
+def _money(header: str, v) -> str:
+    if isinstance(v, (int, float)) and not isinstance(v, bool) and _MONEY.search(header or "") and not re.search(r"(?i)pct|%|days|qty", header or ""):
+        return f"{v:.2f}"
+    return _cellstr(v)
+
+
 def _table_units(rel, fmt, sheet, rows, first_row_no, meta, parser):
     out = []
     if parser == "plain":
@@ -538,8 +549,8 @@ def _table_units(rel, fmt, sheet, rows, first_row_no, meta, parser):
     context = (f"Sheet {sheet}. " if sheet else "") + " ".join(titles)
     for i in range(h + 1, len(rows)):
         r = rows[i]
-        pairs = [f"{header[j] if j < len(header) else f'col{j + 1}'}: {_cellstr(v)}" for j, v in enumerate(r)
-                 if v not in (None, "")]
+        pairs = [f"{header[j] if j < len(header) else f'col{j + 1}'}: {_money(header[j] if j < len(header) else '', v)}"
+                 for j, v in enumerate(r) if v not in (None, "")]
         if not pairs:
             continue
         loc = {"sheet": sheet, "row": first_row_no + i} if sheet is not None else {"row": first_row_no + i}

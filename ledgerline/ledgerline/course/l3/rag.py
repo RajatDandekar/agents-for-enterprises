@@ -15,8 +15,9 @@ The pieces:
                   one column sum. Codes like ERR-PO-0412 stay whole tokens (and their parts are indexed too).
     Embedder      five open embedding models (EMBED_MODELS) through sentence-transformers, each with its own query
                   and passage prefixes. Vectors are L2-normalised, so cosine = dot product.
-    Chroma        one persistent collection per (chunking, embedding model), HNSW with cosine space. Permissions are a
-                  `where` filter (confidential = False for anyone outside HR), applied before ranking.
+    Chroma        persistent (chromadb 1.0.15), HNSW, cosine, ef_search 4000; per (chunking, model) two collections:
+                  everything staff may read, and the confidential HR chunks. Anyone outside HR queries only the first, so
+                  permissions hold before ranking (a `where` filter did the same but cost ~250 ms a query in Chroma 0.6.3).
     Hybrid        reciprocal rank fusion (RRF, k=60) of the dense and BM25 lists.
     Reranker      BAAI/bge-reranker-base, a cross-encoder that reads the question and each candidate together.
     Rewriting     one LLM call turns the staff question into a search query (recorded to cassette L3v4_rewrite).
@@ -50,6 +51,12 @@ EMBED_MODELS = {
 RERANK_MODEL = "BAAI/bge-reranker-base"
 REWRITE_MODEL = "openrouter:google/gemini-3.8-flash"
 POOL = 20          # candidates each list contributes to fusion / the reranker
+# HNSW settings, measured (logs/hnsw_check.json, 3 Nov 2026, bge-small on structured-structure-400, 224 real questions):
+# with Chroma's defaults only 73% of the exact top-10 chunks came back (the questions sit far from the
+# dense clusters of table rows, and the graph search stops early); ef_search 4000 returns 99.9% in about 7 ms.
+# (chromadb 0.6.3 ignored hnsw:search_ef at query time in our runs, so the course uses chromadb 1.0.15.)
+HNSW = {"space": "cosine", "ef_search": 4000, "ef_construction": 200, "max_neighbors": 32}
+HR_SUFFIX = "__hr"  # confidential HR chunks live in their own collection: an index Emma queries never contains them
 RRF_K = 60
 RAG_INDEX_DIR = pathlib.Path(os.environ.get("RAG_INDEX_DIR", C.CACHE_DIR / "rag_index"))
 BEST_INDEX_URL = os.environ.get("RAG_BEST_INDEX_URL", "https://rajatworkspace--northbridge-raglab.us-east.modal.run/api/best_index.tar.gz")
@@ -260,7 +267,8 @@ def rewrite(question: str, llm=None) -> dict:
 
     llm = llm or LLM(REWRITE_MODEL, cassette="L3v4_rewrite", max_tokens=1024)
     r = llm.chat([{"role": "system", "content": REWRITE_SYSTEM}, {"role": "user", "content": question}])
-    q = (r.content or question).strip().splitlines()[0].strip().strip('"') if (r.content or "").strip() else question
+    q = (r.content or question).strip().splitlines()[0].replace('"', " ").strip() if (r.content or "").strip() else question
+    q = re.sub(r"\s+", " ", q)
     return {"query": q, "seconds": r.seconds, "tokens_in": r.tokens_in, "tokens_out": r.tokens_out,
             "cost_usd": cost_usd(r.tokens_in, r.tokens_out, llm.model)}
 
@@ -284,6 +292,19 @@ def save_chunks(chunks: list[C.Chunk], path) -> None:
 
 def load_chunks(path) -> list[C.Chunk]:
     return [C.Chunk(**json.loads(l)) for l in gzip.open(path, "rt", encoding="utf-8")]
+
+
+def add_vectors(client, model: str, chunks: list[C.Chunk], vecs, batch: int = 4000) -> None:
+    """Two Chroma collections per model: `model` (everything staff may read) and `model__hr` (confidential HR only).
+    Ids are the chunk's position in chunks.jsonl.gz, so both map back to the same chunk list."""
+    groups = {model: [i for i, c in enumerate(chunks) if not c.meta.get("confidential")],
+              model + HR_SUFFIX: [i for i, c in enumerate(chunks) if c.meta.get("confidential")]}
+    for name, ids in groups.items():
+        col = client.create_collection(name, configuration={"hnsw": dict(HNSW)}, metadata={"model": EMBED_MODELS[model]["hf"]})
+        for s in range(0, len(ids), batch):
+            part = ids[s:s + batch]
+            col.add(ids=[str(i) for i in part], embeddings=vecs[part].tolist(),
+                    metadatas=[_meta_row(chunks[i], i) for i in part], documents=[chunks[i].text for i in part])
 
 
 class Index:
@@ -316,14 +337,8 @@ class Index:
             t0 = time.time()
             vecs = vectors.get(m) if vectors and m in vectors else Embedder(m).passages([c.text for c in chunks], batch=batch)
             t_embed = time.time() - t0
-            col = client.create_collection(m, metadata={"hnsw:space": "cosine", "model": EMBED_MODELS[m]["hf"]})
             t1 = time.time()
-            B = 4000
-            for s in range(0, len(chunks), B):
-                col.add(ids=[str(i) for i in range(s, min(s + B, len(chunks)))],
-                        embeddings=vecs[s:s + B].tolist(),
-                        metadatas=[_meta_row(chunks[i], i) for i in range(s, min(s + B, len(chunks)))],
-                        documents=[chunks[i].text for i in range(s, min(s + B, len(chunks)))])
+            add_vectors(client, m, chunks, vecs)
             stats[m] = {"embed_s": round(t_embed, 2), "chroma_add_s": round(time.time() - t1, 2), "n": len(chunks),
                         "dim": int(vecs.shape[1])}
             if vectors is not None:
@@ -392,10 +407,14 @@ class Retriever:
             qv = self.emb.query(query)
             t["embed"] = time.perf_counter() - a
             a = time.perf_counter()
-            where = None if role in C.HR_ROLES else {"confidential": False}
-            res = self.idx.collection(cfg.embed).query(query_embeddings=[qv.tolist()], n_results=need, where=where,
-                                                       include=["distances"])
+            res = self.idx.collection(cfg.embed).query(query_embeddings=[qv.tolist()], n_results=need, include=["distances"])
             dense = [(int(i), 1.0 - float(d)) for i, d in zip(res["ids"][0], res["distances"][0])]
+            if role in C.HR_ROLES:  # HR may also read the confidential collection: query it too and merge by similarity
+                hr = self.idx.collection(cfg.embed + HR_SUFFIX)
+                if hr.count():
+                    r2 = hr.query(query_embeddings=[qv.tolist()], n_results=min(need, hr.count()), include=["distances"])
+                    dense = sorted(dense + [(int(i), 1.0 - float(d)) for i, d in zip(r2["ids"][0], r2["distances"][0])],
+                                   key=lambda x: -x[1])[:need]
             t["chroma"] = time.perf_counter() - a
             lists.append([i for i, _ in dense])
             scores["dense"] = dict(dense)

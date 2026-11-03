@@ -29,7 +29,7 @@ item's row range covers it. Gold sources located only by section (DOCX, MD, EML,
 that carry no page/row location also fall back to file level (counted in match_levels). Gold sources marked
 "absent" (e.g. Brightcell is NOT in the supplier master) are not retrievable and are skipped.
 
-Answer model: google/gemini-3.8-flash through OpenRouter for every method, temperature 0, recorded to cassettes
+Answer model: gemini-3.8-flash (Google's OpenAI-compatible endpoint; OpenRouter before 3 Nov 2026) for every method, temperature 0, recorded to cassettes
 (ledgerline/cassettes/<cassette>.jsonl) so NB3 replays without a key. Cost = real tokens x PRICE_USD.
 """
 from __future__ import annotations
@@ -44,9 +44,13 @@ from concurrent.futures import ThreadPoolExecutor
 
 from . import corpus as C
 
-ANSWER_MODEL = "openrouter:google/gemini-3.8-flash"
-JUDGE_MODEL = "openrouter:google/gemini-3.8-flash"
-PRICE_USD = {"gemini-3.8-flash": (0.50, 3.00)}  # per million tokens (input, output): OpenRouter list price, checked 3 Nov 2026
+# The course OpenRouter key hit its monthly limit on 3 Nov 2026; Rajat approved the same model through Google's own
+# OpenAI-compatible endpoint (ledgerline.llm provider "gemini", key GEMINI_API_KEY). Logs name the provider.
+ANSWER_MODEL = os.environ.get("L3_ANSWER_MODEL", "gemini:gemini-3.8-flash")
+JUDGE_MODEL = os.environ.get("L3_JUDGE_MODEL", "gemini:gemini-3.8-flash")
+# USD per million tokens (input, output): OpenRouter's list price for google/gemini-3.8-flash (/api/v1/models, 3 Nov 2026),
+# used for both routes (OpenRouter passes the provider's price through; Google's own bill is the exact figure).
+PRICE_USD = {"gemini-3.8-flash": (0.825, 4.125)}
 KS = (1, 3, 5, 10)
 TYPES = ["single_lookup", "procedure", "rule", "service_field", "table_lookup", "multi_hop", "version_conflict",
          "exact_code", "not_in_docs", "permission"]
@@ -159,9 +163,17 @@ def loc_match(G: Golden, g: dict, file: str, loc: dict) -> str | None:
     return "file"
 
 
+def _has(t: str, needle: str) -> bool:
+    n = norm(needle)
+    if n in t:
+        return True
+    m = re.fullmatch(r"(\d+)\.0+", n)  # a spreadsheet stores 119.00 as 119: accept the bare number, not 1190 or 119.5
+    return bool(m and re.search(rf"(?<![\d.]){m.group(1)}(?![\d]|\.\d)", t))
+
+
 def contains_fact(text: str, fact: dict) -> bool:
     t = norm(text)
-    return all(norm(n) in t for n in fact.get("needles", []))
+    return all(_has(t, n) for n in fact.get("needles", []))
 
 
 def gold_hits(q, items, G: Golden, ks=KS) -> dict:
@@ -205,25 +217,26 @@ Answer ONLY from the numbered sources in the user message. Cite every fact with 
 Be concise: at most 150 words, plain sentences, exact codes and numbers as the sources give them."""
 
 
-def render_sources(items, max_chars: int = 9000) -> str:
+def render_sources(items, max_chars: int | None = 9000) -> str:
     out = []
     for i, it in enumerate(items, 1):
         cite = it.get("cite") or it.get("file", "")
         m = it.get("meta") or {}
         st = C.status_line(m) if m else ""
-        text = (it.get("text") or "")[:max_chars]
+        text = (it.get("text") or "")[:max_chars] if max_chars else (it.get("text") or "")
         out.append(f"[{i}] {cite}{' (' + st + ')' if st else ''}\n{text}")
     return "\n\n".join(out)
 
 
-def answer_messages(q, items) -> list[dict]:
+def answer_messages(q, items, max_chars: int | None = 9000) -> list[dict]:
+    """The exact prompt every method's answer goes through. Each source's text is cut at max_chars (None = whole)."""
     role = C.role_of(q)
     return [{"role": "system", "content": ANSWER_SYSTEM.format(who=ROLE_NAMES.get(role, role))},
-            {"role": "user", "content": f"Sources:\n\n{render_sources(items)}\n\nQuestion: {q['question']}"}]
+            {"role": "user", "content": f"Sources:\n\n{render_sources(items, max_chars)}\n\nQuestion: {q['question']}"}]
 
 
-def answer(q, items, llm) -> dict:
-    r = llm.chat(answer_messages(q, items))
+def answer(q, items, llm, max_chars: int | None = 9000) -> dict:
+    r = llm.chat(answer_messages(q, items, max_chars))
     text = r.content or ""
     return {"answer": text, "cited": cited_numbers(text, len(items)), "tokens_in": r.tokens_in, "tokens_out": r.tokens_out,
             "llm_seconds": r.seconds, "cost_usd": round(cost_usd(r.tokens_in, r.tokens_out, llm.model), 6),
