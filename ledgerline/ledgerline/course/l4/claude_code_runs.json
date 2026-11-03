@@ -1,0 +1,233 @@
+{
+ "single": {
+  "model": "claude-sonnet-5.5",
+  "claude_code": "2.1.241 (Claude Code)",
+  "turns": [
+   {
+    "user": "How many BAT-500 battery packs do we have in Manchester main stores?",
+    "num_turns": 2,
+    "reply": "Manchester main stores (WH-MAN-STR) has 5,400 BAT-500 battery packs on hand. None are allocated, so all 5,400 are free.",
+    "cost_usd_cumulative": 0.016724700000000002,
+    "usage": {
+     "input_tokens": 180,
+     "cache_creation_input_tokens": 5651,
+     "cache_read_input_tokens": 5236,
+     "output_tokens": 119
+    },
+    "steps": [
+     {
+      "kind": "call",
+      "tool": "check_stock",
+      "args": {
+       "item_code": "BAT-500"
+      },
+      "id": "toolu_01DDbrA3h9PEwBEjrfFjyVsc"
+     },
+     {
+      "kind": "result",
+      "tool": "check_stock",
+      "is_error": null,
+      "text": "{\"ok\":true,\"item_code\":\"BAT-500\",\"description\":\"Battery pack, 36 V 500 Wh\",\"unit\":\"NOS\",\"warehouses\":[{\"warehouse\":\"WH-MAN-STR\",\"name\":\"Manchester main stores\",\"on_hand\":5400,\"allocated\":0,\"on_order\":0,\"free\":5400},{\"warehouse\":\"WH-LDS-STR\",\"name\":\"Leeds stores\",\"on_hand\":1200,\"allocated\":0,\"on_order\":0,\"free\":1200}],\"free_total\":6600,\"on_order_total\":0,\"reorder_level\":3000,\"cover_days\":11,\"below_reorder\":false}"
+     },
+     {
+      "kind": "text",
+      "text": "Manchester main stores (WH-MAN-STR) has 5,400 BAT-500 battery packs on hand. None are allocated, so all 5,400 are free."
+     }
+    ]
+   }
+  ],
+  "source": "lectures/L4-the-hands/experiments/logs/claude_harness_single.json"
+ },
+ "order_hands": {
+  "model": "claude-sonnet-5.5",
+  "claude_code": "2.1.241 (Claude Code)",
+  "turns": [
+   {
+    "user": "I need 2,000 of the 36 V 500 Wh battery packs from Voltway for the spring launch run.",
+    "num_turns": 5,
+    "reply": "Two Voltway suppliers matched, so please confirm which one you mean. I assume it's Voltway Cells, Eindhoven (VC-EIN-0042), because the other one is Voltway Paints & Coatings, which doesn't sell cells. VC-EIN-0042 is active, and its UN 38.3 cell-safety certificate is valid until 31 March 2027. The item is BAT-500, Battery pack, 36 V 500 Wh.\n\nCurrent stock of BAT-500 is 6,600 free (5,400 in Manchester, 1,200 in Leeds). That is about 11 days of cover, and nothing is on order.\n\nTo preview the request I still need two things:\n- Which cost centre should pay for it?\n- What is the need-by date?",
+    "cost_usd_cumulative": 0.037329600000000004,
+    "usage": {
+     "input_tokens": 222,
+     "cache_creation_input_tokens": 10364,
+     "cache_read_input_tokens": 18328,
+     "output_tokens": 731
+    },
+    "steps": [
+     {
+      "kind": "text",
+      "text": "I'll look up the item and the supplier first."
+     },
+     {
+      "kind": "call",
+      "tool": "find_item",
+      "args": {
+       "query": "36 V 500 Wh battery pack"
+      },
+      "id": "toolu_016E4UDpS1BKRYw21kLLJYo1"
+     },
+     {
+      "kind": "call",
+      "tool": "find_supplier",
+      "args": {
+       "name": "Voltway"
+      },
+      "id": "toolu_01KjajwzJeJDfdMx5edVtaUE"
+     },
+     {
+      "kind": "result",
+      "tool": "find_item",
+      "is_error": null,
+      "text": "{\"ok\":true,\"items\":[{\"item_code\":\"BAT-500\",\"description\":\"Battery pack, 36 V 500 Wh\",\"unit\":\"NOS\",\"cell_safety\":true},{\"item_code\":\"BAT-500-R\",\"description\":\"Battery pack, 36 V 500 Wh (refurbished)\",\"unit\":\"NOS\",\"cell_safety\":true}],\"note\":\"\"}"
+     },
+     {
+      "kind": "result",
+      "tool": "find_supplier",
+      "is_error": null,
+      "text": "{\"ok\":true,\"matches\":[{\"supplier_code\":\"VC-EIN-0042\",\"name\":\"Voltway Cells\",\"city\":\"Eindhoven\",\"state\":\"NL\",\"status\":\"ACTIVE\",\"match\":0.74,\"cell_safety_certificate\":\"valid\"},{\"supplier_code\":\"VPC-ROT-0107\",\"name\":\"Voltway Paints & Coatings\",\"city\":\"Rotterdam\",\"state\":\"NL\",\"status\":\"ACTIVE\",\"match\":0.5,\"cell_safety_certificate\":\"none\"},{\"supplier_code\":\"VC-EIN-0009\",\"name\":\"Voltway Cells (old code, do not use)\",\"city\":\"Eindhoven\",\"state\":\"NL\",\"status\":\"BLOCKED\",\"match\":0.74,\"cell_safety_certificate\":\"none\"}],\"hint\":\"Only partial matches. Show them to the user and ask which one they mean. Blocked codes, never use: VC-EIN-0009.\"}"
+     },
+     {
+      "kind": "call",
+      "tool": "supplier_certificates",
+      "args": {
+       "supplier_code": "VC-EIN-0042",
+       "item_code": "BAT-500"
+      },
+      "id": "toolu_015n9jg8z5LDxGfELKxyQKag"
+     },
+     {
+      "kind": "call",
+      "tool": "check_stock",
+      "args": {
+       "item_code": "BAT-500"
+      },
+      "id": "toolu_01SBiTrvGQXXGfkrHFhJbYrR"
+     },
+     {
+      "kind": "result",
+      "tool": "supplier_certificates",
+      "is_error": null,
+      "text": "{\"ok\":true,\"supplier_code\":\"VC-EIN-0042\",\"supplier_name\":\"Voltway Cells\",\"supplier_status\":\"ACTIVE\",\"as_of\":\"2026-10-26\",\"certificates\":[{\"cert_type\":\"UN38.3\",\"doc_ref\":\"UN38.3-TR/VC/2026/118\",\"valid_to\":\"2027-03-31\",\"valid\":true,\"days_left\":156}],\"un38_3\":\"valid\",\"item\":{\"item_code\":\"BAT-500\",\"needs_un38_3\":true,\"supplier_qualifies\":true},\"total\":1,\"next_cursor\":null}"
+     },
+     {
+      "kind": "result",
+      "tool": "check_stock",
+      "is_error": null,
+      "text": "{\"ok\":true,\"item_code\":\"BAT-500\",\"description\":\"Battery pack, 36 V 500 Wh\",\"unit\":\"NOS\",\"warehouses\":[{\"warehouse\":\"WH-MAN-STR\",\"name\":\"Manchester main stores\",\"on_hand\":5400,\"allocated\":0,\"on_order\":0,\"free\":5400},{\"warehouse\":\"WH-LDS-STR\",\"name\":\"Leeds stores\",\"on_hand\":1200,\"allocated\":0,\"on_order\":0,\"free\":1200}],\"free_total\":6600,\"on_order_total\":0,\"reorder_level\":3000,\"cover_days\":11,\"below_reorder\":false}"
+     },
+     {
+      "kind": "text",
+      "text": "Two Voltway suppliers matched, so please confirm which one you mean. I assume it's Voltway Cells, Eindhoven (VC-EIN-0042), because the other one is Voltway Paints & Coatings, which doesn't sell cells. VC-EIN-0042 is active, and its UN 38.3 cell-safety certificate is valid until 31 March 2027. The item is BAT-500, Battery pack, 36 V 500 Wh.\n\nCurrent stock of BAT-500 is 6,600 free (5,400 in Manchester, 1,200 in Leeds). That is about 11 days of cover, and nothing is on order.\n\nTo preview the request I still need two things:\n- Which cost centre should pay for it?\n- What is the need-by date?"
+     }
+    ]
+   },
+   {
+    "user": "Yes, go ahead. We need them by 9 November 2026.",
+    "num_turns": 4,
+    "reply": "Here is the preview of the purchase request. Nothing is saved yet.\n\n- Item: BAT-500, Battery pack 36 V 500 Wh\n- Quantity: 2,000\n- Supplier: Voltway Cells, Eindhoven (VC-EIN-0042), chosen when the PO is created\n- Estimated value: £273,600 (at £114 each)\n- Cost centre: PRD-07 Spring launch run, open, with £1,190,000 budget left\n- Need-by: 9 November 2026\n- Approver: DOKAFOR. The value is above your £250,000 limit, so the request waits for their approval.\n\nEven once it's approved, it is not an order. A PO still has to be created and released to Voltway. With 9 November only about a week away, it's worth asking DOKAFOR to approve promptly.\n\nShall I save and submit it?",
+    "cost_usd_cumulative": 0.05456230000000001,
+    "usage": {
+     "input_tokens": 127,
+     "cache_creation_input_tokens": 1285,
+     "cache_read_input_tokens": 32081,
+     "output_tokens": 735
+    },
+    "steps": [
+     {
+      "kind": "text",
+      "text": "You haven't given a cost centre yet, so I'll list the open ones."
+     },
+     {
+      "kind": "call",
+      "tool": "check_budget",
+      "args": {},
+      "id": "toolu_01S5GBRip3w7upmQbcbxGgV6"
+     },
+     {
+      "kind": "result",
+      "tool": "check_budget",
+      "is_error": null,
+      "text": "{\"ok\":true,\"open\":[{\"code\":\"PRD-07\",\"name\":\"Spring launch run\"},{\"code\":\"PRD-03\",\"name\":\"Cargo e-bike line\"},{\"code\":\"MNT-01\",\"name\":\"Plant maintenance\"},{\"code\":\"ADM-01\",\"name\":\"Administration\"}]}"
+     },
+     {
+      "kind": "text",
+      "text": "PRD-07 is \"Spring launch run\", which matches your description. I'll preview the request against it."
+     },
+     {
+      "kind": "call",
+      "tool": "create_purchase_request",
+      "args": {
+       "item_code": "BAT-500",
+       "quantity": 2000,
+       "cost_centre": "PRD-07",
+       "need_by": "2026-11-09",
+       "confirm": false
+      },
+      "id": "toolu_01MhLUsfzHNtq4cJoph34z2F"
+     },
+     {
+      "kind": "call",
+      "tool": "check_budget",
+      "args": {
+       "cost_centre": "PRD-07"
+      },
+      "id": "toolu_0156UXu4aNLBHxm7KcMMPgbU"
+     },
+     {
+      "kind": "result",
+      "tool": "create_purchase_request",
+      "is_error": null,
+      "text": "{\"ok\":true,\"preview\":{\"item_code\":\"BAT-500\",\"quantity\":2000,\"estimated_rate\":114,\"estimated_value\":273600,\"cost_centre\":\"PRD-07\",\"cost_centre_state\":\"OK\",\"need_by\":\"2026-11-09\",\"needs_approval\":true,\"your_limit\":250000,\"approver\":\"DOKAFOR\"},\"warnings\":[],\"note\":\"Nothing has been saved. Show this to the user and ask to confirm.\"}"
+     },
+     {
+      "kind": "result",
+      "tool": "check_budget",
+      "is_error": null,
+      "text": "{\"ok\":true,\"code\":\"PRD-07\",\"name\":\"Spring launch run\",\"open\":true,\"closed_on\":null,\"budget_left\":1190000}"
+     },
+     {
+      "kind": "text",
+      "text": "Here is the preview of the purchase request. Nothing is saved yet.\n\n- Item: BAT-500, Battery pack 36 V 500 Wh\n- Quantity: 2,000\n- Supplier: Voltway Cells, Eindhoven (VC-EIN-0042), chosen when the PO is created\n- Estimated value: £273,600 (at £114 each)\n- Cost centre: PRD-07 Spring launch run, open, with £1,190,000 budget left\n- Need-by: 9 November 2026\n- Approver: DOKAFOR. The value is above your £250,000 limit, so the request waits for their approval.\n\nEven once it's approved, it is not an order. A PO still has to be created and released to Voltway. With 9 November only about a week away, it's worth asking DOKAFOR to approve promptly.\n\nShall I save and submit it?"
+     }
+    ]
+   },
+   {
+    "user": "Yes, submit the purchase request.",
+    "num_turns": 2,
+    "reply": "Purchase request PR/2026/04417 is submitted and waiting for approval from DOKAFOR. Nothing is ordered yet. It covers 2,000 BAT-500 packs at an estimated £273,600 against PRD-07, needed by 9 November 2026.\n\nOnce DOKAFOR approves it, I can create the PO with Voltway Cells (VC-EIN-0042) and release it. Do you want me to message DOKAFOR to ask for a quick approval?",
+    "cost_usd_cumulative": 0.0645589,
+    "usage": {
+     "input_tokens": 85,
+     "cache_creation_input_tokens": 728,
+     "cache_read_input_tokens": 23633,
+     "output_tokens": 328
+    },
+    "steps": [
+     {
+      "kind": "call",
+      "tool": "create_purchase_request",
+      "args": {
+       "item_code": "BAT-500",
+       "quantity": 2000,
+       "cost_centre": "PRD-07",
+       "need_by": "2026-11-09",
+       "confirm": true
+      },
+      "id": "toolu_01QoU12tYV3VU6hHEENnAB5w"
+     },
+     {
+      "kind": "result",
+      "tool": "create_purchase_request",
+      "is_error": null,
+      "text": "{\"ok\":true,\"request_no\":\"PR/2026/04417\",\"status\":\"WAITING FOR APPROVAL\",\"status_code\":\"PA\",\"item_code\":\"BAT-500\",\"quantity\":2000,\"estimated_value\":273600,\"cost_centre\":\"PRD-07\",\"need_by\":\"2026-11-09\",\"approver\":\"DOKAFOR\",\"approved_by\":null,\"next_step\":\"Waiting for DOKAFOR. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417.\"}"
+     },
+     {
+      "kind": "text",
+      "text": "Purchase request PR/2026/04417 is submitted and waiting for approval from DOKAFOR. Nothing is ordered yet. It covers 2,000 BAT-500 packs at an estimated £273,600 against PRD-07, needed by 9 November 2026.\n\nOnce DOKAFOR approves it, I can create the PO with Voltway Cells (VC-EIN-0042) and release it. Do you want me to message DOKAFOR to ask for a quick approval?"
+     }
+    ]
+   }
+  ],
+  "source": "lectures/L4-the-hands/experiments/logs/claude_harness_order_hands.json"
+ }
+}

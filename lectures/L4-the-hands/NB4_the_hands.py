@@ -1,443 +1,426 @@
 # %% [markdown]
-# # NB4 · The Hands: Tools and MCP
-# **From Forms to Agents · Lecture 4 · Sun 8 Nov 2026 · Dr. Rajat Dandekar**
+# # NB4 · The Hands: tools, MCP, two harnesses, production grade
 #
-# You are the engineer Rasoi Steel Works hired to make it AI-native. After Lecture 3, **Ask Rasoi** can explain
-# Rasoi's rules with a citation. It still cannot check stock or raise Kavita's purchase request: a model only
-# writes text. Today it gets hands: **the toolbox, served over MCP.**
+# **Agentic Systems Engineering · Lecture 4 · Vizuara · Dr. Rajat Dandekar**
 #
-# The running example: Kavita needs 20,000 silicone gaskets (GSK-SIL-05L) for the 5-litre cooker before the
-# Diwali run. Her request PR/2026/04417 is estimated at ₹2,69,040, above her ₹2,50,000 limit, so Rohit must approve.
+# Northbridge Cycles builds e-bikes in Manchester and runs on **Ledgerline ERP 7.2** (1998). Its assistant, **Ask
+# Northbridge**, has a brain (Lecture 2) and a memory (Lecture 3). Today it gets hands: tools it can ask our code to run.
+# Emma Clarke, a purchase executive, asks two things on Monday 26 October 2026:
 #
-# What you will do:
-# 1. Meet the toolbox: 15 tools, one folder each (`tool.json` + `tool.py`).
-# 2. Do one **function-calling round trip by hand**: send tools to a model, read the tool call it writes, run it, send the result back.
-# 3. **Validate arguments** against `tool.json` with JSON Schema.
-# 4. Call the toolbox directly through the whole purchase chain: request → approval → order → release → goods receipt.
-# 5. **Write a new tool folder** and load it next to the others.
-# 6. Watch **idempotency** survive an injected timeout.
-# 7. **Serve the toolbox over MCP** and read the JSON-RPC on the wire.
-# 8. Let a model use it for **one round**, through MCP, including your new tool.
+# > **How many BAT-500 battery packs do we have in Manchester main stores?**
+# > **I need 2,000 of the 36 V 500 Wh battery packs from Voltway for the spring launch run.**
 #
-# Everything runs with **no API key** in replay mode: the model replies were recorded in our run (cassette `L4v3_nb`).
-# All companies, people, codes and numbers are fictional.
+# This notebook follows the lecture, section by section:
+#
+# 1. open a tool: `check_stock`'s `tool.json`, `tool.py` and the legacy services inside it
+# 2. call it, and see every legacy envelope `{rc, err_cd, msg, data}` it turns into one clean result
+# 3. the schemas: input and output, checked with a real JSON Schema validator and at the door
+# 4. build a tool: `supplier_certificates` from its services, then your own `payment_terms`
+# 5. MCP: start the server and talk JSON-RPC to it by hand: `initialize`, `tools/list`, `tools/call`
+# 6. two harnesses: Claude Code's recorded run next to ours
+# 7. our harness, with the context printed at every model call and real token counts
+# 8. production checks: schemas, the error contract, latency and the idempotency fix
+#
+# **No API key needed.** Every model call is replayed from our recorded runs (cassettes `L4v4_ours*`), so the notebook
+# shows exactly what happened. Five exercises are marked `TODO (exercise N)`, each with its solution behind
+# `SOLUTION = True`. Set it to `False` and try it yourself.
 
 # %% setup
 
 # %%
-import json, os, pathlib, tempfile, textwrap
-import pandas as pd
-pd.set_option("display.max_colwidth", 100)
-pd.set_option("display.width", 200)
+import inspect
+import json
+import pathlib
+import statistics
+import time
 
-from bahi.erp.engine import ERP, SERVICES, ServiceTimeout
-from bahi.toolbox import Toolbox, SPECS
-from bahi.agent.tools import RawServiceTools, content_key
-from bahi.llm import LLM
-from bahi.course.l4 import (TOOLBOX, HANDS_SYSTEM, add_tool_dir, lint_tool, validate_args, one_round,
-                            stdio_wire, handshake)
+from ledgerline.erp.engine import ERP, SERVICES
+from ledgerline.toolbox import ALL, REGISTRY, SPECS, Toolbox
+from ledgerline.course.l4 import add_tool_folder, handshake, lint_tool, stdio_wire, validate_args
+from ledgerline.course.l4.hands import CLAUDE_CODE, context_parts, hands_run, show_context
 
-SOLUTION = True   # set to False to write the exercises yourself; True runs the worked solutions
 
-def show(x, n=1200):
-    """Print a dict as indented JSON, cut to n characters."""
-    s = json.dumps(x, indent=1, ensure_ascii=False, default=str)
-    print(s if len(s) <= n else s[:n] + "\n  ...")
+def pp(o, n=1400):
+    """Print JSON, cut at n characters."""
+    s = json.dumps(o, indent=1, ensure_ascii=False, default=str)
+    print(s if len(s) <= n else s[:n] + " …")
 
-# %% [markdown]
-# ## 1. The toolbox
-# A **tool** is one thing the assistant can do in Bahi, described so a model can ask for it.
-# Rasoi's toolbox has 15, one per business activity. Each lives in its own folder:
-# `tool.json` is what the model reads; `tool.py` is what runs.
 
-# %%
-erp = ERP()                       # a fresh Rasoi sandbox; the date is Monday 26 Oct 2026
-kavita = Toolbox(erp, "KJOSHI")   # the toolbox bound to Kavita's own Bahi session
-pd.DataFrame([{"tool": n, "category": SPECS[n].spec["category"], "writes": SPECS[n].writes,
-               "Bahi services behind it": ", ".join(SPECS[n].spec["services"])} for n in kavita.names])
-
-# %%
-print(json.dumps(SPECS["check_stock"].spec, indent=1)[:900])
-print("\n--- tool.py ---\n" + SPECS["check_stock"].source)
-
-# %%
-r = kavita.call("check_stock", {"item_code": "GSK-SIL-05L"})
-show(r)
+print(len(ALL), "tool folders:", ", ".join(ALL))
 
 # %% [markdown]
-# Compare: Bahi itself offers **41 raw services**, with terse names and fields. A model given those has to know
-# that stock needs `itm_get`, then `whs_list`, then `stk_query` once per warehouse. The tool knows the order.
-
-# %%
-raw = RawServiceTools(erp.session("KJOSHI"))
-print(len(raw.schemas()), "raw services:", ", ".join(s["function"]["name"] for s in raw.schemas()))
-show(next(s for s in raw.schemas() if s["function"]["name"] == "po_save"))
-
-# %% [markdown]
-# ## 2. Function calling by hand
-# **Function calling**: we send the model the tool definitions with the conversation; instead of words it may
-# reply with a **tool call**, a small JSON request naming a tool and its arguments. **The model never touches Bahi.**
-# Our code decides to run the call, in Kavita's session, and sends the result back as a `tool` message.
-# Then the model answers in words.
+# ## 1 · Open a tool
 #
-# We use the course's LLM shim (`bahi.llm.LLM`), which speaks the OpenAI-compatible chat format to Gemini.
+# A tool is a function our code runs when the model asks for it. Each one is a folder with two files:
+# `tool.json`, what the model reads (its name, description and input schema), and `tool.py`, what runs.
 
 # %%
-llm = LLM("gemini:gemini-3.8-flash", cassette="L4v3_nb")
-messages = [{"role": "system", "content": HANDS_SYSTEM.format(name="Kavita Joshi", user_id="KJOSHI", first="Kavita")},
-            {"role": "user", "content": "Check stock of the 5-litre gasket."}]
-tools = kavita.schemas()           # the 15 definitions, in the OpenAI "function" format
-print(len(tools), "tools,", len(json.dumps(tools)), "characters of JSON sent with every request")
-
-reply = llm.chat(messages, tools=tools)
-print("words:", reply.content)
-for tc in reply.tool_calls:
-    print("tool call:", tc.id, tc.name, tc.arguments)
-print("tokens in/out:", reply.tokens_in, reply.tokens_out)
-
-# %% [markdown]
-# The model did not answer. It wrote a request. Look at the assistant message exactly as it goes back into the
-# conversation (Gemini also returns a "thought signature" we must echo back; it is opaque to us).
+spec = REGISTRY["check_stock"]
+print(spec.folder.relative_to(spec.folder.parents[2]))
+print((spec.folder / "tool.json").read_text())
 
 # %%
-m = reply.message()
-for t in m.get("tool_calls", []):
-    t = dict(t); t.pop("extra_content", None)
-    show(t)
+print(spec.source)
 
 # %% [markdown]
-# **Exercise 1.** Write `run_tool_calls(reply, toolbox)`: for each tool call, run it with `toolbox.call(name, arguments)`
-# and return the list of `tool` messages, each `{"role": "tool", "tool_call_id": <the call's id>, "content": <the result as a JSON string>}`.
+# `tool.py` calls three of Ledgerline's own **services**: the legacy building blocks behind its screens. In the
+# Northbridge document dump they are defined in `northbridge-docs/04_service_definitions/purchase/`; the sandbox defines
+# them in `ledgerline/erp/services.py`, which those files must match.
 
 # %%
-def run_tool_calls(reply, toolbox):
-    # TODO (exercise 1): one tool message per tool call, in order.
-    if not SOLUTION:
-        raise NotImplementedError("exercise 1")
-    out = []
-    for tc in reply.tool_calls:
-        result = toolbox.call(tc.name, tc.arguments)
-        out.append({"role": "tool", "tool_call_id": tc.id, "content": json.dumps(result, default=str)})
-    return out
+for name in spec.spec["services"]:
+    sv = SERVICES[name]
+    print(f"{name:10} {sv.doc:22} kind={sv.kind:5} screen={sv.screen}  fields={[(f.name, 'required' if f.required else 'optional') for f in sv.fields]}")
+print()
+print(inspect.getsource(SERVICES["stk_query"].fn))
 
 # %% [markdown]
-# Now the round trip: append the model's message and our tool messages, ask again, and repeat until it answers in words.
-
-# %%
-for rnd in range(1, 4):
-    messages.append(reply.message())
-    tool_msgs = run_tool_calls(reply, kavita)
-    messages += tool_msgs
-    for tm in tool_msgs:
-        print(f"round {rnd}: our code ran it; result starts", tm["content"][:140], "...")
-    reply = llm.chat(messages, tools=tools)
-    if not reply.tool_calls:
-        break
-    print(f"round {rnd + 1}: the model asks for", [(t.name, t.arguments) for t in reply.tool_calls])
-print("\nAnswer:\n" + reply.content)
-print("\nmodel calls:", llm.totals())
-
-# %% [markdown]
-# It took two tool requests: `find_item` to turn "5-litre gasket" into a code, then `check_stock`. Chaining
-# requests like that is a **loop**, and Lecture 5 builds it properly.
+# ## 2 · Call it
 #
-# Note the answer: 66,000 free and **11 days** of cover, because `check_stock` adds Pune (54,000) and Chakan (12,000).
-# Pune alone is 54,000 at 6,000 a day: 9 days. The tool's output decides what the model can say.
-
-# %% [markdown]
-# ## 3. JSON Schema: checking arguments once, at the door
-# `input_schema` in `tool.json` is **JSON Schema**: a JSON document that says what valid arguments look like
-# (types, which are required, allowed values, a description of each). Here is `create_purchase_request`'s.
-
-# %%
-show(SPECS["create_purchase_request"].spec["input_schema"])
-
-# %%
-good = {"item_code": "GSK-SIL-05L", "quantity": 20000, "cost_centre": "PRD-07", "need_by": "2026-11-09"}
-cases = {"good": good,
-         "quantity as words": {**good, "quantity": "twenty thousand"},
-         "no need_by": {k: v for k, v in good.items() if k != "need_by"},
-         "confirm as 'yes'": {**good, "confirm": "yes"}}
-for label, args in cases.items():
-    print(f"{label:20s}", validate_args("create_purchase_request", args) or "valid")
-
-# %% [markdown]
-# The toolbox does this check itself, once, before any Bahi service runs (`ToolSpec.check`), and turns a failure into
-# an error that says what to do next. Bahi's raw service, given the same mistake, says only `BAD VALUE FOR QTY`.
-
-# %%
-show(kavita.call("create_purchase_request", cases["no need_by"]))
-show(raw.call("pr_save", {"cc_cd": "PRD-07", "need_dt": "2026-11-09", "itm_cd": "GSK-SIL-05L", "qty": "twenty thousand"}))
-
-# %% [markdown]
-# **Exercise 2.** Write `my_check(schema, args)`, a tiny validator: return a list of problems for (a) a missing
-# required argument, (b) a value whose type is wrong (`string`, `integer`, `number`, `boolean`), (c) a value not in its `enum`.
-# Test it on `approve_purchase_request`, whose `decision` must be `approve` or `reject`.
-
-# %%
-PY = {"string": str, "integer": int, "number": (int, float), "boolean": bool}
-
-def my_check(schema, args):
-    # TODO (exercise 2): required, types, enums.
-    if not SOLUTION:
-        raise NotImplementedError("exercise 2")
-    probs = [f"missing {r}" for r in schema.get("required", []) if r not in args]
-    for k, v in args.items():
-        p = schema["properties"].get(k)
-        if p is None:
-            probs.append(f"unknown argument {k}"); continue
-        want = p.get("type")
-        if want in PY and (not isinstance(v, PY[want]) or (want != "boolean" and isinstance(v, bool))):
-            probs.append(f"{k} should be {want}")
-        if "enum" in p and v not in p["enum"]:
-            probs.append(f"{k} must be one of {p['enum']}")
-    return probs
-
-sch = SPECS["approve_purchase_request"].spec["input_schema"]
-for args in [{"request_no": "PR/2026/04417", "decision": "approve"}, {"request_no": "PR/2026/04417", "decision": "yes"},
-             {"decision": "approve"}, {"request_no": 4417, "decision": "approve"}]:
-    print(args, "->", my_check(sch, args), "| jsonschema:", validate_args("approve_purchase_request", args))
-
-# %% [markdown]
-# ## 4. The whole chain, through the toolbox
-# Every write tool **previews** first (`confirm=false`, nothing saved), then commits on `confirm=true` and returns a
-# **receipt** read back from Bahi. Each person uses their own session: Kavita raises, Rohit approves, Neha receives.
+# `Toolbox(erp, "ECLARKE")` binds the toolbox to Emma's own Ledgerline session: her permissions, nobody else's.
+# We call `check_stock` the way our code does when the model asks, and print every legacy call it made.
 
 # %%
 erp = ERP()
-kavita, rohit, neha = Toolbox(erp, "KJOSHI"), Toolbox(erp, "RMEHTA"), Toolbox(erp, "NDESAI")
-pr_args = {"item_code": "GSK-SIL-05L", "quantity": 20000, "cost_centre": "PRD-07", "need_by": "2026-11-09"}
-show(kavita.call("create_purchase_request", pr_args))                       # preview: ₹2,69,040, Rohit must approve
-
-# %%
-pr = kavita.call("create_purchase_request", {**pr_args, "confirm": True})
-print(pr["request_no"], pr["status"], "| approver:", pr["approver"])
-print("Kavita approves her own:", kavita.call("approve_purchase_request", {"request_no": pr["request_no"], "decision": "approve"})["error"])
-print("Rohit approves:", rohit.call("approve_purchase_request", {"request_no": pr["request_no"], "decision": "approve"})["status"])
-
-# %%
-po_args = {"supplier_code": "DP-RJK-0042", "request_no": pr["request_no"]}
-show(kavita.call("create_purchase_order", po_args)["preview"])               # ₹11.90 contract rate, ₹2,80,840 gross
-po = kavita.call("create_purchase_order", {**po_args, "confirm": True})
-print(po["po_no"], po["status"], "|", po["next_step"])
-rel = kavita.call("release_purchase_order", {"po_no": po["po_no"]})
-print(rel["po_no"], rel["status"], "| sent to supplier:", rel["sent_to_supplier"])
-
-# %%
-for q in (12000, 8000):
-    g = neha.call("receive_goods", {"po_no": po["po_no"], "quantity": q, "confirm": True})
-    print(g["grn_no"], "received", g["received"], "| balance", g["balance"], "| Pune on hand now", g["stock_after"])
-print(kavita.call("order_status", {"po_no": po["po_no"]})["status"])
+tb = Toolbox(erp, "ECLARKE")
+n0 = len(erp.calls)
+result = tb.call("check_stock", {"item_code": "BAT-500"})
+for r in erp.calls[n0:]:
+    print(f"{r.svc:10} {json.dumps(r.payload):46} -> rc={r.rc} err_cd={r.err_cd} data={json.dumps(r.data, default=str)[:110]}")
+legacy = sum(len(json.dumps({"rc": r.rc, "err_cd": r.err_cd, "msg": r.msg, "data": r.data}, default=str)) for r in erp.calls[n0:])
+print(f"\n{len(erp.calls) - n0} legacy calls, {legacy} bytes of legacy replies -> {len(json.dumps(result))} bytes of result:")
+pp(result)
 
 # %% [markdown]
-# ## 5. Write a new tool folder
-# A tool is a folder. Here is a new read tool, `purchase_history`, over Bahi's `po_hist` service: the last released
-# orders for an item, with supplier and rate. We write the two files, load the folder next to the 15, lint it, and call it.
+# When something goes wrong, Ledgerline answers with a legacy code. The tool turns it into the **error contract**:
+# `ok=false`, `error` in words, `next_step`, and the legacy code kept as `ledgerline_code`. A wrong type never reaches
+# Ledgerline at all: it is refused at the door.
 
 # %%
-MY = pathlib.Path(tempfile.mkdtemp()) / "my_tools"
-(MY / "purchase_history").mkdir(parents=True)
-(MY / "purchase_history" / "tool.json").write_text(json.dumps({
-    "name": "purchase_history", "title": "Purchase history", "category": "Look up", "writes": False, "version": "1.0",
-    "description": "The last released purchase orders for an item: order number, supplier, quantity, rate and date, newest first. Use it to answer 'what did we pay last time'.",
-    "services": ["po_hist"],
-    "input_schema": {"type": "object", "properties": {
-        "item_code": {"type": "string", "description": "Bahi item code, e.g. GSK-SIL-05L"},
-        "supplier_code": {"type": "string", "description": "optional, only this supplier's orders"}},
-        "required": ["item_code"]},
-    "example": {"item_code": "GSK-SIL-05L"}}, indent=1))
-(MY / "purchase_history" / "tool.py").write_text(textwrap.dedent('''
-    """Purchase history: the last released orders for an item."""
-    from bahi.agent.tools import _bahi
-
-
-    def run(s, item_code, supplier_code=None):
-        rows = _bahi(s, "po_hist", itm_cd=item_code, **({"sup_cd": supplier_code} if supplier_code else {}))["rows"]
-        orders = [{"po_no": r["po_no"], "supplier": f"{r['sup_name']} ({r['sup_cd']})", "quantity": r["qty"],
-                   "rate": r["rate"], "date": r["created_on"][:10]} for r in rows]
-        return {"ok": True, "item_code": item_code, "orders": orders,
-                "last_rate": orders[0]["rate"] if orders else None,
-                **({} if orders else {"next_step": "No released orders for this item. Check the code with find_item."})}
-'''))
-mine = add_tool_dir(MY)
-print("loaded:", mine, "| lint:", lint_tool("purchase_history") or "clean")
-kavita = Toolbox(erp, "KJOSHI", names=TOOLBOX + mine)
-show(kavita.call("purchase_history", {"item_code": "GSK-SIL-05L"}))
+n1 = len(erp.calls)
+print("BAT-5000 ->", tb.call("check_stock", {"item_code": "BAT-5000"}))
+print("  legacy reply:", [(r.svc, r.rc, r.err_cd, r.msg) for r in erp.calls[n1:]])
+n2 = len(erp.calls)
+print("500 (an int) ->", tb.call("check_stock", {"item_code": 500}))
+print("  Ledgerline calls:", len(erp.calls) - n2)
 
 # %% [markdown]
-# **Exercise 3.** Write a **write** tool, `cancel_purchase_order`, over Bahi's `po_cancel` (fields `po_no`, `reason`).
-# Follow the contract:
-# - `confirm=false` returns a preview (the order's current receipt, from `bahi.agent.tools._receipt`) and saves nothing;
-# - `confirm=true` cancels and returns the receipt read back from Bahi;
-# - cancelling an order that is already cancelled returns `ok: true, already_done: true` instead of an error.
-#
-# The folder template is written for you below; fill in `tool.py`.
+# **TODO (exercise 1).** Check the stock of the hub motor `MTR-HUB-250`. From the `stk_query` replies alone, work out
+# how many days the free stock lasts (free = on hand − allocated, summed over warehouses, divided by the average daily
+# issue), and compare it with the tool's `cover_days`.
 
 # %%
-CANCEL_JSON = {
-    "name": "cancel_purchase_order", "title": "Cancel purchase order", "category": "Purchasing", "writes": True, "version": "1.0",
-    "description": "Cancel a purchase order that is no longer needed. confirm=false shows the order and what cancelling does; confirm=true cancels it and returns the order's real status read back from Bahi.",
-    "services": ["po_get", "po_cancel"],
-    "input_schema": {"type": "object", "properties": {
-        "po_no": {"type": "string", "description": "e.g. PO/2026/01182"},
-        "reason": {"type": "string", "description": "why, in a few words; Bahi stores it"},
-        "confirm": {"type": "boolean", "description": "false (default) = preview only, nothing is saved; true = commit"}},
-        "required": ["po_no", "reason"]},
-    "example": {"po_no": "PO/2026/01179", "reason": "no longer needed"}}
-
-# TODO (exercise 3): the body of tool.py for cancel_purchase_order.
-CANCEL_PY = "" if not SOLUTION else '''
-"""Cancel purchase order."""
-from bahi.agent.tools import _bahi, _receipt
-
-
-def run(s, po_no, reason, confirm=False):
-    before = _receipt(s, po_no, tool="order_status")
-    if before["status_code"] == "CN":
-        return {"ok": True, "already_done": True, **before}
-    if not confirm:
-        return {"ok": True, "preview": before, "note": "Nothing has been changed. Cancelling releases the budget and, "
-                "for a released order, the stock on order. Ask the user to confirm."}
-    _bahi(s, "po_cancel", po_no=po_no, reason=reason)
-    return {"ok": True, **_receipt(s, po_no, tool="order_status")}
-'''
-(MY / "cancel_purchase_order").mkdir(exist_ok=True)
-(MY / "cancel_purchase_order" / "tool.json").write_text(json.dumps(CANCEL_JSON, indent=1))
-(MY / "cancel_purchase_order" / "tool.py").write_text(CANCEL_PY or "def run(s, **args):\n    raise NotImplementedError\n")
-mine = add_tool_dir(MY)
-print("loaded:", mine, "| lint:", lint_tool("cancel_purchase_order") or "clean")
-
-# %%
-# Test it on PO/2026/01179 (4,000 lids, waiting for Rohit): preview, cancel, cancel again.
-kavita = Toolbox(erp, "KJOSHI", names=TOOLBOX + mine)
-status = lambda: erp.q1("SELECT status FROM po_hdr WHERE po_no='PO/2026/01179'")["status"]
-a = kavita.call("cancel_purchase_order", {"po_no": "PO/2026/01179", "reason": "no longer needed"})
-print("preview :", a.get("preview", {}).get("status"), "| still", status(), "in Bahi")
-b = kavita.call("cancel_purchase_order", {"po_no": "PO/2026/01179", "reason": "no longer needed", "confirm": True})
-c = kavita.call("cancel_purchase_order", {"po_no": "PO/2026/01179", "reason": "no longer needed", "confirm": True})
-print("cancel  :", b.get("status"))
-print("again   :", c.get("already_done"), c.get("status"))
-assert erp.q1("SELECT status FROM po_hdr WHERE po_no='PO/2026/01179'")["status"] == "CN"
-
-# %% [markdown]
-# ## 6. Idempotency under an injected timeout
-# An **idempotency key** is a label derived from what the order *is* (who, supplier, item, quantity, cost centre,
-# date). Asking twice with the same key finds the first order instead of making a second.
-#
-# We make Bahi save the order and then lose the reply (`erp.inject("po_save", "timeout_after_commit")`), the way a
-# network timeout does, and retry. First with raw services, then through the toolbox. 3,000 whistles from
-# Sahyadri Valves on PRD-07 is a small direct order (₹24,072), so no request is needed.
-
-# %%
-def raw_order_with_retry():
-    e = ERP(); s = e.session("KJOSHI")
-    for attempt in (1, 2):
-        f = s.call("po_fetch", sup_cd="SV-PUN-0017", itm_cd="WHS-STD-01")["data"]
-        if attempt == 1:
-            e.inject("po_save", "timeout_after_commit")
-        try:
-            r = s.call("po_save", po_type="DIR", sup_cd="SV-PUN-0017", itm_cd="WHS-STD-01", qty=3000, rate=6.80,
-                       tax_cd="GST18-INTRA", cc_cd="PRD-07", need_dt="2026-11-04", fetch_tok=f["fetch_tok"])
-            print(f"  attempt {attempt}: {r['msg']}")
-        except ServiceTimeout as ex:
-            print(f"  attempt {attempt}: {ex}")
-    return e.q("SELECT po_no, status, gross_value FROM po_hdr WHERE po_no > 'PO/2026/01181'")
-
-def toolbox_order_with_retry():
-    e = ERP(); t = Toolbox(e, "KJOSHI")
-    args = {"supplier_code": "SV-PUN-0017", "item_code": "WHS-STD-01", "quantity": 3000, "cost_centre": "PRD-07",
-            "need_by": "2026-11-04", "confirm": True}
-    e.inject("po_save", "timeout_after_commit")
-    for attempt in (1, 2):
-        r = t.call("create_purchase_order", args)
-        print(f"  attempt {attempt}: {r.get('po_no')} {r.get('status')} already_done={r.get('already_done', False)}")
-    return e.q("SELECT po_no, status, gross_value, client_ref FROM po_hdr WHERE po_no > 'PO/2026/01181'")
-
-print("raw services, naive retry:"); print(pd.DataFrame(raw_order_with_retry()))
-print("\ntoolbox:"); print(pd.DataFrame(toolbox_order_with_retry()))
-
-# %% [markdown]
-# **Exercise 4.** The key comes from `content_key(...)`. Show that the same order always gets the same key, and that
-# changing the quantity gives a new one. Why must the key never come from `uuid4()` or the clock?
-
-# %%
-# TODO (exercise 4): three keys: the order, the same order again, and the order with quantity 3,001.
+SOLUTION = True
 if SOLUTION:
-    k1 = content_key("PO", "KJOSHI", "SV-PUN-0017", "WHS-STD-01", 3000, "PRD-07", "2026-11-04")
-    k2 = content_key("PO", "KJOSHI", "SV-PUN-0017", "WHS-STD-01", 3000, "PRD-07", "2026-11-04")
-    k3 = content_key("PO", "KJOSHI", "SV-PUN-0017", "WHS-STD-01", 3001, "PRD-07", "2026-11-04")
-    print(k1, k2, k3, "| same:", k1 == k2, "| changed:", k1 != k3)
-    # A random or time-based key is different on the retry, so the retry looks like a new order.
+    n3 = len(erp.calls)
+    motor = tb.call("check_stock", {"item_code": "MTR-HUB-250"})
+    rows = [r.data for r in erp.calls[n3:] if r.svc == "stk_query" and r.rc == "S"]
+    free = sum(d["on_hand"] - d["allocated"] for d in rows)
+    daily = rows[0]["avg_daily_issue"] if rows else None
+    print("by hand:", free, "free ÷", daily, "a day =", int(free / daily) if daily else None, "days")
+    print("the tool says:", motor.get("cover_days"), "days ·", motor.get("free_total"), "free")
 
 # %% [markdown]
-# ## 7. The toolbox over MCP
-# **MCP** (Model Context Protocol) is one standard plug between apps and tools. The **host** is the app the person
-# uses (Ask Rasoi, Claude Desktop). Inside it, one **client** per **server**; the server lists its tools
-# (`tools/list`) and runs them (`tools/call`). The messages are **JSON-RPC**: `{"jsonrpc": "2.0", "id", "method", "params"}`.
+# ## 3 · The schemas
 #
-# `build_toolbox_server(erp, user)` turns every tool folder into an MCP tool, bound to one user's Bahi session.
+# The **input schema** is what the model must send; the **output schema** is what it gets back. Both are JSON Schema.
+# `validate_args` checks arguments with a real JSON Schema validator (`jsonschema`); `ToolSpec.check` is the toolbox's
+# own check at the door. Look at the last case: JSON Schema allows extra fields unless told otherwise; our door does not.
 
 # %%
-from bahi.toolbox.mcp import build_toolbox_server
-from bahi.mcp_server import MCPClient, MCPClientTools
+print(json.dumps(spec.spec["input_schema"], indent=1))
+for args in [{"item_code": "BAT-500"}, {"item_code": 500}, {}, {"item_code": "BAT-500", "warehouse": "WH-MAN-STR"}]:
+    print(f"\n{json.dumps(args):50} jsonschema: {validate_args('check_stock', args) or 'valid'}")
+    try:
+        print(" " * 50, "at the door:", spec.check(args))
+    except Exception as e:  # noqa: BLE001
+        print(" " * 50, "at the door: refused:", e)
 
-server = build_toolbox_server(erp, "KJOSHI", names=TOOLBOX + mine)    # your two tools ride along
-client = MCPClient(server)
-found = client.list_tools()
-print(len(found), "tools discovered:", [t.name for t in found])
-res = client.call_tool("purchase_history", {"item_code": "GSK-SIL-05L"})
-print(client.text(res)[:300])
-for w in client.wire:
-    print(w["method"], json.dumps(w["params"])[:80])
+# %%
+import jsonschema
+
+jsonschema.validate(result, spec.spec["output_schema"])
+print("the real result is valid against check_stock's output schema")
+print("fields in the result but not listed in the schema:", sorted(set(result) - set(spec.spec["output_schema"]["properties"])))
 
 # %% [markdown]
-# Now the real wire. We start the server as a separate process, the way Claude Desktop does
-# (`python -m bahi.toolbox.mcp --user KJOSHI`), and write JSON-RPC to its stdin, one message per line.
+# **TODO (exercise 2).** Write an input schema for a new tool `find_open_orders`: `supplier_code` (a string, required)
+# and `status` (one of `DRAFT`, `PENDING`, `RELEASED`, optional). Check one good and two bad argument sets with
+# `jsonschema`.
 
 # %%
-wire = stdio_wire(handshake("nb4") + [
+SOLUTION = True
+if SOLUTION:
+    schema = {"type": "object",
+              "properties": {"supplier_code": {"type": "string", "description": "Ledgerline supplier code, e.g. VC-EIN-0042"},
+                             "status": {"type": "string", "enum": ["DRAFT", "PENDING", "RELEASED"],
+                                        "description": "optional: only orders in this status"}},
+              "required": ["supplier_code"]}
+    v = jsonschema.Draft202012Validator(schema)
+    for a in [{"supplier_code": "VC-EIN-0042", "status": "RELEASED"}, {"status": "OPEN"}, {"supplier_code": 42}]:
+        print(json.dumps(a), "->", [e.message for e in v.iter_errors(a)] or "valid")
+
+# %% [markdown]
+# ## 4 · Build a tool from scratch
+#
+# `supplier_certificates` was built for this lecture in six steps: the job (Purchase Policy §6.2: lithium-cell parts
+# need a supplier with a valid UN 38.3 certificate), the services (`sup_get`, `sup_cert_get`, `itm_get`), the schema,
+# the code, the error contract and the tests. Here are its schema and code, then two real answers.
+
+# %%
+sc = REGISTRY["supplier_certificates"]
+print("services:", sc.spec["services"])
+print(json.dumps(sc.spec["input_schema"], indent=1))
+print(sc.source[sc.source.index("def run"):])
+
+# %%
+tb_all = Toolbox(ERP(), "ECLARKE", names=ALL)
+pp(tb_all.call("supplier_certificates", {"supplier_code": "NC-GDA-0063", "item_code": "BAT-500"}))
+pp(tb_all.call("supplier_certificates", {"supplier_code": "VC-EIN-0042", "item_code": "BAT-500"}))
+for bad in [{"supplier_code": "XX-NOPE-0001"}, {}, {"supplier_code": 42}, {"supplier_code": "VC-EIN-0042", "limit": 500}]:
+    print(json.dumps(bad), "->", tb_all.call("supplier_certificates", bad))
+
+# %% [markdown]
+# **TODO (exercise 3).** Build your own tool, `payment_terms`: "What are Voltway's payment terms?" It needs two
+# services: `sup_get` (the supplier, with its `pt_cd`) and `pt_list` (every payment-terms code). Write its `tool.json`
+# and `tool.py` into `my_tools/payment_terms/`, load it with `add_tool_folder`, check it with `lint_tool` (the A4 checks)
+# and call it. This is the shape of A4, Part 1.
+
+# %%
+print({n: (SERVICES[n].doc, [f.name for f in SERVICES[n].fields]) for n in ("sup_get", "pt_list")})
+
+# %%
+SOLUTION = True
+if SOLUTION:
+    folder = pathlib.Path("my_tools/payment_terms")
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "tool.json").write_text(json.dumps({
+        "name": "payment_terms", "title": "Payment terms", "category": "Look up",
+        "description": "A supplier's payment terms in Ledgerline: the terms code, what it means and the number of days to pay.",
+        "writes": False, "version": "1.0", "services": ["sup_get", "pt_list"],
+        "input_schema": {"type": "object", "properties": {"supplier_code": {"type": "string", "description": "Ledgerline supplier code, from find_supplier, e.g. VC-EIN-0042"}},
+                         "required": ["supplier_code"]},
+        "output_schema": {"type": "object", "properties": {"ok": {"type": "boolean"}, "supplier_code": {"type": "string"},
+                                                           "supplier_name": {"type": "string"}, "terms_code": {"type": "string"},
+                                                           "terms": {"type": "string"}, "days": {"type": "integer"}}, "required": ["ok"]},
+        "example": {"supplier_code": "VC-EIN-0042"},
+        "annotations": {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False}}, indent=2))
+    (folder / "tool.py").write_text('''"""Payment terms: a supplier's payment terms, from two legacy reads."""
+from ledgerline.agent.tools import ToolError, _ledgerline
+
+
+def run(s, supplier_code):
+    sup = _ledgerline(s, "sup_get", sup_cd=supplier_code.strip().upper())
+    terms = {t["pt_cd"]: t for t in _ledgerline(s, "pt_list")["rows"]}
+    t = terms.get(sup.get("pt_cd"))
+    if not t:
+        raise ToolError(f"{sup['sup_cd']} has no payment terms on file.", "Ask purchasing to set them in the supplier master.")
+    return {"ok": True, "supplier_code": sup["sup_cd"], "supplier_name": sup["name"], "terms_code": t["pt_cd"],
+            "terms": t["descr"], "days": t["days"]}
+''')
+    name = add_tool_folder("my_tools/payment_terms")     # your tool.json + tool.py, next to the shipped ones
+    print("lint:", lint_tool(name) or "[] the A4 checks pass")
+    print("jsonschema on a bad call:", validate_args(name, {"supplier_code": 42}))
+    tb_mine = Toolbox(ERP(), "ECLARKE", names=[name])
+    print(tb_mine.call(name, SPECS[name].spec["example"]))
+    print(tb_mine.call(name, {"supplier_code": "XX-NOPE-0001"}))
+
+# %% [markdown]
+# ## 5 · MCP: the tool on a server, by hand
+#
+# The Model Context Protocol (MCP) is the standard way for any app (Claude Code, Claude Desktop, our own harness) to
+# find and call tools. Our server is one command: `python -m ledgerline.toolbox.mcp --user ECLARKE --tools check_stock`.
+# Over **stdio** it reads one JSON-RPC message per line on stdin and answers on stdout. We start it the way Claude Code
+# does, as a child process, and type the messages ourselves.
+
+# %%
+wire = stdio_wire(handshake() + [
     {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
-    {"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "check_stock", "arguments": {"item_code": "GSK-SIL-05L"}}}])
+    {"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "check_stock", "arguments": {"item_code": "BAT-500"}}},
+    {"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "check_stock", "arguments": {"item_code": "BAT-5000"}}},
+], server_args=["--tools", "check_stock"])
 for w in wire:
-    line = json.dumps(w["msg"])
-    print(w["dir"], f"{len(line):5d} bytes", line[:150] + ("..." if len(line) > 150 else ""))
-
-# %% [markdown]
-# **Exercise 5.** From the `tools/list` reply on the wire, list the tools a careful host should ask the user about
-# before running: the ones whose `annotations.readOnlyHint` is false.
+    print(w["dir"], json.dumps(w["msg"])[:230])
 
 # %%
-# TODO (exercise 5): the write tools, from the wire.
+by_id = {w["msg"].get("id"): w["msg"] for w in wire if w["dir"] == "<-"}
+tool = by_id[2]["result"]["tools"][0]
+print("protocol agreed:", by_id[1]["result"]["protocolVersion"], "· server:", by_id[1]["result"]["serverInfo"])
+print("definition fields:", sorted(tool))
+print("annotations:", tool.get("annotations"))
+print("_meta:", {k: v for k, v in tool.get("_meta", {}).items() if k.startswith("ledgerline/") and k != "ledgerline/policy"})
+for i in (3, 4):
+    res = by_id[i]["result"]
+    print(f"\ntools/call id {i}: isError={res.get('isError', False)} · result fields {sorted(res)}")
+    print("   structuredContent:", json.dumps(res.get("structuredContent"))[:200])
+
+# %% [markdown]
+# **TODO (exercise 4).** Start the server with every tool (`server_args=["--all"]`), count the tools in `tools/list`,
+# and call `supplier_certificates` for Nordic Cell Co. (`NC-GDA-0063`) with `BAT-500`. Is it an error (`isError`), or a
+# business answer?
+
+# %%
+SOLUTION = True
 if SOLUTION:
-    listed = next(w["msg"]["result"]["tools"] for w in wire if w["dir"] == "<-" and "tools" in w["msg"].get("result", {}))
-    print(sorted(t["name"] for t in listed if not t.get("annotations", {}).get("readOnlyHint", True)))
+    w2 = stdio_wire(handshake() + [
+        {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
+        {"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "supplier_certificates",
+                                                                     "arguments": {"supplier_code": "NC-GDA-0063", "item_code": "BAT-500"}}}],
+        server_args=["--all"])
+    m = {w["msg"].get("id"): w["msg"] for w in w2 if w["dir"] == "<-"}
+    print(len(m[2]["result"]["tools"]), "tools")
+    r3 = m[3]["result"]
+    print("isError:", r3.get("isError", False), "· un38_3:", r3["structuredContent"]["un38_3"], "·", r3["structuredContent"].get("next_step"))
 
 # %% [markdown]
-# ## 8. One round, through MCP, with your tool
-# Ask Rasoi at the **hands** stage: the model sees the tools discovered over MCP (not hard-coded), may call tools
-# once, our code runs them, and it answers. Kavita asks something only your new tool can answer.
+# To connect the same server to **Claude Code**, run in a terminal (with `ledgerline-erp[mcp]` installed):
+#
+# ```
+# claude mcp add northbridge -- python -m ledgerline.toolbox.mcp --user ECLARKE --tools check_stock
+# ```
+#
+# and for **Claude Desktop**, add it to `claude_desktop_config.json`:
+#
+# ```
+# {"mcpServers": {"northbridge": {"command": "/full/path/to/python",
+#   "args": ["-m", "ledgerline.toolbox.mcp", "--user", "ECLARKE", "--tools", "check_stock"]}}}
+# ```
+#
+# ## 6 · Two harnesses
+#
+# The **harness** is everything around the model: the system prompt, which tools it gets, the loop that runs its calls,
+# the guards, the limits, the logs. Claude Code is Anthropic's harness; Ask Northbridge's loop
+# (`ledgerline/experience/harness.py`) is ours. Here is Claude Code's recorded run (claude-sonnet-5.5, headless, on our
+# MCP server with two tools) next to ours on the same question.
 
 # %%
-mcp_tools = MCPClientTools(client)
-msgs = [{"role": "system", "content": HANDS_SYSTEM.format(name="Kavita Joshi", user_id="KJOSHI", first="Kavita")},
-        {"role": "user", "content": "What rate did we pay last time for GSK-SIL-05L, and on which order?"}]
-r = one_round(llm, mcp_tools, msgs)
-for c in r["calls"]:
-    print("tool call:", c["tool"], c["args"])
-print("\nAsk Rasoi:", r["answer"])
-client.close()
-print("\nmodel calls in this notebook:", llm.totals())
+cc = CLAUDE_CODE["single"]
+for t in cc["turns"]:
+    print("EMMA:", t["user"])
+    for s in t["steps"]:
+        print("  ", s["kind"], s.get("tool") or "", json.dumps(s.get("args")) if s.get("args") else (s.get("text") or "")[:150])
+    print("   Claude Code turns:", t["num_turns"], "· tokens:", t["usage"])
+
+# %%
+single = hands_run("single")
+for t in single["turns"]:
+    print("EMMA:", t["user"])
+    for c in t["cards"]:
+        print("   call", c["tool"], json.dumps(c["args"]), "->", json.dumps(c["result"])[:150])
+    print("   REPLY:", t["reply"])
+    print("   our harness: model calls", t["model_calls"], "· tokens in", t["tokens_in"], "· out", t["tokens_out"])
 
 # %% [markdown]
-# ## 9. Your module (A4 starts here)
-# Your capstone kit installs on the same sandbox: `ERP(modules=["hr_leave"])`. List its raw services, pick 3–4
-# business activities, and write one tool folder for each, the way you wrote `purchase_history`. Then serve them with
-# `build_toolbox_server(erp, user, names=add_tool_dir("my_module_tools"))`. The checklist is in `A4.md`.
+# ## 7 · What the model sees
+#
+# Our harness kept a copy of the messages at every model call, and the provider's own token count. `show_context`
+# prints the context part by part. The parts add up exactly to each call's `prompt_tokens`. Nothing else ever reaches
+# the model: not `tool.py`, not the services or their envelopes, not the database, not Emma's session.
 
 # %%
-MODULE = "hr_leave"   # change to your kit: pur_amend, fin_payables, hr_leave, sales_orders, svc_warranty, inv_transfers, travel_claims, legal_contracts
-merp = ERP(modules=[MODULE])
-prefix = __import__(f"bahi.modules.{MODULE}", fromlist=["KIT"]).KIT["prefix"]
-pd.DataFrame([{"service": n, "what Bahi calls it": s.doc, "kind": s.kind,
-               "fields": ", ".join(f.name + ("*" if f.required else "") for f in s.fields)}
-              for n, s in SERVICES.items() if n.startswith(prefix)])
+show_context(single)
+
+# %% [markdown]
+# Now Emma's whole order, on Lecture 4's "hands" prompt (the rules, no Northbridge codes): 16 tools, three turns from
+# Emma. Watch the context grow, and notice that the 16 tool definitions are re-sent with every call.
+
+# %%
+order = hands_run("order_hands")
+parts = context_parts(order)
+show_context(order, parts, width=80)
+
+# %%
+seq_ours = [c["tool"] for t in order["turns"] for c in t["cards"]]
+seq_cc = [s["tool"] for t in CLAUDE_CODE["order_hands"]["turns"] for s in t["steps"] if s["kind"] == "call"]
+print(f"our harness ({len(seq_ours)} calls):", " -> ".join(seq_ours))
+print(f"Claude Code ({len(seq_cc)} calls):", " -> ".join(seq_cc))
+print("final reply (ours):", order["turns"][-1]["reply"])
+tools_tok = next(p["tokens"] for p in parts if p["part"].startswith("tool definitions"))
+calls = [s for s in order["steps"] if s["tools"] is not None]
+print(f"{len(calls)} model calls read {sum(s['prompt_tokens'] for s in calls):,} tokens; the tool definitions alone: "
+      f"{len(calls)} x {tools_tok:,} = {len(calls) * tools_tok:,}")
+
+# %% [markdown]
+# ## 8 · Production checks
+#
+# A demo works once. Production is measured. Four of the lecture's ten criteria, on the whole toolbox, in this sandbox.
+#
+# **Schema.** Every tool's own example, called on a fresh Ledgerline; every ok result checked against its output schema.
+
+# %%
+tb_p = Toolbox(ERP(), "ECLARKE", names=ALL)
+viol = {}
+for n in ALL:
+    out = tb_p.call(n, REGISTRY[n].spec.get("example") or {})
+    if out.get("ok"):
+        errs = [e.message for e in jsonschema.Draft202012Validator(REGISTRY[n].spec["output_schema"]).iter_errors(out)]
+        viol[n] = errs
+    print(f"{n:26} ok={out.get('ok')!s:5} {'schema violations: ' + str(viol[n]) if viol.get(n) else ''}{'' if out.get('ok') else out.get('error', '')[:70]}")
+print(f"\n{sum(1 for v in viol.values() if not v)} of {len(viol)} ok results valid against their output schemas")
+
+# %% [markdown]
+# **Reliability.** Bad arguments of every kind, on every tool. Every answer must be inside the error contract
+# (`ok`, and when false: `error` and `next_step`), and none may be a non-business failure (`INTERNAL`, or a bad value
+# that reached Ledgerline: `ERR-SYS-0422`).
+
+# %%
+BAD = [None, "", " ", -1, 0, 10**9, "x" * 200, [], {}]
+calls = bad_contract = non_business = 0
+for n in ALL:
+    props = REGISTRY[n].spec["input_schema"].get("properties", {})
+    for k in props:
+        for v in BAD:
+            args = {**(REGISTRY[n].spec.get("example") or {}), k: v, "confirm": False} if "confirm" in props else {**(REGISTRY[n].spec.get("example") or {}), k: v}
+            out = tb_p.call(n, args)
+            calls += 1
+            if not isinstance(out, dict) or "ok" not in out or (out["ok"] is False and not (out.get("error") and out.get("next_step"))):
+                bad_contract += 1
+            if out.get("ledgerline_code") in ("INTERNAL", "ERR-SYS-0422"):
+                non_business += 1
+print(f"{calls} fuzzed calls · outside the error contract: {bad_contract} · non-business failures: {non_business}")
+
+# %% [markdown]
+# **Latency.** The tool's own time, in this sandbox (Ledgerline here is an in-memory database, so this is mostly our
+# code). The lecture's threshold for the overhead is p50 ≤ 50 ms, p95 ≤ 100 ms, p99 ≤ 200 ms.
+
+# %%
+ms = []
+for _ in range(300):
+    t0 = time.perf_counter()
+    tb_p.call("check_stock", {"item_code": "BAT-500"})
+    ms.append((time.perf_counter() - t0) * 1000)
+q = statistics.quantiles(ms, n=100)
+print(f"check_stock, 300 calls: p50 {q[49]:.2f} ms · p95 {q[94]:.2f} ms · p99 {q[98]:.2f} ms")
+
+# %% [markdown]
+# **Idempotency: the fix from the lecture.** A write is retried with the date written differently: "9 Nov 2026", then
+# "2026-11-09". Before the fix, the idempotency key was built from the arguments as written, so the two calls made two
+# purchase requests. Now the door rewrites `need_by` as YYYY-MM-DD before anything uses it.
+#
+# **TODO (exercise 5).** Before you run the next cell, predict: how many purchase requests will Ledgerline hold, and
+# what will the second reply say? Then show why the old key failed, with `content_key` on the two dates as written.
+
+# %%
+from ledgerline.agent.tools import content_key
+
+erp_i = ERP()
+tb_i = Toolbox(erp_i, "ECLARKE", names=ALL)
+first = {"item_code": "BAT-500", "quantity": 2000, "cost_centre": "PRD-07", "need_by": "9 Nov 2026", "confirm": True}
+retry = {**first, "need_by": "2026-11-09"}
+a = tb_i.call("create_purchase_request", first)
+b = tb_i.call("create_purchase_request", retry)
+print(a["request_no"], b.get("request_no"), "already_done:", b.get("already_done"))
+print("purchase requests in Ledgerline today:", erp_i.q("SELECT pr_no, need_dt FROM pr_hdr WHERE raised_on >= '2026-10-26'"))
+SOLUTION = True
+if SOLUTION:
+    print("key, dates as written:     ", content_key("BAT-500", 2000, "PRD-07", "9 Nov 2026"), content_key("BAT-500", 2000, "PRD-07", "2026-11-09"))
+    clean = REGISTRY["create_purchase_request"].check(first)["need_by"]
+    print("key, after the door:       ", content_key("BAT-500", 2000, "PRD-07", clean), content_key("BAT-500", 2000, "PRD-07", "2026-11-09"))
+
+# %% [markdown]
+# ## Your turn: A4
+#
+# A4 asks you to do all of this for **your own domain**: build one tool from your system's service definitions (Part 1,
+# exercise 3 is the template), put it on MCP and paste the raw JSON-RPC (Part 2, section 5), run the same task on Claude
+# Code and on this notebook's harness (Part 3, sections 6–7), and measure it against at least five of the ten production
+# criteria, fixing one (Part 4, section 8). Details in `A4.md`.

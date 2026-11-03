@@ -111,11 +111,11 @@ def one_round(llm, tools, messages: list[dict]) -> dict:
 
 
 # ----------------------------------------------------------------------------- MCP on the wire, as raw text
-def stdio_wire(requests: list[dict], user: str = "ECLARKE", timeout: float = 60) -> list[dict]:
+def stdio_wire(requests: list[dict], user: str = "ECLARKE", timeout: float = 60, server_args: list[str] | None = None) -> list[dict]:
     """Start the toolbox MCP server as a child process (the way Claude Desktop does) and talk JSON-RPC to it over
     stdin/stdout, one JSON message per line. Returns every line that crossed the pipe: {dir: '->'|'<-', msg}."""
     env = {**os.environ, "FASTMCP_SHOW_CLI_BANNER": "false", "FASTMCP_LOG_LEVEL": "ERROR"}
-    p = subprocess.Popen([sys.executable, "-m", "ledgerline.toolbox.mcp", "--user", user], stdin=subprocess.PIPE,
+    p = subprocess.Popen([sys.executable, "-m", "ledgerline.toolbox.mcp", "--user", user, *(server_args or [])], stdin=subprocess.PIPE,
                          stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, env=env, bufsize=1)
     wire = []
     try:
