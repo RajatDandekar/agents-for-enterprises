@@ -72,6 +72,44 @@ def main():
         rep = json.loads(p.read_text())
         res["methods"][kind] = {"label": LABEL[kind], "answer_model": rep.get("answer_model"),
                                 "shards": rep.get("shards"), "wall_seconds": rep.get("wall_seconds"), **table(rep)}
+    # navigation methods whose golden-set run stopped at the answer step (OpenRouter key out of credit, HTTP 402):
+    # retrieval scored by replaying the recorded navigation calls (no new calls), compared on the same questions
+    hs = json.loads((LOGS / "wiki_eval_hybrid-search.json").read_text()) if (LOGS / "wiki_eval_hybrid-search.json").exists() else None
+    hs_by = {r["id"]: r for r in hs["records"]} if hs else {}
+    for kind in ("wiki", "hybrid"):
+        p = LOGS / f"wiki_eval_{kind}_retrieval_replay.json"
+        if not p.exists():
+            continue
+        d = json.loads(p.read_text())
+        recs = d["records"]
+        ids = [r["id"] for r in recs if r["retrieval"]["n_gold"]]
+
+        def agg(rs):
+            rs = [r for r in rs if r["n_gold"]]
+            if not rs:
+                return {"n": 0}
+            return {"n": len(rs), "recall@1": round(sum(r["hit@1"] for r in rs) / len(rs), 4),
+                    "recall@5": round(sum(r["hit@5"] for r in rs) / len(rs), 4),
+                    "recall@10": round(sum(r["hit@10"] for r in rs) / len(rs), 4),
+                    "mrr": round(sum(r["rr"] for r in rs) / len(rs), 4)}
+
+        lat = [r["retrieval_s"] for r in recs]
+        calls = [r["nav_calls"] for r in recs]
+        res["methods"][kind] = {**res["methods"].get(kind, {}), "label": LABEL[kind],
+            "status": "PARTIAL: navigation ran for every question; the run stopped before the shared answer step "
+                      "(OpenRouter key limit, HTTP 402). Retrieval below is from replaying the recorded calls; "
+                      "answer accuracy, citations and end-to-end latency were NOT measured.",
+            "n_questions_scored": d["n_scored"], "n_questions_missing": d["n_missing"],
+            "retrieval": agg([r["retrieval"] for r in recs]),
+            "retrieval_by_type": {t: agg([r["retrieval"] for r in recs if r["type"] == t]) for t in TYPES},
+            "retrieval_latency_s": {"p50": pct(lat, 50), "p95": pct(lat, 95),
+                                    "note": "sum of the recorded per-call API seconds of the navigation calls "
+                                            "(+ section search for the hybrid); excludes 429 waits"},
+            "llm_calls_navigation_mean": round(sum(calls) / len(calls), 2), "llm_calls_navigation_max": max(calls),
+            "llm_calls_per_answer_mean": round(sum(calls) / len(calls) + 1, 2),
+            "tokens_in_navigation_mean": d["tokens_in_mean"], "navigation_cost_per_q_usd": d["nav_cost_per_q_usd"],
+            "hybrid_search_on_same_questions": agg([hs_by[i]["retrieval"] for i in ids if i in hs_by]) if hs_by else None,
+            "chain_steps_total": dict(Counter(c["step"] for r in recs for c in (r.get("chain") or [])))}
     (LOGS / "wiki_eval.json").write_text(json.dumps(res, indent=1, ensure_ascii=False))
     for k, m in res["methods"].items():
         if "overall" in m:

@@ -17,7 +17,7 @@ updated: "2026-11-03"
 | Status | current |
 | Applies to | Manchester, Leeds satellite unit |
 
-On 2024-10-01, operational leadership established procedural decisions addressing material control, transfer timing, and warehouse congestion across Northbridge facilities [^r1][^r2][^r3]. The agreed rules require immediate electronic logging of issues and inter-site movements, formal quarantine tagging for dealer returns, and rigorous cycle counting of packaging lines [^r1][^r3][^r4][^r5]. These decisions remain in force to ensure inventory accuracy and prevent logistics bottlenecks [^r1][^r2][^r3].
+On 2024-10-01, operational leadership established procedural decisions addressing material control, transfer timing, and warehouse congestion across Northbridge facilities [^r1][^r2][^r3]. The agreed rules require immediate electronic logging of issues and inter-site movements, formal quarantine tagging for bike shop returns, and rigorous cycle counting of packaging lines [^r1][^r3][^r4][^r5]. These decisions remain in force to ensure inventory accuracy and prevent logistics bottlenecks [^r1][^r2][^r3].
 
 ## Agreed operational decisions
 
@@ -30,7 +30,7 @@ Staff at Manchester and the Leeds satellite unit must execute goods-out and good
 ### Dispatch staging and carrier collections
 Dispatch staff in Manchester must strap and label pallets earlier in the afternoon to prevent dispatch bay congestion caused by primary carrier collection delays past the agreed cut-off [^r2].
 
-### Dealer returns and quarantine
+### Bike shop returns and quarantine
 A clear quarantine label must be affixed to every returned crate from bike shops immediately upon offloading from the carrier, and the sales office must provide the corresponding paperwork promptly [^r4].
 
 ### Packaging inventory tracking

@@ -296,6 +296,16 @@ def chains_run(ids: str = "Q-EMMA,Q-0412", fileback: str = "Q-EMMA"):
                        "filed": fb, "page": (pathlib.Path(wd) / "pages" / f"{fb['slug']}.md").read_text(),
                        "again": again,
                        "log_tail": (pathlib.Path(wd) / "log.md").read_text().splitlines()[-3:]}
+    # wiki_search(): the no-LLM tool for the race and Ask Northbridge (permissions filter before ranking)
+    demo = []
+    WQ.wiki_search("warm-up: load the embedding model", wiki_dir="/vol/wiki_v4")
+    for text, user in ((G.by_id["Q-EMMA"]["question"], "ECLARKE"), (G.by_id["Q-0412"]["question"], "ECLARKE"),
+                       ("What is the salary band for a senior buyer?", "ECLARKE"),
+                       ("What is the salary band for a senior buyer?", "HR-MGR")):
+        hits = WQ.wiki_search(text, user=user, k=5, wiki_dir="/vol/wiki_v4")
+        demo.append({"question": text, "user": user, "ms": hits[0]["ms"] if hits else None,
+                     "hits": [{k: h[k] for k in ("page", "section", "score", "citations")} for h in hits]})
+    out["wiki_search"] = demo
     pathlib.Path("/vol/logs/wiki_query_chains.json").write_text(json.dumps(out, indent=1, ensure_ascii=False))
     vol.commit()
     return out
@@ -343,6 +353,58 @@ def merge_all():
     return out
 
 
+@app.function(volumes={"/vol": vol}, timeout=2 * 3600, cpu=4, memory=12288)
+def eval_replay(kind: str = "wiki"):
+    """No key needed: replay every recorded navigation call (cassette L3v4_wiki_nav, merged) and score RETRIEVAL only
+    (recall@k, MRR, LLM calls, tokens, cost) for the questions whose calls were all recorded before the OpenRouter key
+    ran out of credit (402). Latency = the recorded per-call API seconds (+ measured search time), not replay time."""
+    from ledgerline.course.l3 import evaluate as E
+    from ledgerline.course.l3 import wiki_query as WQ
+    from ledgerline.course.l3.wiki_llm import WikiLLM
+    from ledgerline.llm import ReplayMiss
+
+    vol.reload()
+    G = E.Golden("/dump")
+    wiki_dir = f"/vol/wiki_v4_eval_{kind}"
+    w = WQ.Wiki(wiki_dir, dump="/dump")
+    w.units()
+    nav_llm = WikiLLM("L3v4_wiki_nav", mode="replay", max_tokens=4000)
+    if kind == "wiki":
+        m = WQ.Navigator(w, nav_llm)
+    else:
+        si = WQ.SectionIndex(w, qcache="queries_bge-small__replay.jsonl")
+        si.qvec("warm-up: load the embedding model before any question is timed")
+        m = WQ.Hybrid(w, nav_llm, si, navigate=True)
+    recs, missing = [], []
+    for q in G.qs:
+        role = E.C.role_of(q)
+        try:
+            out = m.method(q["question"], role)
+        except ReplayMiss:
+            missing.append(q["id"])
+            continue
+        api_s = sum(c["llm_seconds"] for c in out.get("calls", []))
+        lat = api_s + (out.get("search_ms") or 0) / 1000
+        recs.append({"id": q["id"], "type": q["type"], "role": role, "retrieval": E.gold_hits(q, out["items"], G),
+                     "retrieval_s": round(lat, 3), "nav_calls": out.get("nav_calls"), "tokens_in": out.get("tokens_in"),
+                     "tokens_out": out.get("tokens_out"), "cost_usd": out.get("cost_usd"),
+                     "chain": out.get("chain"), "opened": out.get("opened"), "sources": out.get("sources"),
+                     "items": [{"id": i["id"], "cite": i.get("cite")} for i in out["items"][:10]]})
+    summ = E.summarize_retrieval(recs)
+    import statistics as st
+
+    rep = {"name": kind, "mode": "replay of recorded navigation calls; retrieval only (no answer, judge or citation "
+                                 "scores: the answer step was never reached before the key ran out of credit)",
+           "n_scored": len(recs), "n_missing": len(missing), "missing": missing, "summary": summ,
+           "nav_calls_mean": round(st.mean(r["nav_calls"] for r in recs), 2) if recs else None,
+           "tokens_in_mean": round(st.mean(r["tokens_in"] for r in recs), 1) if recs else None,
+           "nav_cost_per_q_usd": round(st.mean(r["cost_usd"] for r in recs), 6) if recs else None,
+           "records": recs}
+    pathlib.Path(f"/vol/logs/wiki_eval_{kind}_retrieval_replay.json").write_text(json.dumps(rep, indent=1, ensure_ascii=False))
+    vol.commit()
+    return rep
+
+
 @app.function(volumes={"/vol": vol}, timeout=600)
 def pack(paths: list[str]):
     import io
@@ -374,6 +436,13 @@ def main(cmd: str = "build", files: str = "", tag: str = "", workers: int = 32, 
         name = f"wiki_build{('_' + tag) if tag else ''}.json"
         (LOGS / name).write_text(json.dumps(rep, indent=1))
         _log(json.dumps({k: v for k, v in rep.items() if k not in ("merge_map", "orphans")}, indent=1)[:4000])
+    elif cmd == "replay":
+        kind = tag or "wiki"
+        rep = eval_replay.remote(kind)
+        (LOGS / f"wiki_eval_{kind}_retrieval_replay.json").write_text(json.dumps(rep, indent=1, ensure_ascii=False))
+        _log(json.dumps({k: rep[k] for k in ("n_scored", "n_missing", "nav_calls_mean", "tokens_in_mean",
+                                             "nav_cost_per_q_usd")}), json.dumps(rep["summary"]["overall"]),
+             json.dumps(rep["summary"]["latency_s"]))
     elif cmd == "reindex":
         _log(reindex.remote())
     elif cmd == "merge":

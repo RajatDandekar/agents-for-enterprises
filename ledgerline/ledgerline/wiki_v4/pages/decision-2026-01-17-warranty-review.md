@@ -17,7 +17,7 @@ updated: "2026-11-03"
 | Owner | Callum Shaw |
 | Status | current |
 
-The warranty review held on 17 January 2026 established corrective technical, assembly, and administrative actions to address recurring customer warranty claims and dealer disputes [^r1]. It assigned operational responsibilities across manufacturing lines, engineering records, parts reconciliation, and dealer intake procedures [^r2][^r5][^r6][^r9]. These decisions govern quality checks on Manchester frame runs and intake requirements for dealer warranty claims [^r3][^r9].
+The warranty review held on 17 January 2026 established corrective technical, assembly, and administrative actions to address recurring customer warranty claims and bike shop disputes [^r1]. It assigned operational responsibilities across manufacturing lines, engineering records, parts reconciliation, and bike shop intake procedures [^r2][^r5][^r6][^r9]. These decisions govern quality checks on Manchester frame runs and intake requirements for bike shop warranty claims [^r3][^r9].
 
 | Field | Value |
 |---|---|

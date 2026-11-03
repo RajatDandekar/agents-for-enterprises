@@ -30,7 +30,7 @@ Stores and purchasing staff proposed several packaging modifications for incomin
 
 ## Outbound bicycle cartons
 
-To protect outbound assembled e-bikes dispatched to dealer bike shops, several carton redesign proposals were logged:
+To protect outbound assembled e-bikes dispatched to bike shop bike shops, several carton redesign proposals were logged:
 
 * **Moulded pulp suspension**: Suggestions included replacing loose foam pieces and hand-taped bubble wrap with moulded pulp end-caps that hold axles and frame stays suspended clear of the box floor [^r5].
 * **Internal component sleeves**: Cartons would incorporate a dedicated internal corrugated sleeve designed to lock inside the top frame triangle to secure the battery pack and charger [^r6].

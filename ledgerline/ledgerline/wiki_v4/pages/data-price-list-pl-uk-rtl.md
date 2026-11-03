@@ -20,10 +20,10 @@ updated: "2026-11-03"
 | Key column | itm_cd |
 | Status | current |
 
-Price list PL-UK-RTL establishes wholesale selling prices excluding VAT for UK bike shops effective from 2026-04-01 [^r1]. As of 26 October 2026, it is currently in force across Northbridge Cycles' UK retail dealer channel [^r1]. The register defines commercial pricing for 140 finished goods across the [[items-fg|FG-* items]] range [^r2][^r3].
+Price list PL-UK-RTL establishes wholesale selling prices excluding VAT for UK bike shops effective from 2026-04-01 [^r1]. As of 26 October 2026, it is currently in force across Northbridge Cycles' UK retail bike shop channel [^r1]. The register defines commercial pricing for 140 finished goods across the [[items-fg|FG-* items]] range [^r2][^r3].
 
 ## What it holds
-The file specifies standard UK dealer pricing excluding VAT for finished goods, with all lines carrying an effective valid-from date of 2026-04-01 [^r1][^r3]. Sample listings include item FG-ANC-S-BLK (E-bike, Ancoats city, size S, black) priced at £1,614.05 ex VAT [^r4], and item FG-ANC-M-BLK (E-bike, Ancoats city, size M, black) priced at £2,370.05 ex VAT [^r5].
+The file specifies standard UK bike shop pricing excluding VAT for finished goods, with all lines carrying an effective valid-from date of 2026-04-01 [^r1][^r3]. Sample listings include item FG-ANC-S-BLK (E-bike, Ancoats city, size S, black) priced at £1,614.05 ex VAT [^r4], and item FG-ANC-M-BLK (E-bike, Ancoats city, size M, black) priced at £2,370.05 ex VAT [^r5].
 
 ## Columns
 The sheet `PL-UK-RTL` contains four columns [^r2]:
