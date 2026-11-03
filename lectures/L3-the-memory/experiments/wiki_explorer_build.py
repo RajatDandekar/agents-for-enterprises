@@ -137,6 +137,10 @@ def chain_steps(rec, kind_label):
     return steps
 
 
+CHAIN_NOTE = ("Recorded on 3 Nov 2026 on the final index.md (logs/wiki_query_chains.json); the same chains replay "
+              "from the golden-set cassettes.")
+
+
 def build_chains():
     out = {}
     p = LOGS / "wiki_query_chains.json"
@@ -151,7 +155,7 @@ def build_chains():
                         cited.append(rec["items"][n - 1].get("cite") or rec["items"][n - 1]["id"])
                 ti = (rec.get("tokens_in") or 0) + (rec.get("answer_tokens_in") or 0)
                 to = (rec.get("tokens_out") or 0) + (rec.get("answer_tokens_out") or 0)
-                out[key] = {"question": rec["question"], "kind": "LLM Wiki (navigation)" if kind == "wiki" else
+                out[key] = {"note": CHAIN_NOTE, "question": rec["question"], "kind": "LLM Wiki (navigation)" if kind == "wiki" else
                             "Hybrid (search wiki sections, then navigate)", "steps": chain_steps(rec, kind),
                             "answer": rec.get("answer"), "cited": cited, "fact": rec.get("fact"),
                             "totals": {"llm_calls": (rec.get("nav_calls") or 0) + 1, "tokens_in": ti, "tokens_out": to,
