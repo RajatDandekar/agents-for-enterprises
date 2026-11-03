@@ -1,0 +1,37 @@
+---
+title: "Errors SBL"
+type: "error-list"
+slug: "errors-sbl"
+summary: "Reference list of ERR-SBL supplier balance error codes raised by accounts payable balance inquiry, statement, and ageing services."
+audience: "staff"
+status: "current"
+sources: ["04_service_definitions/accounts_payable/sbal_ageing.yaml", "04_service_definitions/accounts_payable/sbal_query.yaml", "04_service_definitions/accounts_payable/sbal_stmt.yaml"]
+created: "2026-11-03"
+updated: "2026-11-03"
+---
+
+| | |
+|---|---|
+| Prefix | ERR-SBL |
+| Module | Accounts Payable |
+| Domain | Supplier Balance (SBAL) |
+| Status | Current |
+
+This page catalogues the error codes under the `ERR-SBL` prefix used across Ledgerline accounts payable balance operations as of 26 October 2026. These messages are raised when querying supplier balances, generating balance statements, or calculating ageing summaries. Unresolved errors prevent balance views and statement retrieval across accounts payable workflows.
+
+### ERR-SBL-0001
+* **Message:** `SUPPLIER BALANCE NOT FOUND` [^r1][^r2][^r3]
+* **Cause:** The system cannot locate an active or existing balance record for the requested supplier [^r1][^r2][^r3].
+* **Remedy:** Verify that the supplier account code exists and has active balance activity in the ledger before re-running the enquiry or statement generation [^r1][^r2][^r3].
+* **Raised by:** [[services-ap-sbal|AP sbal services]] including `sbal_ageing` [^r1], `sbal_query` [^r2], and `sbal_stmt` [^r3].
+
+## See also
+* [[screen-ap-sbl-08|AP-SBL-08 Supplier Balance]]
+* [[services-ap-sbal|AP sbal services]]
+* [[errors-sup|ERR-SUP Error Codes]]
+
+## References
+
+[^r1]: 04_service_definitions/accounts_payable/sbal_ageing.yaml, errors
+[^r2]: 04_service_definitions/accounts_payable/sbal_query.yaml, errors
+[^r3]: 04_service_definitions/accounts_payable/sbal_stmt.yaml, errors

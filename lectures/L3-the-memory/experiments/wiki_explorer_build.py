@@ -89,7 +89,7 @@ def chain_steps(rec, kind_label):
     steps = []
     opened_next = {}
     for c in chain:
-        if c["step"] in ("page", "link"):
+        if c["step"] in ("page", "link", "list"):
             opened_next.setdefault(c.get("turn"), []).append(c["what"])
     first = chain[0] if chain else {"step": "index"}
     c1 = by_turn.get(1, {})
@@ -104,7 +104,7 @@ def chain_steps(rec, kind_label):
     for c in chain[1:]:
         t = c.get("turn")
         call = by_turn.get(t, {})
-        if c["step"] in ("page", "link"):
+        if c["step"] in ("page", "link", "list"):
             nxt = opened_next.get((t or 0) + 1, [])
             steps.append({"kind": c["step"], "label": c["what"], "page": c["what"],
                           "detail": (f"followed the link from [[{c['from']}]]" if c.get("from") else
@@ -181,8 +181,36 @@ def main():
                  "facts": b.get("facts"), "build": f"{b['seconds']['total'] / 60:.0f} min, "
                                                    f"{b['llm']['all']['calls']} LLM calls, ${b['llm']['all']['usd']:.2f}"}
     OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / "wiki.json").write_text(json.dumps({"pages": pages, "stats": stats}, ensure_ascii=False))
-    (OUT / "chains.json").write_text(json.dumps({"chains": build_chains()}, ensure_ascii=False, indent=1))
+    lists = {f.stem: f.read_text() for f in sorted((wiki / "lists").glob("list-*.md"))} if (wiki / "lists").exists() else {}
+    index_md = (wiki / "index.md").read_text()
+    # catalog.json is small (loaded first); one file per page is fetched when the page is opened
+    cat = {s: {k: p.get(k) for k in ("title", "type", "summary", "status", "restricted")} for s, p in pages.items()}
+    (OUT / "wiki.json").unlink(missing_ok=True)
+    (OUT / "catalog.json").write_text(json.dumps({"pages": cat, "lists": lists, "index_md": index_md, "stats": stats},
+                                                 ensure_ascii=False))
+    pdir = OUT / "pages"
+    if pdir.exists():
+        for f in pdir.glob("*.json"):
+            f.unlink()
+    pdir.mkdir(exist_ok=True)
+    for s, p in pages.items():
+        (pdir / f"{s}.json").write_text(json.dumps(p, ensure_ascii=False))
+    extra = {}
+    up = LOGS / "wiki_update.json"
+    if up.exists():
+        u = json.loads(up.read_text())
+        extra["update"] = {"files": u["files"], "updated": u["updated"], "created": u["created"],
+                           "seconds": u["seconds"], "usd": u["usd"], "calls": u["llm"]["calls"],
+                           "facts_added": u.get("facts_added")}
+    li = LOGS / "wiki_lint.json"
+    if li.exists():
+        l = json.loads(li.read_text())
+        extra["lint"] = {"n_findings": l["n_findings"], "by_kind": l["by_kind"], "found": l["messiness"]["found"],
+                         "found_strict": l["messiness"]["found_strict"], "n": l["messiness"]["n"],
+                         "missed": l["messiness"]["missed"],
+                         "items": [{k: r[k] for k in ("id", "kind", "what", "found", "found_strict", "labels")}
+                                   for r in l["messiness"]["items"]]}
+    (OUT / "chains.json").write_text(json.dumps({"chains": build_chains(), **extra}, ensure_ascii=False, indent=1))
     (OUT / "log.json").write_text(json.dumps({"lines": [l[3:] for l in log_lines if l.startswith("## [")]},
                                              ensure_ascii=False))
     print(f"{len(pages)} pages, {len(build_chains())} chains -> {OUT}")

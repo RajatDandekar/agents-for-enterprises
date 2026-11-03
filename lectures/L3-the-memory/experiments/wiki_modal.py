@@ -111,6 +111,7 @@ def _methods(kind: str, wiki_dir: str, suffix: str = ""):
         m = WQ.Navigator(w, nav_llm)
     else:
         si = WQ.SectionIndex(w, qcache=f"queries_bge-small{suffix}.jsonl")
+        si.qvec("warm-up: load the embedding model before any question is timed")
         m = WQ.Hybrid(w, nav_llm, si, navigate=(kind == "hybrid"))
     return w, m
 
@@ -146,11 +147,18 @@ def eval_shard(kind: str, shard: int, nshards: int, ids: str = "", wiki_dir: str
     w, m = _methods(kind, wiki_dir, sfx)
     chains = {}
 
+    nav_llm = m.llm if hasattr(m, "llm") else m.nav.llm
+
     def method(question, role):
+        b0 = getattr(nav_llm, "backoff_seconds", 0.0)
         out = m.method(question, role)
+        waited = getattr(nav_llm, "backoff_seconds", 0.0) - b0
+        if waited:  # time spent waiting out OpenRouter's shared 429 limit is queueing, not retrieval
+            out["seconds"] = round(out["seconds"] - waited, 3)
+        out["backoff_s"] = round(waited, 2)
         chains[question] = {k: out.get(k) for k in ("chain", "calls", "nav_calls", "tokens_in", "tokens_out",
                                                     "llm_seconds", "seconds", "cost_usd", "opened", "sources",
-                                                    "search_ms")}
+                                                    "search_ms", "backoff_s")}
         return out
 
     ans = WikiLLM("L3v4_wiki_answers" + sfx, max_tokens=2048)
@@ -164,7 +172,7 @@ def eval_shard(kind: str, shard: int, nshards: int, ids: str = "", wiki_dir: str
 
 
 @app.function(volumes={"/vol": vol}, secrets=[secret], timeout=6 * 3600, cpu=2, memory=4096)
-def eval_run(kind: str = "wiki", nshards: int = 6, ids: str = "", wiki_src: str = "/vol/wiki_v4"):
+def eval_run(kind: str = "wiki", nshards: int = 4, ids: str = "", wiki_src: str = "/vol/wiki_v4"):
     from ledgerline.course.l3 import evaluate as E
 
     vol.reload()
@@ -183,8 +191,12 @@ def eval_run(kind: str = "wiki", nshards: int = 6, ids: str = "", wiki_src: str 
     recs = []
     for part in eval_shard.starmap([(kind, i, nshards, ids, wiki_dir) for i in range(nshards)]):
         recs += part
+    import hashlib
+
+    ev = pathlib.Path(E.__file__).read_bytes()
     rep = {"name": kind, "records": recs, "summary": E.summarize(recs), "shards": nshards,
-           "wall_seconds": round(time.time() - t0, 1)}
+           "wall_seconds": round(time.time() - t0, 1), "evaluate_py_sha1": hashlib.sha1(ev).hexdigest()[:12],
+           "answer_system_sha1": hashlib.sha1(E.ANSWER_SYSTEM.encode()).hexdigest()[:12]}
     pathlib.Path("/vol/logs").mkdir(exist_ok=True)
     pathlib.Path(f"/vol/logs/wiki_eval_{kind}{('_' + str(len(ids.split(','))) ) if ids else ''}.json").write_text(
         json.dumps(rep, indent=1, ensure_ascii=False))
@@ -211,7 +223,7 @@ def update_run():
 
     make_rn_p6.main(str(dump / new))
     wiki = _wiki_copy("/vol/wiki_v4", "/vol/wiki_v4_update")
-    llm = WikiLLM("L3_wiki_update", max_tokens=16000)
+    llm = WikiLLM("L3_wiki_update_v2", max_tokens=16000)
     rep = WB.update([new], str(dump), wiki, llm)
     # before / after on the same question
     G = E.Golden("/dump")
@@ -246,6 +258,7 @@ def chains_run(ids: str = "Q-EMMA,Q-0412", fileback: str = "Q-EMMA"):
     w = WQ.Wiki("/vol/wiki_v4", dump="/dump")
     w.units()
     si = WQ.SectionIndex(w, qcache="queries_bge-small__chains.jsonl")
+    si.qvec("warm-up: load the embedding model before any question is timed")
     out = {"chains": {}, "fileback": {}}
     for qid in ids.split(","):
         q = G.by_id[qid]
@@ -286,6 +299,22 @@ def chains_run(ids: str = "Q-EMMA,Q-0412", fileback: str = "Q-EMMA"):
     pathlib.Path("/vol/logs/wiki_query_chains.json").write_text(json.dumps(out, indent=1, ensure_ascii=False))
     vol.commit()
     return out
+
+
+@app.function(volumes={"/vol": vol}, timeout=600)
+def reindex(wiki: str = "/vol/wiki_v4"):
+    """Rebuild index.md / restricted/index.md from manifest.json (code only, no LLM)."""
+    from ledgerline.course.l3.wiki_build import write_index
+
+    vol.reload()
+    man = json.loads(pathlib.Path(wiki, "manifest.json").read_text())
+    write_index(pathlib.Path(wiki), man)
+    with open(pathlib.Path(wiki, "log.md"), "a") as f:
+        from ledgerline.course.l3.wiki_build import now
+
+        f.write(f"## [{now()}] reindex | index.md rebuilt with summaries cut to 110 characters\n")
+    vol.commit()
+    return len(pathlib.Path(wiki, "index.md").read_text())
 
 
 @app.function(volumes={"/vol": vol}, timeout=1200)
@@ -345,6 +374,8 @@ def main(cmd: str = "build", files: str = "", tag: str = "", workers: int = 32, 
         name = f"wiki_build{('_' + tag) if tag else ''}.json"
         (LOGS / name).write_text(json.dumps(rep, indent=1))
         _log(json.dumps({k: v for k, v in rep.items() if k not in ("merge_map", "orphans")}, indent=1)[:4000])
+    elif cmd == "reindex":
+        _log(reindex.remote())
     elif cmd == "merge":
         _log(json.dumps(merge_all.remote(), indent=1))
     elif cmd in ("lint", "update", "chains"):

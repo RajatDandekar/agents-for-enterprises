@@ -456,7 +456,7 @@ def build_registry(srcs: list[Source]) -> dict:
     return reg
 
 
-ALWAYS = ("policy", "procedure", "manual", "release", "data-source", "role")
+ALWAYS = ("policy", "procedure", "manual", "release", "data-source", "role", "topic", "decision")
 
 
 def registry_keys(reg: dict) -> list[tuple[str, list[str]]]:
@@ -474,7 +474,7 @@ def registry_keys(reg: dict) -> list[tuple[str, list[str]]]:
         elif t == "supplier":
             m = re.match(r"(.+?) \(([^)]+)\)$", title)
             keys = [m.group(1)] + ([m.group(2)] if m and re.match(r"[A-Z]", m.group(2)) else []) if m else [title]
-        elif t in ("cost-centre", "screen"):
+        elif t in ("cost-centre", "screen", "error"):
             keys = [title.split(" ")[0]]
         elif t == "item-family":
             keys = [title.split("-")[0] + "-"]

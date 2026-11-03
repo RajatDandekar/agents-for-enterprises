@@ -194,8 +194,9 @@ def canonical(slug: str, reg: dict, people: dict, suppliers: dict, doc_slugs: li
     s = re.sub(r"^(screen-)+", "screen-", s)
     if s in reg:
         return s
-    for d in doc_slugs:  # "pol-pur-001-purchase-policy" -> "pol-pur-001"
-        if s.startswith(d + "-") or s == d.replace("-", ""):
+    for d in doc_slugs:  # "pol-pur-001-purchase-policy" -> "pol-pur-001", but never "rn-7-2-3-p6" -> "rn-7-2-3"
+        rest = s[len(d) + 1:] if s.startswith(d + "-") else None
+        if (rest is not None and not (d.startswith("rn-") and re.match(r"p\d|\d", rest))) or s == d.replace("-", ""):
             return d
     m = re.match(r"^(?:policy|procedure|manual|doc)-(.+)$", s)
     if m and m.group(1) in reg:
@@ -621,21 +622,48 @@ TYPE_TITLES = [("policy", "Policies and amendments"), ("procedure", "Procedures 
                ("data-source", "Data sources (structured files)"), ("answer", "Filed answers")]
 
 
+def short(text: str, n: int = 110) -> str:
+    """Index lines stay short: the catalogue is read on every query, so its size is latency."""
+    t = " ".join(str(text).split())
+    return t if len(t) <= n else t[:n].rsplit(" ", 1)[0] + " …"
+
+
+LISTED = {  # big code-named families: one line in index.md, the full list on lists/list-<type>.md
+    "screen": "screen-<screen code>, e.g. screen-pur-po-01",
+    "service-group": "services-<module>-<object>, e.g. services-pur-po (po_save, po_fetch ...)",
+    "error": "err-<code> or w-<code>, e.g. err-po-0412, w-cc-114",
+    "error-list": "errors-<prefix>, e.g. errors-po for every ERR-PO-* code",
+    "item-family": "items-<item code prefix>, e.g. items-bat for BAT-*",
+    "person": "user-<user id>, e.g. user-eclarke",
+    "cost-centre": "cc-<code>, e.g. cc-prd-07",
+}
+
+
+def _line(s, p):
+    flag = {"superseded": " [superseded]", "future": " [not yet in force]"}.get(p.get("status"), "")
+    return f"- [[{s}]] {p['title']}: {short(p['summary'])}{flag}"
+
+
 def write_index(out: pathlib.Path, manifest: dict):
+    """index.md: every document, topic, decision, supplier, role and data-source page in full; the seven big
+    code-named families as one line each (slug rule + a link to their list page), like Wikipedia's 'List of ...'."""
+    (out / "lists").mkdir(parents=True, exist_ok=True)
     for aud, path, head in (("staff", out / "index.md", "Northbridge wiki: index"),
                             ("hr", out / "restricted" / "index.md", "Northbridge wiki: restricted (HR only) index")):
         pages = {s: p for s, p in manifest["pages"].items() if p["audience"] == aud}
         lines = [f"# {head}", "", f"{len(pages)} pages. Read this first; open a page with its slug. "
-                 "Format: `[[slug]] Title: summary`.", ""]
+                 "Format: `[[slug]] Title: summary`. Pages named by a code follow the slug rules below; open the "
+                 "list page to see them all.", ""]
         for t, name in TYPE_TITLES:
             group = sorted((s, p) for s, p in pages.items() if p["type"] == t)
             if not group:
                 continue
-            lines += [f"## {name} ({len(group)})", ""]
-            for s, p in group:
-                flag = {"superseded": " [superseded]", "future": " [not yet in force]"}.get(p.get("status"), "")
-                lines.append(f"- [[{s}]] {p['title']}: {p['summary']}{flag}")
-            lines.append("")
+            if t in LISTED and aud == "staff":
+                lines += [f"## {name} ({len(group)})", "", f"- slug rule: {LISTED[t]}; full list: [[list-{t}]]", ""]
+                (out / "lists" / f"list-{t}.md").write_text(
+                    f"# List of {name.lower()} ({len(group)})\n\n" + "\n".join(_line(s, p) for s, p in group) + "\n")
+                continue
+            lines += [f"## {name} ({len(group)})", ""] + [_line(s, p) for s, p in group] + [""]
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("\n".join(lines))
 

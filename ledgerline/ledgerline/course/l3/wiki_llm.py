@@ -76,3 +76,30 @@ class WikiLLM(LLM):
 
 def reply_usd(r: Reply) -> float:
     return usd(r.tokens_in, r.tokens_out)
+
+
+def _install_backoff():
+    """OpenRouter caps this model at 300 requests a minute across everyone (429 'openrouter_shared_capacity'). Retry
+    with backoff, and keep the time spent waiting apart (WikiLLM.backoff_seconds) so latency excludes queueing."""
+    import random
+    import time as _t
+
+    base_live = WikiLLM._live
+
+    def _live(self, messages, tools, response_format, **kw):
+        for attempt in range(10):
+            try:
+                return base_live(self, messages, tools, response_format, **kw)
+            except RuntimeError as e:
+                if "429" not in str(e) and "Rate limit" not in str(e) or attempt == 9:
+                    raise
+                wait = min(60.0, 4.0 * 2 ** attempt) * (0.75 + 0.5 * random.random())
+                with self._mlock:
+                    self.backoff_seconds = getattr(self, "backoff_seconds", 0.0) + wait
+                    self.backoffs = getattr(self, "backoffs", 0) + 1
+                _t.sleep(wait)
+
+    WikiLLM._live = _live
+
+
+_install_backoff()

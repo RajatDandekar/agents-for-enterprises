@@ -32,6 +32,8 @@ from .wiki_llm import REASONING_LOW, reply_usd
 KINDS = ["superseded", "contradiction", "future_dated", "email_overrides_sop", "near_duplicate", "duplicate",
          "rule_not_in_policy", "legacy_abbreviations", "broken_links", "inconsistent_naming", "confidential", "scans",
          "mixed_formats", "tables_in_pdfs", "orphan", "red_link", "uncited", "citation_not_found"]
+CONTENT = {"superseded", "contradiction", "future_dated", "email_overrides_sop", "near_duplicate", "duplicate",
+           "rule_not_in_policy", "legacy_abbreviations", "inconsistent_naming"}
 FAMILY = {"superseded": "version", "near_duplicate": "version", "duplicate": "version",
           "contradiction": "conflict", "email_overrides_sop": "conflict", "rule_not_in_policy": "conflict",
           "future_dated": "future", "legacy_abbreviations": "legacy", "legacy_terms": "legacy"}
@@ -122,8 +124,8 @@ def code_checks(wiki_dir: pathlib.Path, man: dict, srcs: list[dict], dump) -> li
     # shingle overlap between sources without a shared code (old exports, renamed copies)
     texts = {}
     for s in srcs:
-        if s["fmt"] in ("pdf", "docx", "md", "txt", "csv") and s["file"] not in sum([g for g in sha.values()
-                                                                                    if len(g) > 1], []):
+        if s["fmt"] in ("pdf", "docx", "md", "txt", "csv", "eml", "yaml", "xml") and s["file"] not in sum(
+                [g for g in sha.values() if len(g) > 1], []):
             texts[s["file"]] = s
     sh = {}
     for f in texts:
@@ -134,9 +136,16 @@ def code_checks(wiki_dir: pathlib.Path, man: dict, srcs: list[dict], dump) -> li
         w = re.findall(r"[a-z0-9]+", t.lower())
         sh[f] = {" ".join(w[i:i + 6]) for i in range(0, max(0, len(w) - 6), 3)}
     fl = sorted(sh)
+    svc_files = [f for f in fl if f.startswith("04_service_definitions/")]
+    for a in svc_files:  # a service definition printed again in a reference manual
+        for b in [f for f in fl if f.startswith("03_ledgerline_manuals/") and f.endswith(".pdf")]:
+            ov = len(sh[a] & sh[b]) / max(1, len(sh[a])) if sh[a] and sh[b] else 0
+            if ov >= 0.3:
+                out.append(_f("duplicate", [a, b], f"{a.rsplit('/', 1)[-1]} is printed again in {b.rsplit('/', 1)[-1]} "
+                                                    f"({ov:.0%} of its shingles)", "code", overlap=round(ov, 3)))
     for i, a in enumerate(fl):
         for b in fl[i + 1:]:
-            if not sh[a] or not sh[b] or a.split("/")[0] != b.split("/")[0]:
+            if not sh[a] or not sh[b] or a.split("/")[0] != b.split("/")[0] or a.startswith("04_service_definitions/"):
                 continue
             j = len(sh[a] & sh[b]) / max(1, min(len(sh[a]), len(sh[b])))
             if j >= 0.5 and texts[a].get("doc") != texts[b].get("doc") or (j >= 0.5 and not texts[a].get("doc")):
@@ -149,8 +158,8 @@ def code_checks(wiki_dir: pathlib.Path, man: dict, srcs: list[dict], dump) -> li
                                              f"v{s.get('version')})", "code"))
         if s["status"] == "future":
             out.append(_f("future_dated", [f], f"{f}: effective {s.get('effective')}, after today (2026-10-26)", "code"))
-        if s["status"] == "scan":
-            out.append(_f("scans", [f], f"{f}: image-only, no text layer (OCR found nothing)", "code"))
+        if s["fmt"] == "pdf" and _text_layer_chars(root / f) < 20:
+            out.append(_f("scans", [f], f"{f}: image-only PDF, no text layer; its text exists only through OCR", "code"))
         if s["audience"] == "hr":
             cited_by = [p for p, pg in man["pages"].items() if pg["audience"] != "hr" and f in pg["sources"]]
             out.append(_f("confidential", [f], f"{f}: HR-only; staff pages citing it: {len(cited_by)}", "code",
@@ -175,8 +184,7 @@ def code_checks(wiki_dir: pathlib.Path, man: dict, srcs: list[dict], dump) -> li
     svc = Counter(s["fmt"] for s in srcs if s["file"].startswith("04_service_definitions/") and s["fmt"] in
                   ("yaml", "xml", "wsdl"))
     if len(svc) > 1:
-        ex = [next(s["file"] for s in srcs if s["file"].startswith("04_service_definitions/") and s["fmt"] == k)
-              for k in svc]
+        ex = [s["file"] for s in srcs if s["file"].startswith("04_service_definitions/") and s["fmt"] in svc]
         out.append(_f("mixed_formats", ex, f"service definitions in {dict(svc)} formats", "code"))
     # tables inside PDFs (the structured parser's table rows)
     try:
@@ -195,6 +203,15 @@ def code_checks(wiki_dir: pathlib.Path, man: dict, srcs: list[dict], dump) -> li
     return out
 
 
+def _text_layer_chars(path: pathlib.Path) -> int:
+    from pypdf import PdfReader
+
+    try:
+        return sum(len((p.extract_text() or "").strip()) for p in PdfReader(str(path)).pages)
+    except Exception:
+        return 0
+
+
 def _plain(path: pathlib.Path) -> str:
     ext = path.suffix.lower()
     if ext == ".pdf":
@@ -205,6 +222,13 @@ def _plain(path: pathlib.Path) -> str:
         import docx
 
         return "\n".join(p.text for p in docx.Document(str(path)).paragraphs)
+    if ext == ".eml":
+        import email
+        import email.policy
+
+        m = email.message_from_bytes(path.read_bytes(), policy=email.policy.default)
+        b = m.get_body(preferencelist=("plain",))
+        return b.get_content() if b else ""
     return path.read_bytes().decode("utf-8", errors="replace")
 
 
@@ -338,7 +362,7 @@ def score_against_messiness(rep: dict, dump) -> dict:
     for it in mess:
         F = set(it["files"])
         need = 1 if (len(F) == 1 or it["kind"] in per_file) else 2
-        strict, family = [], []
+        strict, family, other = [], [], []
         for i, f in enumerate(rep["findings"]):
             n = len(F & set(f["files"]))
             if n < need:
@@ -347,10 +371,14 @@ def score_against_messiness(rep: dict, dump) -> dict:
                 strict.append(i)
             elif FAMILY.get(f["kind"]) and FAMILY.get(f["kind"]) == FAMILY.get(it["kind"]):
                 family.append(i)
+            elif f["kind"] in CONTENT and it["kind"] in CONTENT:
+                other.append(i)
         rows.append({"id": it["id"], "kind": it["kind"], "what": it["what"], "files": it["files"],
                      "found_strict": bool(strict), "found": bool(strict or family),
-                     "by": sorted({rep["findings"][i]["source"] for i in strict + family}),
-                     "evidence": [rep["findings"][i]["detail"] for i in (strict + family)[:3]]})
+                     "found_other_label": bool(not (strict or family) and other),
+                     "labels": sorted({rep["findings"][i]["kind"] for i in strict + family + other}),
+                     "by": sorted({rep["findings"][i]["source"] for i in strict + family + other}),
+                     "evidence": [rep["findings"][i]["detail"] for i in (strict + family + other)[:3]]})
     n = len(rows)
     by_kind = defaultdict(lambda: {"n": 0, "found": 0, "strict": 0})
     for r in rows:
@@ -358,4 +386,10 @@ def score_against_messiness(rep: dict, dump) -> dict:
         by_kind[r["kind"]]["found"] += r["found"]
         by_kind[r["kind"]]["strict"] += r["found_strict"]
     return {"items": rows, "found": sum(r["found"] for r in rows), "found_strict": sum(r["found_strict"] for r in rows),
-            "n": n, "missed": [r["id"] for r in rows if not r["found"]], "by_kind": dict(by_kind)}
+            "found_any_label": sum(r["found"] or r["found_other_label"] for r in rows), "n": n,
+            "missed": [r["id"] for r in rows if not r["found"]],
+            "missed_any_label": [r["id"] for r in rows if not (r["found"] or r["found_other_label"])],
+            "by_kind": dict(by_kind),
+            "rule": "found = a finding of the same kind or family names the item's files (1 file for per-file kinds, "
+                    "else 2); found_any_label also counts findings that name the files under another content kind "
+                    "(e.g. the cycle-count clash reported as 'superseded' rather than 'contradiction')"}

@@ -1,0 +1,703 @@
+# log.md
+
+Append-only. One line per operation, oldest first. `ingest | file | +created ~updated | pages`.
+
+## [2026-11-03T05:31:37Z] ingest | README.md | +2 ~0 | data-nbc-change-log, user-hweber
+## [2026-11-03T05:30:21Z] ingest | 05_master_data/BOM_master_2026.xlsx | +10 ~0 | data-bom-master, items-fg, items-bat, items-mtr, items-chg, items-mnt, items-bel, items-brk, items-pkg, items-box
+## [2026-11-03T05:30:20Z] ingest | 05_master_data/Cost Centres and Budgets FY2026-27.xlsx | +29 ~0 | data-cost-centres-and-budgets, cc-prd-05, cc-prd-07, cc-prd-03, cc-mnt-01, cc-adm-01, cc-prd-01, cc-prd-02, cc-prd-04, cc-prd-06, cc-prd-08, cc-prd-09, cc-mnt-02, cc-qa-01, cc-log-01, cc-sal-01, cc-sal-02, cc-sal-03, cc-rnd-01, cc-it-01, cc-hr-01, cc-fin-01, cc-hse-01, cc-lds-prd-01, cc-lds-log-01, cc-lds-adm-01, cc-prd-5, cc-cap-2026, cc-cap-2025
+## [2026-11-03T05:30:19Z] ingest | 05_master_data/Customers (bike shops).xlsx | +3 ~0 | data-customers, user-echen, user-imorgan
+## [2026-11-03T05:30:21Z] ingest | 05_master_data/ITEM_MASTER_2026-10-26.xlsx | +9 ~8 | data-item-master, screen-inv-itm-01, items-bat, items-mnt, items-bel, items-brk, items-chg, items-box, items-pkg, items-spr, items-fg, user-lmoreno, user-eclarke, user-hnakamura, user-kmensah, topic-item-categories, data-units-of-measure
+## [2026-11-03T05:30:19Z] ingest | 05_master_data/Payment terms.csv | +2 ~0 | data-payment-terms, data-tax-codes
+## [2026-11-03T05:30:20Z] ingest | 05_master_data/Price list PL-UK-RTL 2026.xlsx | +1 ~1 | data-price-list-pl-uk-rtl, items-fg
+## [2026-11-03T05:30:22Z] ingest | 05_master_data/Rate Contracts 2025-26 and 2026-27.xlsx | +3 ~7 | data-rate-contracts, sup-vc-ein-0042, sup-nc-gda-0063, items-bat, items-mnt, items-chg, items-box, items-bel, items-brk, items-pkg
+## [2026-11-03T05:30:28Z] ingest | 05_master_data/SUPPLIER_MASTER.xlsx | +5 ~4 | data-supplier-master, sup-vc-ein-0042, sup-vpc-rot-0107, sup-nc-gda-0063, screen-pur-sup-03, topic-un-38-3-certificates, user-eclarke, user-lmoreno, user-pjansen
+## [2026-11-03T05:30:31Z] ingest | 05_master_data/Stock_on_hand_2026-10-26_0900.xlsx | +32 ~10 | data-stock-on-hand, items-bat, items-mnt, items-bel, items-brk, items-mtr, items-chg, items-box, items-dsp, items-ctl, services-pur-stk, items-frm, items-tyr, items-tub, items-rim, items-spk, items-chn, items-cst, items-drl, items-shf, items-blt, items-hgr, items-crg, items-crk, items-bbr, items-pdl, items-hbr, items-stm, items-grp, items-sdl, items-spt, items-lgt, items-acc, items-cbl, items-fst, items-pnt, items-lac, items-prm, items-pkg, items-spr, items-con, items-fg
+## [2026-11-03T05:30:24Z] ingest | 05_master_data/Tax codes.xlsx | +0 ~1 | data-tax-codes
+## [2026-11-03T05:30:22Z] ingest | 05_master_data/Units of measure.csv | +0 ~1 | data-units-of-measure
+## [2026-11-03T05:30:24Z] ingest | 05_master_data/Users_and_approval_limits.xlsx | +10 ~7 | data-users-and-approval-limits, screen-sys-usr-01, user-eclarke, user-dokafor, user-lmoreno, user-hweber, user-atanaka, role-pur-exec, role-pur-sr, role-pur-mgr, role-plant-head, role-stores, cc-prd-05, cc-prd-07, cc-prd-03, cc-adm-01, pol-apr-002
+## [2026-11-03T05:30:23Z] ingest | 05_master_data/Warehouses.csv | +1 ~0 | data-warehouses
+## [2026-11-03T05:30:25Z] ingest | 05_master_data/old/item_master_export_2025-03.csv | +0 ~8 | data-item-master, items-bat, items-mnt, items-bel, items-brk, items-chg, items-box, items-pkg
+## [2026-11-03T05:30:23Z] ingest | 05_master_data/supplier_master_EXPORT_2024.csv | +0 ~4 | data-supplier-master, sup-vc-ein-0042, sup-vpc-rot-0107, sup-nc-gda-0063
+## [2026-11-03T05:31:27Z] ingest | 07_data_dictionary/Ledgerline 7.2 Data Dictionary (all modules).pdf | +6 ~2 | man-dd-72-all, data-data-dictionary, topic-un-38-3-certificates, pol-apr-002, sop-prd-002, sop-prd-001, sop-qua-001, pol-bat-004
+## [2026-11-03T05:31:28Z] ingest | 07_data_dictionary/Ledgerline_7.2_tables_and_fields.xlsx | +19 ~3 | data-data-dictionary, man-dd-72-all, topic-status-codes, errors-adj, errors-apr, errors-bnk, errors-cc, errors-cnt, errors-mat, errors-grn, sop-ap-001, pol-bat-004, errors-po, err-po-0412, errors-pay, errors-per, errors-pr, errors-rtv, errors-sup, errors-wo, errors-usr, errors-txf
+## [2026-11-03T05:31:25Z] ingest | 07_data_dictionary/MAN-DD-72 Data Dictionary Purchasing v7.2.3.pdf | +4 ~2 | man-dd-72, services-pur-po, services-pur-bud, w-cc-114, data-tax-codes, data-payment-terms
+## [2026-11-03T05:31:23Z] ingest | 07_data_dictionary/code_lists.csv | +2 ~2 | data-code-lists, err-sup-0031, errors-sup, services-pur-po
+## [2026-11-03T05:29:31Z] ingest | 01_policies/AMD-PUR-2026-03_Amendment3_PurchasePolicy_DIRlimit.pdf | +5 ~0 | amd-pur-2026-03, pol-pur-001, err-po-0610, man-pur-72, person-d-okafor
+## [2026-11-03T05:29:31Z] ingest | 01_policies/AMD-SUP-2026-02 Amendment 2 Supplier Policy.pdf | +4 ~4 | amd-sup-2026-02, pol-sup-003, topic-un-38-3-certificates, role-pur-sr, sop-pur-005, man-pur-72, items-bat, person-l-moreno
+## [2026-11-03T05:29:31Z] ingest | 01_policies/HR/CONFIDENTIAL/HR-CONF-007 Salary Bands 2026-27.pdf | +1 ~0 | hr-conf-007
+## [2026-11-03T05:29:32Z] ingest | 01_policies/HR/CONFIDENTIAL/HR-CONF-009 Disciplinary register 2026.xlsx | +1 ~0 | hr-conf-009
+## [2026-11-03T05:29:32Z] ingest | 01_policies/HR/CONFIDENTIAL/HR-CONF-011 Leeds stores consolidation - consultation plan (DRAFT).docx | +1 ~0 | hr-conf-011
+## [2026-11-03T05:29:32Z] ingest | 01_policies/HR/CONFIDENTIAL/README_ACCESS.txt | +1 ~0 | pol-its-008
+## [2026-11-03T05:29:32Z] ingest | 01_policies/HR/POL-HR-020 Employee Handbook (extract).pdf | +2 ~0 | pol-hr-020, user-slindqvist
+## [2026-11-03T05:29:32Z] ingest | 01_policies/POL-ABC-011 Anti-Bribery and Gifts Policy v1.3.pdf | +1 ~2 | pol-abc-011, user-hweber, role-plant-head
+## [2026-11-03T05:29:32Z] ingest | 01_policies/POL-APR-002 Approval Matrix v3.0.pdf | +3 ~11 | pol-apr-002, pol-pur-001, role-pur-exec, role-pur-sr, role-pur-mgr, role-plant-head, role-stores, user-svc-agent, user-eclarke, user-dokafor, user-hweber, err-apr-0003, err-apr-0009, errors-apr
+## [2026-11-03T05:29:32Z] ingest | 01_policies/POL-BAT-004 Battery Safety and Handling Policy v1.2.pdf | +1 ~4 | pol-bat-004, screen-qa-ncr-02, items-bat, items-pkg, data-warehouses
+## [2026-11-03T05:29:32Z] ingest | 01_policies/POL-DRP-009 Data Retention Policy v1.4.pdf | +2 ~0 | pol-drp-009, user-gwhitaker
+## [2026-11-03T05:29:33Z] ingest | 01_policies/POL-HSE-010 Health and Safety Policy v5.0.pdf | +1 ~2 | pol-hse-010, pol-bat-004, user-hweber
+## [2026-11-03T05:29:33Z] ingest | 01_policies/POL-ITS-008 IT Security Policy v3.2.pdf | +2 ~2 | pol-its-008, user-rpryce, user-svc-agent, sop-it-002
+## [2026-11-03T05:29:32Z] ingest | 01_policies/POL-PUR-001_Purchase_Policy_v4.1.pdf | +1 ~5 | pol-pur-001, pol-apr-002, screen-fin-cc-01, user-hweber, topic-un-38-3-certificates, data-tax-codes
+## [2026-11-03T05:29:32Z] ingest | 01_policies/POL-QUA-005 Quality Policy v3.0.pdf | +1 ~4 | pol-qua-005, sop-qua-001, pol-sup-003, items-bat, user-hweber
+## [2026-11-03T05:29:32Z] ingest | 01_policies/POL-RET-006 Returns Policy v2.1.pdf | +4 ~2 | pol-ret-006, screen-inv-rtv-07, screen-ap-dbn-04, err-rtv-0230, cc-prd-09, user-hweber
+## [2026-11-03T05:29:32Z] ingest | 01_policies/POL-SUP-003 Supplier Policy v2.3 (1).pdf | +3 ~7 | pol-sup-003, user-dokafor, sup-vc-ein-0042, sup-vc-ein-0009, sup-vpc-rot-0107, screen-pur-sup-01, screen-pur-sup-03, err-sup-0031, err-sup-0118, topic-un-38-3-certificates
+## [2026-11-03T05:29:32Z] ingest | 01_policies/POL-SUP-003 Supplier Policy v2.3.pdf | +1 ~14 | pol-sup-003, pol-pur-001, sop-pur-001, screen-pur-sup-01, screen-pur-sup-03, topic-un-38-3-certificates, err-sup-0031, err-sup-0118, errors-sup, sup-vc-ein-0042, sup-vpc-rot-0107, user-dokafor, role-pur-mgr, role-pur-sr, role-pur-exec
+## [2026-11-03T05:29:32Z] ingest | 01_policies/POL-TEX-007 Travel and Expenses Policy v2.4.pdf | +2 ~1 | pol-tex-007, screen-ap-exp-09, user-gwhitaker
+## [2026-11-03T05:29:33Z] ingest | 01_policies/POL-TEX-007 Travel and Expenses Policy v3.0 (effective 2027-01-01).pdf | +0 ~3 | pol-tex-007, screen-ap-exp-09, user-gwhitaker
+## [2026-11-03T05:29:32Z] ingest | 01_policies/old/Approval_Matrix_v2.0_2024.docx | +0 ~5 | pol-apr-002, role-pur-exec, role-pur-sr, role-pur-mgr, role-plant-head
+## [2026-11-03T05:29:32Z] ingest | 01_policies/old/Purchase Policy v4.0.docx | +0 ~4 | pol-pur-001, screen-fin-cc-01, topic-un-38-3-certificates, data-tax-codes
+## [2026-11-03T05:29:32Z] ingest | 01_policies/old/Supplier_Policy_v2.2.docx | +0 ~8 | pol-sup-003, sup-vc-ein-0042, sup-vpc-rot-0107, screen-pur-sup-01, screen-pur-sup-03, err-sup-0031, err-sup-0118, topic-un-38-3-certificates
+## [2026-11-03T05:29:32Z] ingest | 01_policies/old/purchase_policy_v3_2019.docx | +0 ~3 | pol-pur-001, topic-un-38-3-certificates, items-bat
+## [2026-11-03T05:29:33Z] ingest | 02_procedures/SOP-AP-001 Three-Way Invoice Matching v2.1.pdf | +3 ~3 | sop-ap-001, screen-ap-inv-01, err-mat-0420, user-mkowalski, user-gwhitaker, data-tax-codes
+## [2026-11-03T05:29:34Z] ingest | 02_procedures/SOP-AP-002 Period Close v3.0.pdf | +3 ~3 | sop-ap-002, screen-ap-per-11, err-per-0010, errors-per, user-mkowalski, user-gwhitaker
+## [2026-11-03T05:29:33Z] ingest | 02_procedures/SOP-AP-003 Supplier Payment Run v1.4.pdf | +4 ~2 | sop-ap-003, screen-ap-pay-03, err-pay-0430, err-bnk-0101, user-mkowalski, user-gwhitaker
+## [2026-11-03T05:29:33Z] ingest | 02_procedures/SOP-AP-004 Supplier Bank Detail Changes v2.0.pdf | +4 ~2 | sop-ap-004, screen-ap-bnk-06, services-ap-bnk, w-bnk-120, user-mkowalski, user-gwhitaker
+## [2026-11-03T05:29:34Z] ingest | 02_procedures/SOP-FIN-001 Cost Centre Open and Close v1.1.pdf | +3 ~4 | sop-fin-001, screen-fin-cc-01, err-cc-0310, errors-cc, user-gwhitaker, user-hweber, sop-it-001
+## [2026-11-03T05:29:33Z] ingest | 02_procedures/SOP-INV-002 Returns to Vendor (RTV) v1.3.pdf | +2 ~5 | sop-inv-002, screen-inv-rtv-07, err-rtv-0230, user-cshaw, user-hweber, pol-ret-006, items-bat
+## [2026-11-03T05:29:35Z] ingest | 02_procedures/SOP-INV-003 Stock Count v1.2.pdf | +4 ~2 | sop-inv-003, screen-inv-ccp-14, screen-inv-cnt-06, err-cnt-0230, user-cshaw, user-gwhitaker
+## [2026-11-03T05:29:33Z] ingest | 02_procedures/SOP-INV-004 Battery Pack Storage and Handling v1.0.pdf | +2 ~4 | sop-inv-004, pol-bat-004, sop-qua-002, items-bat, user-cshaw, user-pjansen
+## [2026-11-03T05:29:34Z] ingest | 02_procedures/SOP-IT-001 User Access Request v1.6.pdf | +0 ~4 | sop-it-001, pol-apr-002, user-rpryce, user-hweber
+## [2026-11-03T05:29:34Z] ingest | 02_procedures/SOP-IT-002 Service Account Management v1.0.pdf | +1 ~4 | sop-it-002, screen-sys-api-14, pol-apr-002, user-rpryce, user-hweber
+## [2026-11-03T05:29:35Z] ingest | 02_procedures/SOP-PRD-001 Work Order Release and Backflush v1.5.pdf | +4 ~3 | sop-prd-001, screen-prd-wo-01, screen-inv-mrn-08, err-wo-0310, items-bat, user-sberg, user-hweber
+## [2026-11-03T05:29:35Z] ingest | 02_procedures/SOP-PRD-002 Engineering Change v1.0.pdf | +3 ~5 | sop-prd-002, screen-prd-ecn-06, err-ecn-0220, errors-ecn, pol-sup-003, topic-un-38-3-certificates, user-sberg, user-hweber
+## [2026-11-03T05:29:35Z] ingest | 02_procedures/SOP-PUR-001 Supplier Onboarding v3.1.pdf | +1 ~4 | sop-pur-001, screen-pur-sup-01, screen-pur-sup-03, services-pur-sup, topic-un-38-3-certificates
+## [2026-11-03T05:29:35Z] ingest | 02_procedures/SOP-PUR-002 PR to PO v1.3 (FINAL).pdf | +4 ~6 | sop-pur-002, screen-pur-pr-01, screen-pur-po-01, screen-pur-por-05, screen-fin-cc-01, err-po-0412, w-cc-114, data-tax-codes, user-dokafor, user-hweber
+## [2026-11-03T05:29:35Z] ingest | 02_procedures/SOP-PUR-002 PR to PO v1.4.pdf | +1 ~9 | sop-pur-002, screen-pur-pr-01, screen-pur-po-01, screen-pur-por-05, screen-fin-cc-01, err-scr-0221, err-po-0412, w-cc-114, user-dokafor, user-hweber
+## [2026-11-03T05:29:36Z] ingest | 02_procedures/SOP-PUR-003 PO Amendment and Cancellation v1.2.pdf | +3 ~3 | sop-pur-003, screen-pur-pom-06, err-po-0801, w-cc-114, user-dokafor, user-hweber
+## [2026-11-03T05:29:37Z] ingest | 02_procedures/SOP-PUR-004 Rate Contract Maintenance v2.0.pdf | +1 ~5 | sop-pur-004, pol-sup-003, role-pur-mgr, user-dokafor, user-hweber, items-bat
+## [2026-11-03T05:29:36Z] ingest | 02_procedures/SOP-PUR-005 Certificate Renewal (UN 38.3) v1.1.pdf | +1 ~6 | sop-pur-005, topic-un-38-3-certificates, amd-sup-2026-02, user-lmoreno, user-dokafor, man-bat-72, items-bat
+## [2026-11-03T05:29:36Z] ingest | 02_procedures/SOP-PUR-006 Quotations and Supplier Selection v1.0.pdf | +1 ~6 | sop-pur-006, pol-pur-001, sop-pur-001, topic-un-38-3-certificates, items-bat, user-dokafor, user-hweber
+## [2026-11-03T05:29:36Z] ingest | 02_procedures/SOP-QUA-001 Incoming Inspection v2.0.pdf | +1 ~5 | sop-qua-001, screen-qa-ins-01, screen-qa-ncr-02, items-bat, user-pjansen, user-hweber
+## [2026-11-03T05:29:37Z] ingest | 02_procedures/SOP-QUA-002 Damaged Battery Pack Quarantine v1.1.pdf | +1 ~6 | sop-qua-002, screen-qa-ncr-02, screen-inv-qch-11, cc-prd-09, items-bat, user-pjansen, user-hweber
+## [2026-11-03T05:29:37Z] ingest | 02_procedures/SOP-SAL-001 Sales Order to Despatch v2.2.pdf | +5 ~2 | sop-sal-001, screen-sal-so-01, screen-sal-frt-12, err-crd-0207, err-dlv-0320, user-imorgan, user-hweber
+## [2026-11-03T05:29:38Z] ingest | 02_procedures/SOP-SAL-002 Warranty Claims (RMA) v1.1.pdf | +5 ~3 | sop-sal-002, pol-ret-006, screen-sal-srl-16, err-rma-0210, errors-rma, user-imorgan, user-pjansen, topic-battery-handling
+## [2026-11-03T05:29:36Z] ingest | 02_procedures/forms/Final_FINAL_onboarding checklist NBC-F-113.docx | +0 ~3 | sop-pur-001, sop-ap-004, topic-un-38-3-certificates
+## [2026-11-03T05:29:36Z] ingest | 02_procedures/old/SOP-PUR-001 Supplier onboarding v2.0 (2021).docx | +0 ~3 | sop-pur-001, user-lmoreno, topic-un-38-3-certificates
+## [2026-11-03T05:29:38Z] ingest | 02_procedures/sop_inv_001_goods_receipt_v2.docx | +4 ~3 | sop-inv-001, screen-inv-grn-03, err-grn-0102, err-grn-0204, user-cshaw, sop-qua-002, sop-inv-004
+## [2026-11-03T05:29:44Z] ingest | 03_ledgerline_manuals/MAN-ADM-72 Ledgerline 7.2 System Administration Guide v7.2.3.pdf | +7 ~3 | man-adm-72, screen-sys-dlg-03, screen-sys-par-04, services-adm-par, err-dlg-0210, data-tax-codes, screen-sys-job-06, sop-it-002, man-bat-72, topic-terminal-and-session-management
+## [2026-11-03T05:29:46Z] ingest | 03_ledgerline_manuals/MAN-AP-72 Ledgerline 7.2 User Manual - Accounts Payable v7.2.3.pdf | +49 ~16 | man-ap-72, screen-ap-inv-01, services-ap-inv, errors-inv, errors-mat, screen-ap-mat-02, screen-ap-dbn-04, services-ap-mat, services-ap-dbn, screen-ap-crn-05, services-ap-crn, err-dbn-0001, err-dbn-0007, err-dbn-0801, err-sup-0030, screen-ap-pay-03, screen-ap-bnk-06, services-ap-pay, services-ap-bnk, errors-apr, errors-pay, errors-bnk, errors-sup, screen-ap-adv-07, services-ap-adv, err-bnk-0001, err-bnk-0118, err-bnk-0125, err-adv-0001, err-adv-0007, err-apr-0003, err-apr-0004, sop-ap-004, screen-ap-sbl-08, services-ap-sbal, screen-ap-acr-10, services-ap-acr, screen-ap-per-11, services-ap-per, err-acr-0001, errors-per, screen-ap-vat-12, services-ap-vat, screen-ap-exp-09, services-ap-exp, screen-ap-cur-13, services-ap-cur, errors-po, screen-ap-gl-14, services-ap-gl, err-cur-0001, err-gl-0001, err-gl-0007, screen-ap-pcs-15, screen-ap-spy-16, services-ap-pcs, services-ap-sup, err-cc-0009, err-pcs-0001, err-pcs-0007, screen-ap-tax-17, services-ap-tax, errors-spy, err-tax-0001, errors-tax
+## [2026-11-03T05:29:43Z] ingest | 03_ledgerline_manuals/MAN-BAT-72 Batch Jobs and Scheduler Reference (NBC schedule).pdf | +1 ~3 | man-bat-72, screen-qa-btt-03, services-pur-stk, sop-ap-003
+## [2026-11-03T05:29:40Z] ingest | 03_ledgerline_manuals/MAN-ERR-72 Message and Error Code Reference v7.2.3.pdf | +21 ~25 | man-err-72, errors-apr, errors-bnk, errors-bud, services-ap-bnk, services-pur-bud, services-prd-btt, services-adm-dlg, services-inv-cnt, services-sal-dlv, services-sal-so, services-prd-ecn, services-sal-edi, services-ap-exp, services-sal-fcs, services-sal-frt, services-ap-gl, services-inv-grn, services-adm-imp, services-ap-inv, services-inv-itm, sop-ap-001, sop-ap-003, services-ap-mat, services-ap-pay, err-po-0412, errors-po, services-pur-po, services-pur-pr, services-ap-per, data-tax-codes, errors-rtv, errors-rma, services-inv-rtv, services-sal-rma, sop-inv-002, sop-sal-002, errors-sup, screen-pur-sup-03, services-pur-sup, services-sal-sinv, services-ap-sup, w-cc-114, services-adm-usr, services-prd-wo, services-inv-txf
+## [2026-11-03T05:29:53Z] ingest | 03_ledgerline_manuals/MAN-INV-72 Ledgerline 7.2 User Manual - Inventory v7.2.3.pdf | +48 ~18 | man-inv-72, screen-inv-trf-04, services-inv-txf, errors-txf, errors-itm, errors-stk, screen-inv-adj-05, screen-inv-cnt-06, services-inv-adj, services-inv-cnt, errors-adj, errors-cnt, screen-inv-rtv-07, services-inv-rtv, errors-po, sop-inv-002, screen-inv-mrn-08, services-inv-mrn, screen-inv-bin-09, services-inv-bin, screen-inv-lot-10, services-inv-lot, err-bin-0001, err-lot-0001, err-lot-0007, err-lot-0301, err-itm-0011, screen-inv-qch-11, screen-inv-res-12, services-inv-qch, services-inv-res, errors-inv, items-bat, screen-inv-whs-01, services-inv-whs, err-res-0001, err-res-0201, err-res-0801, err-whs-0001, screen-inv-itm-01, services-inv-itm, err-itm-0001, err-itm-0801, screen-inv-stk-03, screen-inv-kbn-13, services-inv-stk, services-inv-kbn, err-stk-0001, screen-inv-ccp-14, services-inv-ccp, err-kbn-0001, err-kbn-0801, screen-inv-pkg-15, services-inv-pkg, err-ccp-0001, err-pkg-0001, err-pkg-0007, err-pkg-0201, err-sup-0030, screen-inv-scr-16, services-inv-scr, screen-inv-csg-17, services-inv-csg, errors-csg, err-csg-0001, err-csg-0201
+## [2026-11-03T05:29:55Z] ingest | 03_ledgerline_manuals/MAN-PRD-72 Ledgerline 7.2 User Manual - Production and Quality v7.2.3.pdf | +49 ~13 | man-prd-72, screen-prd-wo-01, services-prd-wo, errors-wo, screen-prd-bom-02, screen-prd-rtg-03, services-prd-bom, err-bom-0001, err-bom-0120, err-bom-0201, err-itm-0011, services-prd-rtg, screen-prd-bkf-08, services-prd-bkf, err-rtg-0001, screen-prd-opr-04, services-prd-opr, err-bkf-0001, err-bkf-0007, err-opr-0001, screen-prd-mrp-09, services-prd-mrp, err-mrp-0001, screen-prd-mps-05, services-prd-mps, screen-prd-ecn-06, services-prd-ecn, err-mps-0001, err-mps-0201, sop-prd-002, screen-qa-ins-01, services-prd-qin, errors-po, sop-qua-001, screen-qa-ncr-02, screen-qa-btt-03, services-prd-ncr, services-prd-btt, screen-qa-cal-04, services-prd-cal, errors-prd, screen-prd-wc-10, services-prd-wc, err-cal-0001, err-wc-0001, screen-prd-shf-11, services-prd-shf, screen-prd-scp-12, services-prd-scp, err-shf-0001, err-scp-0001, screen-prd-cap-13, services-prd-cap, screen-prd-mnt-07, services-prd-mnt, screen-prd-tol-14, services-prd-tool, screen-prd-pkb-15, services-prd-pkb, err-tol-0001, err-pkb-0001, err-pkb-0201
+## [2026-11-03T05:29:57Z] ingest | 03_ledgerline_manuals/MAN-PUR-72 Ledgerline 7.2 User Manual - Purchasing v7.2.3.pdf | +5 ~12 | man-pur-72, screen-inv-itm-03, screen-inv-stk-02, screen-pur-sup-03, screen-pur-sup-01, screen-fin-cc-01, screen-pur-pr-01, screen-pur-pr-04, screen-pur-po-01, err-scr-0221, err-po-0412, screen-pur-poa-04, screen-pur-por-05, screen-pur-pom-06, screen-pur-poh-02, errors-po, errors-sup
+## [2026-11-03T05:30:03Z] ingest | 03_ledgerline_manuals/MAN-SAL-72 Ledgerline 7.2 User Manual - Sales and Distribution v7.2.3.pdf | +47 ~14 | man-sal-72, screen-sal-cus-01, services-sal-cust, err-cus-0001, err-cus-0801, screen-sal-so-01, services-sal-so, screen-sal-quo-02, errors-so, sop-sal-001, screen-sal-alc-03, services-sal-quo, services-sal-alc, errors-quo, errors-alc, screen-sal-pck-04, services-sal-pck, errors-po, screen-sal-dlv-05, services-sal-dlv, screen-sal-inv-06, services-sal-sinv, errors-dlv, err-frt-0501, screen-sal-rma-07, services-sal-rma, errors-sin, errors-rma, screen-sal-prc-08, services-sal-prc, err-prc-0001, screen-sal-dsc-10, screen-sal-crn-09, services-sal-dsc, services-sal-scn, err-dsc-0001, screen-sal-crd-11, services-sal-crd, err-scn-0001, err-scn-0007, err-crd-0001, screen-sal-frt-12, services-sal-frt, screen-sal-edi-13, services-sal-edi, screen-sal-fcs-14, services-sal-fcs, errors-edi, screen-sal-com-15, services-sal-com, errors-fcs, errors-com, err-itm-0011, screen-sal-srl-16, screen-sal-dmo-17, services-sal-srl, services-sal-dmo, err-com-0001, err-srl-0001, err-dmo-0001, err-dmo-0801
+## [2026-11-03T05:30:00Z] ingest | 03_ledgerline_manuals/MAN-SCR-72 Screen Reference v7.2.3.pdf | +27 ~150 | man-scr-72, screen-ap-acr-10, screen-ap-adv-07, screen-ap-bnk-06, screen-ap-crn-05, screen-ap-cur-13, screen-ap-dbn-04, screen-ap-exp-09, screen-ap-gl-14, screen-ap-inv-01, screen-ap-mat-02, screen-ap-pay-03, services-ap-acr, services-ap-adv, services-ap-bnk, services-ap-crn, services-ap-cur, services-ap-dbn, services-ap-exp, services-ap-gl, services-ap-inv, services-ap-mat, services-ap-pay, screen-ap-pcs-15, screen-ap-per-11, screen-ap-sbl-08, screen-ap-spy-16, screen-ap-tax-17, screen-ap-vat-12, screen-fin-bud-02, screen-fin-cc-01, screen-inv-adj-05, screen-inv-bin-09, screen-inv-ccp-14, screen-inv-cnt-06, screen-inv-csg-17, screen-inv-grn-03, screen-inv-itm-01, screen-inv-itm-03, screen-inv-kbn-13, screen-inv-lot-10, screen-inv-mrn-08, screen-inv-pkg-15, screen-inv-qch-11, screen-inv-res-12, screen-inv-rtv-07, services-inv-csg, services-inv-grn, screen-inv-scr-16, screen-inv-stk-02, screen-inv-stk-03, screen-inv-trf-04, screen-inv-whs-01, screen-prd-bkf-08, screen-prd-bom-02, screen-prd-cap-13, screen-prd-ecn-06, screen-prd-mnt-07, screen-prd-mps-05, screen-prd-mrp-09, screen-prd-opr-04, screen-prd-pkb-15, screen-prd-rtg-03, services-inv-rtv, services-inv-scr, services-inv-stk, services-inv-txf, services-inv-whs, services-prd-bkf, services-prd-bom, services-prd-cap, services-prd-ecn, services-prd-mnt, services-prd-mps, services-prd-mrp, services-prd-opr, services-prd-pkb, screen-prd-scp-12, screen-prd-shf-11, screen-prd-tol-14, screen-prd-wc-10, screen-prd-wo-01, screen-pur-po-01, screen-pur-poa-04, screen-pur-poh-02, screen-pur-pom-06, screen-pur-por-05, screen-pur-pr-01, screen-pur-pr-04, services-prd-scp, services-prd-shf, services-prd-tool, services-prd-wc, services-prd-wo, services-pur-po, services-pur-pr, err-po-0412, screen-pur-sup-01, screen-pur-sup-03, screen-qa-btt-03, screen-qa-cal-04, screen-qa-ins-01, screen-qa-ncr-02, screen-sal-alc-03, screen-sal-com-15, screen-sal-crd-11, screen-sal-crn-09, screen-sal-cus-01, screen-sal-dlv-05, services-prd-btt, services-prd-cal, services-prd-qin, services-prd-ncr, services-sal-alc, services-sal-com, services-sal-crd, services-sal-scn, services-sal-cust, services-sal-dlv, screen-sal-dmo-17, screen-sal-dsc-10, screen-sal-edi-13, screen-sal-fcs-14, screen-sal-frt-12, screen-sal-inv-06, screen-sal-pck-04, screen-sal-prc-08, screen-sal-quo-02, screen-sal-rma-07, screen-sal-so-01, screen-sal-srl-16, screen-sys-api-14, screen-sys-aud-07, screen-sys-cfg-16, services-sal-dmo, services-sal-dsc, services-sal-edi, services-sal-fcs, services-sal-frt, services-sal-pck, services-sal-prc, services-sal-quo, services-sal-rma, services-sal-sinv, services-sal-so, services-sal-srl, services-adm-api, services-adm-aud, screen-sys-dlg-03, screen-sys-imp-13, screen-sys-job-06, screen-sys-lgn-01, screen-sys-lic-10, screen-sys-ntf-11, screen-sys-ou-08, screen-sys-par-04, screen-sys-prt-12, screen-sys-rol-02, screen-sys-seq-05, screen-sys-ses-09, screen-sys-sys-15, screen-sys-usr-01, services-adm-cfg, services-adm-dlg, services-adm-imp, services-adm-job, services-adm-lic, services-adm-ntf, services-adm-ou, services-adm-par, services-adm-prt, services-adm-role, services-adm-seq, services-adm-ses, services-adm-sys, services-adm-usr, services-pur-usr
+## [2026-11-03T05:30:03Z] ingest | 03_ledgerline_manuals/MAN-SVC-72 Service Reference (all modules) v7.2.3.pdf | +9 ~145 | man-svc-72, services-pur-itm, services-pur-sup, services-pur-cc, services-pur-whs, services-pur-tax, services-pur-pt, services-pur-usr, services-pur-stk, services-pur-pr, services-pur-po, err-po-0412, services-pur-bud, services-pur-ntf, services-inv-grn, services-inv-txf, services-inv-adj, services-inv-cnt, screen-pur-poa-04, screen-pur-por-05, screen-pur-pom-06, screen-inv-grn-03, screen-inv-trf-04, screen-inv-adj-05, screen-inv-cnt-06, role-plant-head, role-stores, services-inv-rtv, services-inv-mrn, services-inv-bin, services-inv-lot, services-inv-qch, screen-inv-rtv-07, screen-inv-mrn-08, screen-inv-bin-09, screen-inv-lot-10, screen-inv-qch-11, services-inv-res, services-inv-whs, services-inv-itm, services-inv-stk, services-inv-kbn, services-inv-ccp, screen-inv-res-12, screen-inv-whs-01, screen-inv-itm-01, screen-inv-stk-03, screen-inv-kbn-13, screen-inv-ccp-14, services-inv-pkg, services-inv-scr, services-inv-csg, services-ap-inv, services-ap-mat, screen-inv-pkg-15, screen-inv-scr-16, screen-inv-csg-17, screen-ap-inv-01, screen-ap-mat-02, services-ap-dbn, services-ap-crn, services-ap-pay, services-ap-bnk, services-ap-adv, services-ap-sbal, services-ap-acr, services-ap-per, services-ap-vat, services-ap-exp, services-ap-cur, services-ap-gl, services-ap-pcs, services-ap-sup, services-ap-tax, services-sal-cust, services-sal-so, services-sal-quo, screen-ap-pcs-15, screen-ap-spy-16, screen-ap-tax-17, screen-sal-cus-01, screen-sal-so-01, screen-sal-quo-02, services-sal-alc, services-sal-pck, services-sal-dlv, services-sal-sinv, services-sal-rma, services-sal-prc, services-sal-dsc, services-sal-scn, services-sal-crd, services-sal-frt, services-sal-edi, services-sal-fcs, services-sal-com, services-sal-srl, services-sal-dmo, screen-sal-dmo-17, services-prd-wo, screen-prd-wo-01, services-prd-bom, screen-prd-bom-02, services-prd-rtg, screen-prd-rtg-03, services-prd-bkf, screen-prd-bkf-08, services-prd-opr, screen-prd-opr-04, services-prd-mrp, screen-prd-mrp-09, services-prd-mps, services-prd-ecn, services-prd-qin, services-prd-ncr, services-prd-btt, services-prd-cal, services-prd-wc, screen-prd-mps-05, screen-prd-ecn-06, screen-qa-ins-01, screen-qa-ncr-02, screen-qa-btt-03, screen-qa-cal-04, screen-prd-wc-10, services-prd-shf, services-prd-scp, services-prd-cap, services-prd-mnt, services-prd-tool, services-prd-pkb, services-adm-usr, services-adm-role, services-adm-dlg, services-adm-par, services-adm-seq, services-adm-job, services-adm-aud, services-adm-ou, services-adm-cc, services-adm-bud, services-adm-ses, services-adm-lic, services-adm-ntf, services-adm-prt, services-adm-imp, services-adm-api, services-adm-sys, services-adm-cfg, screen-sys-prt-12, screen-sys-imp-13, screen-sys-api-14, screen-sys-sys-15, screen-sys-cfg-16
+## [2026-11-03T05:29:56Z] ingest | 03_ledgerline_manuals/old/LL6_purchasing_quickguide.docx | +3 ~1 | man-pur-70, screen-po-ent, data-tax-codes, user-dramsden
+## [2026-11-03T05:30:04Z] ingest | 03_ledgerline_manuals/old/Ledgerline 7.0 Purchasing Manual (2015).pdf | +0 ~4 | man-pur-70, err-po-0412, errors-po, data-tax-codes
+## [2026-11-03T05:30:06Z] ingest | 03_ledgerline_manuals/old/MAN-INV-72 Inventory v7.2.2 (old).pdf | +0 ~36 | man-inv-72, screen-inv-trf-04, services-inv-txf, screen-inv-adj-05, services-inv-adj, screen-inv-cnt-06, services-inv-cnt, screen-inv-rtv-07, services-inv-rtv, screen-inv-mrn-08, services-inv-mrn, screen-inv-bin-09, services-inv-bin, screen-inv-lot-10, services-inv-lot, items-bat, screen-inv-qch-11, services-inv-qch, screen-inv-res-12, services-inv-res, screen-inv-whs-01, services-inv-whs, screen-inv-itm-01, services-inv-itm, screen-inv-stk-03, services-inv-stk, screen-inv-kbn-13, services-inv-kbn, screen-inv-ccp-14, screen-inv-pkg-15, screen-inv-scr-16, screen-inv-csg-17, services-inv-ccp, services-inv-pkg, services-inv-scr, services-inv-csg
+## [2026-11-03T05:29:57Z] ingest | 04_service_definitions/README.md | +1 ~2 | data-service-index, man-svc-72, user-svc-agent
+## [2026-11-03T05:29:55Z] ingest | 04_service_definitions/_legacy_6x/PO_ENTRY_SAVE.xml | +1 ~1 | services-pur-po, rn-ll6-history
+## [2026-11-03T05:29:56Z] ingest | 04_service_definitions/_legacy_6x/REQ_ENTRY.xml | +1 ~1 | services-pur-req, rn-ll6-history
+## [2026-11-03T05:29:55Z] ingest | 04_service_definitions/_legacy_6x/VENDOR_ADD.xml | +1 ~1 | services-sup-vendor, rn-ll6-history
+## [2026-11-03T05:29:56Z] ingest | 04_service_definitions/accounts_payable/acr_get.yaml | +2 ~2 | services-ap-acr, screen-ap-acr-10, errors-acr, user-jfletcher
+## [2026-11-03T05:29:57Z] ingest | 04_service_definitions/accounts_payable/acr_reverse.yaml | +0 ~3 | services-ap-acr, screen-ap-acr-10, errors-acr
+## [2026-11-03T05:29:58Z] ingest | 04_service_definitions/accounts_payable/acr_run.yaml | +0 ~2 | services-ap-acr, screen-ap-acr-10
+## [2026-11-03T05:29:57Z] ingest | 04_service_definitions/accounts_payable/adv_adjust.yaml | +1 ~4 | services-ap-adv, screen-ap-adv-07, errors-adv, errors-sup, user-jfletcher
+## [2026-11-03T05:29:57Z] ingest | 04_service_definitions/accounts_payable/adv_approve.yaml | +0 ~4 | services-ap-adv, screen-ap-adv-07, errors-adv, errors-apr
+## [2026-11-03T05:29:57Z] ingest | 04_service_definitions/accounts_payable/adv_get.yaml | +0 ~4 | services-ap-adv, screen-ap-adv-07, errors-adv, user-jfletcher
+## [2026-11-03T05:29:57Z] ingest | 04_service_definitions/accounts_payable/adv_save.yaml | +0 ~3 | services-ap-adv, screen-ap-adv-07, errors-sup
+## [2026-11-03T05:29:57Z] ingest | 04_service_definitions/accounts_payable/adv_search.yaml | +0 ~3 | services-ap-adv, screen-ap-adv-07, user-jfletcher
+## [2026-11-03T05:30:01Z] ingest | 04_service_definitions/accounts_payable/bnk_block.xml | +0 ~5 | services-ap-bnk, screen-ap-bnk-06, errors-sup, err-bnk-0001, user-jfletcher
+## [2026-11-03T05:30:01Z] ingest | 04_service_definitions/accounts_payable/bnk_get.xml | +0 ~5 | services-ap-bnk, screen-ap-bnk-06, err-bnk-0001, user-jfletcher, user-dramsden
+## [2026-11-03T05:30:02Z] ingest | 04_service_definitions/accounts_payable/bnk_save.xml | +0 ~6 | services-ap-bnk, screen-ap-bnk-06, errors-sup, errors-bnk, user-jfletcher, user-dramsden
+## [2026-11-03T05:29:59Z] ingest | 04_service_definitions/accounts_payable/bnk_search.xml | +0 ~4 | services-ap-bnk, screen-ap-bnk-06, user-jfletcher, user-dramsden
+## [2026-11-03T05:30:00Z] ingest | 04_service_definitions/accounts_payable/bnk_verify.xml | +0 ~6 | services-ap-bnk, screen-ap-bnk-06, errors-bnk, errors-sup, user-dramsden, user-jfletcher
+## [2026-11-03T05:29:58Z] ingest | 04_service_definitions/accounts_payable/crn_get.yaml | +1 ~3 | services-ap-crn, screen-ap-crn-05, errors-crn, user-jfletcher
+## [2026-11-03T05:29:59Z] ingest | 04_service_definitions/accounts_payable/crn_post.yaml | +0 ~4 | services-ap-crn, screen-ap-crn-05, errors-crn, user-jfletcher
+## [2026-11-03T05:29:58Z] ingest | 04_service_definitions/accounts_payable/crn_save.yaml | +0 ~4 | services-ap-crn, screen-ap-crn-05, errors-sup, user-jfletcher
+## [2026-11-03T05:29:59Z] ingest | 04_service_definitions/accounts_payable/crn_search.yaml | +0 ~3 | services-ap-crn, screen-ap-crn-05, user-jfletcher
+## [2026-11-03T05:29:58Z] ingest | 04_service_definitions/accounts_payable/cur_get.yaml | +1 ~2 | services-ap-cur, screen-ap-cur-13, errors-cur
+## [2026-11-03T05:29:59Z] ingest | 04_service_definitions/accounts_payable/cur_list.yaml | +0 ~3 | services-ap-cur, screen-ap-cur-13, user-jfletcher
+## [2026-11-03T05:29:59Z] ingest | 04_service_definitions/accounts_payable/cur_save.yaml | +2 ~3 | services-ap-cur, screen-ap-cur-13, user-jfletcher, errors-sys, errors-sec
+## [2026-11-03T05:29:58Z] ingest | 04_service_definitions/accounts_payable/dbn_cancel.yaml | +1 ~3 | services-ap-dbn, screen-ap-dbn-04, errors-dbn, user-jfletcher
+## [2026-11-03T05:29:59Z] ingest | 04_service_definitions/accounts_payable/dbn_get.yaml | +0 ~3 | services-ap-dbn, screen-ap-dbn-04, errors-dbn
+## [2026-11-03T05:30:00Z] ingest | 04_service_definitions/accounts_payable/dbn_post.yaml | +0 ~3 | services-ap-dbn, screen-ap-dbn-04, errors-dbn
+## [2026-11-03T05:30:00Z] ingest | 04_service_definitions/accounts_payable/dbn_save.yaml | +0 ~4 | services-ap-dbn, screen-ap-dbn-04, errors-sup, user-jfletcher
+## [2026-11-03T05:29:58Z] ingest | 04_service_definitions/accounts_payable/dbn_search.yaml | +0 ~3 | services-ap-dbn, screen-ap-dbn-04, user-jfletcher
+## [2026-11-03T05:29:59Z] ingest | 04_service_definitions/accounts_payable/exp_approve.yaml | +1 ~4 | services-ap-exp, screen-ap-exp-09, errors-exp, errors-apr, user-jfletcher
+## [2026-11-03T05:30:02Z] ingest | 04_service_definitions/accounts_payable/exp_get.yaml | +0 ~4 | services-ap-exp, screen-ap-exp-09, errors-exp, user-jfletcher
+## [2026-11-03T05:29:58Z] ingest | 04_service_definitions/accounts_payable/exp_pay.yaml | +0 ~4 | services-ap-exp, screen-ap-exp-09, errors-exp, user-jfletcher
+## [2026-11-03T05:29:59Z] ingest | 04_service_definitions/accounts_payable/exp_reject.yaml | +0 ~3 | services-ap-exp, screen-ap-exp-09, errors-exp
+## [2026-11-03T05:30:00Z] ingest | 04_service_definitions/accounts_payable/exp_save.yaml | +0 ~4 | services-ap-exp, screen-ap-exp-09, errors-cc, user-jfletcher
+## [2026-11-03T05:29:59Z] ingest | 04_service_definitions/accounts_payable/exp_search.yaml | +0 ~3 | services-ap-exp, screen-ap-exp-09, user-jfletcher
+## [2026-11-03T05:30:01Z] ingest | 04_service_definitions/accounts_payable/exp_submit.yaml | +0 ~3 | services-ap-exp, screen-ap-exp-09, errors-exp
+## [2026-11-03T05:29:59Z] ingest | 04_service_definitions/accounts_payable/gl_post.yaml | +1 ~2 | services-ap-gl, screen-ap-gl-14, errors-gl
+## [2026-11-03T05:30:00Z] ingest | 04_service_definitions/accounts_payable/gl_query.yaml | +0 ~3 | services-ap-gl, screen-ap-gl-14, errors-gl
+## [2026-11-03T05:30:00Z] ingest | 04_service_definitions/accounts_payable/gl_reverse.yaml | +0 ~4 | services-ap-gl, screen-ap-gl-14, errors-gl, user-jfletcher
+## [2026-11-03T05:29:59Z] ingest | 04_service_definitions/accounts_payable/inv_cancel.yaml | +0 ~3 | services-ap-inv, screen-ap-inv-01, errors-inv
+## [2026-11-03T05:29:59Z] ingest | 04_service_definitions/accounts_payable/inv_get.yaml | +0 ~3 | services-ap-inv, screen-ap-inv-01, errors-inv
+## [2026-11-03T05:30:03Z] ingest | 04_service_definitions/accounts_payable/inv_hold.yaml | +0 ~4 | services-ap-inv, screen-ap-inv-01, errors-inv, user-jfletcher
+## [2026-11-03T05:30:00Z] ingest | 04_service_definitions/accounts_payable/inv_post.yaml | +0 ~5 | services-ap-inv, screen-ap-inv-01, errors-mat, errors-inv, errors-per
+## [2026-11-03T05:29:59Z] ingest | 04_service_definitions/accounts_payable/inv_release.yaml | +0 ~3 | services-ap-inv, screen-ap-inv-01, errors-inv
+## [2026-11-03T05:30:02Z] ingest | 04_service_definitions/accounts_payable/inv_save.yaml | +0 ~3 | services-ap-inv, screen-ap-inv-01, errors-inv
+## [2026-11-03T05:30:01Z] ingest | 04_service_definitions/accounts_payable/inv_search.yaml | +0 ~3 | services-ap-inv, screen-ap-inv-01, user-jfletcher
+## [2026-11-03T05:29:59Z] ingest | 04_service_definitions/accounts_payable/mat_get.yaml | +0 ~4 | services-ap-mat, screen-ap-mat-02, errors-mat, user-jfletcher
+## [2026-11-03T05:30:00Z] ingest | 04_service_definitions/accounts_payable/mat_override.yaml | +1 ~4 | services-ap-mat, screen-ap-mat-02, errors-mat, role-ap-mgr, user-jfletcher
+## [2026-11-03T05:30:02Z] ingest | 04_service_definitions/accounts_payable/mat_run.yaml | +0 ~4 | services-ap-mat, screen-ap-mat-02, errors-mat, user-jfletcher
+## [2026-11-03T05:30:00Z] ingest | 04_service_definitions/accounts_payable/mat_search.yaml | +0 ~3 | services-ap-mat, screen-ap-mat-02, user-jfletcher
+## [2026-11-03T05:30:03Z] ingest | 04_service_definitions/accounts_payable/pay_approve.xml | +0 ~7 | services-ap-pay, screen-ap-pay-03, errors-pay, errors-apr, errors-bnk, user-jfletcher, user-dramsden
+## [2026-11-03T05:30:03Z] ingest | 04_service_definitions/accounts_payable/pay_cancel.xml | +0 ~4 | services-ap-pay, screen-ap-pay-03, errors-pay, user-jfletcher
+## [2026-11-03T05:30:02Z] ingest | 04_service_definitions/accounts_payable/pay_file.xml | +0 ~6 | services-ap-pay, screen-ap-pay-03, user-jfletcher, user-dramsden, errors-pay, errors-bnk
+## [2026-11-03T05:30:03Z] ingest | 04_service_definitions/accounts_payable/pay_get.xml | +0 ~5 | services-ap-pay, screen-ap-pay-03, errors-pay, user-dramsden, user-jfletcher
+## [2026-11-03T05:30:03Z] ingest | 04_service_definitions/accounts_payable/pay_propose.xml | +0 ~6 | services-ap-pay, screen-ap-pay-03, errors-pay, errors-sup, user-jfletcher, user-dramsden
+## [2026-11-03T05:30:02Z] ingest | 04_service_definitions/accounts_payable/pay_release.xml | +0 ~4 | services-ap-pay, screen-ap-pay-03, errors-pay, user-jfletcher
+## [2026-11-03T05:30:02Z] ingest | 04_service_definitions/accounts_payable/pay_search.xml | +0 ~4 | services-ap-pay, screen-ap-pay-03, errors-pay, user-jfletcher
+## [2026-11-03T05:30:00Z] ingest | 04_service_definitions/accounts_payable/pcs_get.yaml | +1 ~3 | services-ap-pcs, screen-ap-pcs-15, errors-pcs, user-jfletcher
+## [2026-11-03T05:30:01Z] ingest | 04_service_definitions/accounts_payable/pcs_post.yaml | +0 ~4 | services-ap-pcs, screen-ap-pcs-15, errors-pcs, user-jfletcher
+## [2026-11-03T05:30:01Z] ingest | 04_service_definitions/accounts_payable/pcs_save.yaml | +0 ~4 | services-ap-pcs, screen-ap-pcs-15, errors-cc, user-jfletcher
+## [2026-11-03T05:30:00Z] ingest | 04_service_definitions/accounts_payable/pcs_search.yaml | +0 ~3 | services-ap-pcs, screen-ap-pcs-15, user-jfletcher
+## [2026-11-03T05:30:03Z] ingest | 04_service_definitions/accounts_payable/per_close.yaml | +0 ~5 | services-ap-per, screen-ap-per-11, errors-per, sop-ap-002, user-jfletcher
+## [2026-11-03T05:30:02Z] ingest | 04_service_definitions/accounts_payable/per_list.yaml | +0 ~3 | services-ap-per, screen-ap-per-11, user-jfletcher
+## [2026-11-03T05:30:02Z] ingest | 04_service_definitions/accounts_payable/per_open.yaml | +0 ~4 | services-ap-per, screen-ap-per-11, errors-per, user-jfletcher
+## [2026-11-03T05:30:02Z] ingest | 04_service_definitions/accounts_payable/per_status.yaml | +0 ~4 | services-ap-per, screen-ap-per-11, errors-per, user-jfletcher
+## [2026-11-03T05:30:02Z] ingest | 04_service_definitions/accounts_payable/sbal_ageing.yaml | +1 ~4 | services-ap-sbal, screen-ap-sbl-08, errors-sbl, errors-sup, user-jfletcher
+## [2026-11-03T05:30:02Z] ingest | 04_service_definitions/accounts_payable/sbal_query.yaml | +0 ~5 | services-ap-sbal, screen-ap-sbl-08, errors-sbl, errors-sup, user-jfletcher
+## [2026-11-03T05:30:01Z] ingest | 04_service_definitions/accounts_payable/sbal_stmt.yaml | +0 ~5 | services-ap-sbal, screen-ap-sbl-08, errors-sbl, errors-sup, user-jfletcher
+## [2026-11-03T05:30:02Z] ingest | 04_service_definitions/accounts_payable/sup_pay_hold.yaml | +0 ~5 | services-ap-sup, screen-ap-spy-16, errors-spy, errors-sup, user-jfletcher
+## [2026-11-03T05:30:02Z] ingest | 04_service_definitions/accounts_payable/sup_pay_release.yaml | +0 ~5 | services-ap-sup, screen-ap-spy-16, errors-spy, errors-sup, user-jfletcher
+## [2026-11-03T05:30:03Z] ingest | 04_service_definitions/accounts_payable/tax_get.yaml | +0 ~3 | services-ap-tax, screen-ap-tax-17, errors-tax
+## [2026-11-03T05:30:02Z] ingest | 04_service_definitions/accounts_payable/tax_save.yaml | +0 ~3 | services-ap-tax, screen-ap-tax-17, user-jfletcher
+## [2026-11-03T05:30:03Z] ingest | 04_service_definitions/accounts_payable/vat_get.yaml | +1 ~3 | services-ap-vat, screen-ap-vat-12, errors-vat, user-jfletcher
+## [2026-11-03T05:30:02Z] ingest | 04_service_definitions/accounts_payable/vat_rc_list.yaml | +0 ~4 | services-ap-vat, screen-ap-vat-12, errors-vat, user-jfletcher
+## [2026-11-03T05:30:03Z] ingest | 04_service_definitions/accounts_payable/vat_run.yaml | +0 ~3 | services-ap-vat, screen-ap-vat-12, user-jfletcher
+## [2026-11-03T05:30:02Z] ingest | 04_service_definitions/admin/api_key_issue.yaml | +1 ~3 | services-adm-api, screen-sys-api-14, errors-api, sop-it-002
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/api_key_list.yaml | +0 ~4 | services-adm-api, screen-sys-api-14, errors-api, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/api_key_revoke.yaml | +0 ~4 | services-adm-api, screen-sys-api-14, errors-api, user-jfletcher
+## [2026-11-03T05:30:02Z] ingest | 04_service_definitions/admin/aud_export.yaml | +1 ~2 | services-adm-aud, screen-sys-aud-07, errors-aud
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/aud_query.yaml | +0 ~4 | services-adm-aud, screen-sys-aud-07, errors-aud, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/bud_query.yaml | +0 ~4 | services-adm-bud, screen-fin-bud-02, errors-bud, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/bud_save.yaml | +0 ~4 | services-adm-bud, screen-fin-bud-02, errors-cc, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/bud_transfer.yaml | +0 ~4 | services-adm-bud, screen-fin-bud-02, errors-bud, errors-cc
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/cc_close.yaml | +0 ~4 | services-adm-cc, screen-fin-cc-01, errors-cc, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/cc_reopen.yaml | +0 ~3 | services-adm-cc, screen-fin-cc-01, errors-cc
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/cc_save.yaml | +0 ~3 | services-adm-cc, screen-fin-cc-01, errors-cc
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/cfg_get.yaml | +1 ~3 | services-adm-cfg, screen-sys-cfg-16, errors-cfg, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/cfg_save.yaml | +0 ~3 | services-adm-cfg, screen-sys-cfg-16, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/dlg_cancel.yaml | +1 ~3 | services-adm-dlg, screen-sys-dlg-03, errors-dlg, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/dlg_get.yaml | +0 ~4 | services-adm-dlg, screen-sys-dlg-03, errors-dlg, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/dlg_list.yaml | +0 ~3 | services-adm-dlg, screen-sys-dlg-03, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/dlg_save.yaml | +0 ~4 | services-adm-dlg, screen-sys-dlg-03, errors-dlg, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/imp_post.yaml | +1 ~2 | services-adm-imp, screen-sys-imp-13, errors-imp
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/imp_status.yaml | +0 ~3 | services-adm-imp, screen-sys-imp-13, errors-imp
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/imp_upload.yaml | +0 ~3 | services-adm-imp, screen-sys-imp-13, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/imp_validate.yaml | +0 ~3 | services-adm-imp, screen-sys-imp-13, errors-imp
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/job_cancel.yaml | +1 ~3 | services-adm-job, screen-sys-job-06, errors-job, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/job_list.yaml | +0 ~3 | services-adm-job, screen-sys-job-06, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/job_log.yaml | +0 ~4 | services-adm-job, screen-sys-job-06, errors-job, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/job_schedule.yaml | +0 ~4 | services-adm-job, screen-sys-job-06, errors-job, user-jfletcher
+## [2026-11-03T05:30:05Z] ingest | 04_service_definitions/admin/job_status.yaml | +0 ~4 | services-adm-job, screen-sys-job-06, errors-job, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/job_submit.yaml | +0 ~4 | services-adm-job, screen-sys-job-06, errors-job, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/lic_status.yaml | +1 ~3 | services-adm-lic, screen-sys-lic-10, errors-lic, user-jfletcher
+## [2026-11-03T05:30:05Z] ingest | 04_service_definitions/admin/ntf_queue_list.yaml | +1 ~3 | services-adm-ntf, screen-sys-ntf-11, errors-ntf, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/ntf_retry.yaml | +0 ~3 | services-adm-ntf, screen-sys-ntf-11, errors-ntf
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/ntf_tpl_get.yaml | +0 ~4 | services-adm-ntf, screen-sys-ntf-11, errors-ntf, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/ntf_tpl_save.yaml | +0 ~4 | services-adm-ntf, screen-sys-ntf-11, user-jfletcher, errors-ntf
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/ou_get.yaml | +1 ~3 | services-adm-ou, screen-sys-ou-08, errors-ou, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/ou_list.yaml | +0 ~3 | services-adm-ou, screen-sys-ou-08, user-jfletcher
+## [2026-11-03T05:30:05Z] ingest | 04_service_definitions/admin/ou_save.yaml | +0 ~3 | services-adm-ou, screen-sys-ou-08, user-jfletcher
+## [2026-11-03T05:30:05Z] ingest | 04_service_definitions/admin/par_get.yaml | +1 ~3 | services-adm-par, screen-sys-par-04, errors-par, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/par_hist.yaml | +0 ~4 | services-adm-par, screen-sys-par-04, errors-par, user-jfletcher
+## [2026-11-03T05:30:05Z] ingest | 04_service_definitions/admin/par_list.yaml | +0 ~3 | services-adm-par, screen-sys-par-04, user-jfletcher
+## [2026-11-03T05:30:05Z] ingest | 04_service_definitions/admin/par_set.yaml | +0 ~4 | services-adm-par, screen-sys-par-04, errors-par, user-jfletcher
+## [2026-11-03T05:30:04Z] ingest | 04_service_definitions/admin/prt_form_get.yaml | +1 ~3 | services-adm-prt, screen-sys-prt-12, errors-prt, user-jfletcher
+## [2026-11-03T05:30:05Z] ingest | 04_service_definitions/admin/prt_list.yaml | +0 ~3 | services-adm-prt, screen-sys-prt-12, user-jfletcher
+## [2026-11-03T05:30:05Z] ingest | 04_service_definitions/admin/role_get.yaml | +1 ~3 | services-adm-role, screen-sys-rol-02, errors-rol, user-jfletcher
+## [2026-11-03T05:30:05Z] ingest | 04_service_definitions/admin/role_list.yaml | +0 ~3 | services-adm-role, screen-sys-rol-02, user-jfletcher
+## [2026-11-03T05:30:05Z] ingest | 04_service_definitions/admin/role_save.yaml | +0 ~2 | services-adm-role, screen-sys-rol-02
+## [2026-11-03T05:30:05Z] ingest | 04_service_definitions/admin/role_svc_add.yaml | +0 ~4 | services-adm-role, screen-sys-rol-02, errors-rol, user-jfletcher
+## [2026-11-03T05:30:05Z] ingest | 04_service_definitions/admin/role_svc_remove.yaml | +0 ~4 | services-adm-role, screen-sys-rol-02, errors-rol, user-jfletcher
+## [2026-11-03T05:30:05Z] ingest | 04_service_definitions/admin/seq_get.yaml | +1 ~2 | services-adm-seq, screen-sys-seq-05, errors-seq
+## [2026-11-03T05:30:05Z] ingest | 04_service_definitions/admin/seq_list.yaml | +0 ~3 | services-adm-seq, screen-sys-seq-05, user-jfletcher
+## [2026-11-03T05:30:05Z] ingest | 04_service_definitions/admin/seq_set.yaml | +0 ~4 | services-adm-seq, screen-sys-seq-05, errors-seq, user-jfletcher
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/admin/ses_kill.yaml | +1 ~3 | services-adm-ses, screen-sys-ses-09, errors-ses, user-jfletcher
+## [2026-11-03T05:30:05Z] ingest | 04_service_definitions/admin/ses_list.yaml | +0 ~3 | services-adm-ses, screen-sys-ses-09, user-jfletcher
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/admin/sys_health.yaml | +0 ~3 | services-adm-sys, screen-sys-sys-15, user-jfletcher
+## [2026-11-03T05:30:05Z] ingest | 04_service_definitions/admin/sys_ping.yaml | +0 ~3 | services-adm-sys, screen-sys-sys-15, user-jfletcher
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/admin/sys_version.yaml | +0 ~3 | services-adm-sys, screen-sys-sys-15, user-jfletcher
+## [2026-11-03T05:30:05Z] ingest | 04_service_definitions/admin/usr_create.yaml | +0 ~4 | services-adm-usr, screen-sys-usr-01, errors-usr, user-jfletcher
+## [2026-11-03T05:30:05Z] ingest | 04_service_definitions/admin/usr_disable.yaml | +0 ~6 | services-adm-usr, screen-sys-usr-01, errors-usr, errors-sec, errors-sys, user-jfletcher
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/admin/usr_lock.yaml | +0 ~4 | services-adm-usr, screen-sys-usr-01, errors-usr, user-jfletcher
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/admin/usr_pwd_reset.yaml | +0 ~6 | services-adm-usr, screen-sys-usr-01, errors-usr, errors-sec, errors-sys, user-jfletcher
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/admin/usr_search.yaml | +0 ~3 | services-adm-usr, screen-sys-usr-01, user-jfletcher
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/admin/usr_unlock.yaml | +0 ~4 | services-adm-usr, screen-sys-usr-01, errors-usr, user-jfletcher
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/admin/usr_update.yaml | +0 ~4 | services-adm-usr, screen-sys-usr-01, errors-usr, user-jfletcher
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/inventory/adj_approve.yaml | +0 ~5 | services-inv-adj, screen-inv-adj-05, errors-adj, errors-apr, user-jfletcher
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/inventory/adj_cancel.yaml | +0 ~4 | services-inv-adj, screen-inv-adj-05, errors-adj, user-jfletcher
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/inventory/adj_get.yaml | +0 ~4 | services-inv-adj, screen-inv-adj-05, errors-adj, user-jfletcher
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/inventory/adj_post.yaml | +0 ~4 | services-inv-adj, screen-inv-adj-05, errors-adj, user-jfletcher
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/inventory/adj_save.yaml | +0 ~5 | services-inv-adj, screen-inv-adj-05, errors-adj, errors-itm, user-jfletcher
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/inventory/adj_search.yaml | +0 ~5 | services-inv-adj, screen-inv-adj-05, errors-adj, errors-itm, user-jfletcher
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/inventory/bin_block.yaml | +1 ~3 | services-inv-bin, screen-inv-bin-09, errors-bin, user-jfletcher
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/inventory/bin_get.yaml | +0 ~4 | services-inv-bin, screen-inv-bin-09, errors-bin, user-jfletcher
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/bin_save.yaml | +0 ~2 | services-inv-bin, screen-inv-bin-09
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/inventory/bin_search.yaml | +0 ~3 | services-inv-bin, screen-inv-bin-09, user-jfletcher
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/inventory/ccp_generate.yaml | +1 ~2 | services-inv-ccp, screen-inv-ccp-14, errors-ccp
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/inventory/ccp_get.yaml | +0 ~4 | services-inv-ccp, screen-inv-ccp-14, errors-ccp, user-jfletcher
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/ccp_save.yaml | +0 ~3 | services-inv-ccp, screen-inv-ccp-14, user-jfletcher
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/inventory/ccp_search.yaml | +0 ~3 | services-inv-ccp, screen-inv-ccp-14, user-jfletcher
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/inventory/cnt_cancel.yaml | +0 ~4 | services-inv-cnt, screen-inv-cnt-06, errors-cnt, user-jfletcher
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/cnt_entry.yaml | +0 ~4 | services-inv-cnt, screen-inv-cnt-06, errors-cnt, errors-itm
+## [2026-11-03T05:30:06Z] ingest | 04_service_definitions/inventory/cnt_freeze.yaml | +0 ~4 | services-inv-cnt, screen-inv-cnt-06, errors-cnt, user-jfletcher
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/cnt_get.yaml | +0 ~4 | services-inv-cnt, screen-inv-cnt-06, errors-cnt, user-jfletcher
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/cnt_post.yaml | +0 ~4 | services-inv-cnt, screen-inv-cnt-06, errors-cnt, user-jfletcher
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/cnt_save.yaml | +0 ~4 | services-inv-cnt, screen-inv-cnt-06, errors-cnt, user-jfletcher
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/cnt_search.yaml | +0 ~2 | services-inv-cnt, screen-inv-cnt-06
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/csg_get.yaml | +0 ~3 | services-inv-csg, screen-inv-csg-17, errors-csg
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/csg_save.yaml | +0 ~6 | services-inv-csg, screen-inv-csg-17, errors-csg, errors-itm, errors-sup, user-jfletcher
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/csg_search.yaml | +0 ~5 | services-inv-csg, screen-inv-csg-17, errors-csg, errors-itm, user-jfletcher
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/csg_settle.yaml | +0 ~3 | services-inv-csg, screen-inv-csg-17, errors-inv
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/grn_get.yaml | +0 ~3 | services-inv-grn, errors-grn, user-jfletcher
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/grn_save.yaml | +0 ~4 | services-inv-grn, screen-inv-grn-03, errors-grn, user-jfletcher
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/grn_search.yaml | +0 ~2 | services-inv-grn, user-jfletcher
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/itm_block.yaml | +0 ~4 | services-inv-itm, screen-inv-itm-01, errors-itm, user-jfletcher
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/itm_save.yaml | +0 ~4 | services-inv-itm, screen-inv-itm-01, errors-itm, user-jfletcher
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/itm_uom_conv.yaml | +0 ~3 | services-inv-itm, screen-inv-itm-01, errors-itm
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/itm_update.yaml | +0 ~4 | services-inv-itm, screen-inv-itm-01, errors-itm, user-jfletcher
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/kbn_close.yaml | +1 ~2 | services-inv-kbn, screen-inv-kbn-13, errors-kbn
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/kbn_get.yaml | +0 ~4 | services-inv-kbn, screen-inv-kbn-13, errors-kbn, user-jfletcher
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/kbn_save.yaml | +0 ~4 | services-inv-kbn, screen-inv-kbn-13, errors-itm, user-jfletcher
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/kbn_search.yaml | +0 ~3 | services-inv-kbn, screen-inv-kbn-13, errors-itm
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/kbn_signal.yaml | +0 ~4 | services-inv-kbn, screen-inv-kbn-13, errors-kbn, user-jfletcher
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/lot_get.yaml | +1 ~3 | services-inv-lot, screen-inv-lot-10, errors-lot, user-jfletcher
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/lot_hold.yaml | +0 ~4 | services-inv-lot, screen-inv-lot-10, errors-lot, user-jfletcher
+## [2026-11-03T05:30:07Z] ingest | 04_service_definitions/inventory/lot_release.yaml | +0 ~4 | services-inv-lot, screen-inv-lot-10, errors-lot, user-jfletcher
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/lot_save.yaml | +0 ~5 | services-inv-lot, screen-inv-lot-10, errors-itm, errors-sup, user-jfletcher
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/lot_search.yaml | +0 ~4 | services-inv-lot, screen-inv-lot-10, errors-itm, user-jfletcher
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/lot_trace.yaml | +0 ~4 | services-inv-lot, screen-inv-lot-10, errors-lot, user-jfletcher
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/mrn_cancel.yaml | +1 ~2 | services-inv-mrn, screen-inv-mrn-08, errors-mrn
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/mrn_get.yaml | +0 ~4 | services-inv-mrn, screen-inv-mrn-08, errors-inv, user-jfletcher
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/mrn_post.yaml | +0 ~4 | services-inv-mrn, screen-inv-mrn-08, errors-mrn, user-jfletcher
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/mrn_save.yaml | +0 ~3 | services-inv-mrn, screen-inv-mrn-08, errors-mrn
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/mrn_search.yaml | +0 ~5 | services-inv-mrn, screen-inv-mrn-08, errors-mrn, errors-itm, user-jfletcher
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/pkg_get.yaml | +1 ~3 | services-inv-pkg, screen-inv-pkg-15, errors-pkg, user-jfletcher
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/pkg_post.yaml | +0 ~4 | services-inv-pkg, screen-inv-pkg-15, errors-pkg, user-jfletcher
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/pkg_save.yaml | +0 ~4 | services-inv-pkg, screen-inv-pkg-15, errors-pkg, user-jfletcher
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/pkg_search.yaml | +0 ~4 | services-inv-pkg, screen-inv-pkg-15, errors-pkg, user-jfletcher
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/qch_get.yaml | +1 ~2 | services-inv-qch, screen-inv-qch-11, errors-qch
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/qch_reject.yaml | +0 ~4 | services-inv-qch, screen-inv-qch-11, errors-qch, user-jfletcher
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/qch_release.yaml | +0 ~3 | services-inv-qch, screen-inv-qch-11, errors-qch
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/qch_save.yaml | +0 ~4 | services-inv-qch, screen-inv-qch-11, errors-qch, errors-itm
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/qch_search.yaml | +0 ~4 | services-inv-qch, screen-inv-qch-11, errors-qch, errors-itm
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/res_cancel.yaml | +1 ~3 | services-inv-res, screen-inv-res-12, errors-res, user-jfletcher
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/res_get.yaml | +0 ~4 | services-inv-res, screen-inv-res-12, errors-res, user-jfletcher
+## [2026-11-03T05:30:08Z] ingest | 04_service_definitions/inventory/res_save.yaml | +0 ~5 | services-inv-res, screen-inv-res-12, errors-res, errors-itm, user-jfletcher
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/res_search.yaml | +0 ~5 | services-inv-res, screen-inv-res-12, errors-res, errors-itm, user-jfletcher
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/rtv_cancel.yaml | +0 ~4 | services-inv-rtv, screen-inv-rtv-07, errors-rtv, user-jfletcher
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/rtv_get.yaml | +0 ~4 | services-inv-rtv, screen-inv-rtv-07, errors-rtv, user-jfletcher
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/rtv_post.yaml | +0 ~3 | services-inv-rtv, screen-inv-rtv-07, errors-rtv
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/rtv_save.yaml | +0 ~3 | services-inv-rtv, screen-inv-rtv-07, errors-rtv
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/rtv_search.yaml | +0 ~4 | services-inv-rtv, screen-inv-rtv-07, errors-rtv, user-jfletcher
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/scr_approve.yaml | +1 ~4 | services-inv-scr, screen-inv-scr-16, errors-scr, errors-apr, user-jfletcher
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/scr_get.yaml | +0 ~4 | services-inv-scr, screen-inv-scr-16, errors-scr, user-jfletcher
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/scr_post.yaml | +0 ~3 | services-inv-scr, screen-inv-scr-16, errors-scr
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/scr_save.yaml | +0 ~4 | services-inv-scr, screen-inv-scr-16, errors-scr, errors-itm
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/scr_search.yaml | +0 ~4 | services-inv-scr, screen-inv-scr-16, errors-scr, errors-itm
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/stk_abc_run.yaml | +0 ~4 | services-inv-stk, screen-inv-stk-03, errors-stk, errors-itm
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/stk_age_query.yaml | +0 ~5 | services-inv-stk, screen-inv-stk-03, errors-stk, errors-itm, user-jfletcher
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/stk_move_query.yaml | +0 ~4 | services-inv-stk, screen-inv-stk-03, errors-stk, errors-itm
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/stk_snapshot.yaml | +0 ~4 | services-inv-stk, screen-inv-stk-03, errors-stk, errors-itm
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/stk_val_query.yaml | +0 ~3 | services-inv-stk, screen-inv-stk-03, user-jfletcher
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/stk_val_run.yaml | +0 ~4 | services-inv-stk, screen-inv-stk-03, errors-stk, errors-itm
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/inventory/txf_cancel.yaml | +0 ~3 | services-inv-txf, screen-inv-trf-04, errors-txf
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/txf_get.yaml | +0 ~4 | services-inv-txf, screen-inv-trf-04, errors-txf, user-jfletcher
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/txf_post.yaml | +0 ~4 | services-inv-txf, screen-inv-trf-04, errors-txf, user-jfletcher
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/inventory/txf_save.yaml | +0 ~3 | services-inv-txf, screen-inv-trf-04, errors-txf
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/txf_search.yaml | +0 ~4 | services-inv-txf, screen-inv-trf-04, errors-itm, user-jfletcher
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/whs_get.yaml | +1 ~3 | services-inv-whs, screen-inv-whs-01, errors-whs, user-jfletcher
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/inventory/whs_save.yaml | +0 ~3 | services-inv-whs, screen-inv-whs-01, user-jfletcher
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/production/bkf_get.yaml | +1 ~2 | services-prd-bkf, screen-prd-bkf-08, errors-bkf
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/production/bkf_post.yaml | +0 ~3 | services-prd-bkf, screen-prd-bkf-08, errors-bkf
+## [2026-11-03T05:30:09Z] ingest | 04_service_definitions/production/bkf_reverse.yaml | +0 ~4 | services-prd-bkf, screen-prd-bkf-08, errors-bkf, user-jfletcher
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/bom_copy.yaml | +1 ~3 | services-prd-bom, screen-prd-bom-02, errors-bom, user-jfletcher
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/bom_explode.yaml | +0 ~4 | services-prd-bom, screen-prd-bom-02, errors-bom, user-jfletcher
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/bom_get.yaml | +0 ~5 | services-prd-bom, screen-prd-bom-02, errors-bom, errors-itm, user-jfletcher
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/bom_save.yaml | +0 ~4 | services-prd-bom, screen-prd-bom-02, errors-bom, user-jfletcher
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/bom_search.yaml | +0 ~4 | services-prd-bom, screen-prd-bom-02, errors-bom, user-jfletcher
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/bom_where_used.yaml | +0 ~5 | services-prd-bom, screen-prd-bom-02, errors-bom, errors-itm, user-jfletcher
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/btt_get.yaml | +1 ~2 | services-prd-btt, screen-qa-btt-03, errors-btt
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/btt_save.yaml | +0 ~4 | services-prd-btt, screen-qa-btt-03, errors-btt, user-jfletcher
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/btt_search.yaml | +0 ~4 | services-prd-btt, screen-qa-btt-03, errors-itm, user-jfletcher
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/cal_due.yaml | +1 ~2 | services-prd-cal, screen-qa-cal-04, errors-cal
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/cal_get.yaml | +0 ~4 | services-prd-cal, screen-qa-cal-04, errors-cal, user-jfletcher
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/cal_save.yaml | +0 ~3 | services-prd-cal, screen-qa-cal-04, user-jfletcher
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/cap_load.yaml | +1 ~2 | services-prd-cap, screen-prd-cap-13, errors-cap
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/cap_query.yaml | +0 ~3 | services-prd-cap, screen-prd-cap-13, errors-cap
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/ecn_approve.yaml | +0 ~5 | services-prd-ecn, screen-prd-ecn-06, errors-ecn, errors-apr, sop-prd-002
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/ecn_get.yaml | +0 ~3 | services-prd-ecn, screen-prd-ecn-06, errors-prd
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/ecn_release.yaml | +0 ~4 | services-prd-ecn, screen-prd-ecn-06, errors-ecn, sop-prd-002
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/ecn_save.yaml | +0 ~4 | services-prd-ecn, screen-prd-ecn-06, sop-prd-002, user-jfletcher
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/ecn_search.yaml | +0 ~4 | services-prd-ecn, screen-prd-ecn-06, errors-ecn, user-jfletcher
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/mnt_close.yaml | +1 ~2 | services-prd-mnt, screen-prd-mnt-07, errors-mno
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/mnt_get.yaml | +0 ~3 | services-prd-mnt, screen-prd-mnt-07, errors-mno
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/mnt_save.yaml | +0 ~4 | services-prd-mnt, screen-prd-mnt-07, errors-cc, user-jfletcher
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/mnt_search.yaml | +0 ~3 | services-prd-mnt, screen-prd-mnt-07, user-jfletcher
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/mps_get.yaml | +1 ~3 | services-prd-mps, screen-prd-mps-05, errors-mps, errors-itm
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/mps_save.yaml | +0 ~5 | services-prd-mps, screen-prd-mps-05, errors-mps, errors-itm, user-jfletcher
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/mps_search.yaml | +0 ~4 | services-prd-mps, screen-prd-mps-05, errors-mps, errors-itm
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/mrp_exceptions.yaml | +1 ~3 | services-prd-mrp, screen-prd-mrp-09, errors-mrp, user-jfletcher
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/mrp_firm.yaml | +0 ~4 | services-prd-mrp, screen-prd-mrp-09, errors-mrp, user-jfletcher
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/mrp_get.yaml | +0 ~3 | services-prd-mrp, screen-prd-mrp-09, errors-mrp
+## [2026-11-03T05:30:10Z] ingest | 04_service_definitions/production/mrp_run.yaml | +0 ~3 | services-prd-mrp, screen-prd-mrp-09, user-jfletcher
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/ncr_close.yaml | +1 ~3 | services-prd-ncr, screen-qa-ncr-02, errors-ncr, user-jfletcher
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/ncr_get.yaml | +0 ~4 | services-prd-ncr, screen-qa-ncr-02, errors-ncr, user-jfletcher
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/ncr_save.yaml | +0 ~3 | services-prd-ncr, screen-qa-ncr-02, errors-ncr
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/ncr_search.yaml | +0 ~4 | services-prd-ncr, screen-qa-ncr-02, errors-itm, user-jfletcher
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/opr_get.yaml | +1 ~3 | services-prd-opr, screen-prd-opr-04, errors-opr, user-jfletcher
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/opr_save.yaml | +0 ~3 | services-prd-opr, screen-prd-opr-04, user-jfletcher
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/opr_search.yaml | +0 ~3 | services-prd-opr, screen-prd-opr-04, user-jfletcher
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/pkb_get.yaml | +1 ~3 | services-prd-pkb, screen-prd-pkb-15, errors-pkb, user-jfletcher
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/pkb_save.yaml | +0 ~4 | services-prd-pkb, screen-prd-pkb-15, errors-pkb, errors-itm
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/pkb_signal.yaml | +0 ~4 | services-prd-pkb, screen-prd-pkb-15, errors-pkb, user-jfletcher
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/qin_get.yaml | +1 ~2 | services-prd-qin, screen-qa-ins-01, errors-qin
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/qin_post.yaml | +0 ~3 | services-prd-qin, screen-qa-ins-01, errors-qin
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/qin_reject.yaml | +0 ~4 | services-prd-qin, screen-qa-ins-01, errors-qin, user-jfletcher
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/qin_save.yaml | +0 ~3 | services-prd-qin, screen-qa-ins-01, user-jfletcher
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/qin_search.yaml | +0 ~3 | services-prd-qin, screen-qa-ins-01, user-jfletcher
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/production/rtg_get.yaml | +1 ~4 | services-prd-rtg, screen-prd-rtg-03, errors-rtg, errors-itm, user-jfletcher
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/production/rtg_save.yaml | +0 ~3 | services-prd-rtg, screen-prd-rtg-03, errors-itm
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/production/rtg_search.yaml | +0 ~4 | services-prd-rtg, screen-prd-rtg-03, errors-itm, user-jfletcher
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/scp_get.yaml | +1 ~2 | services-prd-scp, screen-prd-scp-12, errors-scp
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/production/scp_post.yaml | +0 ~4 | services-prd-scp, screen-prd-scp-12, errors-scp, user-jfletcher
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/scp_save.yaml | +0 ~4 | services-prd-scp, screen-prd-scp-12, errors-scp, errors-itm
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/shf_get.yaml | +1 ~2 | services-prd-shf, screen-prd-shf-11, errors-shf
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/shf_save.yaml | +0 ~2 | services-prd-shf, screen-prd-shf-11
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/tool_get.yaml | +1 ~3 | services-prd-tool, screen-prd-tol-14, errors-tol, user-jfletcher
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/production/tool_save.yaml | +0 ~2 | services-prd-tool, screen-prd-tol-14
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/production/wc_get.yaml | +1 ~2 | services-prd-wc, screen-prd-wc-10, errors-wc
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/production/wc_list.yaml | +0 ~3 | services-prd-wc, screen-prd-wc-10, user-jfletcher
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/production/wc_save.yaml | +0 ~3 | services-prd-wc, screen-prd-wc-10, user-jfletcher
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/production/wo_cancel.yaml | +0 ~4 | services-prd-wo, screen-prd-wo-01, errors-wo, user-jfletcher
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/production/wo_close.yaml | +0 ~4 | services-prd-wo, screen-prd-wo-01, errors-wo, user-jfletcher
+## [2026-11-03T05:30:11Z] ingest | 04_service_definitions/production/wo_get.yaml | +0 ~4 | services-prd-wo, screen-prd-wo-01, errors-wo, user-jfletcher
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/production/wo_release.yaml | +0 ~5 | services-prd-wo, screen-prd-wo-01, errors-wo, errors-bom, sop-prd-001
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/production/wo_save.yaml | +0 ~6 | services-prd-wo, screen-prd-wo-01, errors-wo, errors-itm, errors-cc, user-jfletcher
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/production/wo_search.yaml | +0 ~3 | services-prd-wo, screen-prd-wo-01, errors-wo
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/purchase/bud_check.yaml | +0 ~4 | services-pur-bud, user-jfletcher, errors-bud, errors-cc
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/purchase/cc_get.yaml | +0 ~3 | services-pur-cc, errors-cc, user-jfletcher
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/purchase/cc_list.yaml | +0 ~2 | services-pur-cc, user-jfletcher
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/purchase/itm_get.yaml | +0 ~3 | services-pur-itm, errors-itm, user-jfletcher
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/purchase/itm_search.yaml | +0 ~3 | services-pur-itm, screen-inv-itm-03, user-jfletcher
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/purchase/ntf_send.yaml | +0 ~4 | services-pur-ntf, user-jfletcher, errors-sys, errors-sec
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/purchase/po_amend.yaml | +0 ~4 | services-pur-po, screen-pur-pom-06, errors-po, err-po-0801
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/purchase/po_approve.yaml | +0 ~4 | services-pur-po, screen-pur-poa-04, errors-po, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/po_cancel.yaml | +0 ~4 | services-pur-po, screen-pur-pom-06, errors-po, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/po_fetch.yaml | +0 ~5 | services-pur-po, screen-pur-po-01, err-po-0412, errors-sup, user-jfletcher
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/purchase/po_get.yaml | +0 ~2 | services-pur-po, errors-po
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/po_hist.yaml | +0 ~3 | services-pur-po, screen-pur-poh-02, user-jfletcher
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/purchase/po_pending_appr.yaml | +0 ~2 | services-pur-po, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/po_reject.yaml | +0 ~4 | services-pur-po, screen-pur-poa-04, errors-po, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/po_release.yaml | +0 ~4 | services-pur-po, screen-pur-por-05, errors-po, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/po_save.yaml | +0 ~5 | services-pur-po, screen-pur-po-01, errors-po, err-po-0412, user-jfletcher
+## [2026-11-03T05:30:12Z] ingest | 04_service_definitions/purchase/po_search.yaml | +0 ~2 | services-pur-po, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/pr_approve.yaml | +0 ~4 | services-pur-pr, screen-pur-pr-04, errors-po, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/pr_fetch.yaml | +0 ~4 | services-pur-pr, screen-pur-pr-01, errors-itm, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/pr_get.yaml | +0 ~3 | services-pur-pr, errors-pr, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/pr_save.yaml | +0 ~6 | services-pur-pr, screen-pur-pr-01, errors-pr, errors-itm, errors-cc, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/pr_search.yaml | +0 ~2 | services-pur-pr, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/pr_submit.yaml | +0 ~5 | services-pur-pr, screen-pur-pr-01, user-jfletcher, errors-pr, errors-apr
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/pt_list.yaml | +0 ~2 | services-pur-pt, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/stk_ledger.yaml | +0 ~2 | services-pur-stk, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/stk_query.yaml | +0 ~4 | services-pur-stk, screen-inv-stk-02, errors-stk, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/stk_reorder_list.yaml | +0 ~2 | services-pur-stk, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/sup_cert_get.yaml | +0 ~2 | services-pur-sup, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/sup_cert_upload.yaml | +0 ~3 | services-pur-sup, errors-sup, data-service-index
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/sup_create.yaml | +0 ~4 | services-pur-sup, screen-pur-sup-01, err-sup-0118, errors-sup
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/sup_get.yaml | +0 ~3 | services-pur-sup, errors-sup, user-jfletcher
+## [2026-11-03T05:30:14Z] ingest | 04_service_definitions/purchase/sup_rate_get.yaml | +0 ~2 | services-pur-sup, user-jfletcher
+## [2026-11-03T05:30:14Z] ingest | 04_service_definitions/purchase/sup_search.yaml | +0 ~3 | services-pur-sup, screen-pur-sup-03, user-jfletcher
+## [2026-11-03T05:30:14Z] ingest | 04_service_definitions/purchase/tax_compute.yaml | +0 ~4 | services-pur-tax, errors-tax, data-tax-codes, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/tax_list.yaml | +0 ~3 | services-pur-tax, user-jfletcher, data-tax-codes
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/usr_get.yaml | +0 ~3 | services-pur-usr, user-jfletcher, errors-sec
+## [2026-11-03T05:30:14Z] ingest | 04_service_definitions/purchase/usr_roles.yaml | +0 ~4 | services-pur-usr, errors-sec, errors-sys, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/purchase/whs_list.yaml | +0 ~2 | services-pur-whs, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/sales/alc_cancel.yaml | +0 ~4 | services-sal-alc, screen-sal-alc-03, errors-alc, user-jfletcher
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/sales/alc_get.yaml | +0 ~3 | services-sal-alc, screen-sal-alc-03, errors-alc
+## [2026-11-03T05:30:13Z] ingest | 04_service_definitions/sales/alc_run.yaml | +0 ~2 | services-sal-alc, screen-sal-alc-03
+## [2026-11-03T05:30:14Z] ingest | 04_service_definitions/sales/com_get.yaml | +0 ~4 | services-sal-com, screen-sal-com-15, errors-com, user-jfletcher
+## [2026-11-03T05:30:14Z] ingest | 04_service_definitions/sales/com_run.yaml | +0 ~3 | services-sal-com, screen-sal-com-15, user-jfletcher
+## [2026-11-03T05:30:14Z] ingest | 04_service_definitions/sales/crd_check.yaml | +1 ~3 | services-sal-crd, screen-sal-crd-11, errors-crd, user-jfletcher
+## [2026-11-03T05:30:14Z] ingest | 04_service_definitions/sales/crd_hold_list.yaml | +0 ~3 | services-sal-crd, screen-sal-crd-11, errors-crd
+## [2026-11-03T05:30:14Z] ingest | 04_service_definitions/sales/crd_release.yaml | +0 ~3 | services-sal-crd, screen-sal-crd-11, errors-crd
+## [2026-11-03T05:30:14Z] ingest | 04_service_definitions/sales/cust_block.yaml | +1 ~3 | services-sal-cust, screen-sal-cus-01, errors-cus, user-jfletcher
+## [2026-11-03T05:30:14Z] ingest | 04_service_definitions/sales/cust_credit.yaml | +0 ~4 | services-sal-cust, screen-sal-cus-01, errors-cus, user-jfletcher
+## [2026-11-03T05:30:14Z] ingest | 04_service_definitions/sales/cust_get.yaml | +0 ~4 | services-sal-cust, screen-sal-cus-01, errors-cus, user-jfletcher
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/cust_save.yaml | +0 ~3 | services-sal-cust, screen-sal-cus-01, user-jfletcher
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/cust_search.yaml | +0 ~3 | services-sal-cust, screen-sal-cus-01, user-jfletcher
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/cust_update.yaml | +0 ~3 | services-sal-cust, screen-sal-cus-01, errors-cus
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/dlv_cancel.yaml | +0 ~3 | services-sal-dlv, screen-sal-dlv-05, errors-dlv
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/dlv_get.yaml | +0 ~3 | services-sal-dlv, screen-sal-dlv-05, errors-dlv
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/dlv_label.yaml | +0 ~4 | services-sal-dlv, screen-sal-dlv-05, errors-dlv, user-jfletcher
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/dlv_post.yaml | +1 ~4 | services-sal-dlv, screen-sal-dlv-05, errors-dlv, errors-frt, user-jfletcher
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/dlv_save.yaml | +0 ~3 | services-sal-dlv, screen-sal-dlv-05, errors-dlv
+## [2026-11-03T05:30:14Z] ingest | 04_service_definitions/sales/dlv_search.yaml | +0 ~3 | services-sal-dlv, screen-sal-dlv-05, user-jfletcher
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/dmo_close.yaml | +1 ~3 | services-sal-dmo, screen-sal-dmo-17, errors-dmo, user-jfletcher
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/dmo_get.yaml | +0 ~4 | services-sal-dmo, screen-sal-dmo-17, errors-dmo, user-jfletcher
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/dmo_save.yaml | +0 ~4 | services-sal-dmo, screen-sal-dmo-17, errors-itm, user-jfletcher
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/dmo_search.yaml | +0 ~3 | services-sal-dmo, screen-sal-dmo-17, errors-itm
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/dsc_get.yaml | +1 ~3 | services-sal-dsc, screen-sal-dsc-10, errors-dsc, user-jfletcher
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/dsc_save.yaml | +0 ~2 | services-sal-dsc, screen-sal-dsc-10
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/dsc_search.yaml | +0 ~3 | services-sal-dsc, screen-sal-dsc-10, user-jfletcher
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/edi_desadv_out.xml | +0 ~5 | services-sal-edi, screen-sal-edi-13, errors-edi, user-jfletcher, user-dramsden
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/edi_err_list.xml | +0 ~4 | services-sal-edi, screen-sal-edi-13, errors-edi, user-jfletcher
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/edi_invoic_out.xml | +0 ~5 | services-sal-edi, screen-sal-edi-13, errors-edi, user-dramsden, user-jfletcher
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/edi_ord_ack.xml | +0 ~5 | services-sal-edi, screen-sal-edi-13, errors-edi, user-jfletcher, user-dramsden
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/edi_ord_in.xml | +0 ~5 | services-sal-edi, screen-sal-edi-13, errors-edi, user-jfletcher, user-dramsden
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/fcs_get.yaml | +0 ~3 | services-sal-fcs, screen-sal-fcs-14, errors-fcs
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/fcs_save.yaml | +0 ~5 | services-sal-fcs, screen-sal-fcs-14, errors-fcs, errors-itm, user-jfletcher
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/fcs_upload.yaml | +0 ~5 | services-sal-fcs, screen-sal-fcs-14, errors-fcs, errors-itm, user-jfletcher
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/frt_book.xml | +0 ~5 | services-sal-frt, screen-sal-frt-12, errors-frt, user-jfletcher, user-dramsden
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/frt_label.xml | +0 ~4 | services-sal-frt, screen-sal-frt-12, errors-frt, user-jfletcher
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/frt_quote.xml | +0 ~4 | services-sal-frt, screen-sal-frt-12, user-jfletcher, user-dramsden
+## [2026-11-03T05:30:16Z] ingest | 04_service_definitions/sales/frt_track.xml | +0 ~5 | services-sal-frt, screen-sal-frt-12, errors-frt, user-jfletcher, user-dramsden
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/pck_confirm.yaml | +1 ~3 | services-sal-pck, screen-sal-pck-04, errors-pck, user-jfletcher
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/pck_get.yaml | +0 ~4 | services-sal-pck, screen-sal-pck-04, errors-pck, user-jfletcher
+## [2026-11-03T05:30:16Z] ingest | 04_service_definitions/sales/pck_save.yaml | +0 ~3 | services-sal-pck, screen-sal-pck-04, user-jfletcher
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/pck_search.yaml | +0 ~3 | services-sal-pck, screen-sal-pck-04, user-jfletcher
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/prc_copy.yaml | +1 ~4 | services-sal-prc, screen-sal-prc-08, errors-prc, errors-itm, user-jfletcher
+## [2026-11-03T05:30:16Z] ingest | 04_service_definitions/sales/prc_get.yaml | +0 ~3 | services-sal-prc, screen-sal-prc-08, errors-prc
+## [2026-11-03T05:30:16Z] ingest | 04_service_definitions/sales/prc_save.yaml | +0 ~3 | services-sal-prc, screen-sal-prc-08, errors-itm
+## [2026-11-03T05:30:15Z] ingest | 04_service_definitions/sales/prc_search.yaml | +0 ~3 | services-sal-prc, screen-sal-prc-08, errors-itm
+## [2026-11-03T05:30:16Z] ingest | 04_service_definitions/sales/quo_cancel.yaml | +0 ~4 | services-sal-quo, screen-sal-quo-02, errors-quo, user-jfletcher
+## [2026-11-03T05:30:16Z] ingest | 04_service_definitions/sales/quo_convert.yaml | +0 ~4 | services-sal-quo, screen-sal-quo-02, errors-quo, user-jfletcher
+## [2026-11-03T05:30:16Z] ingest | 04_service_definitions/sales/quo_get.yaml | +0 ~4 | services-sal-quo, screen-sal-quo-02, errors-quo, user-jfletcher
+## [2026-11-03T05:30:16Z] ingest | 04_service_definitions/sales/quo_save.yaml | +0 ~4 | services-sal-quo, screen-sal-quo-02, errors-quo, errors-itm
+## [2026-11-03T05:30:16Z] ingest | 04_service_definitions/sales/quo_search.yaml | +0 ~4 | services-sal-quo, screen-sal-quo-02, errors-quo, errors-itm
+## [2026-11-03T05:30:16Z] ingest | 04_service_definitions/sales/rma_approve.yaml | +0 ~4 | services-sal-rma, screen-sal-rma-07, errors-rma, errors-apr
+## [2026-11-03T05:30:16Z] ingest | 04_service_definitions/sales/rma_close.yaml | +0 ~4 | services-sal-rma, screen-sal-rma-07, errors-rma, user-jfletcher
+## [2026-11-03T05:30:16Z] ingest | 04_service_definitions/sales/rma_get.yaml | +0 ~4 | services-sal-rma, screen-sal-rma-07, errors-rma, user-jfletcher
+## [2026-11-03T05:30:16Z] ingest | 04_service_definitions/sales/rma_receive.yaml | +0 ~4 | services-sal-rma, screen-sal-rma-07, errors-rma, user-jfletcher
+## [2026-11-03T05:30:16Z] ingest | 04_service_definitions/sales/rma_save.yaml | +0 ~3 | services-sal-rma, screen-sal-rma-07, errors-itm
+## [2026-11-03T05:30:16Z] ingest | 04_service_definitions/sales/rma_search.yaml | +0 ~3 | services-sal-rma, screen-sal-rma-07, errors-itm
+## [2026-11-03T05:30:17Z] ingest | 04_service_definitions/sales/scn_get.yaml | +1 ~3 | services-sal-scn, screen-sal-crn-09, errors-scn, user-jfletcher
+## [2026-11-03T05:30:17Z] ingest | 04_service_definitions/sales/scn_post.yaml | +0 ~3 | services-sal-scn, screen-sal-crn-09, errors-scn
+## [2026-11-03T05:30:17Z] ingest | 04_service_definitions/sales/scn_save.yaml | +0 ~3 | services-sal-scn, screen-sal-crn-09, user-jfletcher
+## [2026-11-03T05:30:17Z] ingest | 04_service_definitions/sales/sinv_cancel.yaml | +0 ~3 | services-sal-sinv, screen-sal-inv-06, errors-sin
+## [2026-11-03T05:30:17Z] ingest | 04_service_definitions/sales/sinv_get.yaml | +0 ~4 | services-sal-sinv, screen-sal-inv-06, errors-sin, user-jfletcher
+## [2026-11-03T05:30:17Z] ingest | 04_service_definitions/sales/sinv_post.yaml | +0 ~3 | services-sal-sinv, screen-sal-inv-06, errors-sin
+## [2026-11-03T05:30:17Z] ingest | 04_service_definitions/sales/sinv_print.yaml | +0 ~4 | services-sal-sinv, screen-sal-inv-06, errors-sin, user-jfletcher
+## [2026-11-03T05:30:17Z] ingest | 04_service_definitions/sales/sinv_save.yaml | +0 ~3 | services-sal-sinv, screen-sal-inv-06, user-jfletcher
+## [2026-11-03T05:30:17Z] ingest | 04_service_definitions/sales/sinv_search.yaml | +0 ~3 | services-sal-sinv, screen-sal-inv-06, user-jfletcher
+## [2026-11-03T05:30:18Z] ingest | 04_service_definitions/sales/so_amend.yaml | +0 ~4 | services-sal-so, screen-sal-so-01, errors-so, user-jfletcher
+## [2026-11-03T05:30:18Z] ingest | 04_service_definitions/sales/so_cancel.yaml | +0 ~3 | services-sal-so, screen-sal-so-01, errors-so
+## [2026-11-03T05:30:18Z] ingest | 04_service_definitions/sales/so_confirm.yaml | +0 ~4 | services-sal-so, screen-sal-so-01, errors-so, user-jfletcher
+## [2026-11-03T05:30:18Z] ingest | 04_service_definitions/sales/so_fetch.yaml | +0 ~5 | services-sal-so, screen-sal-so-01, errors-so, errors-itm, user-jfletcher
+## [2026-11-03T05:30:17Z] ingest | 04_service_definitions/sales/so_get.yaml | +0 ~4 | services-sal-so, screen-sal-so-01, errors-so, user-jfletcher
+## [2026-11-03T05:30:17Z] ingest | 04_service_definitions/sales/so_hold.yaml | +0 ~3 | services-sal-so, screen-sal-so-01, errors-so
+## [2026-11-03T05:30:18Z] ingest | 04_service_definitions/sales/so_release.yaml | +0 ~3 | services-sal-so, screen-sal-so-01, errors-so
+## [2026-11-03T05:30:18Z] ingest | 04_service_definitions/sales/so_save.yaml | +0 ~3 | services-sal-so, screen-sal-so-01, errors-so
+## [2026-11-03T05:30:18Z] ingest | 04_service_definitions/sales/so_search.yaml | +0 ~4 | services-sal-so, screen-sal-so-01, errors-so, errors-itm
+## [2026-11-03T05:30:18Z] ingest | 04_service_definitions/sales/srl_get.yaml | +1 ~3 | services-sal-srl, screen-sal-srl-16, errors-srl, user-jfletcher
+## [2026-11-03T05:30:19Z] ingest | 04_service_definitions/sales/srl_reg.yaml | +0 ~4 | services-sal-srl, screen-sal-srl-16, errors-itm, user-jfletcher
+## [2026-11-03T05:30:18Z] ingest | 04_service_definitions/sales/srl_search.yaml | +0 ~3 | services-sal-srl, screen-sal-srl-16, user-jfletcher
+## [2026-11-03T05:30:18Z] ingest | 04_service_definitions/service_index.csv | +0 ~5 | data-service-index, screen-ap-acr-10, services-ap-acr, screen-inv-adj-05, services-inv-adj
+## [2026-11-03T05:31:22Z] ingest | 08_release_notes/LL6_release_history_2004-2012.txt | +0 ~2 | rn-ll6-history, data-tax-codes
+## [2026-11-03T05:31:24Z] ingest | 08_release_notes/NBC_customisations_and_patch_log.xlsx | +3 ~7 | data-nbc-change-log, pol-its-008, pol-pur-001, amd-pur-2026-03, rn-7-2-3-p2, rn-7-2-3-p4, rn-7-2-3-p5, user-jfletcher, user-rpryce, user-dramsden
+## [2026-11-03T05:31:33Z] ingest | 08_release_notes/RN-7.0 Ledgerline Release Notes.pdf | +1 ~3 | rn-7-0, screen-pur-po-01, data-users-and-approval-limits, data-item-master
+## [2026-11-03T05:31:29Z] ingest | 08_release_notes/RN-7.0.1 Ledgerline Release Notes.pdf | +1 ~1 | rn-7-0-1, screen-pur-po-01
+## [2026-11-03T05:31:30Z] ingest | 08_release_notes/RN-7.0.2 Ledgerline Release Notes.pdf | +1 ~0 | rn-7-0-2
+## [2026-11-03T05:31:33Z] ingest | 08_release_notes/RN-7.1 Ledgerline Release Notes.pdf | +1 ~5 | rn-7-1, screen-sys-dlg-03, err-dlg-0210, screen-inv-csg-17, screen-prd-ecn-06, sop-prd-002
+## [2026-11-03T05:31:27Z] ingest | 08_release_notes/RN-7.1.1 Ledgerline Release Notes.pdf | +1 ~1 | rn-7-1-1, screen-sal-dmo-17
+## [2026-11-03T05:31:32Z] ingest | 08_release_notes/RN-7.1.2 Ledgerline Release Notes.pdf | +1 ~1 | rn-7-1-2, data-supplier-master
+## [2026-11-03T05:31:33Z] ingest | 08_release_notes/RN-7.2.0 Ledgerline Release Notes.pdf | +1 ~5 | rn-7-2-0, screen-pur-poa-04, screen-inv-lot-10, screen-qa-btt-03, screen-sys-api-14, sop-it-002
+## [2026-11-03T05:31:29Z] ingest | 08_release_notes/RN-7.2.1 Ledgerline Release Notes.pdf | +1 ~1 | rn-7-2-1, sop-pur-005
+## [2026-11-03T05:31:32Z] ingest | 08_release_notes/RN-7.2.2 Ledgerline Release Notes.pdf | +2 ~3 | rn-7-2-2, sop-inv-003, sop-ap-001, err-cnt-0240, errors-cnt
+## [2026-11-03T05:31:31Z] ingest | 08_release_notes/RN-7.2.3 Ledgerline Release Notes.pdf | +1 ~4 | rn-7-2-3, screen-pur-po-01, services-pur-po, err-scr-0221, w-cc-114
+## [2026-11-03T05:31:28Z] ingest | 08_release_notes/RN-7.2.3-P1 Ledgerline Patch Notes.pdf | +1 ~3 | rn-7-2-3-p1, err-po-0412, errors-po, services-pur-po
+## [2026-11-03T05:31:30Z] ingest | 08_release_notes/RN-7.2.3-P2 Ledgerline Patch Notes.pdf | +0 ~2 | rn-7-2-3-p2, man-adm-72
+## [2026-11-03T05:31:31Z] ingest | 08_release_notes/RN-7.2.3-P3 Ledgerline Patch Notes.pdf | +2 ~1 | rn-7-2-3-p3, sop-ap-001, err-inv-0118
+## [2026-11-03T05:31:32Z] ingest | 08_release_notes/RN-7.2.3-P4 Ledgerline Patch Notes.pdf | +1 ~3 | rn-7-2-3-p4, screen-pur-po-01, w-sup-0207, topic-un-38-3-certificates
+## [2026-11-03T05:31:29Z] ingest | 08_release_notes/RN-7.2.3-P5 Ledgerline Patch Notes.pdf | +0 ~4 | rn-7-2-3-p5, sop-sal-001, items-bat, sop-ap-001
+## [2026-11-03T05:31:28Z] ingest | 08_release_notes/RN-7.3 PREVIEW (planned March 2027).pdf | +2 ~2 | rn-7-3-preview, screen-pur-po-01, err-sup-0207, topic-un-38-3-certificates
+## [2026-11-03T05:31:35Z] ingest | 11_training/BHT-01 Battery handling course slides.pdf | +1 ~5 | man-bht-01, pol-bat-004, sop-inv-004, sop-qua-002, screen-qa-ncr-02, items-bat
+## [2026-11-03T05:31:35Z] ingest | 11_training/New starter - Purchasing (2024) deck export.pdf | +1 ~6 | topic-purchasing-induction, role-pur-exec, topic-un-38-3-certificates, data-tax-codes, err-po-0412, user-dokafor, user-lmoreno
+## [2026-11-03T05:31:36Z] ingest | 11_training/QRC-01 Raising a purchase request.pdf | +1 ~2 | qrc-01, screen-pur-pr-01, sop-pur-002
+## [2026-11-03T05:31:36Z] ingest | 11_training/QRC-02 Raising a purchase order - Fetch first.pdf | +1 ~4 | qrc-02, screen-pur-po-01, screen-pur-por-05, err-scr-0221, data-tax-codes
+## [2026-11-03T05:31:36Z] ingest | 11_training/QRC-03 ERR-PO-0412 quick fix.pdf | +0 ~3 | err-po-0412, errors-po, data-tax-codes
+## [2026-11-03T05:31:36Z] ingest | 11_training/QRC-04 Goods receipt.pdf | +1 ~3 | screen-inv-grn-03, sup-vc-ein-0042, items-bat, decision-2026-06-15-voltway-battery-receipt
+## [2026-11-03T05:31:36Z] ingest | 11_training/QRC-05 Uploading a supplier certificate.pdf | +1 ~3 | qrc-05, sop-pur-005, topic-un-38-3-certificates, role-pur-sr
+## [2026-11-03T05:31:35Z] ingest | 11_training/QRC-06 Your approval inbox.pdf | +0 ~3 | screen-pur-poa-04, sop-pur-002, items-bat
+## [2026-11-03T05:31:36Z] ingest | 11_training/QRC-07 Lithium battery labels.pdf | +1 ~4 | qrc-07, items-pkg, err-dlv-0320, sop-sal-001, pol-bat-004
+## [2026-11-03T05:31:37Z] ingest | 11_training/QRC-08 Stock enquiry and days of cover.pdf | +1 ~1 | qrc-08, screen-inv-stk-02
+## [2026-11-03T05:31:36Z] ingest | 11_training/intranet_export_2016/approval_limits.html | +0 ~6 | pol-apr-002, role-pur-exec, role-pur-sr, role-pur-mgr, role-plant-head, user-dramsden
+## [2026-11-03T05:31:36Z] ingest | 11_training/intranet_export_2016/contacts.html | +2 ~2 | data-intranet-contacts-2016, user-gsutcliffe, user-dramsden, user-lmoreno
+## [2026-11-03T05:31:36Z] ingest | 11_training/intranet_export_2016/error_messages.html | +0 ~5 | err-po-0412, err-sup-0031, err-po-0610, user-gsutcliffe, user-dramsden
+## [2026-11-03T05:31:36Z] ingest | 11_training/intranet_export_2016/how_to_raise_an_order.html | +0 ~3 | sop-pur-002, screen-pur-po-01, user-dramsden
+## [2026-11-03T05:31:36Z] ingest | 11_training/intranet_export_2016/index.html | +1 ~3 | data-integration-inventory, pol-pur-001, sop-qua-001, user-dramsden
+## [2026-11-03T05:31:36Z] ingest | 11_training/intranet_export_2016/page_charity_cycle_ride.html | +1 ~1 | topic-charity-cycle-ride, user-dramsden
+## [2026-11-03T05:31:36Z] ingest | 11_training/intranet_export_2016/page_frequently_asked_questions.html | +1 ~1 | topic-purchasing-faq-2016, user-dramsden
+## [2026-11-03T05:31:36Z] ingest | 11_training/intranet_export_2016/page_glossary_of_ledgerline_terms.html | +1 ~2 | topic-ledgerline-glossary, sop-ap-001, user-dramsden
+## [2026-11-03T05:31:37Z] ingest | 11_training/intranet_export_2016/page_goods_receipt_tips.html | +0 ~2 | sop-qua-001, user-dramsden
+## [2026-11-03T05:31:37Z] ingest | 11_training/intranet_export_2016/page_health_and_safety_in_the_warehouse.html | +0 ~3 | pol-hse-010, pol-bat-004, user-dramsden
+## [2026-11-03T05:31:37Z] ingest | 11_training/intranet_export_2016/page_how_we_work_with_finance.html | +0 ~4 | sop-pur-002, sop-ap-001, sop-ap-002, user-dramsden
+## [2026-11-03T05:31:37Z] ingest | 11_training/intranet_export_2016/page_ledgerline_tips_and_tricks.html | +0 ~4 | user-dramsden, sop-pur-002, sop-qua-001, man-adm-72
+## [2026-11-03T05:31:37Z] ingest | 11_training/intranet_export_2016/page_meet_the_leeds_team.html | +1 ~1 | topic-leeds-commercial-unit, user-dramsden
+## [2026-11-03T05:31:37Z] ingest | 11_training/intranet_export_2016/page_month_end_checklist__2016.html | +1 ~2 | procedure-purchasing-month-end-checklist, sop-ap-002, user-dramsden
+## [2026-11-03T05:31:37Z] ingest | 11_training/intranet_export_2016/page_our_e_bike_range_2016.html | +1 ~1 | topic-e-bike-range-2016, user-dramsden
+## [2026-11-03T05:31:37Z] ingest | 11_training/intranet_export_2016/page_packaging_ideas.html | +1 ~1 | topic-packaging-ideas, user-dramsden
+## [2026-11-03T05:31:37Z] ingest | 11_training/intranet_export_2016/page_purchasing_team_news__spring_2016.html | +0 ~5 | data-nbc-change-log, user-dramsden, sop-pur-003, sop-pur-002, sop-qua-001
+## [2026-11-03T05:31:37Z] ingest | 11_training/intranet_export_2016/page_quality_notices.html | +1 ~2 | sop-qua-001, topic-supplier-quality-management, user-dramsden
+## [2026-11-03T05:31:37Z] ingest | 11_training/intranet_export_2016/page_supplier_visits.html | +1 ~1 | topic-supplier-visits, user-dramsden
+## [2026-11-03T05:31:37Z] ingest | 11_training/intranet_export_2016/page_suppliers_in_europe.html | +1 ~3 | topic-european-purchasing, sop-pur-002, sop-ap-001, user-dramsden
+## [2026-11-03T05:31:37Z] ingest | 11_training/intranet_export_2016/page_working_with_stores.html | +1 ~2 | topic-purchasing-and-stores-cooperation, user-dramsden, role-stores
+## [2026-11-03T05:31:37Z] ingest | 11_training/intranet_export_2016/page_year_end_stock_count__2016.html | +0 ~3 | sop-inv-003, sop-inv-002, user-dramsden
+## [2026-11-03T05:31:37Z] ingest | 11_training/intranet_export_2016/supplier_list.html | +0 ~4 | screen-pur-sup-03, sop-pur-001, sop-pur-002, user-dramsden
+## [2026-11-03T05:31:37Z] ingest | 11_training/old/Ledgerline basics for new starters (2019) deck export.pdf | +1 ~1 | topic-ledgerline-basics-2019, user-jfletcher
+## [2026-11-03T05:31:37Z] ingest | 12_integrations/Bank payment file format STD18 v1.3.pdf | +1 ~2 | int-bnk-002, sop-ap-003, data-integration-inventory
+## [2026-11-03T05:31:37Z] ingest | 12_integrations/Carrier API notes - Moorland Logistics.md | +0 ~3 | data-integration-inventory, services-sal-frt, sop-sal-001
+## [2026-11-03T05:31:37Z] ingest | 12_integrations/EDI ORDERS interface spec v2.1.pdf | +3 ~2 | int-edi-001, services-sal-edi, err-edi-0140, err-edi-0101, errors-edi
+## [2026-11-03T05:31:37Z] ingest | 12_integrations/Integration inventory.xlsx | +1 ~8 | data-integration-inventory, user-svc-agent, user-edi-gw, user-imorgan, user-mkowalski, user-cshaw, user-pjansen, user-slindqvist, user-gwhitaker
+## [2026-11-03T05:31:37Z] ingest | 12_integrations/SVC_AGENT integration account - design note.md | +0 ~2 | user-svc-agent, sop-it-002
+## [2026-11-03T05:31:37Z] ingest | 12_integrations/bank_file_sample_2026-10-22.txt | +4 ~1 | data-bank-file-sample-2026-10-22, sop-ap-003, sup-pennine-brakes, sup-irwell-packaging, sup-castlefield-charge
+## [2026-11-03T05:31:37Z] ingest | 12_integrations/edi_samples/ORDERS_4500091877.edi | +0 ~3 | data-integration-inventory, items-fg, items-spr
+## [2026-11-03T05:31:37Z] ingest | 12_integrations/edi_samples/ORDERS_ORD-88213.edi | +0 ~3 | data-integration-inventory, items-fg, items-spr
+## [2026-11-03T05:31:37Z] ingest | 12_integrations/edi_samples/ORDERS_ORD-88240.edi | +0 ~3 | data-integration-inventory, items-fg, items-spr
+## [2026-11-03T05:31:37Z] ingest | 12_integrations/wsdl/LedgerlineGateway.wsdl | +0 ~5 | data-integration-inventory, services-ap-pay, services-ap-bnk, services-sal-frt, services-sal-edi
+## [2026-11-03T05:31:33Z] ingest | 10_meeting_notes/2022-02-10 Sales meeting.docx | +0 ~6 | sop-sal-002, sop-sal-001, user-atanaka, user-imorgan, user-kmensah, user-lmoreno
+## [2026-11-03T05:31:33Z] ingest | 10_meeting_notes/2022-03-03 Production planning meeting.docx | +1 ~5 | user-rpryce, user-sberg, user-bprice, user-dokafor, user-eclarke, user-mkowalski
+## [2026-11-03T05:31:33Z] ingest | 10_meeting_notes/2022-03-11 IT steering.docx | +1 ~5 | topic-it-steering-2022-03-11, user-imorgan, user-pjansen, user-kmensah, user-cshaw, user-atanaka
+## [2026-11-03T05:31:33Z] ingest | 10_meeting_notes/2022-10-15 Battery safety committee.md | +0 ~7 | pol-bat-004, sop-qua-002, pol-ret-006, sop-sal-002, user-gwhitaker, user-imorgan, user-sberg
+## [2026-11-03T05:31:34Z] ingest | 10_meeting_notes/2022-10-16 Weekly purchasing meeting.docx | +1 ~3 | decision-2022-10-16-purchasing-meeting, user-rpryce, user-kmensah, sop-inv-003
+## [2026-11-03T05:31:33Z] ingest | 10_meeting_notes/2022-10-21 Supplier review.docx | +1 ~2 | decision-2022-10-21-supplier-review, user-bprice, sop-pur-003
+## [2026-11-03T05:31:34Z] ingest | 10_meeting_notes/2023-02-14 Ledgerline 7.2 upgrade steering.md | +1 ~2 | decision-2023-02-14-ledgerline-7-2-upgrade, sop-pur-002, rn-7-2-0
+## [2026-11-03T05:31:33Z] ingest | 10_meeting_notes/2023-03-02 Production planning meeting.docx | +1 ~3 | decision-2023-03-02-production-planning, user-sberg, user-cshaw, user-eclarke
+## [2026-11-03T05:31:34Z] ingest | 10_meeting_notes/2023-06-21 Packaging review.docx | +1 ~2 | decision-2023-06-21-packaging-review, user-jfletcher, user-atanaka
+## [2026-11-03T05:31:34Z] ingest | 10_meeting_notes/2023-12-25 Health and safety committee.docx | +0 ~2 | pol-hse-010, user-bprice
+## [2026-11-03T05:31:34Z] ingest | 10_meeting_notes/2024-03-10 Sales meeting.md | +0 ~3 | sop-sal-001, sop-sal-002, user-bprice
+## [2026-11-03T05:31:34Z] ingest | 10_meeting_notes/2024-05-08 Leeds unit update.docx | +1 ~3 | decision-2024-05-08-leeds-unit-update, user-eclarke, user-rpryce, user-sberg
+## [2026-11-03T05:31:34Z] ingest | 10_meeting_notes/2024-10-01 Stores and logistics meeting.md | +1 ~6 | decision-2024-10-01-stores-logistics, sop-prd-001, sop-inv-003, sop-sal-002, user-imorgan, user-pjansen, user-jfletcher
+## [2026-11-03T05:31:34Z] ingest | 10_meeting_notes/2025-03-18 Leeds unit update.docx | +1 ~5 | decision-2025-03-18-leeds-unit-update, user-pjansen, user-bprice, user-kmensah, sop-sal-002, pol-bat-004
+## [2026-11-03T05:31:35Z] ingest | 10_meeting_notes/2025-07-24 Supplier review.docx | +1 ~4 | decision-2025-07-24-supplier-review, user-jfletcher, user-dokafor, user-atanaka, sop-ap-001
+## [2026-11-03T05:31:35Z] ingest | 10_meeting_notes/2025-10-08 Continuous improvement workshop.docx | +1 ~3 | topic-continuous-improvement-2025-10-08, sop-prd-001, sop-prd-002, sop-sal-002
+## [2026-11-03T05:31:34Z] ingest | 10_meeting_notes/2025-12-12 Finance and purchasing catch-up.md | +1 ~7 | decision-2025-12-12-finance-purchasing-catchup, sop-ap-001, sop-ap-003, sop-pur-002, user-kmensah, user-dokafor, user-cshaw, user-eclarke
+## [2026-11-03T05:31:34Z] ingest | 10_meeting_notes/2026-01-11 IT steering.docx | +1 ~4 | decision-2026-01-11-it-steering, user-bprice, sop-sal-001, sop-qua-001, sop-sal-002
+## [2026-11-03T05:31:35Z] ingest | 10_meeting_notes/2026-01-17 Warranty review.docx | +1 ~3 | decision-2026-01-17-warranty-review, sop-sal-002, sop-inv-002, user-cshaw
+## [2026-11-03T05:31:35Z] ingest | 10_meeting_notes/2026-01-24 Weekly purchasing meeting.md | +1 ~3 | user-atanaka, user-bprice, user-pjansen, topic-warehouse-transfers
+## [2026-11-03T05:31:35Z] ingest | 10_meeting_notes/2026-03-05 CAB minutes.docx | +1 ~3 | decision-2026-03-05-cab-cr-2026-007, rn-7-2-3-p2, man-adm-72, user-rpryce
+## [2026-11-03T05:31:35Z] ingest | 10_meeting_notes/2026-04-18 Stores and logistics meeting.docx | +1 ~5 | decision-2026-04-18-stores-and-logistics, sop-sal-002, sop-inv-003, sop-prd-001, sop-sal-001, user-atanaka
+## [2026-11-03T05:31:35Z] ingest | 10_meeting_notes/2026-05-23 Quality meeting.docx | +1 ~4 | decision-2026-05-23-quality-meeting, user-gwhitaker, user-pjansen, user-lmoreno, sop-sal-002
+## [2026-11-03T05:31:35Z] ingest | 10_meeting_notes/2026-06-10 Health and safety committee.docx | +0 ~7 | pol-hse-010, pol-bat-004, sop-inv-004, user-kmensah, user-sberg, user-jfletcher, user-rpryce
+## [2026-11-03T05:31:35Z] ingest | 10_meeting_notes/2026-06-30 Month-end review.docx | +2 ~3 | decision-2026-06-02-ap-cut-off, sop-ap-002, user-gwhitaker, user-mkowalski, user-tashworth
+## [2026-11-03T05:31:35Z] ingest | 10_meeting_notes/2026-07-30 Battery incident review.md | +1 ~5 | decision-2026-07-30-battery-incident-review, amd-sup-2026-02, pol-sup-003, sop-qua-002, user-lmoreno, user-pjansen
+## [2026-11-03T05:31:36Z] ingest | 10_meeting_notes/2026-08-21 Quality meeting.docx | +0 ~4 | pol-qua-005, user-pjansen, user-cshaw, user-jfletcher
+## [2026-11-03T05:31:35Z] ingest | 10_meeting_notes/2026-09-17 Supplier review - Voltway Cells.docx | +0 ~5 | sup-vc-ein-0042, items-bat, topic-un-38-3-certificates, user-dokafor, user-lmoreno
+## [2026-11-03T05:31:35Z] ingest | 10_meeting_notes/2026-09-18 Ledgerline key users.docx | +1 ~5 | decision-2026-09-18-ledgerline-key-users, user-gwhitaker, user-mkowalski, user-atanaka, user-imorgan, sop-prd-002
+## [2026-11-03T05:31:35Z] ingest | 10_meeting_notes/2026-09-30 S&OP meeting.docx | +1 ~3 | decision-2026-09-30-sop-planning, cc-prd-07, cc-prd-05, items-bat
+## [2026-11-03T05:31:36Z] ingest | 10_meeting_notes/2026-10-07 CAB minutes (CR-2026-031 certificate check).docx | +1 ~5 | decision-2026-10-07-cr-2026-031-cert-check, w-sup-0207, rn-7-2-3-p4, rn-7-2-3-p5, sop-pur-001, amd-sup-2026-02
+## [2026-11-03T05:31:36Z] ingest | 10_meeting_notes/2026-10-19 Weekly purchasing meeting.md | +1 ~8 | sup-brightcell-energy, sup-vc-ein-0042, sup-nc-gda-0063, items-bat, cc-prd-07, sop-pur-001, topic-un-38-3-certificates, user-eclarke, user-lmoreno
+## [2026-11-03T05:31:27Z] ingest | 09_email_archive/2015/2015-02-16_Moving to Ledgerline 7.eml | +1 ~2 | decision-2015-02-16-ledgerline-7-migration, user-gsutcliffe, rn-ll6-history
+## [2026-11-03T05:31:24Z] ingest | 09_email_archive/2019/2019-01-12_New printer for purchase orders.eml | +1 ~1 | user-jfletcher, decision-2019-01-12-po-printer-replacement
+## [2026-11-03T05:31:24Z] ingest | 09_email_archive/2019/2019-01-16_Planned network outage.eml | +0 ~1 | user-rpryce
+## [2026-11-03T05:31:24Z] ingest | 09_email_archive/2019/2019-01-19_Supplier quality review for the third quarter.eml | +0 ~2 | user-pjansen, sop-qua-001
+## [2026-11-03T05:31:27Z] ingest | 09_email_archive/2019/2019-03-06_Retail packaging change.eml | +1 ~2 | decision-2019-03-06-retail-packaging-change, user-imorgan, user-eclarke
+## [2026-11-03T05:31:26Z] ingest | 09_email_archive/2019/2019-03-20_Voltway Cells - new supplier code VC-EIN-0042.eml | +0 ~3 | sup-vc-ein-0042, user-gsutcliffe, rn-7-1
+## [2026-11-03T05:31:25Z] ingest | 09_email_archive/2019/2019-05-02_Phishing e-mails pretending to be suppliers.eml | +0 ~2 | user-rpryce, sop-ap-004
+## [2026-11-03T05:31:27Z] ingest | 09_email_archive/2019/2019-07-10_Material shortages on the Deansgate line.eml | +1 ~2 | user-sberg, user-dokafor, topic-material-shortages
+## [2026-11-03T05:31:26Z] ingest | 09_email_archive/2019/2019-08-07_New starters in purchasing.eml | +0 ~4 | user-slindqvist, user-hweber, role-pur-exec, sop-it-001
+## [2026-11-03T05:31:25Z] ingest | 09_email_archive/2019/2019-08-08_Supplier performance scores.eml | +1 ~2 | topic-supplier-performance-evaluation, user-dokafor, user-lmoreno
+## [2026-11-03T05:31:27Z] ingest | 09_email_archive/2019/2019-09-09_Rate contract review in March.eml | +0 ~3 | sop-pur-004, user-lmoreno, user-dokafor
+## [2026-11-03T05:31:27Z] ingest | 09_email_archive/2019/2019-09-17_Trade show stand volunteers.eml | +0 ~2 | user-imorgan, pol-tex-007
+## [2026-11-03T05:31:25Z] ingest | 09_email_archive/2019/2019-12-04_Quarantine bin full.eml | +0 ~3 | user-pjansen, user-cshaw, pol-qua-005
+## [2026-11-03T05:31:27Z] ingest | 09_email_archive/2021/2021-01-17_Approval stuck in the inbox.eml | +1 ~2 | user-kmensah, user-dokafor, topic-record-locking
+## [2026-11-03T05:31:27Z] ingest | 09_email_archive/2021/2021-01-18_Damaged cartons from the carrier.eml | +0 ~3 | sop-qua-001, user-cshaw, user-pjansen
+## [2026-11-03T05:31:27Z] ingest | 09_email_archive/2021/2021-01-27_Supplier visit to Eindhoven.eml | +0 ~3 | sup-vc-ein-0042, user-hweber, user-dokafor
+## [2026-11-03T05:31:27Z] ingest | 09_email_archive/2021/2021-02-24_Supplier statement does not match.eml | +0 ~3 | user-tashworth, user-lmoreno, sop-ap-001
+## [2026-11-03T05:31:27Z] ingest | 09_email_archive/2021/2021-04-04_End-of-line test rig downtime.eml | +0 ~3 | user-sberg, user-pjansen, sop-prd-001
+## [2026-11-03T05:31:30Z] ingest | 09_email_archive/2021/2021-04-25_MRP run results look odd.eml | +1 ~1 | user-sberg, topic-mrp-planning
+## [2026-11-03T05:31:28Z] ingest | 09_email_archive/2021/2021-05-27_Duplicate invoice caught.eml | +0 ~4 | sop-ap-003, sop-ap-001, user-tashworth, user-mkowalski
+## [2026-11-03T05:31:27Z] ingest | 09_email_archive/2021/2021-06-27_ISO 9001 surveillance audit.eml | +0 ~2 | user-pjansen, pol-qua-005
+## [2026-11-03T05:31:27Z] ingest | 09_email_archive/2021/2021-09-28_Visit from the Leeds team.eml | +0 ~1 | user-hweber
+## [2026-11-03T05:31:28Z] ingest | 09_email_archive/2021/2021-12-15_Annual leave reminder before year end.eml | +0 ~2 | pol-hr-020, user-slindqvist
+## [2026-11-03T05:31:28Z] ingest | 09_email_archive/2021/2021-12-25_Warranty claims trend.eml | +0 ~3 | user-imorgan, user-hweber, sop-sal-002
+## [2026-11-03T05:31:27Z] ingest | 09_email_archive/2022/2022-07-04_Ledgerline support contract renewal.eml | +0 ~2 | user-jfletcher, man-adm-72
+## [2026-11-03T05:31:30Z] ingest | 09_email_archive/2022/2022-08-26_Delivery without a purchase order number.eml | +0 ~3 | user-atanaka, user-dokafor, sop-qua-001
+## [2026-11-03T05:31:28Z] ingest | 09_email_archive/2023/2023-02-27_Battery fire drill.eml | +0 ~4 | pol-bat-004, sop-inv-004, user-cshaw, user-hweber
+## [2026-11-03T05:31:28Z] ingest | 09_email_archive/2023/2023-10-06_Purchasing headcount request.eml | +0 ~2 | user-dokafor, user-hweber
+## [2026-11-03T05:31:27Z] ingest | 09_email_archive/2023/2023-10-12_Late deliveries this week.eml | +0 ~1 | user-cshaw
+## [2026-11-03T05:31:27Z] ingest | 09_email_archive/2024/2024-03-10_Month-end_ release your approved orders.eml | +0 ~3 | sop-pur-002, sop-ap-002, user-dokafor
+## [2026-11-03T05:31:29Z] ingest | 09_email_archive/2024/2024-07-03_Incoming inspection backlog.eml | +0 ~3 | sop-qua-001, user-pjansen, user-lmoreno
+## [2026-11-03T05:31:28Z] ingest | 09_email_archive/2024/2024-09-10_Christmas shutdown dates.eml | +0 ~1 | user-hweber
+## [2026-11-03T05:31:27Z] ingest | 09_email_archive/2024/2024-10-21_Leeds stores space.eml | +1 ~2 | user-bprice, user-hweber, topic-leeds-stores-management
+## [2026-11-03T05:31:28Z] ingest | 09_email_archive/2025/2025-01-08_Payment run approval cover.eml | +0 ~3 | sop-ap-003, user-mkowalski, user-gwhitaker
+## [2026-11-03T05:31:29Z] ingest | 09_email_archive/2025/2025-02-13_Cover for my requests next week.eml | +0 ~2 | user-eclarke, user-kmensah
+## [2026-11-03T05:31:30Z] ingest | 09_email_archive/2025/2025-04-17_Bike shop orders ahead of the spring range.eml | +0 ~3 | user-imorgan, user-sberg, sop-sal-001
+## [2026-11-03T05:31:30Z] ingest | 09_email_archive/2025/2025-05-18_Invoices on hold for price differences.eml | +0 ~3 | sop-ap-001, sop-pur-003, user-mkowalski
+## [2026-11-03T05:31:31Z] ingest | 09_email_archive/2025/2025-07-28_Handover while I am on leave.eml | +0 ~2 | user-lmoreno, user-kmensah
+## [2026-11-03T05:31:30Z] ingest | 09_email_archive/2025/2025-09-02_Packaging supplier asking for a forecast.eml | +1 ~2 | user-eclarke, user-lmoreno, topic-packaging-forecasting
+## [2026-11-03T05:31:30Z] ingest | 09_email_archive/2025/2025-09-15_How to search for a supplier properly.eml | +0 ~2 | sop-pur-001, user-lmoreno
+## [2026-11-03T05:31:30Z] ingest | 09_email_archive/2025/2025-09-27_Weekly purchasing meeting moved to Thursday.eml | +1 ~1 | decision-2025-09-27-weekly-purchasing-meeting, user-dokafor
+## [2026-11-03T05:31:29Z] ingest | 09_email_archive/2025/2025-10-16_Budget review for next year.eml | +0 ~1 | user-gwhitaker
+## [2026-11-03T05:31:29Z] ingest | 09_email_archive/2025/2025-12-07_Tyre supplier lead times.eml | +1 ~2 | user-kmensah, user-lmoreno, topic-purchasing-parameters
+## [2026-11-03T05:31:29Z] ingest | 09_email_archive/2026/2026-01-07_Expense claims before the summer.eml | +0 ~2 | pol-tex-007, user-gwhitaker
+## [2026-11-03T05:31:29Z] ingest | 09_email_archive/2026/2026-01-18_Old 6.x gateway still in use.eml | +1 ~2 | topic-leeds-manchester-gateway, user-rpryce, user-jfletcher
+## [2026-11-03T05:31:30Z] ingest | 09_email_archive/2026/2026-01-21_Cycle count this Friday.eml | +0 ~2 | sop-inv-003, user-atanaka
+## [2026-11-03T05:31:30Z] ingest | 09_email_archive/2026/2026-02-15_Bank detail change requests.eml | +0 ~3 | sop-ap-004, user-mkowalski, sop-ap-003
+## [2026-11-03T05:31:31Z] ingest | 09_email_archive/2026/2026-02-15_Ledgerline read-only during backup window.eml | +1 ~1 | topic-backup-window, user-jfletcher
+## [2026-11-03T05:31:31Z] ingest | 09_email_archive/2026/2026-03-04_Forklift refresher training.eml | +1 ~2 | topic-forklift-training, user-cshaw, pol-hse-010
+## [2026-11-03T05:31:31Z] ingest | 09_email_archive/2026/2026-03-05_Supplier asking for early payment.eml | +0 ~2 | sop-ap-003, user-tashworth
+## [2026-11-03T05:31:30Z] ingest | 09_email_archive/2026/2026-03-09_Ledgerline patch installed - sessions now time out after 15 minutes.eml | +0 ~3 | rn-7-2-3-p2, user-jfletcher, man-adm-72
+## [2026-11-03T05:31:29Z] ingest | 09_email_archive/2026/2026-03-16_Receiving bay congestion on Mondays.eml | +1 ~2 | user-atanaka, user-cshaw, topic-goods-receiving-and-intake
+## [2026-11-03T05:31:29Z] ingest | 09_email_archive/2026/2026-04-20_SVC_AGENT - audit finding ITS-2026-07.eml | +0 ~3 | user-svc-agent, user-rpryce, sop-it-002
+## [2026-11-03T05:31:31Z] ingest | 09_email_archive/2026/2026-04-23_Password change reminder.eml | +0 ~2 | user-jfletcher, sop-it-001
+## [2026-11-03T05:31:31Z] ingest | 09_email_archive/2026/2026-05-14_Voltway freight.eml | +0 ~4 | sup-vc-ein-0042, user-lmoreno, sop-ap-001, sop-pur-002
+## [2026-11-03T05:31:30Z] ingest | 09_email_archive/2026/2026-05-26_Labelling of returnable crates.eml | +1 ~2 | decision-2026-05-26-returnable-crate-labelling, user-kmensah, user-cshaw
+## [2026-11-03T05:31:30Z] ingest | 09_email_archive/2026/2026-06-02_AP cut-off moves to working day 2.eml | +0 ~4 | decision-2026-06-02-ap-cut-off, sop-ap-002, user-gwhitaker, user-mkowalski
+## [2026-11-03T05:31:30Z] ingest | 09_email_archive/2026/2026-06-15_Voltway battery packs - receive straight into main stores.eml | +0 ~7 | decision-2026-06-15-voltway-battery-receipt, sup-vc-ein-0042, items-bat, sop-qua-001, user-dokafor, user-pjansen, topic-un-38-3-certificates
+## [2026-11-03T05:31:30Z] ingest | 09_email_archive/2026/2026-07-13_Support ticket_ report runs slowly.eml | +1 ~1 | user-jfletcher, topic-ledgerline-performance
+## [2026-11-03T05:31:31Z] ingest | 09_email_archive/2026/2026-07-15_User access review.eml | +0 ~3 | sop-it-001, user-jfletcher, user-dokafor
+## [2026-11-03T05:31:32Z] ingest | 09_email_archive/2026/2026-07-23_Partial delivery of brake pads.eml | +0 ~4 | user-eclarke, user-atanaka, sop-ap-001, sop-qua-001
+## [2026-11-03T05:31:32Z] ingest | 09_email_archive/2026/2026-07-28_Failed battery lot - incoming abuse test.eml | +0 ~5 | topic-un-38-3-certificates, items-bat, sop-qua-002, sop-pur-005, user-pjansen
+## [2026-11-03T05:31:31Z] ingest | 09_email_archive/2026/2026-09-02_Approving orders for lithium-cell parts - CERT OK in the approval comment.eml | +1 ~6 | decision-2026-09-02-lithium-cell-po-approval-comment, user-dokafor, items-bat, items-mtr, items-chg, sop-pur-002, topic-un-38-3-certificates
+## [2026-11-03T05:31:31Z] ingest | 09_email_archive/2026/2026-09-09_Transfers between Leeds and Manchester.eml | +1 ~2 | decision-2026-09-09-inter-site-transfers, user-bprice, user-cshaw
+## [2026-11-03T05:31:30Z] ingest | 09_email_archive/2026/2026-09-24_Voltway Cells - BAT-500 price from 1 October 2026.eml | +0 ~4 | sup-vc-ein-0042, items-bat, user-dokafor, user-lmoreno
+## [2026-11-03T05:31:31Z] ingest | 09_email_archive/2026/2026-09-25_FW_ Voltway Cells - BAT-500 price from 1 October 2026.eml | +0 ~3 | sup-vc-ein-0042, items-bat, user-dokafor
+## [2026-11-03T05:31:32Z] ingest | 09_email_archive/2026/2026-09-25_RE_ FW_ Voltway Cells - BAT-500 price from 1 October 2026.eml | +0 ~4 | sup-vc-ein-0042, items-bat, user-kmensah, user-dokafor
+## [2026-11-03T05:31:31Z] ingest | 09_email_archive/2026/2026-09-25_RE_ RE_ FW_ Voltway Cells - BAT-500 price from 1 October 2026.eml | +0 ~4 | sup-vc-ein-0042, items-bat, user-dokafor, user-kmensah
+## [2026-11-03T05:31:32Z] ingest | 09_email_archive/2026/2026-09-29_UN 38.3 report renewal.eml | +0 ~4 | sup-nc-gda-0063, topic-un-38-3-certificates, sop-pur-005, user-lmoreno
+## [2026-11-03T05:31:33Z] ingest | 09_email_archive/2026/2026-10-01_CERT EXPIRED - DO NOT ORDER_ Nordic Cell Co. (NC-GDA-0063).eml | +1 ~4 | decision-2026-10-01-nordic-cell-order-hold, sup-nc-gda-0063, items-bat, topic-un-38-3-certificates, user-lmoreno
+## [2026-11-03T05:31:32Z] ingest | 09_email_archive/2026/2026-10-01_Spring launch run - cost centre PRD-07.eml | +1 ~3 | decision-2026-10-01-prd-07-spring-launch, cc-prd-07, cc-prd-05, user-hweber
+## [2026-11-03T05:31:32Z] ingest | 09_email_archive/2026/2026-10-07_Certificate check in Ledgerline (PUR.CERT_CHK) - stays off for now.eml | +0 ~4 | decision-2026-10-07-cr-2026-031-cert-check, rn-7-2-3-p4, sop-pur-001, user-jfletcher
+## [2026-11-03T05:31:32Z] ingest | 09_email_archive/2026/2026-10-12_Amendment 3 - direct orders limited to _25,000 from 1 December.eml | +0 ~3 | amd-pur-2026-03, pol-pur-001, user-dokafor
+## [2026-11-03T05:31:32Z] ingest | 09_email_archive/2026/2026-10-15_PRD-05 is now closed.eml | +1 ~3 | decision-2026-10-15-prd-05-closure, cc-prd-05, w-cc-114, user-gwhitaker
+## [2026-11-03T05:31:32Z] ingest | 09_email_archive/2026/2026-10-22_Quotation Q-BE-26-0917 - Brightcell Energy.eml | +0 ~4 | sup-brightcell-energy, items-bat, user-eclarke, topic-un-38-3-certificates
+## [2026-11-03T05:31:33Z] ingest | 09_email_archive/2026/2026-10-23_Brightcell quote - can we switch from Voltway_.eml | +0 ~5 | sup-brightcell-energy, sup-vc-ein-0042, items-bat, user-eclarke, user-lmoreno
+## [2026-11-03T05:31:33Z] ingest | 09_email_archive/2026/2026-10-23_PO_2026_01179 chargers.eml | +0 ~2 | user-dokafor, user-eclarke
+## [2026-11-03T05:31:33Z] ingest | 09_email_archive/2026/2026-10-23_RE_ Brightcell quote - can we switch from Voltway_.eml | +0 ~7 | sop-pur-001, pol-pur-001, amd-sup-2026-02, sup-brightcell-energy, sup-vc-ein-0042, topic-un-38-3-certificates, user-lmoreno
+## [2026-11-03T05:31:33Z] ingest | 09_email_archive/2026/2026-10-26_Battery packs for the spring launch run.eml | +0 ~4 | user-eclarke, user-dokafor, items-bat, sup-vc-ein-0042
+## [2026-11-03T05:30:26Z] ingest | 06_transactions/AP_invoices_2026.xlsx | +1 ~3 | data-ap-invoices-2026, sop-ap-001, sop-ap-003, data-tax-codes
+## [2026-11-03T05:30:23Z] ingest | 06_transactions/GRN_register_2026.xlsx | +2 ~2 | data-grn-register-2026, user-atanaka, user-ndoyle, user-cshaw
+## [2026-11-03T05:30:47Z] ingest | 06_transactions/PO_extract_2026-01_to_2026-10.xlsx | +1 ~28 | data-po-extract-2026, sup-vc-ein-0042, items-bat, user-dokafor, user-hweber, user-hnakamura, cc-lds-prd-01, cc-mnt-02, items-mtr, items-fst, items-spk, items-frm, items-lac, items-bel, items-grp, items-chg, items-brk, user-lmoreno, cc-prd-03, sup-nc-gda-0063, items-shf, items-sdl, items-acc, user-eclarke, items-rim, cc-prd-04, items-mnt, items-box, cc-prd-07
+## [2026-11-03T05:30:28Z] ingest | 06_transactions/PR_extract_2026.csv | +1 ~1 | data-pr-extract-2026, sop-pur-002
+## [2026-11-03T05:30:31Z] ingest | 06_transactions/reports/Bill of materials listing 2026 (printed).pdf | +0 ~2 | data-bom-master, items-fg
+## [2026-11-03T05:30:35Z] ingest | 06_transactions/reports/Certificate expiry report 2026-10-01.pdf | +1 ~3 | data-certificate-expiry-report-2026-10-01, sup-vc-ein-0042, sup-nc-gda-0063, topic-un-38-3-certificates
+## [2026-11-03T05:30:27Z] ingest | 06_transactions/reports/Draft orders report 2026-10-26.pdf | +0 ~2 | data-po-extract-2026, man-bat-72
+## [2026-11-03T05:30:33Z] ingest | 06_transactions/reports/Goods Receipt Register Jan-Oct 2026 (printed).pdf | +0 ~6 | data-grn-register-2026, sup-vc-ein-0042, items-bat, user-atanaka, user-cshaw, user-ndoyle
+## [2026-11-03T05:30:31Z] ingest | 06_transactions/reports/Item master listing 2026-10 (printed).pdf | +0 ~11 | data-item-master, items-bat, items-mnt, items-bel, items-brk, items-box, items-mtr, items-chg, items-dsp, items-ctl, items-frm
+## [2026-11-03T05:30:29Z] ingest | 06_transactions/reports/Open orders by supplier 2026-10-23.pdf | +0 ~3 | data-po-extract-2026, items-frm, items-rim
+## [2026-11-03T05:30:39Z] ingest | 06_transactions/reports/PO register 2026-01 (printed).pdf | +0 ~6 | data-po-extract-2026, sup-vc-ein-0042, items-bat, user-eclarke, user-hnakamura, cc-lds-prd-01
+## [2026-11-03T05:30:39Z] ingest | 06_transactions/reports/PO register 2026-02 (printed).pdf | +0 ~7 | data-po-extract-2026, sup-vc-ein-0042, items-bat, user-eclarke, user-kmensah, user-hnakamura, user-lmoreno
+## [2026-11-03T05:30:39Z] ingest | 06_transactions/reports/PO register 2026-03 (printed).pdf | +0 ~10 | data-po-extract-2026, sup-vc-ein-0042, items-bat, items-box, items-grp, user-eclarke, user-hnakamura, user-lmoreno, user-kmensah, cc-lds-prd-01
+## [2026-11-03T05:30:41Z] ingest | 06_transactions/reports/PO register 2026-04 (printed).pdf | +0 ~6 | data-po-extract-2026, sup-vc-ein-0042, items-bat, items-chg, items-brk, user-hnakamura
+## [2026-11-03T05:30:39Z] ingest | 06_transactions/reports/PO register 2026-05 (printed).pdf | +0 ~8 | data-po-extract-2026, sup-vc-ein-0042, sup-nc-gda-0063, items-bat, items-frm, user-eclarke, user-hnakamura, cc-lds-prd-01
+## [2026-11-03T05:30:38Z] ingest | 06_transactions/reports/PO register 2026-06 (printed).pdf | +0 ~9 | data-po-extract-2026, sup-vc-ein-0042, sup-nc-gda-0063, items-bat, user-eclarke, user-hnakamura, cc-prd-05, cc-lds-prd-01, items-frm
+## [2026-11-03T05:30:37Z] ingest | 06_transactions/reports/PO register 2026-07 (printed).pdf | +0 ~12 | data-po-extract-2026, sup-vc-ein-0042, items-bat, items-mtr, cc-lds-prd-01, user-hnakamura, user-lmoreno, user-kmensah, user-eclarke, items-chg, items-frm, cc-mnt-02
+## [2026-11-03T05:30:35Z] ingest | 06_transactions/reports/PO register 2026-08 (printed).pdf | +0 ~7 | data-po-extract-2026, sup-vc-ein-0042, items-bat, user-eclarke, user-hnakamura, cc-lds-prd-01, cc-prd-05
+## [2026-11-03T05:30:36Z] ingest | 06_transactions/reports/PO register 2026-09 (printed).pdf | +0 ~6 | data-po-extract-2026, sup-vc-ein-0042, items-bat, user-eclarke, user-hnakamura, cc-lds-prd-01
+## [2026-11-03T05:30:34Z] ingest | 06_transactions/reports/PO register 2026-10 (printed).pdf | +0 ~8 | data-po-extract-2026, sup-vc-ein-0042, user-eclarke, user-kmensah, user-lmoreno, user-hnakamura, cc-prd-07, cc-lds-prd-01
+## [2026-11-03T05:30:35Z] ingest | 06_transactions/reports/Purchase Request Register Jan-Oct 2026 (printed).pdf | +0 ~2 | data-pr-extract-2026, sop-pur-002
+## [2026-11-03T05:30:38Z] ingest | 06_transactions/reports/Stock status listing 2026-10-26 (printed).pdf | +0 ~4 | data-stock-on-hand, items-bat, items-mtr, items-frm
+## [2026-11-03T05:30:39Z] ingest | 06_transactions/reports/Supplier Invoice Register Jan-Oct 2026 (printed).pdf | +0 ~2 | data-ap-invoices-2026, sup-vc-ein-0042
+## [2026-11-03T05:30:39Z] ingest | 06_transactions/reports/Supplier listing 2026-10 (printed).pdf | +0 ~4 | data-supplier-master, sup-vc-ein-0042, sup-vpc-rot-0107, sup-nc-gda-0063
+## [2026-11-03T05:30:35Z] ingest | 06_transactions/sales_orders_2026.csv | +1 ~3 | data-sales-orders-2026, user-echen, user-imorgan, items-fg
+## [2026-11-03T05:31:27Z] ingest | 06_transactions/stock_ledger_2026-Q3.csv | +1 ~15 | data-stock-ledger-2026-q3, items-acc, items-bat, items-bel, items-blt, items-box, items-brk, items-cbl, items-chg, items-crk, items-cst, items-ctl, items-drl, items-dsp, items-frm, items-fst
+## [2026-11-03T05:31:37Z] ingest | 99_scans/1998_Ledgerline_licence_signature_page.pdf | +1 ~1 | data-nbc-change-log, person-r-ainsworth
+## [2026-11-03T05:31:37Z] ingest | 99_scans/2004_LL6_manual_page_37_scan.pdf | +0 ~2 | rn-ll6-history, screen-po-ent
+## [2026-11-03T05:31:37Z] ingest | 99_scans/2011_VAT_rate_change_memo.pdf | +1 ~1 | decision-2010-12-20-vat-rate-change, data-tax-codes
+## [2026-11-03T05:31:37Z] ingest | 99_scans/2019_Voltway_code_change_approval_signed.pdf | +1 ~2 | sup-vc-ein-0042, rn-7-1, person-g-sutcliffe
+## [2026-11-03T05:31:37Z] ingest | 99_scans/2023_stock_count_sheet_MAN_aisle_B.pdf | +2 ~6 | sop-inv-003, items-brk, items-bel, items-box, items-mnt, items-chg, person-a-tanaka, person-c-shaw
+## [2026-11-03T05:31:37Z] ingest | 99_scans/2026_signed_approval_PO-2026-00452.pdf | +0 ~3 | sup-vc-ein-0042, items-bat, user-dokafor
+## [2026-11-03T05:34:51Z] build | 683 pages | index.md rebuilt
+## [2026-11-03T05:49:17Z] reindex | index.md rebuilt with summaries cut to 110 characters
+## [2026-11-03T05:49:46Z] reindex | index.md rebuilt with summaries cut to 110 characters
+## [2026-11-03T05:50:51Z] reindex | index.md rebuilt with summaries cut to 110 characters
+## [2026-11-03T05:56:42Z] lint | 1066 findings | contradiction 275, superseded 195, uncited 115, orphan 108, rule_not_in_policy 74, citation_not_found 47, tables_in_pdfs 44, future_dated 40, email_overrides_sop 38, inconsistent_naming 36, legacy_abbreviations 32, broken_links 23, near_duplicate 20, duplicate 9, red_link 5, confidential 4, mixed_formats 1
+## [2026-11-03T05:59:05Z] lint | 1073 findings | contradiction 275, superseded 195, uncited 115, orphan 108, rule_not_in_policy 74, citation_not_found 47, tables_in_pdfs 44, future_dated 40, email_overrides_sop 38, inconsistent_naming 36, legacy_abbreviations 32, broken_links 23, near_duplicate 21, duplicate 9, scans 6, red_link 5, confidential 4, mixed_formats 1

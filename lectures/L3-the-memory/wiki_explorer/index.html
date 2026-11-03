@@ -83,7 +83,7 @@ ol.refs li:target, .flash { background: var(--hl); }
 .step .k { font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: .05em; margin-right: 4px; }
 .arrow { color: var(--muted); }
 .chain-panel { border: 1px solid var(--chain); background: var(--chain-bg); padding: 10px 14px; margin-bottom: 14px;
-  font-size: 13px; }
+  font-size: 13px; position: sticky; top: 54px; z-index: 4; }
 .chain-panel .num { font-variant-numeric: tabular-nums; }
 .chosen { background: var(--hl); outline: 2px solid var(--hl-line); }
 .src-box { white-space: pre-wrap; font-family: ui-monospace, Menlo, monospace; font-size: 12px; background: var(--panel);
@@ -95,7 +95,8 @@ ol.refs li:target, .flash { background: var(--hl); }
 .small { font-size: 12px; color: var(--muted); }
 @media (max-width: 760px) {
   .wrap { grid-template-columns: 1fr; }
-  nav.side { position: static; max-height: none; border-right: 0; border-bottom: 1px solid var(--soft); }
+  nav.side { position: static; max-height: 150px; border-right: 0; border-bottom: 1px solid var(--soft); }
+  .chain-panel { position: static; }
   .infobox { float: none; width: 100%; margin: 0 0 12px; }
   main { padding: 12px 16px 40px; }
 }
@@ -123,11 +124,11 @@ const TYPE_NAMES = { policy: "Policies", procedure: "Procedures", topic: "Topics
   "data-source": "Data sources", answer: "Filed answers" };
 
 async function load() {
-  const [w, c, l] = await Promise.all(["data/wiki.json", "data/chains.json", "data/log.json"].map(u =>
+  const [w, c, l] = await Promise.all(["data/catalog.json", "data/chains.json", "data/log.json"].map(u =>
     fetch(u).then(r => r.ok ? r.json() : null).catch(() => null)));
-  if (!w) { $("#main").innerHTML = "<p>data/wiki.json not found.</p>"; return; }
-  S.pages = w.pages; S.stats = w.stats || {}; S.order = Object.keys(w.pages).sort();
-  S.chains = (c && c.chains) || {}; S.log = (l && l.lines) || [];
+  if (!w) { $("#main").innerHTML = "<p>data/catalog.json not found.</p>"; return; }
+  S.pages = w.pages; S.stats = w.stats || {}; S.order = Object.keys(w.pages).sort(); S.lists = w.lists || {}; S.indexMd = w.index_md || "";
+  S.chains = (c && c.chains) || {}; S.log = (l && l.lines) || []; S.update = c && c.update; S.lint = c && c.lint;
   side(); route();
 }
 
@@ -156,7 +157,7 @@ function inline(t, slug) {
   t = esc(t);
   t = t.replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<i>$2</i>");
   t = t.replace(/\[\[([a-z0-9][a-z0-9-]*)(#[^\]|]*)?(?:\|([^\]]*))?\]\]/g, (m, s, h, txt) => {
-    const p = S.pages[s];
+    const p = S.pages[s] || (S.lists && S.lists[s] ? { title: s } : null);
     const label = txt || (p ? p.title : s);
     return p ? `<a href="#/page/${s}" data-link="${s}" title="${esc(p.title)}">${label}</a>`
       : (s.startsWith("hr-") ? `<span class="badge hr" title="restricted to HR">restricted</span>`
@@ -178,7 +179,7 @@ function md(body, slug) {
     }
     if (/^\|/.test(ln)) {
       const rows = []; while (i < lines.length && /^\|/.test(lines[i])) { rows.push(lines[i]); i++; }
-      const cells = r => r.replace(/^\||\|$/g, "").split("|").map(c => c.trim());
+      const cells = r => r.replace(/\[\[([^\]|]+)\|([^\]]*)\]\]/g, "[[$1\u0001$2]]").replace(/^\||\|$/g, "").split("|").map(c => c.trim().replace(/\u0001/g, "|"));
       const body = rows.filter(r => !/^\|\s*-{2,}/.test(r) && !/^\|[\s|:-]+\|$/.test(r));
       out.push(`<table class="md">` + body.map((r, k) => `<tr>${cells(r).map(c => k === 0 && rows.length > 2 && /^\|[\s|:-]+\|$/.test(rows[1]) ? `<th>${inline(c, slug)}</th>` : `<td>${inline(c, slug)}</td>`).join("")}</tr>`).join("") + `</table>`);
       continue;
@@ -197,7 +198,16 @@ function md(body, slug) {
 function flash(id) { const e = document.getElementById(id); if (!e) return; e.scrollIntoView({ block: "center" }); e.classList.add("flash"); setTimeout(() => e.classList.remove("flash"), 1600); }
 
 // ---------------------------------------------------------------- views
+function listView(slug, hl) {
+  S.cur = { slug, refNum: {} };
+  const t = S.lists[slug] || "";
+  const title = (t.match(/^# (.*)$/m) || [, slug])[1];
+  setTimeout(() => { if (hl) hl.forEach(s => document.querySelectorAll(`[data-link="${s}"]`).forEach(a => a.classList.add("chosen"))); }, 0);
+  return `<h1 class="title">${esc(title)}</h1><div class="tagline">lists/${esc(slug)}.md: a "List of ..." page that index.md points to</div><div class="article">${md(t.replace(/^# .*$/m, ""), slug).html}</div>`;
+}
+
 function pageView(slug, hl) {
+  if (S.lists && S.lists[slug]) return listView(slug, hl);
   const p = S.pages[slug];
   if (!p) return `<h1 class="title">${esc(slug)}</h1><p>This page does not exist in the wiki (a red link).</p>`;
   if (p.restricted) return `<h1 class="title">${esc(p.title)}<span class="badge hr">HR only</span></h1>
@@ -210,7 +220,8 @@ function pageView(slug, hl) {
   const ib = p.infobox && Object.keys(p.infobox).length ? `<div class="infobox"><div class="ib-title">${esc(p.title)}</div><table>${Object.entries(p.infobox).map(([k, v]) => `<tr><th>${esc(k)}</th><td>${inline(String(v), slug)}</td></tr>`).join("")}<tr><th>Type</th><td>${esc(p.type)}</td></tr></table></div>` : "";
   const tocH = toc.length >= 3 ? `<div class="toc"><b>Contents</b><ol>${toc.filter(t => t.lvl === 2).map(t => `<li><a onclick="flash('${t.id}')">${esc(t.text)}</a></li>`).join("")}</ol></div>` : "";
   const firstH = html.indexOf("<h2");
-  const lead = firstH > 0 ? html.slice(0, firstH) : html, rest = firstH > 0 ? html.slice(firstH) : "";
+  let lead = firstH > 0 ? html.slice(0, firstH) : html; const rest = firstH > 0 ? html.slice(firstH) : "";
+  if (ib) lead = lead.replace(/<table class="md">[\s\S]*?<\/table>/, "");  // the model sometimes repeats the infobox as a table
   const refs = (p.refs_order || []).map(k => { const r = p.refs[k] || {};
     return `<li id="ref-${k}">${esc(r.file)}, ${esc(r.loc_text || "")}${r.verified ? ` <span class="ok" title="the quoted words were found at this location">&#10003;</span>` : ""}${r.quote ? `<br><span class="q">“${esc(r.quote)}”</span>` : ""}${r.status && r.status !== "current" ? ` <span class="badge sup">${esc(r.status)}</span>` : ""}</li>`; }).join("");
   const inbound = (p.inbound || []).map(s => `<a href="#/page/${s}">${esc(S.pages[s] ? S.pages[s].title : s)}</a>`).join(" · ") || "<i>no page links here (an orphan)</i>";
@@ -228,6 +239,14 @@ function pageView(slug, hl) {
 }
 
 function indexView(hlPages) {
+  if (S.indexMd) {
+    S.cur = { slug: "index", refNum: {} };
+    const st = S.stats;
+    const h = md(S.indexMd.replace(/^# .*$/m, ""), "index").html;
+    setTimeout(() => { (hlPages || []).forEach(s => document.querySelectorAll(`[data-link="${s}"]`).forEach(a => { a.closest("li") ? a.closest("li").classList.add("chosen") : a.classList.add("chosen"); }));
+      const e = document.querySelector(".chosen"); if (e) e.scrollIntoView({ block: "center" }); }, 30);
+    return `<h1 class="title">index.md</h1><div class="tagline">The catalogue every query reads first. ${st.pages ? `${st.pages} pages · ${st.links} links · ${st.references} references to raw sources` : ""}</div><div class="article index-list">${h}</div>`;
+  }
   const by = {};
   for (const s of S.order) { const p = S.pages[s]; if (p.restricted) continue; (by[p.type] = by[p.type] || []).push(s); }
   const st = S.stats;
@@ -272,7 +291,12 @@ function chainsView() {
   const ids = Object.keys(S.chains);
   return `<h1 class="title">Query chains</h1><div class="tagline">How a question is answered by navigation: index → page → link → source → answer.
     Every step is one recorded LLM call (tokens, seconds) or one file read.</div>
-    <div class="grid2">${ids.map(id => { const c = S.chains[id]; return `<div><a href="#/chain/${id}">${esc(id)}</a> <span class="small">${esc(c.kind || "")}</span><div class="small">${esc(c.question)}</div></div>`; }).join("")}</div>`;
+    <div class="grid2">${ids.map(id => { const c = S.chains[id]; return `<div><a href="#/chain/${id}">${esc(id)}</a> <span class="small">${esc(c.kind || "")}</span><div class="small">${esc(c.question)}</div></div>`; }).join("")}</div>
+    ${S.update ? `<div class="meta-box"><h4>Update: one new source</h4><code>${esc(S.update.files.join(", "))}</code> touched ${S.update.updated.length + S.update.created.length} pages
+      (updated: ${S.update.updated.map(s => `<a href="#/page/${s}">${esc(s)}</a>`).join(", ")}; created: ${S.update.created.map(esc).join(", ")})
+      in ${S.update.seconds.total} s, ${S.update.calls} LLM calls, $${S.update.usd.toFixed(3)}. <span class="small">(The explorer shows the wiki before this update.)</span></div>` : ""}
+    ${S.lint ? `<div class="meta-box"><h4>Lint: ${S.lint.n_findings} findings; ${S.lint.found} of the ${S.lint.n} planted problems found (${S.lint.found_strict} under the same label)</h4>
+      <table class="md"><tr><th>Item</th><th>Kind</th><th>Found</th><th>Planted problem</th></tr>${S.lint.items.map(r => `<tr><td>${r.id}</td><td>${esc(r.kind)}</td><td>${r.found ? '<span class="ok">yes</span>' : (r.labels.length ? "as " + esc(r.labels.join("/")) : "missed")}</td><td class="small">${esc(r.what)}</td></tr>`).join("")}</table></div>` : ""}`;
 }
 
 function chainView(id, k) {
@@ -290,7 +314,9 @@ function chainView(id, k) {
   let body = "";
   if (st.kind === "index") body = indexView(st.chose || []);
   else if (st.kind === "search") body = `<h1 class="title">Search over wiki sections</h1><div class="tagline">BM25 + bge-small, fused with RRF, no LLM call (${esc(st.ms ?? "")} ms)</div><ol>${(st.sections || []).map(s => `<li><a href="#/page/${s.split(" > ")[0]}">${esc(s)}</a></li>`).join("")}</ol>`;
-  else if (st.kind === "page" || st.kind === "link") body = pageView(st.page, st.next_links || []);
+  else if (st.kind === "page" || st.kind === "link" || st.kind === "list") body = pageView(st.page, st.next_links || []);
+  else if (st.kind === "done") body = `<h1 class="title">The navigator stops</h1><div class="tagline">call ${esc(st.call)}: it has read enough</div><p>${esc(st.detail)}</p>`;
+  else if (st.kind === "denied" || st.kind === "missing") body = `<h1 class="title">${st.kind === "denied" ? "Access denied" : "No such page"}</h1><p>${esc(st.label)}: ${esc(st.detail)}</p>`;
   else if (st.kind === "source") body = `<h1 class="title">Raw source</h1><div class="tagline">${esc(st.file)} ${esc(st.loc || "")}</div><div class="src-box">${esc(st.excerpt || "(excerpt not recorded)")}</div>`;
   else if (st.kind === "answer") body = `<h1 class="title">Answer</h1><div class="tagline">The shared answer step (same model and prompt as RAG) over what navigation opened</div>
     <div class="answer">${esc(c.answer)}</div><h3>Sources the answer cites</h3><ol>${(c.cited || []).map(x => `<li>${esc(x)}</li>`).join("")}</ol>
@@ -298,9 +324,20 @@ function chainView(id, k) {
   return panel + body;
 }
 
-function route() {
+const LOADED = {};
+async function ensurePage(slug) {
+  if (!slug || LOADED[slug] || !S.pages[slug] || S.pages[slug].restricted) return;
+  const r = await fetch(`data/pages/${encodeURIComponent(slug)}.json`).catch(() => null);
+  if (r && r.ok) { S.pages[slug] = await r.json(); LOADED[slug] = true; }
+}
+async function route() {
   const h = location.hash || "#/index";
   const parts = h.slice(2).split("/");
+  if (parts[0] === "page") await ensurePage(decodeURIComponent(parts[1]));
+  if (parts[0] === "chain" && S.chains[decodeURIComponent(parts[1])]) {
+    const st = S.chains[decodeURIComponent(parts[1])].steps[parseInt(parts[2] || "0", 10)];
+    if (st && st.page) await ensurePage(st.page);
+  }
   document.querySelectorAll("#tabs a").forEach(a => a.classList.toggle("on", h.startsWith(a.dataset.r)));
   let html;
   if (parts[0] === "page") html = pageView(decodeURIComponent(parts[1]));

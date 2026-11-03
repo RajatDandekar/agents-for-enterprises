@@ -49,7 +49,12 @@ class Wiki:
         self._units = None
 
     # ---------------------------------------------------------------- permissions
+    def is_list(self, slug: str) -> bool:
+        return slug.startswith("list-") and (self.root / "lists" / f"{slug}.md").exists()
+
     def may_open(self, slug: str, role: str) -> bool:
+        if self.is_list(slug):
+            return True
         p = self.pages.get(slug)
         return bool(p) and (p["audience"] != "hr" or role in C.HR_ROLES)
 
@@ -69,6 +74,8 @@ class Wiki:
         return self._texts[slug]
 
     def page_text(self, slug: str, with_refs: bool = True) -> str:
+        if self.is_list(slug):
+            return (self.root / "lists" / f"{slug}.md").read_text()
         fm, body = self.page(slug)
         if not with_refs:
             body = re.sub(r"\n## References\n.*$", "", body, flags=re.S)
@@ -94,7 +101,15 @@ class Wiki:
                 out.append({"file": r["file"], "loc": loc})
         return out
 
+    def links_of(self, slug: str) -> list[str]:
+        if self.is_list(slug):
+            return [m.group(1) for m in LINK.finditer(self.page_text(slug))]
+        return self.pages[slug]["links_out"]
+
     def page_item(self, slug: str) -> dict:
+        if self.is_list(slug):
+            return {"id": f"wiki:{slug}", "file": f"wiki_v4/lists/{slug}.md", "text": self.page_text(slug), "loc": {},
+                    "cite": f"wiki list [[{slug}]]", "sources": [], "meta": {"title": slug}}
         p = self.pages[slug]
         return {"id": f"wiki:{slug}", "file": f"wiki_v4/{p['path']}", "text": self.page_text(slug, with_refs=False),
                 "loc": {}, "cite": f"wiki page [[{slug}]] {p['title']}", "sources": self.page_sources(slug),
@@ -180,10 +195,16 @@ Reply with JSON only, one action per turn:
 {{"action": "open", "pages": ["slug", ...], "why": "a few words"}}          (at most 3 pages a turn)
 {{"action": "source", "file": "path as in a page's References", "page": 3, "sheet": null, "find": "row key or exact words", "why": "..."}}
 {{"action": "done", "why": "what you found, or that the wiki has nothing on it"}}
-Rules: open only slugs from the index or from links on pages you have read. Open a raw source for table look-ups
-(a code's row in a master or extract), for a service's fields, or when a page says the detail is in the source.
-Stop as soon as what you have read answers the question; if the index shows no page that could hold it, say done.
-You have at most {max_calls} turns."""
+Rules:
+* Open only slugs from the index or from links on pages you have read.
+* A question about whether something is allowed, how to do it, or what a code means usually needs 2-4 pages: the
+  entity (supplier, item, error, screen), the rule that governs it (the policy page and clause), the procedure that
+  says how, and anything that changed it later (an amendment, a release note, a decision). Follow the links a page
+  gives for these before you stop; an entity page's summary of a rule is not the rule.
+* Open a raw source for table look-ups (a code's row in a master or extract: give the file, the sheet and the row key
+  as "find"), for a service's exact fields, or when a page says the detail is in the source.
+* Stop when what you have read answers every part of the question; if the index has no page that could hold it, say
+  done at once. You have at most {max_calls} turns."""
 
 
 class Navigator:
@@ -231,6 +252,9 @@ class Navigator:
             calls.append({"turn": turn + 1, "tokens_in": r.tokens_in, "tokens_out": r.tokens_out,
                           "llm_seconds": r.seconds, "action": a.get("action"), "why": a.get("why", "")[:200]})
             act = a.get("action")
+            if turn == 0 and start is None:  # the full catalogue is read once; later turns keep slugs and titles only
+                msgs[1] = {"role": "user", "content": f"INDEX (slugs and titles; you read the full index.md on turn 1):\n"
+                                                      f"{self.w.index_text(role, compact=True)}\n\nQUESTION: {question}"}
             msgs.append({"role": "assistant", "content": json.dumps(a)})
             if act == "open":
                 want = [WS_slug(s) for s in (a.get("pages") or [])][:3]
@@ -243,14 +267,15 @@ class Navigator:
                                                     if s in self.w.pages else "no such page."))
                         chain.append({"step": "denied" if s in self.w.pages else "missing", "what": s, "turn": turn + 1})
                         continue
-                    kind = "link" if s in links_seen else "page"
+                    kind = "list" if self.w.is_list(s) else ("link" if s in links_seen else "page")
                     chain.append({"step": kind, "what": s, "turn": turn + 1,
-                                  "from": next((o for o in opened if s in self.w.pages[o]["links_out"]), None)})
+                                  "from": next((o for o in opened if s in self.w.links_of(o)), None)})
                     opened.append(s)
                     got.append(s)
-                    links_seen |= set(self.w.pages[s]["links_out"])
+                    links_seen |= set(self.w.links_of(s))
                     txt.append(self.w.page_text(s))
-                    items.append(self.w.page_item(s))
+                    if not self.w.is_list(s):  # a list page is a signpost, not a source for the answer
+                        items.append(self.w.page_item(s))
                 msgs.append({"role": "user", "content": "\n\n".join(txt) or "(nothing new opened)"})
             elif act == "source":
                 res = self.w.open_source(a.get("file", ""), role, a.get("page"), a.get("sheet"), a.get("find"))
@@ -267,12 +292,16 @@ class Navigator:
             else:
                 chain.append({"step": "done", "why": a.get("why", "")[:200], "turn": turn + 1})
                 break
-        if start is not None:  # the hybrid: the searched sections are items too (after what navigation opened)
-            have = {i["id"] for i in items}
+        if start is not None:  # the hybrid: searched sections keep their rank; an opened page takes its section's place
+            by_id = {i["id"]: i for i in items}
+            ranked, used = [], set()
             for s in start:
-                it = section_item(s)
-                if it["id"] not in have and f"wiki:{s['page']}" not in have:
-                    items.append(it)
+                pid = f"wiki:{s['page']}"
+                it = by_id.get(pid) or section_item(s)
+                if it["id"] not in used:
+                    ranked.append(it)
+                    used.add(it["id"])
+            items = ranked + [i for i in items if i["id"] not in used]
         ti, to = sum(c["tokens_in"] for c in calls), sum(c["tokens_out"] for c in calls)
         from .evaluate import cost_usd
 
@@ -369,7 +398,7 @@ class SectionIndex:
             f.write(json.dumps({"q": q, "v": self._qcache[q]}) + "\n")
         return v
 
-    def search(self, q: str, role: str = C.DEFAULT_ROLE, k: int = 6, pool: int = 30) -> list[dict]:
+    def search(self, q: str, role: str = C.DEFAULT_ROLE, k: int = 6, pool: int = 40, max_per_page: int = 2) -> list[dict]:
         import numpy as np
 
         from . import rag
@@ -380,7 +409,14 @@ class SectionIndex:
         d_rank = [int(i) for i in np.argsort(-dense)[:pool]]
         b_rank = [i for i, _ in self.bm25.search(q, pool, mask=mask)]
         fused = rag.rrf([d_rank, b_rank])
-        top = sorted(fused, key=lambda i: -fused[i])[:k]
+        top, per_page = [], {}
+        for i in sorted(fused, key=lambda i: -fused[i]):  # at most max_per_page sections of one page
+            pg = self.sections[i]["page"]
+            if per_page.get(pg, 0) < max_per_page:
+                top.append(i)
+                per_page[pg] = per_page.get(pg, 0) + 1
+            if len(top) == k:
+                break
         return [{**self.sections[i], "score": round(fused[i], 5), "rank": r + 1} for r, i in enumerate(top)]
 
 
@@ -407,7 +443,7 @@ def wiki_search(question: str, user: str = "ECLARKE", k: int = 6, role: str | No
 class Hybrid:
     """Search the wiki's sections first (no LLM), then let the navigator open pages / sources from there (index-guided)."""
 
-    def __init__(self, w: Wiki, llm, si: SectionIndex, k: int = 6, max_calls: int = 3, navigate: bool = True):
+    def __init__(self, w: Wiki, llm, si: SectionIndex, k: int = 8, max_calls: int = 3, navigate: bool = True):
         self.w, self.si, self.k = w, si, k
         self.nav = Navigator(w, llm, max_calls=max_calls)
         self.navigate = navigate
