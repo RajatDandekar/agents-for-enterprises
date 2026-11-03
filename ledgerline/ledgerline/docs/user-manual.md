@@ -72,7 +72,7 @@ Ctrl+P prints the current document on the default printer in the layout set by y
 Item enquiry finds items in the item master by code or description. Use it before raising a request or an order, to get the exact item code.
 
 ### 3.2 Searching
-Type any part of the description or code in Search text and press Enter. The search ignores case and spaces, so "5l battery pack" and "5 L Battery pack" find the same items. Use % as a wildcard in the middle of a word. Up to 20 rows are shown; refine the search if the item you want is not listed.
+Type any part of the description or code in Search text and press Enter. The search ignores case and spaces, so "36v battery" and "36 V Battery" find the same items. Use % as a wildcard in the middle of a word. Up to 20 rows are shown; refine the search if the item you want is not listed.
 
 ### 3.3 Reading the list
 The list shows the item code, description, unit of measure (UOM) and whether the item is active. Inactive items are shown in grey and cannot be used on a new request or order. An item code ending in -R (for example BAT-500-R) is a rework item used by Quality; do not order it from suppliers.
@@ -106,7 +106,7 @@ Reports, then Items below reorder level, lists every item whose on-hand plus on-
 Supplier enquiry finds suppliers in the supplier master by name. Always search before creating a supplier.
 
 ### 5.2 Searching
-Type part of the supplier's name in Name like and press Enter. The search matches any part of the name, ignoring case. It does not match spelling variants: "Voltway Polymer Industries" will not find "Voltway Cells". Search on a short distinctive word (for example "Voltway") and read the whole list.
+Type part of the supplier's name in Name like and press Enter. The search matches any part of the name, ignoring case. It does not match spelling variants: "VoltWay Cell" will not find "Voltway Cells". Search on a short distinctive word (for example "Voltway") and read the whole list.
 
 ### 5.3 Reading the list
 The list shows the supplier code, name, city, country and status. Status is ACTIVE or BLOCKED. Blocked suppliers are shown in red. A supplier whose name ends in "(old code, do not use)" has been replaced by a new code; use the active one.
@@ -219,7 +219,7 @@ Press F8. Ledgerline checks the supplier, the item, the quantity, the need-by da
 ### 11.9 The status after saving
 If the cost centre is closed, the order is saved as DR (Draft) with warning W-CC-114, and nothing is sent to anyone. If the gross value is within your limit, the order is AP (approved). If the order is against a request whose approver's limit covers the order's gross value, it is AP and the request's approver is recorded. Otherwise the order is PA and goes to the approver's inbox.
 
-### 111.00 Quantity against the request
+### 11.10 Quantity against the request
 An order against a request may not be for a different item or a larger quantity than the request (ERR-PO-0604). The request is closed (CL) when the order is saved against it.
 
 ### 11.11 Supplier status
@@ -305,7 +305,7 @@ Only RL. An order in DR, PA or AP has not been sent to the supplier.
 ## 17. Messages and error codes
 
 ### 17.1 How to read a message
-Every message has a code and a short text, for example ERR-PO-0412 TAX CODE DOES NOT MATCH SUPPLIER COUNTRY (GJ). The code tells you which rule failed; the text in brackets gives the value that failed it. Errors stop the Save. Warnings do not.
+Every message has a code and a short text, for example ERR-PO-0412 TAX CODE DOES NOT MATCH SUPPLIER COUNTRY (NL). The code tells you which rule failed; the text in brackets gives the value that failed it. Errors stop the Save. Warnings do not.
 
 ### 17.2 ERR-PO-0412 Tax code does not match supplier country
 Cause: the tax code is for the wrong country. A UK supplier needs a -UK code; a supplier in any other country needs a reverse-charge -RC code. Fetch always fills VAT20-UK. Remedy: change the tax code to the -RC code with the same rate (for example VAT20-RC) and save again.

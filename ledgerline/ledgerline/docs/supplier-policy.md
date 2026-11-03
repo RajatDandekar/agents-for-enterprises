@@ -26,11 +26,11 @@ This policy says how a supplier enters the supplier master in Ledgerline, what p
 
 ## 4. UN 38.3 certificates
 4.1 A supplier of any lithium-cell part (battery packs, hub motors, chargers, and any item marked lithium-cell in the item master) must hold a UN 38.3 certificate. This is the certificate referred to in Purchase Policy §6.2.
-4.2 The certificate must be a test report from a laboratory accredited for lithium-cell materials (for example an UN 38.3-notified laboratory), or a BIS conformity certificate for stainless steel grade 304 or better.
+4.2 The certificate must be a test report from a laboratory accredited for lithium-cell materials (for example a laboratory accredited to ISO/IEC 17025 for UN 38.3 testing).
 4.3 The certificate is uploaded in Ledgerline against the supplier (certificate type UN38.3) with its document reference and its valid-to date, and checked by the senior buyer before the first order.
 4.4 A UN 38.3 certificate is accepted if it was issued within the last 24 months and its valid-to date has not passed.
 4.5 An expired certificate counts as no certificate. The supplier stays ACTIVE in the master, but no lithium-cell part may be ordered from it until a new certificate is uploaded and checked.
-4.6 The certificate covers the supplier, not a single item. If the supplier changes the material or the compound of a part (for example a new silicone grade), it must give a fresh test report for that part.
+4.6 The certificate covers the supplier, not a single item. If the supplier changes the cells or the design of a part (for example a new cell maker or cell chemistry), it must give a fresh test report for that part.
 4.7 Ledgerline does not stop an order to a supplier without a certificate. The check in this section is done by the person raising the order, and by the approver.
 
 ## 5. Blocking and unblocking
@@ -41,7 +41,7 @@ This policy says how a supplier enters the supplier master in Ledgerline, what p
 
 ## 6. Duplicate suppliers
 6.1 One legal supplier has exactly one active code. The VAT number is the test of sameness: two records with the same VAT number are the same supplier.
-6.2 Suppliers are often called by short or slightly different names in quotations and e-mails (for example "Voltway Polymer Industries" for Voltway Cells). A name that is close to an existing supplier in the same city must be treated as that supplier until shown otherwise.
+6.2 Suppliers are often called by short or slightly different names in quotations and e-mails (for example "Voltway Cells B.V." or "VoltWay" for Voltway Cells). A name that is close to an existing supplier in the same city must be treated as that supplier until shown otherwise.
 6.3 A near-match in a different city or with a different VAT number is a different supplier (for example Voltway Paints & Coatings, Rotterdam, is not Voltway Cells, Eindhoven).
 6.4 Ledgerline refuses to create a second supplier with a VAT number that is already registered (ERR-SUP-0118). It does not catch a duplicate entered without a VAT number; that check is the proposer's job under §3.3.
 6.5 A duplicate created by mistake must be reported to the purchase manager the same day, blocked, and its open documents moved to the correct code.

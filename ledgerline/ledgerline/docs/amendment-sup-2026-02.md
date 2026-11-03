@@ -16,7 +16,7 @@ amends: POL-SUP-003 §4.4
 1.2 A certificate that meets the old rule (issued within 24 months and not expired) but not the new one counts as no certificate for new orders from 1 September 2026. Orders released before that date are not affected.
 
 ## 2. Why
-2.1 In July 2026 a battery pack lot from a supplier with a 22-month-old test report failed our own migration test. The compound had changed in the meantime. A shorter window, and a margin before expiry, make sure the certificate describes what the supplier is actually making.
+2.1 In July 2026 a battery pack lot from a supplier with a 22-month-old test report failed our own incoming abuse test. The cell maker had changed in the meantime. A shorter window, and a margin before expiry, make sure the certificate describes what the supplier is actually making.
 
 ## 3. What purchase staff must do
 3.1 Before raising an order for a lithium-cell part, check the certificate's issue date and its valid-to date against the new rule.

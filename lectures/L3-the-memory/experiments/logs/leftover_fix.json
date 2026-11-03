@@ -1,0 +1,326 @@
+{
+ "what": "Leftover old-world text in ledgerline docs and screens replaced with the wording of the northbridge-docs dump (checked against the PDFs with pypdf on Modal and against tools/northbridge_docs/ndocs FIX_SUP/FIX_AMD_SUP/FIX_MAN/YAML_FIX)",
+ "date": "2026-11-03",
+ "edits": [
+  {
+   "file": "ledgerline/ledgerline/docs/supplier-policy.md",
+   "clause": "4.2",
+   "before": "(for example an UN 38.3-notified laboratory), or a BIS conformity certificate for stainless steel grade 304 or better.",
+   "after": "(for example a laboratory accredited to ISO/IEC 17025 for UN 38.3 testing)."
+  },
+  {
+   "file": "ledgerline/ledgerline/docs/supplier-policy.md",
+   "clause": "4.6",
+   "before": "If the supplier changes the material or the compound of a part (for example a new silicone grade), ...",
+   "after": "If the supplier changes the cells or the design of a part (for example a new cell maker or cell chemistry), ..."
+  },
+  {
+   "file": "ledgerline/ledgerline/docs/supplier-policy.md",
+   "clause": "6.2",
+   "before": "(for example \"Voltway Polymer Industries\" for Voltway Cells)",
+   "after": "(for example \"Voltway Cells B.V.\" or \"VoltWay\" for Voltway Cells)"
+  },
+  {
+   "file": "ledgerline/ledgerline/docs/amendment-sup-2026-02.md",
+   "clause": "2.1",
+   "before": "failed our own migration test. The compound had changed in the meantime.",
+   "after": "failed our own incoming abuse test. The cell maker had changed in the meantime."
+  },
+  {
+   "file": "ledgerline/ledgerline/docs/user-manual.md",
+   "clause": "3.2",
+   "before": "\"5l battery pack\" and \"5 L Battery pack\" find the same items",
+   "after": "\"36v battery\" and \"36 V Battery\" find the same items"
+  },
+  {
+   "file": "ledgerline/ledgerline/docs/user-manual.md",
+   "clause": "5.2",
+   "before": "\"Voltway Polymer Industries\" will not find \"Voltway Cells\"",
+   "after": "\"VoltWay Cell\" will not find \"Voltway Cells\""
+  },
+  {
+   "file": "ledgerline/ledgerline/docs/user-manual.md",
+   "clause": "11.10",
+   "before": "### 111.00 Quantity against the request",
+   "after": "### 11.10 Quantity against the request (between 11.9 and 11.11)"
+  },
+  {
+   "file": "ledgerline/ledgerline/docs/user-manual.md",
+   "clause": "17.1",
+   "before": "ERR-PO-0412 TAX CODE DOES NOT MATCH SUPPLIER COUNTRY (GJ)",
+   "after": "ERR-PO-0412 TAX CODE DOES NOT MATCH SUPPLIER COUNTRY (NL)"
+  },
+  {
+   "file": "ledgerline/ledgerline/erp/screens/PUR-SUP-01.yaml",
+   "before": "help: \"MH, GJ ...\"",
+   "after": "help: \"GB, NL, PL ...\""
+  },
+  {
+   "file": "ledgerline/ledgerline/erp/screens/PUR-SUP-01.yaml",
+   "before": "A near-duplicate name (Voltway Polymer Industries) is NOT caught",
+   "after": "A near-duplicate name (VoltWay) is NOT caught"
+  },
+  {
+   "file": "ledgerline/ledgerline/erp/screens/PUR-PO-01.yaml",
+   "before": "Fetch defaults the tax code to the plant's state; a the Netherlands supplier needs -INTER",
+   "after": "Fetch defaults the tax code to the plant's state; an overseas supplier needs the -RC code"
+  },
+  {
+   "file": "ledgerline/ledgerline/erp/screens/INV-GRN-03.yaml",
+   "before": "the supplier's delivery delivery note",
+   "after": "the supplier's delivery note"
+  }
+ ],
+ "world_v4_check": "python3 tools/world_v4.py --check ledgerline/ledgerline/docs ledgerline/ledgerline/erp/screens: exit 0, no findings (before and after)",
+ "checks": {
+  "baseline_before_edits": {
+   "NB1 replay": "25 code cells, 0 errors",
+   "NB2 replay": "32 code cells, 0 errors",
+   "compat_check (label before-leftover-fix)": "NB1 After replayed, 7/7 missions done, schema sha 74ce5730da28e434 (toolbox = MCP)",
+   "flow3d capture_trace replay": "ok, 13 calls, 52,273 tokens in",
+   "L1 production replay_check": "118/120 same verdict (2 misses already before the edits: openai_agents r1 M2, M3; the committed log says 120/120)",
+   "Studio engine replay": "82/82",
+   "Experience in-process test (live model)": "66/66, spend {'inr': 4.9313, 'calls': 30, 'tokens_in': 98909, 'tokens_out': 2194, 'messages': 11}"
+  },
+  "after_edits_before_rerecord": {
+   "NB1 replay": "25 cells, 1 error: ReplayMiss in cassette L1v4_after (brightcell mission: search_policy returned the new §4.2 text)",
+   "NB2 replay": "32 cells, 0 errors",
+   "compat_check (label after-leftover-fix)": "FAIL: replayed False, 6 missions, ReplayMiss L1v4_after",
+   "flow3d capture_trace replay": "ok (unaffected)",
+   "L1 production replay_check": "111/120 same verdict; misses in M3 of ours r1-r3, openai_agents r1-r3, langgraph r2-r3, and openai_agents r3 M4",
+   "Studio engine replay": "79/82: ReplayMiss in cassette 'studio' (stock desk agent chat, 3 checks)"
+  },
+  "after_rerecord": {
+   "NB1 replay": "25 code cells, 0 errors",
+   "NB2 replay": "32 code cells, 0 errors (not affected)",
+   "compat_check (label after-leftover-fix-rerecorded)": "pass: NB1 After replayed, 7/7 missions done, schema sha 74ce5730da28e434",
+   "Studio engine": "auto 82/82, then replay 82/82",
+   "Experience in-process test (live model)": "66/66, spend {'inr': 5.5478, 'calls': 31, 'tokens_in': 112784, 'tokens_out': 2217, 'messages': 11}",
+   "L1 production replay_check": "still 111/120: NOT re-recorded (see production_rerecord)"
+  }
+ },
+ "rerecords": {
+  "L1v4_after": {
+   "how": "experiments/after_run.py --mode auto (37 -> 39 lines, appended; the 2 old brightcell lines after the search are dead but kept)",
+   "six_missions_summary": {
+    "old": {
+     "missions": 6,
+     "all_done": true,
+     "messages": 12,
+     "taps": 6,
+     "typed_messages": 6,
+     "chars_typed": 453,
+     "words_typed": 77,
+     "tool_calls": 20,
+     "tool_errors": 1,
+     "seconds": 113.1,
+     "screens_opened": 0,
+     "codes_typed": 1,
+     "note": "the five missions of the Before (stock, request, approve, order, two receipts); the Brightcell question is extra",
+     "recorded_seconds": 113.1
+    },
+    "note": "missions 1-6 replay the same recorded replies; the summary in the deck (6/6, 12 messages, 20 tool calls, 113 s) still holds"
+   },
+   "brightcell_old": {
+    "id": "brightcell",
+    "title": "A cheaper supplier?",
+    "user": "ECLARKE",
+    "who": "Emma",
+    "done": true,
+    "user_turns": 1,
+    "taps": 0,
+    "typed_messages": 1,
+    "words_typed": 17,
+    "chars_typed": 97,
+    "tool_calls": 4,
+    "tool_errors": 0,
+    "seconds": 15.4,
+    "reply": "Not right away. Brightcell Energy is not currently registered in Ledgerline, and battery packs cannot be ordered from them until:\n\n1. **Supplier Onboarding:** They must be formally onboarded with full documentation (POL-PUR-001 §6.3, POL-SUP-003 §3.2).\n2. **UN 38.3 Certification:** As battery packs are lithium-cell parts, we can only purchase from suppliers with a valid UN 38.3 safety certificate checked and on file before an order is placed (POL-PUR-001 §6.2, POL-SUP-003 §4.1).\n\nAdditionally, PO/2026/01182 has already been released to Voltway Cells."
+   },
+   "brightcell_new": {
+    "id": "brightcell",
+    "title": "A cheaper supplier?",
+    "user": "ECLARKE",
+    "who": "Emma",
+    "done": true,
+    "user_turns": 1,
+    "taps": 0,
+    "typed_messages": 1,
+    "words_typed": 17,
+    "chars_typed": 97,
+    "tool_calls": 3,
+    "tool_errors": 0,
+    "seconds": 6.2,
+    "reply": "No, we cannot buy from them right now:\n\n1. **New supplier:** Brightcell Energy is not registered in Ledgerline and must be onboarded first.\n2. **Safety certificate requirement:** Battery packs are lithium-cell parts and can only be purchased from a supplier holding a valid **UN 38.3 certificate** verified and on file in Ledgerline before an order is placed (POL-PUR-001 §6.2, POL-SUP-003 §4.1).\n3. **Existing order:** PO/2026/01182 has already been released to Voltway Cells."
+   },
+   "llm_totals_old": {
+    "ECLARKE": {
+     "calls": 24,
+     "tokens_in": 127032,
+     "tokens_out": 1190,
+     "seconds": 71.43,
+     "cost_usd": 0.06709,
+     "replayed": 0
+    },
+    "DOKAFOR": {
+     "calls": 5,
+     "tokens_in": 16203,
+     "tokens_out": 219,
+     "seconds": 21.08,
+     "cost_usd": 0.00876,
+     "replayed": 0
+    },
+    "ATANAKA": {
+     "calls": 8,
+     "tokens_in": 24059,
+     "tokens_out": 519,
+     "seconds": 26.55,
+     "cost_usd": 0.01359,
+     "replayed": 0
+    }
+   },
+   "llm_totals_new": {
+    "ECLARKE": {
+     "calls": 23,
+     "tokens_in": 114755,
+     "tokens_out": 1138,
+     "seconds": 65.27,
+     "cost_usd": 0.06079,
+     "replayed": 21
+    },
+    "DOKAFOR": {
+     "calls": 5,
+     "tokens_in": 16203,
+     "tokens_out": 219,
+     "seconds": 21.08,
+     "cost_usd": 0.00876,
+     "replayed": 5
+    },
+    "ATANAKA": {
+     "calls": 8,
+     "tokens_in": 24059,
+     "tokens_out": 519,
+     "seconds": 26.55,
+     "cost_usd": 0.01359,
+     "replayed": 8
+    }
+   },
+   "cost_usd_total_old": 0.08944,
+   "cost_usd_total_new": 0.08314,
+   "live_calls": [
+    {
+     "tokens_in": 6407,
+     "tokens_out": 20,
+     "seconds": 1.794,
+     "chose": "search_policy"
+    },
+    {
+     "tokens_in": 7184,
+     "tokens_out": 133,
+     "seconds": 2.52,
+     "chose": "reply"
+    }
+   ]
+  },
+  "experience/studio/cassettes/studio.jsonl": {
+   "how": "modal_studio.py --what engine --mode auto (34 -> 53 lines, appended)",
+   "result": "82/82 auto, 82/82 replay",
+   "changed_reply": "stock question: old 'We currently have 11 days of cover ... 6,600 units' (4 tool calls); new also answers for BAT-375 (16 days, 4,100); the PR turns end on the same PR/2026/04417"
+  },
+  "production_rerecord": {
+   "jobs_tried": [
+    [
+     "ours",
+     1,
+     "M3"
+    ],
+    [
+     "openai_agents",
+     1,
+     "M3"
+    ],
+    [
+     "ours",
+     2,
+     "M3"
+    ],
+    [
+     "openai_agents",
+     2,
+     "M3"
+    ],
+    [
+     "langgraph",
+     2,
+     "M3"
+    ],
+    [
+     "ours",
+     3,
+     "M3"
+    ],
+    [
+     "openai_agents",
+     3,
+     "M3"
+    ],
+    [
+     "openai_agents",
+     3,
+     "M4"
+    ],
+    [
+     "langgraph",
+     3,
+     "M3"
+    ]
+   ],
+   "result": "BLOCKED: OpenRouter key monthly limit exceeded ($50.20 of $50.00 used; resets 2026-12-01). Every job replayed its recorded calls then failed at the first new call; gateway spent $0.00; no cassette lines written",
+   "replayed_calls_before_the_miss": {
+    "ours/1/M3": [
+     7,
+     9
+    ],
+    "openai_agents/1/M3": [
+     7,
+     12
+    ],
+    "ours/2/M3": [
+     8,
+     12
+    ],
+    "openai_agents/2/M3": [
+     8,
+     12
+    ],
+    "langgraph/2/M3": [
+     9,
+     13
+    ],
+    "ours/3/M3": [
+     8,
+     12
+    ],
+    "openai_agents/3/M3": [
+     7,
+     12
+    ],
+    "openai_agents/3/M4": [
+     2,
+     5
+    ],
+    "langgraph/3/M3": [
+     7,
+     13
+    ]
+   }
+  }
+ },
+ "not_mine_still_old": [
+  "ledgerline/ledgerline/course/l2/northbridge_corpus.md:763,1443 (§4.2/§4.6/§6.2 old text; built by course/l2/corpus.py; NB2 and the Brain Lab read it)",
+  "ledgerline/ledgerline/scenarios.py:44, evals/suite.py:248,294,323 ('Voltway Polymer Industries')",
+  "ledgerline/ledgerline/wiki/pages/battery-safety-compliance.md, supplier-onboarding-and-master.md",
+  "ledgerline/ledgerline/experience/static/before.html:96 ('battery pack, silicone, 5 L')",
+  "tools/northbridge_docs/ndocs/content_policies.py FIX_SUP/FIX_AMD_SUP/FIX_MAN: md_to_doc raises 'fix target not found' now that the source is fixed"
+ ]
+}
