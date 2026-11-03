@@ -15,7 +15,10 @@ absent) and cassettes/L3_wiki_ingest.jsonl (10 MB, the 1,752 ingest calls):
     MODAL_PROFILE=rajatworkspace /Users/raj/.venv/bin/modal volume get northbridge-wiki cassettes/L3_wiki_ingest.jsonl .
 Query cassettes (L3v4_wiki_nav / _answers / _judge, L3_wiki_update_v2, L3_wiki_lint) are in ledgerline/cassettes.
 
-Resuming the golden-set runs (stopped on 3 Nov by the OpenRouter key's limit, HTTP 402): once the key has credit,
+Provider: the OpenRouter key hit its limit (HTTP 402) on 3 Nov ~11:45 IST; with Rajat's approval every later live
+call goes to Google's OpenAI-compatible endpoint (LEDGER_WIKI_PROVIDER=google-direct, GEMINI_API_KEY from
+wm-lecture6-ijepa/.env). Cassette keys are unchanged, so both providers' records replay; each record's "model"
+field names its provider. The note below is how the runs were resumed (done 3 Nov, ~12:50 IST):
     --cmd eval --tag wiki    and    --cmd eval --tag hybrid
 replay every recorded navigation call from the shard cassettes (same 4-shard split) and only call the model for
 what is missing (the answer + judge steps, ~26 / ~84 questions' navigation). Then --cmd merge.
