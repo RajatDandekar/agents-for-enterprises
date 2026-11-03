@@ -48,6 +48,13 @@ class WikiLLM(LLM):
                             d = json.loads(line)
                             self._mem.setdefault(d["key"], d)
 
+    def _has_key(self) -> bool:
+        import os
+
+        if provider() == "google-direct":  # live calls go to Google: its key counts, not OpenRouter's
+            return bool(os.environ.get("GEMINI_API_KEY"))
+        return super()._has_key()
+
     def _lookup(self, key):
         with self._mlock:
             self._load()

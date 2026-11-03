@@ -58,6 +58,7 @@ POOL = 20          # candidates each list contributes to fusion / the reranker
 HNSW = {"space": "cosine", "ef_search": 4000, "ef_construction": 200, "max_neighbors": 32}
 HR_SUFFIX = "__hr"  # confidential HR chunks live in their own collection: an index Emma queries never contains them
 RRF_K = 60
+WITHHELD_K = 10    # the withheld notice: a confidential chunk in BM25's unfiltered top 10 (see withheld_item)
 RAG_INDEX_DIR = pathlib.Path(os.environ.get("RAG_INDEX_DIR", C.CACHE_DIR / "rag_index"))
 BEST_INDEX_URL = os.environ.get("RAG_BEST_INDEX_URL", "https://rajatworkspace--northbridge-raglab.us-east.modal.run/api/best_index.tar.gz")
 BEST_PATH = pathlib.Path(__file__).parent / "rag_best.json"   # written by the grid: the chosen config + its metrics
@@ -453,6 +454,31 @@ class Retriever:
 
     __call__ = search
 
+    def withheld(self, question: str, role: str = C.DEFAULT_ROLE, k: int = WITHHELD_K) -> dict | None:
+        """The "a confidential source exists" notice (see withheld_item). For a role outside HR: if, with the permission
+        filter switched off, a confidential HR chunk would be in BM25's top k for this question, return the notice
+        (no title, no file name, no content). None for HR roles or when nothing confidential would have matched."""
+        if role in C.HR_ROLES or not self.idx.conf.any():
+            return None
+        top = self.idx.bm25.search(question, k, None)
+        hit = [i for i, _ in top if self.idx.conf[i]]
+        return withheld_item(rank=next(r for r, (i, _) in enumerate(top, 1) if self.idx.conf[i])) if hit else None
+
+
+# =============================================================================== the "withheld" notice
+# Filtering confidential chunks out before ranking keeps their content safe, but then the model only sees that nothing
+# answers, and says "not in the documents" when the right reply is "that is confidential, ask HR" (rag_failures.json,
+# permission questions: judge 0.3). The notice tells the answer step a restricted source exists without leaking it.
+# The race (logs/race.json) applies the same notice to every method, decided by this one detector.
+WITHHELD_TEXT = ("WITHHELD. A confidential HR document matches this question, but this user may not open it. It is in "
+                 "the HR confidential folder, readable only by members of the HR group NBC-HR-CONF. Its title and "
+                 "content are not shown. Ask HR (NBC-HR-CONF) for this information.")
+
+
+def withheld_item(rank: int | None = None) -> dict:
+    return {"id": "withheld:hr", "file": "(withheld)", "loc": {}, "cite": "a confidential HR document (withheld)",
+            "text": WITHHELD_TEXT, "meta": {"confidential": True, "withheld": True, "bm25_rank": rank}}
+
 
 # =============================================================================== rag_search: the best config, ready to use
 _BEST: dict = {}
@@ -495,6 +521,10 @@ def _best_retriever(root=None) -> Retriever:
             chunks = C.chunk(units, cfg.chunker, cfg.size, cfg.overlap)
             Index.build(chunks, [cfg.embed] if cfg.retrieval != "bm25" else [], path)
     idx = Index.load(path)
+    if (path / "bm25.pkl").exists():  # the grid's pickled BM25 (the same index the race measured); else built from the chunks
+        import pickle
+
+        idx._bm25 = pickle.loads((path / "bm25.pkl").read_bytes())
     _BEST["r"] = Retriever(idx, cfg)
     return _BEST["r"]
 
@@ -503,11 +533,19 @@ USER_ROLES = {"ECLARKE": "PUR-EXEC", "DOKAFOR": "PUR-MGR", "LMORENO": "PUR-SR", 
               "SVC_AGENT": "SERVICE"}
 
 
-def rag_search(question: str, user: str = "ECLARKE", k: int = 5, role: str | None = None) -> list[dict]:
+def rag_search(question: str, user: str = "ECLARKE", k: int = 5, role: str | None = None,
+               withheld: bool = False) -> list[dict]:
     """Search Northbridge's documents with the best measured configuration. Returns k cited chunks, best first:
     {"cite", "file", "loc", "text", "score", "rank", "meta"}. Confidential HR documents are filtered out before ranking
-    unless the user's role is an HR role. `user` is a Ledgerline user id (ECLARKE ...) or pass `role` directly."""
+    unless the user's role is an HR role. `user` is a Ledgerline user id (ECLARKE ...) or pass `role` directly.
+    withheld=True appends the "confidential source withheld" notice (no content) when one would have matched."""
     role = role or USER_ROLES.get(user, user if user in C.HR_ROLES else C.DEFAULT_ROLE)
-    out = _best_retriever().search(question, role=role, k=k)
-    return [{"cite": it["cite"], "file": it["file"], "loc": it["loc"], "text": it["text"], "score": it["score"],
+    r = _best_retriever()
+    out = r.search(question, role=role, k=k)
+    hits = [{"cite": it["cite"], "file": it["file"], "loc": it["loc"], "text": it["text"], "score": it["score"],
              "rank": it["rank"], "meta": it["meta"]} for it in out["items"]]
+    stub = r.withheld(question, role) if withheld else None
+    if stub:
+        hits.append({"cite": stub["cite"], "file": stub["file"], "loc": {}, "text": stub["text"], "score": None,
+                     "rank": None, "meta": stub["meta"]})
+    return hits

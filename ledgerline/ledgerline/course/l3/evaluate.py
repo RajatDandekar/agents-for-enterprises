@@ -214,7 +214,9 @@ Answer ONLY from the numbered sources in the user message. Cite every fact with 
 - If an amendment, release note or e-mail changed what an older document says, give the current position and mention the change.
 - If the sources do not answer the question, reply "NOT IN THE DOCUMENTS." and one sentence on what is missing. Never guess.
 - If the question asks for confidential HR information that this user may not see, refuse politely and say who may see it.
-Be concise: at most 150 words, plain sentences, exact codes and numbers as the sources give them."""
+Be concise: at most {words} words, plain sentences, exact codes and numbers as the sources give them."""
+ANSWER_WORDS = 150  # the cap every v4 run before the race used (its cassettes replay at this value); the race uses 250
+RACE_WORDS = 250   # Emma's question needs seven facts; 150 words cannot hold them with citations (3 Nov)
 
 
 def render_sources(items, max_chars: int | None = 9000) -> str:
@@ -228,15 +230,16 @@ def render_sources(items, max_chars: int | None = 9000) -> str:
     return "\n\n".join(out)
 
 
-def answer_messages(q, items, max_chars: int | None = 9000) -> list[dict]:
-    """The exact prompt every method's answer goes through. Each source's text is cut at max_chars (None = whole)."""
+def answer_messages(q, items, max_chars: int | None = 9000, answer_words: int = ANSWER_WORDS) -> list[dict]:
+    """The exact prompt every method's answer goes through. Each source's text is cut at max_chars (None = whole);
+    answer_words is the length cap in the instructions (150 by default, so earlier cassettes replay)."""
     role = C.role_of(q)
-    return [{"role": "system", "content": ANSWER_SYSTEM.format(who=ROLE_NAMES.get(role, role))},
+    return [{"role": "system", "content": ANSWER_SYSTEM.format(who=ROLE_NAMES.get(role, role), words=answer_words)},
             {"role": "user", "content": f"Sources:\n\n{render_sources(items, max_chars)}\n\nQuestion: {q['question']}"}]
 
 
-def answer(q, items, llm, max_chars: int | None = 9000) -> dict:
-    r = llm.chat(answer_messages(q, items, max_chars))
+def answer(q, items, llm, max_chars: int | None = 9000, answer_words: int = ANSWER_WORDS) -> dict:
+    r = llm.chat(answer_messages(q, items, max_chars, answer_words))
     text = r.content or ""
     return {"answer": text, "cited": cited_numbers(text, len(items)), "tokens_in": r.tokens_in, "tokens_out": r.tokens_out,
             "llm_seconds": r.seconds, "cost_usd": round(cost_usd(r.tokens_in, r.tokens_out, llm.model), 6),
@@ -413,9 +416,13 @@ def summarize_retrieval(recs, ks=KS) -> dict:
 
 
 def run(method, name: str, G: Golden | None = None, qs=None, answer_llm=None, judge_llm=None, workers: int = 8,
-        cassette: str = "L3v4_answers", judge_cassette: str = "L3v4_judge", ks=KS, log_items: int = 10) -> dict:
+        cassette: str = "L3v4_answers", judge_cassette: str = "L3v4_judge", ks=KS, log_items: int = 10,
+        answer_words: int = ANSWER_WORDS, withheld=None) -> dict:
     """The full harness for one method: retrieve (sequential, timed), answer with ANSWER_MODEL (parallel),
-    fact check + judge + citation check, then summarise. Returns {"name", "records", "summary"}."""
+    fact check + judge + citation check, then summarise. Returns {"name", "records", "summary"}.
+    answer_words: the answer's length cap. withheld: {question id: stub item} (or a function (q, role) -> item|None):
+    a "confidential source withheld" notice appended after the method's items, the same for every method, so the
+    answer can refuse instead of saying "not in the documents". Retrieval metrics never see it."""
     from ...llm import LLM
 
     G = G or Golden()
@@ -439,11 +446,15 @@ def run(method, name: str, G: Golden | None = None, qs=None, answer_llm=None, ju
         q = G.by_id[rec["id"]] if rec["id"] in G.by_id else next(x for x in qs if x["id"] == rec["id"])
         out = its[rec["id"]]
         items = out["items"]
+        stub = (withheld(q, C.role_of(q)) if callable(withheld) else (withheld or {}).get(q["id"]))
+        rec["withheld"] = bool(stub)
+        if stub:
+            items = items + [stub]
         if out.get("answer") is not None:
             a = {"answer": out["answer"], "cited": cited_numbers(out["answer"], len(items)), "tokens_in": 0,
                  "tokens_out": 0, "llm_seconds": 0.0, "cost_usd": 0.0}
         else:
-            a = answer(q, items, answer_llm)
+            a = answer(q, items, answer_llm, answer_words=answer_words)
         rec.update({k: a[k] for k in ("answer", "cited", "tokens_in", "tokens_out", "llm_seconds", "cost_usd")})
         rec["fact"] = fact_check(q, a["answer"], G)
         rec["judge"] = judge(q, a["answer"], judge_llm, G)
@@ -454,8 +465,8 @@ def run(method, name: str, G: Golden | None = None, qs=None, answer_llm=None, ju
 
     with ThreadPoolExecutor(workers) as ex:
         recs = list(ex.map(finish, recs))
-    return {"name": name, "records": recs, "summary": summarize(recs, ks),
-            "answer_model": answer_llm.model, "judge_model": judge_llm.model}
+    return {"name": name, "records": recs, "summary": summarize(recs, ks), "answer_words": answer_words,
+            "withheld_notice": bool(withheld), "answer_model": answer_llm.model, "judge_model": judge_llm.model}
 
 
 def summarize(recs, ks=KS) -> dict:

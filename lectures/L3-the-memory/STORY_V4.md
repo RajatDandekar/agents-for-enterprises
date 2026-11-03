@@ -187,3 +187,41 @@ Part slide → teach → the section's own question to the class → film (where
 - the RAG Lab app;
 - the live `?stage=knowledge`;
 - 3 films.
+
+## The race: result (3 Nov 2026, `experiments/logs/race.json`)
+Built by `race_modal.py` and `race_report.py`. The setup is the same for every method:
+- 224 documentation questions;
+- the same answer prompt, with the cap raised from 150 to 250 words;
+- gemini-3.8-flash as the answer and judge model, through Google's endpoint;
+- the same withheld notice;
+- one Modal L4 container per method.
+
+| | Judge | Fact | Citation | R@5 | Retrieval p95 | Answer p50 / p95 | $/q |
+|---|---|---|---|---|---|---|---|
+| **RAG** (BM25 + reranker) | 89.3% | 85.7% | 92.2% | 0.89 | **48 ms** | **6.2 / 11.6 s** | **$0.0046** |
+| Wiki navigation | 89.3% | 83.5% | 85.9% | 0.86 | 23.4 s | 12.5 / 30.6 s | $0.032 |
+| Wiki hybrid | **92.9%** | 86.6% | 91.7% | 0.81 | 11.2 s | 12.6 / 22.1 s | $0.024 |
+| Wiki sections only | 79.5% | 76.3% | 79.5% | 0.78 | 1 ms | 6.5 / 15.3 s | $0.0054 |
+| Paste-all (12-question sample) | 12/12 | 12/12 | 12/12 | — | — | 44 / 80 s | $0.61 |
+
+**Winner: RAG,** which now sits behind `?stage=knowledge` as the tool `search_docs`.
+- **Latency weighs most.** RAG is the only method that finds sources inside the 200 ms budget, and it answers in about half the hybrid's time.
+- **Accuracy is close.** The hybrid gets 8 more questions right out of 224, at twice the wait and 5× the cost.
+- **Where the wiki wins:** procedures (95% vs 75%), table lookups (97% vs 88%) and version conflicts.
+- **Where RAG wins:** permissions (90% vs 70%).
+- **No method meets every target.** The 4 s p95 time to answer is missed by all; the model's own time dominates. Citations stay under 95% for all.
+
+**Measured cascade (not shipped).** Answer with RAG; ask the wiki hybrid only when RAG finds nothing (21 questions).
+- Results: 92.0% judge, 94.6% citation, p50 6.6 s, p95 21.8 s.
+- This is the "next step" slide. It costs p95 latency.
+
+**The word cap was not the bottleneck.**
+- Moving from 150 to 250 words changed the judge score by +0.4, −0.4, +1.3 and +0.9 points.
+- Q-EMMA is still wrong for every method at 250 words. RAG's answer uses 186 words and has §6.2, NBC-F-112, 12 months and 60 days. It misses £104 vs £119 and PUR.CERT_CHK, because retrieval never brought back the rate-contract row or the setting.
+
+**The withheld notice made the biggest fix.** Permission questions went 50% → 90% for RAG and 10% → 70% for every wiki method.
+- The detector is one BM25 check: is a confidential chunk in the unfiltered top 10? It is the same for every method.
+- It fires on 7 of the 8 refusal questions, plus 3 false alarms that did not change any answer.
+- It misses Q-906, the bonus question.
+
+**Spend:** $6.53 of LLM spend at the harness price. Navigation replayed from its cassettes.
