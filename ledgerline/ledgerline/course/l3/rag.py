@@ -529,6 +529,11 @@ def _best_retriever(root=None) -> Retriever:
     return _BEST["r"]
 
 
+# A deployment may search on a GPU elsewhere: REMOTE(question, role, k, withheld) -> the same list rag_search returns.
+# The Experience app sets it to its GPU function (deploy/experience_modal.py, docs_search); on any error rag_search
+# falls back to searching here.
+REMOTE = None
+
 USER_ROLES = {"ECLARKE": "PUR-EXEC", "DOKAFOR": "PUR-MGR", "LMORENO": "PUR-SR", "HWEBER": "PLANT-HEAD", "ATANAKA": "STORES",
               "SVC_AGENT": "SERVICE"}
 
@@ -540,6 +545,11 @@ def rag_search(question: str, user: str = "ECLARKE", k: int = 5, role: str | Non
     unless the user's role is an HR role. `user` is a Ledgerline user id (ECLARKE ...) or pass `role` directly.
     withheld=True appends the "confidential source withheld" notice (no content) when one would have matched."""
     role = role or USER_ROLES.get(user, user if user in C.HR_ROLES else C.DEFAULT_ROLE)
+    if REMOTE is not None:
+        try:
+            return REMOTE(question, role, k, withheld)
+        except Exception as e:  # noqa: BLE001  the GPU side is down: search here (slower on a CPU)
+            print(f"[rag_search] remote search failed ({type(e).__name__}: {str(e)[:160]}); searching locally")
     r = _best_retriever()
     out = r.search(question, role=role, k=k)
     hits = [{"cite": it["cite"], "file": it["file"], "loc": it["loc"], "text": it["text"], "score": it["score"],

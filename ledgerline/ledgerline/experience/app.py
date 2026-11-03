@@ -18,6 +18,7 @@ from __future__ import annotations
 import asyncio
 import os
 import pathlib
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 
@@ -46,6 +47,22 @@ QUESTIONS = [("bad", "What felt bad about doing it through the screens?"),
              ("feel", "How should doing this feel?")]
 
 
+def use_gpu_docs() -> bool:
+    """search_docs on the deployed GPU class (NORTHBRIDGE_GPU_DOCS="app/Class", deploy/experience_modal.py Docs).
+    rag_search falls back to searching on this CPU if the call fails."""
+    spec = os.environ.get("NORTHBRIDGE_GPU_DOCS")
+    if not spec:
+        return False
+    import modal
+
+    from ..course.l3 import rag
+
+    app_name, cls = spec.split("/", 1)
+    d = modal.Cls.from_name(app_name, cls)()
+    rag.REMOTE = lambda question, role, k, withheld: d.search.remote(question, role, k, withheld)
+    return True
+
+
 def create_app(store: Store | None = None) -> FastAPI:
     app = FastAPI(title="The Northbridge Experience", docs_url=None, redoc_url=None)
     store = store or Store()
@@ -54,6 +71,20 @@ def create_app(store: Store | None = None) -> FastAPI:
     agents = Agents(players, guard)
     pool = ThreadPoolExecutor(max_workers=int(os.environ.get("NORTHBRIDGE_CHAT_THREADS", "96")))
     app.state.players, app.state.store, app.state.guard, app.state.agents = players, store, guard, agents
+    DOCS = {"ok": False}
+
+    def warm_docs():  # the knowledge stage's index and reranker, loaded once in the background (about 20 s)
+        try:
+            from ..course.l3 import rag
+            t0 = time.time()
+            rag.rag_search("What does ERR-PO-0412 mean?", user="ECLARKE", k=3)
+            DOCS.update(ok=True, seconds=round(time.time() - t0, 1))
+        except Exception as e:  # noqa: BLE001  the other stages work without it
+            DOCS.update(ok=False, error=f"{type(e).__name__}: {e}"[:300])
+
+    if os.environ.get("RAG_INDEX_DIR"):
+        DOCS["gpu"] = use_gpu_docs()
+        threading.Thread(target=warm_docs, daemon=True).start()
 
     # ------------------------------------------------------------------ players (restored from the store)
     for k in store.keys("p:"):
@@ -117,7 +148,7 @@ def create_app(store: Store | None = None) -> FastAPI:
     @app.get("/healthz")
     def healthz():
         return {"ok": True, "players": len(players.all()), "conversations": agents.count(),
-                "studio": STUDIO.get("ok", False)}
+                "studio": STUDIO.get("ok", False), "docs": DOCS}
 
     # ------------------------------------------------------------------ joining
     @app.post("/api/join")
@@ -465,7 +496,6 @@ def create_app(store: Store | None = None) -> FastAPI:
         except Exception as e:  # noqa: BLE001
             print("warm search_policy failed:", type(e).__name__, str(e)[:200])
 
-    import threading
     threading.Thread(target=warm, daemon=True).start()
     return app
 

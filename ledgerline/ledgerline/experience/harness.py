@@ -8,7 +8,8 @@ architecture on the slide is the architecture in the code.
 
 Stages (?stage=..., one per lecture):
     brain       no tools at all: the bare model. It will make up Northbridge's numbers (Lecture 2 shows this on purpose).
-    knowledge   one tool, search_policy: it can quote the purchase policy, but cannot see Ledgerline (Lecture 3).
+    knowledge   one tool, search_docs (the Lecture 3 race winner over all of northbridge-docs): it can cite any
+                document, but cannot see Ledgerline (Lecture 3).
     hands       the whole toolbox, one tool round per message: it can act, one step at a time (Lecture 4).
     agent       the whole toolbox and the loop: multi-step until the job is done or it needs you (Lecture 5).
 """
@@ -52,15 +53,21 @@ approvals and receipts. Keep replies short and plain. No emoji."""
 
 KNOWLEDGE = """You are Ask Northbridge, the assistant on the home page of Northbridge Cycles, Manchester, a maker of e-bikes.
 You are talking to {name}, {role}. Today is Monday 26 October 2026.
-You can search Northbridge's purchase policy and the Ledgerline manual with search_policy. For any question about a rule, call it
-first and quote the clause with its citation, for example (POL-PUR-001 §6.2). Never state a rule from memory.
-If the first search does not answer it, search again for the rule behind the question (which suppliers may be used,
-certificates, limits, approvals). Battery packs, hub motors and chargers contain or charge lithium cells.
-Northbridge makes e-bikes, so many of the parts it buys contain lithium cells. Before you answer, think which of Northbridge's rules
-the question could depend on (the kind of part, the supplier, the amount, the price) and search for each of them
-separately.
-You cannot see or change Ledgerline ERP yet: no stock, orders, prices or approvals. If asked for one, say so plainly.
-Keep replies short and plain. No emoji."""
+You can search all of Northbridge's documentation with search_docs: policies, SOPs, amendments, release notes, the
+Ledgerline manual and error codes, service definitions, master data exports and e-mails. For any question about a rule,
+a procedure, a code or a document, call it first and answer only from the passages it returns, citing each fact as its
+cite, for example (POL-PUR-001 v4.1, p.6, § 6.2). Never state a rule from memory.
+- Give the rule in force today. A passage marked superseded or not yet in force does not apply today; if an amendment
+  or release note changed an older document, give the current position and say what changed.
+- Before you answer, think which of Northbridge's rules the question could depend on (the kind of part, the supplier,
+  the amount, the price, the system setting) and search for each of them separately, by its own words: for example
+  the supplier by name, then the rule for that kind of part. Battery packs, hub motors and chargers contain or charge
+  lithium cells, so the lithium-cell supplier rule applies to them.
+- If a passage is "withheld", the answer is in a confidential HR document this user may not see: say so politely and
+  that HR (NBC-HR-CONF) can help. Never guess its content.
+- If the documents do not answer it, say "That is not in Northbridge's documents" and what is missing.
+You cannot see or change Ledgerline ERP yet: no live stock, orders, prices or approvals. If asked for one, say so plainly.
+Short, plain replies: two to eight lines, plain text (no bold, no headings). No emoji."""
 
 AGENT = """You are Ask Northbridge, the assistant on the home page of Northbridge Cycles, Manchester, a maker of e-bikes
 (about 18,000 a month). You work inside Northbridge's Ledgerline ERP for {name} ({user}), {role}, with {first}'s own Ledgerline
@@ -158,7 +165,7 @@ class AskNorthbridge:
         self.busy = threading.Lock()
         self.client = self.tools = None
         if stage != "brain":
-            names = names or (["search_policy"] if stage == "knowledge" else None)
+            names = names or (["search_docs"] if stage == "knowledge" else None)
             with erp.lock:
                 server = build_toolbox_server(erp, user, names=names, name="northbridge-toolbox")
             locked_toolbox(server.toolbox, erp.lock)  # every tool call runs under this Northbridge's lock
@@ -179,7 +186,9 @@ class AskNorthbridge:
     # ------------------------------------------------------------------ one model call, guarded, with fallbacks
     def _llm(self, model: str) -> LLM:
         if model not in self.llms:
-            self.llms[model] = LLM(model, cassette="experience", mode="live", max_tokens=MAX_TOKENS)
+            # NORTHBRIDGE_CASSETTE / NORTHBRIDGE_LLM_MODE: record a run for a notebook (Lecture 3's knowledge stage)
+            self.llms[model] = LLM(model, cassette=os.environ.get("NORTHBRIDGE_CASSETTE", "experience"),
+                                   mode=os.environ.get("NORTHBRIDGE_LLM_MODE", "live"), max_tokens=MAX_TOKENS)
         return self.llms[model]
 
     def _chat(self, tools, extra=None, **kw):

@@ -43,6 +43,7 @@ ORDER = ["find_item", "check_stock", "find_supplier", "check_budget", "search_po
          "create_purchase_order", "approve_purchase_order", "release_purchase_order", "order_status",
          "receive_goods", "register_supplier", "send_message"]
 EXTRAS = ["supplier_certificates"]  # in SPECS, served when named (not in the default set, so recorded runs replay)
+STAGE_ONLY = ["search_docs"]  # served only when named (Ask Northbridge's knowledge stage); not in ALL, so L4's runs replay
 TYPES = {"string": str, "integer": int, "number": (int, float), "boolean": bool, "object": dict, "array": list}
 
 
@@ -111,9 +112,9 @@ def load_specs() -> dict[str, ToolSpec]:
 
 
 REGISTRY: dict[str, ToolSpec] = load_specs()                                # every tool folder, extras included
-SPECS: dict[str, ToolSpec] = {n: s for n, s in REGISTRY.items() if n not in EXTRAS}  # the default set (15)
+SPECS: dict[str, ToolSpec] = {n: s for n, s in REGISTRY.items() if n not in EXTRAS + STAGE_ONLY}  # the default set (15)
 DEFAULT = [n for n in ORDER if n in SPECS]   # what Toolbox() and build_toolbox_server() serve when no names are given
-ALL = list(REGISTRY)                         # every tool folder
+ALL = [n for n in REGISTRY if n not in STAGE_ONLY]   # every tool folder but the stage-only ones (16)
 
 
 def spec_of(name: str) -> ToolSpec | None:

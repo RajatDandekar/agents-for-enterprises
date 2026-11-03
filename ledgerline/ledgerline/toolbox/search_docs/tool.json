@@ -1,0 +1,60 @@
+{
+  "name": "search_docs",
+  "title": "Search documents",
+  "category": "Knowledge",
+  "description": "Search all of Northbridge's documentation (policies, SOPs, amendments, release notes, the Ledgerline manual, error codes, service definitions, master data exports, e-mails). Returns the best matching passages, each with a citation (file and page, section or row) and a status (current, superseded, not yet in force). Confidential HR documents are only searched for HR users; for anyone else a match comes back as a 'withheld' notice with no content.",
+  "writes": false,
+  "version": "1.0",
+  "added_in": "Lecture 3 (3 Nov 2026): the race winner behind Ask Northbridge's knowledge stage",
+  "services": [],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "question": {
+        "type": "string",
+        "description": "what to look for, in plain words or with the exact code (e.g. ERR-PO-0412, NBC-F-112)"
+      },
+      "k": {
+        "type": "integer",
+        "description": "optional: how many passages (default 10, at most 15)"
+      }
+    },
+    "required": [
+      "question"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean",
+        "description": "true when it worked; false comes with error and next_step"
+      },
+      "passages": {
+        "type": "array",
+        "description": "n, cite, status, text (best first); cite a passage as its cite"
+      },
+      "withheld": {
+        "type": "boolean",
+        "description": "true when a confidential HR document matched that this user may not see"
+      },
+      "method": {
+        "type": "string",
+        "description": "the retrieval behind the tool (the Lecture 3 race winner)"
+      }
+    }
+  },
+  "example": {
+    "question": "Can we buy battery packs from a supplier without a UN 38.3 certificate?"
+  },
+  "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  },
+  "policy": {
+    "ledgerline_reply_timeout_s": null,
+    "note": "no Ledgerline call: searches the northbridge-docs index in memory (ledgerline.course.l3.rag.rag_search)"
+  }
+}

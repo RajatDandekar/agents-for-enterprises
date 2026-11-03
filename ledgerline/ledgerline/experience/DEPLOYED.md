@@ -2,7 +2,15 @@
 
 **URL:** https://rajatworkspace--northbridge-experience.us-east.modal.run
 
-Modal app `northbridge-experience` (workspace rajatworkspace), deployed 2026-10-28 from `deploy/experience_modal.py`.
+Modal app `northbridge-experience` (workspace rajatworkspace), deployed 2026-10-28 from `deploy/experience_modal.py`;
+redeployed 2026-11-03 for Lecture 3's knowledge stage.
+
+**`?stage=knowledge` (Lecture 3, 3 Nov 2026).**
+- **The tool:** one tool, `search_docs` (`toolbox/search_docs`), the winner of the L3 race (`lectures/L3-the-memory/experiments/logs/race.json`). It runs BM25 + bge-reranker-base over all of northbridge-docs, filtered by the user's role, plus the withheld notice for confidential HR matches.
+- **Where it runs:** on the app's GPU class `Docs` (an L4, with the index read from the RAG Lab volume `northbridge-raglab`). The web container's CPU copy is only the fallback, at about 5 s a search.
+- **Speed (live check, `logs/knowledge_live.json`):** about 180 ms a search once warm. The first search after a cold start took 17 s.
+- **Warm-up:** the warm cron now runs at 06:50 IST on Saturday and Sunday, and waits until `/healthz` says `docs.ok`.
+- **Kept the same:** `search_docs` is not in the default toolbox or in `ALL`, so the agent and hands stages, and every recorded run, are unchanged (`compat_check` schema hash 74ce5730da28e434).
 
 | Page | What it is |
 |---|---|
@@ -26,6 +34,6 @@ The admin token is in Modal secret `northbridge-experience` (NORTHBRIDGE_ADMIN_T
 `ledgerline/ledgerline/experience/admin.env`. Do not redeploy during a class: a new container re-seeds every player's Northbridge
 (names, briefs and scores survive in the modal.Dict `northbridge-experience-state`).
 
-Tests: `modal run deploy/experience_modal.py::test` (in-process, live model, 66 checks) and
+Tests: `modal run deploy/experience_modal.py::test` (in-process, live model, 71 checks; 6 for the knowledge stage) and
 `modal run ledgerline/ledgerline/experience/tests/e2e_modal.py` (Playwright against this URL, desktop + 390 px phone).
 Screenshots: `ledgerline/ledgerline/experience/shots/`.
