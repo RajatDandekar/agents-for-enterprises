@@ -1,0 +1,3230 @@
+{
+ "single": {
+  "label": "single",
+  "model": "openrouter:google/gemini-3.8-flash",
+  "harness": "ledgerline.experience.harness.AskNorthbridge, stage agent (max 14 rounds)",
+  "system_prompt": "You are Ask Northbridge, the assistant on the home page of Northbridge Cycles, Manchester, a maker of e-bikes\n(about 18,000 a month). You work inside Northbridge's Ledgerline ERP for Emma Clarke (ECLARKE), purchase executive, with Emma's own Ledgerline\npermissions and nobody else's. Today is Monday 26 October 2026.\n\nHow you work\n- Every fact (stock, rates, suppliers, budgets, approvals, statuses, rules) comes from a tool. Never guess a number.\n  For a question about a rule, call search_policy and cite the clause. Battery packs, hub motors and chargers contain or charge lithium cells.\n- Anything that saves a request, an order or a goods receipt: first call the tool with confirm=false and show the\n  preview as a short list (item, quantity, supplier, value in pounds, cost centre, need-by date, who must approve).\n  Ask Emma to confirm. Call it again with confirm=true only after a clear yes.\n- Release and approve tools have no preview. An instruction like \"release it\" or \"approve it\", or a yes to a plan\n  that says you will release it, is the go-ahead for that one document.\n- When a step finishes, do the next step of the same job if Emma has already agreed to it; otherwise say what\n  comes next and who does it.\n- Report the status the receipt gives you, in plain words. Never say an order is placed, sent or ordered unless its\n  status is RELEASED. A request waiting for approval is not an order: say who it waits for.\n- A yes to a purchase request covers the order made from it: once the request is approved, create the purchase\n  order from it with confirm=true and release it, without asking again. Then show the receipt.\n- If a tool returns ok=false, read next_step and follow it, or tell Emma plainly what to do.\n- Approving is Daniel's job and receiving goods is Aiko's: if Emma cannot do a step, say who can.\n- Short, plain replies: two to six lines, no tables. Money with commas, like £285,600. Dates like 9 Nov 2026.\n  No emoji.\n\nWhat you know about Northbridge (codes and numbers still come from the tools)\n- The city e-bike battery pack is BAT-500. Voltway Cells, Eindhoven, is VC-EIN-0042.\n- The Spring launch run is cost centre PRD-07. If no need-by date is given for it, propose Monday\n  9 November 2026 (2026-11-09) and show it in the preview.\n- Emma Clarke (ECLARKE) buys, Daniel Okafor (DOKAFOR) approves above Emma's limit, Aiko Tanaka (ATANAKA) receives\n  goods at Manchester stores.",
+  "tools_exposed": [
+   "check_stock",
+   "find_item"
+  ],
+  "tool_definitions": [
+   {
+    "type": "function",
+    "function": {
+     "name": "check_stock",
+     "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "item_code": {
+        "type": "string",
+        "description": "Ledgerline item code, e.g. BAT-500"
+       }
+      },
+      "required": [
+       "item_code"
+      ]
+     }
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "find_item",
+     "description": "Find stock items by description or code (e.g. '500 Wh battery pack'). Returns active items, best match first, with code, unit and whether they are lithium-cell parts.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "query": {
+        "type": "string",
+        "description": "words describing the item, or its code"
+       }
+      },
+      "required": [
+       "query"
+      ]
+     }
+    }
+   }
+  ],
+  "turns": [
+   {
+    "user": "How many BAT-500 battery packs do we have in Manchester main stores?",
+    "reply": "Manchester main stores currently has 5,400 BAT-500 battery packs on hand (all free, none allocated or on order). \n\nAcross all locations, there are 6,600 units in total, giving 11 days of stock cover.",
+    "cards": [
+     {
+      "round": 1,
+      "tool": "check_stock",
+      "args": {
+       "item_code": "BAT-500"
+      },
+      "result": {
+       "ok": true,
+       "item_code": "BAT-500",
+       "description": "Battery pack, 36 V 500 Wh",
+       "unit": "NOS",
+       "warehouses": [
+        {
+         "warehouse": "WH-MAN-STR",
+         "name": "Manchester main stores",
+         "on_hand": 5400,
+         "allocated": 0,
+         "on_order": 0,
+         "free": 5400
+        },
+        {
+         "warehouse": "WH-LDS-STR",
+         "name": "Leeds stores",
+         "on_hand": 1200,
+         "allocated": 0,
+         "on_order": 0,
+         "free": 1200
+        }
+       ],
+       "free_total": 6600,
+       "on_order_total": 0,
+       "reorder_level": 3000,
+       "cover_days": 11,
+       "below_reorder": false
+      },
+      "ms": 62
+     }
+    ],
+    "rounds": 1,
+    "model_calls": 2,
+    "tokens_in": 1850,
+    "tokens_out": 143,
+    "cost_gbp_est": 0.00167
+   }
+  ],
+  "steps": [
+   {
+    "call": 0,
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are Ask Northbridge, the assistant on the home page of Northbridge Cycles, Manchester, a maker of e-bikes\n(about 18,000 a month). You work inside Northbridge's Ledgerline ERP for Emma Clarke (ECLARKE), purchase executive, with Emma's own Ledgerline\npermissions and nobody else's. Today is Monday 26 October 2026.\n\nHow you work\n- Every fact (stock, rates, suppliers, budgets, approvals, statuses, rules) comes from a tool. Never guess a number.\n  For a question about a rule, call search_policy and cite the clause. Battery packs, hub motors and chargers contain or charge lithium cells.\n- Anything that saves a request, an order or a goods receipt: first call the tool with confirm=false and show the\n  preview as a short list (item, quantity, supplier, value in pounds, cost centre, need-by date, who must approve).\n  Ask Emma to confirm. Call it again with confirm=true only after a clear yes.\n- Release and approve tools have no preview. An instruction like \"release it\" or \"approve it\", or a yes to a plan\n  that says you will release it, is the go-ahead for that one document.\n- When a step finishes, do the next step of the same job if Emma has already agreed to it; otherwise say what\n  comes next and who does it.\n- Report the status the receipt gives you, in plain words. Never say an order is placed, sent or ordered unless its\n  status is RELEASED. A request waiting for approval is not an order: say who it waits for.\n- A yes to a purchase request covers the order made from it: once the request is approved, create the purchase\n  order from it with confirm=true and release it, without asking again. Then show the receipt.\n- If a tool returns ok=false, read next_step and follow it, or tell Emma plainly what to do.\n- Approving is Daniel's job and receiving goods is Aiko's: if Emma cannot do a step, say who can.\n- Short, plain replies: two to six lines, no tables. Money with commas, like £285,600. Dates like 9 Nov 2026.\n  No emoji.\n\nWhat you know about Northbridge (codes and numbers still come from the tools)\n- The city e-bike battery pack is BAT-500. Voltway Cells, Eindhoven, is VC-EIN-0042.\n- The Spring launch run is cost centre PRD-07. If no need-by date is given for it, propose Monday\n  9 November 2026 (2026-11-09) and show it in the preview.\n- Emma Clarke (ECLARKE) buys, Daniel Okafor (DOKAFOR) approves above Emma's limit, Aiko Tanaka (ATANAKA) receives\n  goods at Manchester stores."
+     },
+     {
+      "role": "user",
+      "content": "How many BAT-500 battery packs do we have in Manchester main stores?"
+     }
+    ],
+    "tools_sent": [
+     "check_stock",
+     "find_item"
+    ],
+    "settings": {},
+    "reply": {
+     "content": null,
+     "tool_calls": [
+      {
+       "id": "call_117021",
+       "name": "check_stock",
+       "arguments": {
+        "item_code": "BAT-500"
+       }
+      }
+     ]
+    },
+    "tool_calls": [
+     {
+      "id": "call_117021",
+      "name": "check_stock",
+      "arguments": {
+       "item_code": "BAT-500"
+      }
+     }
+    ],
+    "prompt_tokens": 799,
+    "completion_tokens": 86,
+    "seconds": 3.093,
+    "replayed": false,
+    "model": "openrouter:google/gemini-3.8-flash",
+    "tools": [
+     {
+      "type": "function",
+      "function": {
+       "name": "check_stock",
+       "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Ledgerline item code, e.g. BAT-500"
+         }
+        },
+        "required": [
+         "item_code"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "find_item",
+       "description": "Find stock items by description or code (e.g. '500 Wh battery pack'). Returns active items, best match first, with code, unit and whether they are lithium-cell parts.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "query": {
+          "type": "string",
+          "description": "words describing the item, or its code"
+         }
+        },
+        "required": [
+         "query"
+        ]
+       }
+      }
+     }
+    ]
+   },
+   {
+    "call": 1,
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are Ask Northbridge, the assistant on the home page of Northbridge Cycles, Manchester, a maker of e-bikes\n(about 18,000 a month). You work inside Northbridge's Ledgerline ERP for Emma Clarke (ECLARKE), purchase executive, with Emma's own Ledgerline\npermissions and nobody else's. Today is Monday 26 October 2026.\n\nHow you work\n- Every fact (stock, rates, suppliers, budgets, approvals, statuses, rules) comes from a tool. Never guess a number.\n  For a question about a rule, call search_policy and cite the clause. Battery packs, hub motors and chargers contain or charge lithium cells.\n- Anything that saves a request, an order or a goods receipt: first call the tool with confirm=false and show the\n  preview as a short list (item, quantity, supplier, value in pounds, cost centre, need-by date, who must approve).\n  Ask Emma to confirm. Call it again with confirm=true only after a clear yes.\n- Release and approve tools have no preview. An instruction like \"release it\" or \"approve it\", or a yes to a plan\n  that says you will release it, is the go-ahead for that one document.\n- When a step finishes, do the next step of the same job if Emma has already agreed to it; otherwise say what\n  comes next and who does it.\n- Report the status the receipt gives you, in plain words. Never say an order is placed, sent or ordered unless its\n  status is RELEASED. A request waiting for approval is not an order: say who it waits for.\n- A yes to a purchase request covers the order made from it: once the request is approved, create the purchase\n  order from it with confirm=true and release it, without asking again. Then show the receipt.\n- If a tool returns ok=false, read next_step and follow it, or tell Emma plainly what to do.\n- Approving is Daniel's job and receiving goods is Aiko's: if Emma cannot do a step, say who can.\n- Short, plain replies: two to six lines, no tables. Money with commas, like £285,600. Dates like 9 Nov 2026.\n  No emoji.\n\nWhat you know about Northbridge (codes and numbers still come from the tools)\n- The city e-bike battery pack is BAT-500. Voltway Cells, Eindhoven, is VC-EIN-0042.\n- The Spring launch run is cost centre PRD-07. If no need-by date is given for it, propose Monday\n  9 November 2026 (2026-11-09) and show it in the preview.\n- Emma Clarke (ECLARKE) buys, Daniel Okafor (DOKAFOR) approves above Emma's limit, Aiko Tanaka (ATANAKA) receives\n  goods at Manchester stores."
+     },
+     {
+      "role": "user",
+      "content": "How many BAT-500 battery packs do we have in Manchester main stores?"
+     },
+     {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+       {
+        "id": "call_117021",
+        "type": "function",
+        "function": {
+         "name": "check_stock",
+         "arguments": "{\"item_code\": \"BAT-500\"}"
+        }
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_117021",
+      "content": "{\"ok\": true, \"item_code\": \"BAT-500\", \"description\": \"Battery pack, 36 V 500 Wh\", \"unit\": \"NOS\", \"warehouses\": [{\"warehouse\": \"WH-MAN-STR\", \"name\": \"Manchester main stores\", \"on_hand\": 5400, \"allocated\": 0, \"on_order\": 0, \"free\": 5400}, {\"warehouse\": \"WH-LDS-STR\", \"name\": \"Leeds stores\", \"on_hand\": 1200, \"allocated\": 0, \"on_order\": 0, \"free\": 1200}], \"free_total\": 6600, \"on_order_total\": 0, \"reorder_level\": 3000, \"cover_days\": 11, \"below_reorder\": false}"
+     }
+    ],
+    "tools_sent": [
+     "check_stock",
+     "find_item"
+    ],
+    "settings": {},
+    "reply": {
+     "content": "Manchester main stores currently has 5,400 BAT-500 battery packs on hand (all free, none allocated or on order). \n\nAcross all locations, there are 6,600 units in total, giving 11 days of stock cover.",
+     "tool_calls": []
+    },
+    "tool_calls": [],
+    "prompt_tokens": 1051,
+    "completion_tokens": 57,
+    "seconds": 12.974,
+    "replayed": false,
+    "model": "openrouter:google/gemini-3.8-flash",
+    "tools": [
+     {
+      "type": "function",
+      "function": {
+       "name": "check_stock",
+       "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Ledgerline item code, e.g. BAT-500"
+         }
+        },
+        "required": [
+         "item_code"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "find_item",
+       "description": "Find stock items by description or code (e.g. '500 Wh battery pack'). Returns active items, best match first, with code, unit and whether they are lithium-cell parts.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "query": {
+          "type": "string",
+          "description": "words describing the item, or its code"
+         }
+        },
+        "required": [
+         "query"
+        ]
+       }
+      }
+     }
+    ]
+   }
+  ],
+  "seconds_wall": 17.26,
+  "ledgerline_after": {
+   "pr": [],
+   "po": [],
+   "approval": []
+  },
+  "ledgerline_service_calls": 4,
+  "context_parts": [
+   {
+    "part": "system prompt",
+    "tokens": 654,
+    "text": "You are Ask Northbridge, the assistant on the home page of Northbridge Cycles, Manchester, a maker of e-bikes\n(about 18,000 a month). You work inside Northbridge's Ledgerline ERP for Emma Clarke (ECLARKE), purchase executive, with Emma's own Ledgerline\npermissions and nobody else's. Today is Monday 26 October 2026.\n\nHow you work\n- Every fact (stock, rates, suppliers, budgets, approvals, statuses, rules) comes from a tool. Never guess a number.\n  For a question about a rule, call search_policy and cite the clause. Battery packs, hub motors and chargers contain or charge lithium cells.\n- Anything that saves a request, an order or a goods receipt: first call the tool with confirm=false and show the\n  preview as a short list (item, quantity, supplier, value in pounds, cost centre, need-by date, who must approve).\n  Ask Emma to confirm. Call it again with confirm=true only after a clear yes.\n- Release and approve tools have no preview. An instruction like \"release it\" or \"approve it\", or a yes to a plan\n  that says you will release it, is the go-ahead for that one document.\n- When a step finishes, do the next step of the same job if Emma has already agreed to it; otherwise say what\n  comes next and who does it.\n- Report the status the receipt gives you, in plain words. Never say an order is placed, sent or ordered unless its\n  status is RELEASED. A request waiting for approval is not an order: say who it waits for.\n- A yes to a purchase request covers the order made from it: once the request is approved, create the purchase\n  order from it with confirm=true and release it, without asking again. Then show the receipt.\n- If a tool returns ok=false, read next_step and follow it, or tell Emma plainly what to do.\n- Approving is Daniel's job and receiving goods is Aiko's: if Emma cannot do a step, say who can.\n- Short, plain replies: two to six lines, no tables. Money with commas, like £285,600. Dates like 9 Nov 2026.\n  No emoji.\n\nWhat you know about Northbridge (codes and numbers still come from the tools)\n- The city e-bike battery pack is BAT-500. Voltway Cells, Eindhoven, is VC-EIN-0042.\n- The Spring launch run is cost centre PRD-07. If no need-by date is given for it, propose Monday\n  9 November 2026 (2026-11-09) and show it in the preview.\n- Emma Clarke (ECLARKE) buys, Daniel Okafor (DOKAFOR) approves above Emma's limit, Aiko Tanaka (ATANAKA) receives\n  goods at Manchester stores."
+   },
+   {
+    "part": "tool definitions (2)",
+    "tokens": 128,
+    "tools": [
+     "check_stock",
+     "find_item"
+    ]
+   },
+   {
+    "part": "user message",
+    "tokens": 17,
+    "text": "How many BAT-500 battery packs do we have in Manchester main stores?",
+    "note": "includes the chat template's own few tokens"
+   },
+   {
+    "part": "tool call (model -> our code)",
+    "tokens": 23,
+    "calls": [
+     {
+      "name": "check_stock",
+      "arguments": {
+       "item_code": "BAT-500"
+      }
+     }
+    ]
+   },
+   {
+    "part": "tool result (only what the tool returned)",
+    "tokens": 229,
+    "content": "{\"ok\": true, \"item_code\": \"BAT-500\", \"description\": \"Battery pack, 36 V 500 Wh\", \"unit\": \"NOS\", \"warehouses\": [{\"warehouse\": \"WH-MAN-STR\", \"name\": \"Manchester main stores\", \"on_hand\": 5400, \"allocated\": 0, \"on_order\": 0, \"free\": 5400}, {\"warehouse\": \"WH-LDS-STR\", \"name\": \"Leeds stores\", \"on_hand\": 1200, \"allocated\": 0, \"on_order\": 0, \"free\": 1200}], \"free_total\": 6600, \"on_order_total\": 0, \"reorder_level\": 3000, \"cover_days\": 11, \"below_reorder\": false}"
+   }
+  ],
+  "context_parts_method": "provider prompt_tokens on prefix requests (see docstring); same model and route",
+  "what_never_enters_the_context": [
+   "tool.py",
+   "the Ledgerline services and their {rc, err_cd, msg, data} replies",
+   "the database",
+   "Emma's session and password",
+   "the MCP plumbing"
+  ],
+  "summary": {
+   "tool_calls": 1,
+   "sequence": [
+    "check_stock"
+   ],
+   "model_calls": 2,
+   "tokens_in": 1850,
+   "tokens_out": 143,
+   "cost_gbp_est": 0.00167,
+   "errors_recovered": [],
+   "replayed": false
+  },
+  "check_only_tool_returns_in_context": {
+   "tool_messages": 1,
+   "identical_to_tool_results": true,
+   "parts_sum": 1051,
+   "last_prompt_tokens": 1051
+  }
+ },
+ "order": {
+  "label": "order",
+  "model": "openrouter:google/gemini-3.8-flash",
+  "harness": "ledgerline.experience.harness.AskNorthbridge, stage agent (max 14 rounds)",
+  "system_prompt": "You are Ask Northbridge, the assistant on the home page of Northbridge Cycles, Manchester, a maker of e-bikes\n(about 18,000 a month). You work inside Northbridge's Ledgerline ERP for Emma Clarke (ECLARKE), purchase executive, with Emma's own Ledgerline\npermissions and nobody else's. Today is Monday 26 October 2026.\n\nHow you work\n- Every fact (stock, rates, suppliers, budgets, approvals, statuses, rules) comes from a tool. Never guess a number.\n  For a question about a rule, call search_policy and cite the clause. Battery packs, hub motors and chargers contain or charge lithium cells.\n- Anything that saves a request, an order or a goods receipt: first call the tool with confirm=false and show the\n  preview as a short list (item, quantity, supplier, value in pounds, cost centre, need-by date, who must approve).\n  Ask Emma to confirm. Call it again with confirm=true only after a clear yes.\n- Release and approve tools have no preview. An instruction like \"release it\" or \"approve it\", or a yes to a plan\n  that says you will release it, is the go-ahead for that one document.\n- When a step finishes, do the next step of the same job if Emma has already agreed to it; otherwise say what\n  comes next and who does it.\n- Report the status the receipt gives you, in plain words. Never say an order is placed, sent or ordered unless its\n  status is RELEASED. A request waiting for approval is not an order: say who it waits for.\n- A yes to a purchase request covers the order made from it: once the request is approved, create the purchase\n  order from it with confirm=true and release it, without asking again. Then show the receipt.\n- If a tool returns ok=false, read next_step and follow it, or tell Emma plainly what to do.\n- Approving is Daniel's job and receiving goods is Aiko's: if Emma cannot do a step, say who can.\n- Short, plain replies: two to six lines, no tables. Money with commas, like £285,600. Dates like 9 Nov 2026.\n  No emoji.\n\nWhat you know about Northbridge (codes and numbers still come from the tools)\n- The city e-bike battery pack is BAT-500. Voltway Cells, Eindhoven, is VC-EIN-0042.\n- The Spring launch run is cost centre PRD-07. If no need-by date is given for it, propose Monday\n  9 November 2026 (2026-11-09) and show it in the preview.\n- Emma Clarke (ECLARKE) buys, Daniel Okafor (DOKAFOR) approves above Emma's limit, Aiko Tanaka (ATANAKA) receives\n  goods at Manchester stores.",
+  "tools_exposed": [
+   "find_item",
+   "check_stock",
+   "find_supplier",
+   "check_budget",
+   "search_policy",
+   "create_purchase_request",
+   "list_my_approvals",
+   "approve_purchase_request",
+   "create_purchase_order",
+   "approve_purchase_order",
+   "release_purchase_order",
+   "order_status",
+   "receive_goods",
+   "register_supplier",
+   "send_message",
+   "supplier_certificates"
+  ],
+  "tool_definitions": [
+   {
+    "type": "function",
+    "function": {
+     "name": "find_item",
+     "description": "Find stock items by description or code (e.g. '500 Wh battery pack'). Returns active items, best match first, with code, unit and whether they are lithium-cell parts.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "query": {
+        "type": "string",
+        "description": "words describing the item, or its code"
+       }
+      },
+      "required": [
+       "query"
+      ]
+     }
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "check_stock",
+     "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "item_code": {
+        "type": "string",
+        "description": "Ledgerline item code, e.g. BAT-500"
+       }
+      },
+      "required": [
+       "item_code"
+      ]
+     }
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "find_supplier",
+     "description": "Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid UN 38.3 certificate. Use it before registering anyone new.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "name": {
+        "type": "string",
+        "description": "the supplier's name as the user said it"
+       },
+       "city": {
+        "type": "string",
+        "description": "optional city, to tell two branches apart"
+       }
+      },
+      "required": [
+       "name"
+      ]
+     }
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "check_budget",
+     "description": "Is a cost centre open, and how much budget is left this quarter? Without a code, lists every open cost centre.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "cost_centre": {
+        "type": "string",
+        "description": "cost centre code, e.g. PRD-07; leave out to list the open ones"
+       }
+      },
+      "required": []
+     }
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "search_policy",
+     "description": "Search Northbridge's purchasing policy and the Ledgerline manual. Returns the relevant clauses with their citations, or says the documents do not cover it.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "question": {
+        "type": "string",
+        "description": "the policy question in plain words"
+       }
+      },
+      "required": [
+       "question"
+      ]
+     }
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "create_purchase_request",
+     "description": "Raise a purchase request (PR): the internal ask to buy something. With confirm=false it previews the estimated value and who must approve; with confirm=true it saves and submits it. Within your limit it is approved at once; above it, it waits for your manager.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "item_code": {
+        "type": "string",
+        "description": "Ledgerline item code"
+       },
+       "quantity": {
+        "type": "integer",
+        "description": "how many, in the item's unit"
+       },
+       "cost_centre": {
+        "type": "string",
+        "description": "who pays, e.g. PRD-07"
+       },
+       "need_by": {
+        "type": "string",
+        "description": "date needed, YYYY-MM-DD"
+       },
+       "confirm": {
+        "type": "boolean",
+        "description": "false (default) = preview only, nothing is saved; true = commit"
+       }
+      },
+      "required": [
+       "item_code",
+       "quantity",
+       "cost_centre",
+       "need_by"
+      ]
+     }
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "list_my_approvals",
+     "description": "What is waiting for the signed-in user's signature: purchase requests and orders, with value and who raised them.",
+     "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+     }
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "approve_purchase_request",
+     "description": "Approve or reject a purchase request that waits for the signed-in user. Only the named approver can do this, never the person who raised it.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "request_no": {
+        "type": "string",
+        "description": "e.g. PR/2026/04417"
+       },
+       "decision": {
+        "type": "string",
+        "enum": [
+         "approve",
+         "reject"
+        ],
+        "description": "approve or reject"
+       },
+       "comment": {
+        "type": "string",
+        "description": "optional note to the requester"
+       }
+      },
+      "required": [
+       "request_no",
+       "decision"
+      ]
+     }
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "create_purchase_order",
+     "description": "Create a purchase order (PO) with a supplier. Give request_no for an approved purchase request (it supplies item, quantity, cost centre and date), or item_code, quantity, cost_centre and need_by for a small direct order up to £50,000. confirm=false previews price, tax and value; confirm=true saves it. Returns a receipt with the order's real status: an APPROVED order still has to be released.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "supplier_code": {
+        "type": "string",
+        "description": "Ledgerline supplier code, from find_supplier"
+       },
+       "request_no": {
+        "type": "string",
+        "description": "an APPROVED purchase request"
+       },
+       "item_code": {
+        "type": "string",
+        "description": "for a direct order"
+       },
+       "quantity": {
+        "type": "integer",
+        "description": "for a direct order"
+       },
+       "cost_centre": {
+        "type": "string",
+        "description": "for a direct order"
+       },
+       "need_by": {
+        "type": "string",
+        "description": "for a direct order, YYYY-MM-DD"
+       },
+       "rate": {
+        "type": "number",
+        "description": "omit to use the contract rate"
+       },
+       "confirm": {
+        "type": "boolean",
+        "description": "false (default) = preview only, nothing is saved; true = commit"
+       }
+      },
+      "required": [
+       "supplier_code"
+      ]
+     }
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "approve_purchase_order",
+     "description": "Approve a purchase order that waits for the signed-in user's signature.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "po_no": {
+        "type": "string",
+        "description": "e.g. PO/2026/01182"
+       },
+       "comment": {
+        "type": "string",
+        "description": "optional"
+       }
+      },
+      "required": [
+       "po_no"
+      ]
+     }
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "release_purchase_order",
+     "description": "Release an APPROVED purchase order to the supplier; only then does the supplier get it. Returns a receipt with the real status.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "po_no": {
+        "type": "string",
+        "description": "e.g. PO/2026/01182"
+       }
+      },
+      "required": [
+       "po_no"
+      ]
+     }
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "order_status",
+     "description": "The real status of a purchase order or a purchase request, read from Ledgerline, with approval, goods received and any warning.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "po_no": {
+        "type": "string",
+        "description": "e.g. PO/2026/01182"
+       },
+       "request_no": {
+        "type": "string",
+        "description": "e.g. PR/2026/04417"
+       }
+      },
+      "required": []
+     }
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "receive_goods",
+     "description": "Record goods received (GRN) against a RELEASED purchase order: stock goes up, and the order closes once everything has arrived. Cannot receive more than was ordered.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "po_no": {
+        "type": "string",
+        "description": "the released order the goods came against"
+       },
+       "quantity": {
+        "type": "integer",
+        "description": "how many arrived"
+       },
+       "warehouse": {
+        "type": "string",
+        "description": "optional; defaults to the order's warehouse"
+       },
+       "remarks": {
+        "type": "string",
+        "description": "optional, e.g. vehicle number"
+       },
+       "confirm": {
+        "type": "boolean",
+        "description": "false (default) = preview only, nothing is saved; true = commit"
+       }
+      },
+      "required": [
+       "po_no",
+       "quantity"
+      ]
+     }
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "register_supplier",
+     "description": "Register a NEW supplier. Only after find_supplier shows no existing match. confirm=false previews and checks for duplicates; confirm=true creates it.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "name": {
+        "type": "string",
+        "description": "registered name"
+       },
+       "city": {
+        "type": "string",
+        "description": ""
+       },
+       "state": {
+        "type": "string",
+        "description": "Two-letter country code, e.g. GB or NL"
+       },
+       "vat_no": {
+        "type": "string",
+        "description": "15-character VAT number"
+       },
+       "confirm": {
+        "type": "boolean",
+        "description": "false (default) = preview only, nothing is saved; true = commit"
+       }
+      },
+      "required": [
+       "name",
+       "city",
+       "state",
+       "vat_no"
+      ]
+     }
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "send_message",
+     "description": "Send a short message to a colleague or supplier (Slack handle like @daniel, or an email address). Goes through Ledgerline's notification queue.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "to": {
+        "type": "string",
+        "description": "@handle or email"
+       },
+       "text": {
+        "type": "string",
+        "description": "the message"
+       }
+      },
+      "required": [
+       "to",
+       "text"
+      ]
+     }
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "supplier_certificates",
+     "description": "A supplier's certificates on file in Ledgerline (UN 38.3 cell-safety and others): type, document reference, valid-to date, whether each is valid today and how many days are left. Give item_code to also learn whether that item needs a valid UN 38.3 certificate (Purchase Policy §6.2) and whether this supplier has one.",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "supplier_code": {
+        "type": "string",
+        "description": "Ledgerline supplier code, from find_supplier, e.g. NC-GDA-0063"
+       },
+       "item_code": {
+        "type": "string",
+        "description": "optional item code, e.g. BAT-500: also says whether this item needs UN 38.3 and whether the supplier qualifies"
+       },
+       "cert_type": {
+        "type": "string",
+        "description": "optional: only this certificate type, e.g. UN38.3"
+       },
+       "limit": {
+        "type": "integer",
+        "description": "optional: at most this many certificates per page (default 20, at most 50)"
+       },
+       "cursor": {
+        "type": "string",
+        "description": "optional: the next_cursor from the previous page"
+       }
+      },
+      "required": [
+       "supplier_code"
+      ]
+     }
+    }
+   }
+  ],
+  "turns": [
+   {
+    "user": "Order 2,000 BAT-500 packs from Voltway for the spring launch run.",
+    "reply": "This order exceeds the £50,000 direct order limit, so a purchase request must be raised first for Daniel Okafor's approval.\n\nPreview:\n- Item: BAT-500 (City e-bike battery pack)\n- Quantity: 2,000\n- Supplier: Voltway Cells (VC-EIN-0042)\n- Estimated value: £273,600 (ex. VAT)\n- Cost centre: PRD-07\n- Need-by date: 9 Nov 2026\n- Approver: Daniel Okafor (DOKAFOR)\n\nShall I submit this purchase request?",
+    "cards": [
+     {
+      "round": 1,
+      "tool": "supplier_certificates",
+      "args": {
+       "item_code": "BAT-500",
+       "supplier_code": "VC-EIN-0042"
+      },
+      "result": {
+       "ok": true,
+       "supplier_code": "VC-EIN-0042",
+       "supplier_name": "Voltway Cells",
+       "supplier_status": "ACTIVE",
+       "as_of": "2026-10-26",
+       "certificates": [
+        {
+         "cert_type": "UN38.3",
+         "doc_ref": "UN38.3-TR/VC/2026/118",
+         "valid_to": "2027-03-31",
+         "valid": true,
+         "days_left": 156
+        }
+       ],
+       "un38_3": "valid",
+       "item": {
+        "item_code": "BAT-500",
+        "needs_un38_3": true,
+        "supplier_qualifies": true
+       },
+       "total": 1,
+       "next_cursor": null
+      },
+      "ms": 9
+     },
+     {
+      "round": 1,
+      "tool": "create_purchase_order",
+      "args": {
+       "need_by": "2026-11-09",
+       "quantity": 2000,
+       "item_code": "BAT-500",
+       "cost_centre": "PRD-07",
+       "supplier_code": "VC-EIN-0042",
+       "confirm": false
+      },
+      "result": {
+       "ok": false,
+       "error": "A direct order is limited to £50,000; this one is £285,600.",
+       "next_step": "Raise a purchase request first with create_purchase_request.",
+       "ledgerline_code": ""
+      },
+      "ms": 10
+     },
+     {
+      "round": 1,
+      "tool": "create_purchase_request",
+      "args": {
+       "need_by": "2026-11-09",
+       "item_code": "BAT-500",
+       "confirm": false,
+       "cost_centre": "PRD-07",
+       "quantity": 2000
+      },
+      "result": {
+       "ok": true,
+       "preview": {
+        "item_code": "BAT-500",
+        "quantity": 2000,
+        "estimated_rate": 114.0,
+        "estimated_value": 273600.0,
+        "cost_centre": "PRD-07",
+        "cost_centre_state": "OK",
+        "need_by": "2026-11-09",
+        "needs_approval": true,
+        "your_limit": 250000.0,
+        "approver": "DOKAFOR"
+       },
+       "warnings": [],
+       "note": "Nothing has been saved. Show this to the user and ask to confirm."
+      },
+      "ms": 5
+     }
+    ],
+    "rounds": 1,
+    "model_calls": 2,
+    "tokens_in": 4877,
+    "tokens_out": 1057,
+    "cost_gbp_est": 0.00662
+   },
+   {
+    "user": "Yes, go ahead. We need them by 9 November 2026.",
+    "reply": "Purchase request PR/2026/04417 has been submitted.\n\n- Status: WAITING FOR APPROVAL\n- Item: BAT-500 (2,000 units)\n- Estimated value: £273,600\n- Cost centre: PRD-07\n- Need-by date: 9 Nov 2026\n- Approver: Daniel Okafor (DOKAFOR)\n\nNothing is ordered yet. Once Daniel approves it, I will create and release the purchase order to Voltway Cells.",
+    "cards": [
+     {
+      "round": 1,
+      "tool": "create_purchase_request",
+      "args": {
+       "need_by": "2026-11-09",
+       "confirm": true,
+       "cost_centre": "PRD-07",
+       "item_code": "BAT-500",
+       "quantity": 2000
+      },
+      "result": {
+       "ok": true,
+       "request_no": "PR/2026/04417",
+       "status": "WAITING FOR APPROVAL",
+       "status_code": "PA",
+       "item_code": "BAT-500",
+       "quantity": 2000,
+       "estimated_value": 273600.0,
+       "cost_centre": "PRD-07",
+       "need_by": "2026-11-09",
+       "approver": "DOKAFOR",
+       "approved_by": null,
+       "next_step": "Waiting for DOKAFOR. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+      },
+      "ms": 4
+     }
+    ],
+    "rounds": 1,
+    "model_calls": 2,
+    "tokens_in": 5789,
+    "tokens_out": 399,
+    "cost_gbp_est": 0.00507
+   }
+  ],
+  "steps": [
+   {
+    "call": 0,
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are Ask Northbridge, the assistant on the home page of Northbridge Cycles, Manchester, a maker of e-bikes\n(about 18,000 a month). You work inside Northbridge's Ledgerline ERP for Emma Clarke (ECLARKE), purchase executive, with Emma's own Ledgerline\npermissions and nobody else's. Today is Monday 26 October 2026.\n\nHow you work\n- Every fact (stock, rates, suppliers, budgets, approvals, statuses, rules) comes from a tool. Never guess a number.\n  For a question about a rule, call search_policy and cite the clause. Battery packs, hub motors and chargers contain or charge lithium cells.\n- Anything that saves a request, an order or a goods receipt: first call the tool with confirm=false and show the\n  preview as a short list (item, quantity, supplier, value in pounds, cost centre, need-by date, who must approve).\n  Ask Emma to confirm. Call it again with confirm=true only after a clear yes.\n- Release and approve tools have no preview. An instruction like \"release it\" or \"approve it\", or a yes to a plan\n  that says you will release it, is the go-ahead for that one document.\n- When a step finishes, do the next step of the same job if Emma has already agreed to it; otherwise say what\n  comes next and who does it.\n- Report the status the receipt gives you, in plain words. Never say an order is placed, sent or ordered unless its\n  status is RELEASED. A request waiting for approval is not an order: say who it waits for.\n- A yes to a purchase request covers the order made from it: once the request is approved, create the purchase\n  order from it with confirm=true and release it, without asking again. Then show the receipt.\n- If a tool returns ok=false, read next_step and follow it, or tell Emma plainly what to do.\n- Approving is Daniel's job and receiving goods is Aiko's: if Emma cannot do a step, say who can.\n- Short, plain replies: two to six lines, no tables. Money with commas, like £285,600. Dates like 9 Nov 2026.\n  No emoji.\n\nWhat you know about Northbridge (codes and numbers still come from the tools)\n- The city e-bike battery pack is BAT-500. Voltway Cells, Eindhoven, is VC-EIN-0042.\n- The Spring launch run is cost centre PRD-07. If no need-by date is given for it, propose Monday\n  9 November 2026 (2026-11-09) and show it in the preview.\n- Emma Clarke (ECLARKE) buys, Daniel Okafor (DOKAFOR) approves above Emma's limit, Aiko Tanaka (ATANAKA) receives\n  goods at Manchester stores."
+     },
+     {
+      "role": "user",
+      "content": "Order 2,000 BAT-500 packs from Voltway for the spring launch run."
+     }
+    ],
+    "tools_sent": [
+     "find_item",
+     "check_stock",
+     "find_supplier",
+     "check_budget",
+     "search_policy",
+     "create_purchase_request",
+     "list_my_approvals",
+     "approve_purchase_request",
+     "create_purchase_order",
+     "approve_purchase_order",
+     "release_purchase_order",
+     "order_status",
+     "receive_goods",
+     "register_supplier",
+     "send_message",
+     "supplier_certificates"
+    ],
+    "settings": {},
+    "reply": {
+     "content": null,
+     "tool_calls": [
+      {
+       "id": "call_36890",
+       "name": "supplier_certificates",
+       "arguments": {
+        "item_code": "BAT-500",
+        "supplier_code": "VC-EIN-0042"
+       }
+      },
+      {
+       "id": "call_36899",
+       "name": "create_purchase_order",
+       "arguments": {
+        "need_by": "2026-11-09",
+        "quantity": 2000,
+        "item_code": "BAT-500",
+        "cost_centre": "PRD-07",
+        "supplier_code": "VC-EIN-0042",
+        "confirm": false
+       }
+      },
+      {
+       "id": "call_36908",
+       "name": "create_purchase_request",
+       "arguments": {
+        "need_by": "2026-11-09",
+        "item_code": "BAT-500",
+        "confirm": false,
+        "cost_centre": "PRD-07",
+        "quantity": 2000
+       }
+      }
+     ]
+    },
+    "tool_calls": [
+     {
+      "id": "call_36890",
+      "name": "supplier_certificates",
+      "arguments": {
+       "item_code": "BAT-500",
+       "supplier_code": "VC-EIN-0042"
+      }
+     },
+     {
+      "id": "call_36899",
+      "name": "create_purchase_order",
+      "arguments": {
+       "need_by": "2026-11-09",
+       "quantity": 2000,
+       "item_code": "BAT-500",
+       "cost_centre": "PRD-07",
+       "supplier_code": "VC-EIN-0042",
+       "confirm": false
+      }
+     },
+     {
+      "id": "call_36908",
+      "name": "create_purchase_request",
+      "arguments": {
+       "need_by": "2026-11-09",
+       "item_code": "BAT-500",
+       "confirm": false,
+       "cost_centre": "PRD-07",
+       "quantity": 2000
+      }
+     }
+    ],
+    "prompt_tokens": 2231,
+    "completion_tokens": 914,
+    "seconds": 6.72,
+    "replayed": false,
+    "model": "openrouter:google/gemini-3.8-flash",
+    "tools": [
+     {
+      "type": "function",
+      "function": {
+       "name": "find_item",
+       "description": "Find stock items by description or code (e.g. '500 Wh battery pack'). Returns active items, best match first, with code, unit and whether they are lithium-cell parts.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "query": {
+          "type": "string",
+          "description": "words describing the item, or its code"
+         }
+        },
+        "required": [
+         "query"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "check_stock",
+       "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Ledgerline item code, e.g. BAT-500"
+         }
+        },
+        "required": [
+         "item_code"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "find_supplier",
+       "description": "Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid UN 38.3 certificate. Use it before registering anyone new.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "description": "the supplier's name as the user said it"
+         },
+         "city": {
+          "type": "string",
+          "description": "optional city, to tell two branches apart"
+         }
+        },
+        "required": [
+         "name"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "check_budget",
+       "description": "Is a cost centre open, and how much budget is left this quarter? Without a code, lists every open cost centre.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "cost_centre": {
+          "type": "string",
+          "description": "cost centre code, e.g. PRD-07; leave out to list the open ones"
+         }
+        },
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "search_policy",
+       "description": "Search Northbridge's purchasing policy and the Ledgerline manual. Returns the relevant clauses with their citations, or says the documents do not cover it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "question": {
+          "type": "string",
+          "description": "the policy question in plain words"
+         }
+        },
+        "required": [
+         "question"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "create_purchase_request",
+       "description": "Raise a purchase request (PR): the internal ask to buy something. With confirm=false it previews the estimated value and who must approve; with confirm=true it saves and submits it. Within your limit it is approved at once; above it, it waits for your manager.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Ledgerline item code"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "how many, in the item's unit"
+         },
+         "cost_centre": {
+          "type": "string",
+          "description": "who pays, e.g. PRD-07"
+         },
+         "need_by": {
+          "type": "string",
+          "description": "date needed, YYYY-MM-DD"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "item_code",
+         "quantity",
+         "cost_centre",
+         "need_by"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "list_my_approvals",
+       "description": "What is waiting for the signed-in user's signature: purchase requests and orders, with value and who raised them.",
+       "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "approve_purchase_request",
+       "description": "Approve or reject a purchase request that waits for the signed-in user. Only the named approver can do this, never the person who raised it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "request_no": {
+          "type": "string",
+          "description": "e.g. PR/2026/04417"
+         },
+         "decision": {
+          "type": "string",
+          "enum": [
+           "approve",
+           "reject"
+          ],
+          "description": "approve or reject"
+         },
+         "comment": {
+          "type": "string",
+          "description": "optional note to the requester"
+         }
+        },
+        "required": [
+         "request_no",
+         "decision"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "create_purchase_order",
+       "description": "Create a purchase order (PO) with a supplier. Give request_no for an approved purchase request (it supplies item, quantity, cost centre and date), or item_code, quantity, cost_centre and need_by for a small direct order up to £50,000. confirm=false previews price, tax and value; confirm=true saves it. Returns a receipt with the order's real status: an APPROVED order still has to be released.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "supplier_code": {
+          "type": "string",
+          "description": "Ledgerline supplier code, from find_supplier"
+         },
+         "request_no": {
+          "type": "string",
+          "description": "an APPROVED purchase request"
+         },
+         "item_code": {
+          "type": "string",
+          "description": "for a direct order"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "for a direct order"
+         },
+         "cost_centre": {
+          "type": "string",
+          "description": "for a direct order"
+         },
+         "need_by": {
+          "type": "string",
+          "description": "for a direct order, YYYY-MM-DD"
+         },
+         "rate": {
+          "type": "number",
+          "description": "omit to use the contract rate"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "supplier_code"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "approve_purchase_order",
+       "description": "Approve a purchase order that waits for the signed-in user's signature.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         },
+         "comment": {
+          "type": "string",
+          "description": "optional"
+         }
+        },
+        "required": [
+         "po_no"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "release_purchase_order",
+       "description": "Release an APPROVED purchase order to the supplier; only then does the supplier get it. Returns a receipt with the real status.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         }
+        },
+        "required": [
+         "po_no"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "order_status",
+       "description": "The real status of a purchase order or a purchase request, read from Ledgerline, with approval, goods received and any warning.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         },
+         "request_no": {
+          "type": "string",
+          "description": "e.g. PR/2026/04417"
+         }
+        },
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "receive_goods",
+       "description": "Record goods received (GRN) against a RELEASED purchase order: stock goes up, and the order closes once everything has arrived. Cannot receive more than was ordered.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "the released order the goods came against"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "how many arrived"
+         },
+         "warehouse": {
+          "type": "string",
+          "description": "optional; defaults to the order's warehouse"
+         },
+         "remarks": {
+          "type": "string",
+          "description": "optional, e.g. vehicle number"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "po_no",
+         "quantity"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "register_supplier",
+       "description": "Register a NEW supplier. Only after find_supplier shows no existing match. confirm=false previews and checks for duplicates; confirm=true creates it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "description": "registered name"
+         },
+         "city": {
+          "type": "string",
+          "description": ""
+         },
+         "state": {
+          "type": "string",
+          "description": "Two-letter country code, e.g. GB or NL"
+         },
+         "vat_no": {
+          "type": "string",
+          "description": "15-character VAT number"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "name",
+         "city",
+         "state",
+         "vat_no"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "send_message",
+       "description": "Send a short message to a colleague or supplier (Slack handle like @daniel, or an email address). Goes through Ledgerline's notification queue.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "to": {
+          "type": "string",
+          "description": "@handle or email"
+         },
+         "text": {
+          "type": "string",
+          "description": "the message"
+         }
+        },
+        "required": [
+         "to",
+         "text"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "supplier_certificates",
+       "description": "A supplier's certificates on file in Ledgerline (UN 38.3 cell-safety and others): type, document reference, valid-to date, whether each is valid today and how many days are left. Give item_code to also learn whether that item needs a valid UN 38.3 certificate (Purchase Policy §6.2) and whether this supplier has one.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "supplier_code": {
+          "type": "string",
+          "description": "Ledgerline supplier code, from find_supplier, e.g. NC-GDA-0063"
+         },
+         "item_code": {
+          "type": "string",
+          "description": "optional item code, e.g. BAT-500: also says whether this item needs UN 38.3 and whether the supplier qualifies"
+         },
+         "cert_type": {
+          "type": "string",
+          "description": "optional: only this certificate type, e.g. UN38.3"
+         },
+         "limit": {
+          "type": "integer",
+          "description": "optional: at most this many certificates per page (default 20, at most 50)"
+         },
+         "cursor": {
+          "type": "string",
+          "description": "optional: the next_cursor from the previous page"
+         }
+        },
+        "required": [
+         "supplier_code"
+        ]
+       }
+      }
+     }
+    ]
+   },
+   {
+    "call": 1,
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are Ask Northbridge, the assistant on the home page of Northbridge Cycles, Manchester, a maker of e-bikes\n(about 18,000 a month). You work inside Northbridge's Ledgerline ERP for Emma Clarke (ECLARKE), purchase executive, with Emma's own Ledgerline\npermissions and nobody else's. Today is Monday 26 October 2026.\n\nHow you work\n- Every fact (stock, rates, suppliers, budgets, approvals, statuses, rules) comes from a tool. Never guess a number.\n  For a question about a rule, call search_policy and cite the clause. Battery packs, hub motors and chargers contain or charge lithium cells.\n- Anything that saves a request, an order or a goods receipt: first call the tool with confirm=false and show the\n  preview as a short list (item, quantity, supplier, value in pounds, cost centre, need-by date, who must approve).\n  Ask Emma to confirm. Call it again with confirm=true only after a clear yes.\n- Release and approve tools have no preview. An instruction like \"release it\" or \"approve it\", or a yes to a plan\n  that says you will release it, is the go-ahead for that one document.\n- When a step finishes, do the next step of the same job if Emma has already agreed to it; otherwise say what\n  comes next and who does it.\n- Report the status the receipt gives you, in plain words. Never say an order is placed, sent or ordered unless its\n  status is RELEASED. A request waiting for approval is not an order: say who it waits for.\n- A yes to a purchase request covers the order made from it: once the request is approved, create the purchase\n  order from it with confirm=true and release it, without asking again. Then show the receipt.\n- If a tool returns ok=false, read next_step and follow it, or tell Emma plainly what to do.\n- Approving is Daniel's job and receiving goods is Aiko's: if Emma cannot do a step, say who can.\n- Short, plain replies: two to six lines, no tables. Money with commas, like £285,600. Dates like 9 Nov 2026.\n  No emoji.\n\nWhat you know about Northbridge (codes and numbers still come from the tools)\n- The city e-bike battery pack is BAT-500. Voltway Cells, Eindhoven, is VC-EIN-0042.\n- The Spring launch run is cost centre PRD-07. If no need-by date is given for it, propose Monday\n  9 November 2026 (2026-11-09) and show it in the preview.\n- Emma Clarke (ECLARKE) buys, Daniel Okafor (DOKAFOR) approves above Emma's limit, Aiko Tanaka (ATANAKA) receives\n  goods at Manchester stores."
+     },
+     {
+      "role": "user",
+      "content": "Order 2,000 BAT-500 packs from Voltway for the spring launch run."
+     },
+     {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+       {
+        "id": "call_36890",
+        "type": "function",
+        "function": {
+         "name": "supplier_certificates",
+         "arguments": "{\"item_code\": \"BAT-500\", \"supplier_code\": \"VC-EIN-0042\"}"
+        }
+       },
+       {
+        "id": "call_36899",
+        "type": "function",
+        "function": {
+         "name": "create_purchase_order",
+         "arguments": "{\"need_by\": \"2026-11-09\", \"quantity\": 2000, \"item_code\": \"BAT-500\", \"cost_centre\": \"PRD-07\", \"supplier_code\": \"VC-EIN-0042\", \"confirm\": false}"
+        }
+       },
+       {
+        "id": "call_36908",
+        "type": "function",
+        "function": {
+         "name": "create_purchase_request",
+         "arguments": "{\"need_by\": \"2026-11-09\", \"item_code\": \"BAT-500\", \"confirm\": false, \"cost_centre\": \"PRD-07\", \"quantity\": 2000}"
+        }
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_36890",
+      "content": "{\"ok\": true, \"supplier_code\": \"VC-EIN-0042\", \"supplier_name\": \"Voltway Cells\", \"supplier_status\": \"ACTIVE\", \"as_of\": \"2026-10-26\", \"certificates\": [{\"cert_type\": \"UN38.3\", \"doc_ref\": \"UN38.3-TR/VC/2026/118\", \"valid_to\": \"2027-03-31\", \"valid\": true, \"days_left\": 156}], \"un38_3\": \"valid\", \"item\": {\"item_code\": \"BAT-500\", \"needs_un38_3\": true, \"supplier_qualifies\": true}, \"total\": 1, \"next_cursor\": null}"
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_36899",
+      "content": "{\"ok\": false, \"error\": \"A direct order is limited to \\u00a350,000; this one is \\u00a3285,600.\", \"next_step\": \"Raise a purchase request first with create_purchase_request.\", \"ledgerline_code\": \"\"}"
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_36908",
+      "content": "{\"ok\": true, \"preview\": {\"item_code\": \"BAT-500\", \"quantity\": 2000, \"estimated_rate\": 114.0, \"estimated_value\": 273600.0, \"cost_centre\": \"PRD-07\", \"cost_centre_state\": \"OK\", \"need_by\": \"2026-11-09\", \"needs_approval\": true, \"your_limit\": 250000.0, \"approver\": \"DOKAFOR\"}, \"warnings\": [], \"note\": \"Nothing has been saved. Show this to the user and ask to confirm.\"}"
+     }
+    ],
+    "tools_sent": [
+     "find_item",
+     "check_stock",
+     "find_supplier",
+     "check_budget",
+     "search_policy",
+     "create_purchase_request",
+     "list_my_approvals",
+     "approve_purchase_request",
+     "create_purchase_order",
+     "approve_purchase_order",
+     "release_purchase_order",
+     "order_status",
+     "receive_goods",
+     "register_supplier",
+     "send_message",
+     "supplier_certificates"
+    ],
+    "settings": {},
+    "reply": {
+     "content": "This order exceeds the £50,000 direct order limit, so a purchase request must be raised first for Daniel Okafor's approval.\n\nPreview:\n- Item: BAT-500 (City e-bike battery pack)\n- Quantity: 2,000\n- Supplier: Voltway Cells (VC-EIN-0042)\n- Estimated value: £273,600 (ex. VAT)\n- Cost centre: PRD-07\n- Need-by date: 9 Nov 2026\n- Approver: Daniel Okafor (DOKAFOR)\n\nShall I submit this purchase request?",
+     "tool_calls": []
+    },
+    "tool_calls": [],
+    "prompt_tokens": 2646,
+    "completion_tokens": 143,
+    "seconds": 5.22,
+    "replayed": false,
+    "model": "openrouter:google/gemini-3.8-flash",
+    "tools": [
+     {
+      "type": "function",
+      "function": {
+       "name": "find_item",
+       "description": "Find stock items by description or code (e.g. '500 Wh battery pack'). Returns active items, best match first, with code, unit and whether they are lithium-cell parts.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "query": {
+          "type": "string",
+          "description": "words describing the item, or its code"
+         }
+        },
+        "required": [
+         "query"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "check_stock",
+       "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Ledgerline item code, e.g. BAT-500"
+         }
+        },
+        "required": [
+         "item_code"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "find_supplier",
+       "description": "Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid UN 38.3 certificate. Use it before registering anyone new.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "description": "the supplier's name as the user said it"
+         },
+         "city": {
+          "type": "string",
+          "description": "optional city, to tell two branches apart"
+         }
+        },
+        "required": [
+         "name"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "check_budget",
+       "description": "Is a cost centre open, and how much budget is left this quarter? Without a code, lists every open cost centre.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "cost_centre": {
+          "type": "string",
+          "description": "cost centre code, e.g. PRD-07; leave out to list the open ones"
+         }
+        },
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "search_policy",
+       "description": "Search Northbridge's purchasing policy and the Ledgerline manual. Returns the relevant clauses with their citations, or says the documents do not cover it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "question": {
+          "type": "string",
+          "description": "the policy question in plain words"
+         }
+        },
+        "required": [
+         "question"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "create_purchase_request",
+       "description": "Raise a purchase request (PR): the internal ask to buy something. With confirm=false it previews the estimated value and who must approve; with confirm=true it saves and submits it. Within your limit it is approved at once; above it, it waits for your manager.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Ledgerline item code"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "how many, in the item's unit"
+         },
+         "cost_centre": {
+          "type": "string",
+          "description": "who pays, e.g. PRD-07"
+         },
+         "need_by": {
+          "type": "string",
+          "description": "date needed, YYYY-MM-DD"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "item_code",
+         "quantity",
+         "cost_centre",
+         "need_by"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "list_my_approvals",
+       "description": "What is waiting for the signed-in user's signature: purchase requests and orders, with value and who raised them.",
+       "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "approve_purchase_request",
+       "description": "Approve or reject a purchase request that waits for the signed-in user. Only the named approver can do this, never the person who raised it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "request_no": {
+          "type": "string",
+          "description": "e.g. PR/2026/04417"
+         },
+         "decision": {
+          "type": "string",
+          "enum": [
+           "approve",
+           "reject"
+          ],
+          "description": "approve or reject"
+         },
+         "comment": {
+          "type": "string",
+          "description": "optional note to the requester"
+         }
+        },
+        "required": [
+         "request_no",
+         "decision"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "create_purchase_order",
+       "description": "Create a purchase order (PO) with a supplier. Give request_no for an approved purchase request (it supplies item, quantity, cost centre and date), or item_code, quantity, cost_centre and need_by for a small direct order up to £50,000. confirm=false previews price, tax and value; confirm=true saves it. Returns a receipt with the order's real status: an APPROVED order still has to be released.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "supplier_code": {
+          "type": "string",
+          "description": "Ledgerline supplier code, from find_supplier"
+         },
+         "request_no": {
+          "type": "string",
+          "description": "an APPROVED purchase request"
+         },
+         "item_code": {
+          "type": "string",
+          "description": "for a direct order"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "for a direct order"
+         },
+         "cost_centre": {
+          "type": "string",
+          "description": "for a direct order"
+         },
+         "need_by": {
+          "type": "string",
+          "description": "for a direct order, YYYY-MM-DD"
+         },
+         "rate": {
+          "type": "number",
+          "description": "omit to use the contract rate"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "supplier_code"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "approve_purchase_order",
+       "description": "Approve a purchase order that waits for the signed-in user's signature.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         },
+         "comment": {
+          "type": "string",
+          "description": "optional"
+         }
+        },
+        "required": [
+         "po_no"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "release_purchase_order",
+       "description": "Release an APPROVED purchase order to the supplier; only then does the supplier get it. Returns a receipt with the real status.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         }
+        },
+        "required": [
+         "po_no"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "order_status",
+       "description": "The real status of a purchase order or a purchase request, read from Ledgerline, with approval, goods received and any warning.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         },
+         "request_no": {
+          "type": "string",
+          "description": "e.g. PR/2026/04417"
+         }
+        },
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "receive_goods",
+       "description": "Record goods received (GRN) against a RELEASED purchase order: stock goes up, and the order closes once everything has arrived. Cannot receive more than was ordered.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "the released order the goods came against"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "how many arrived"
+         },
+         "warehouse": {
+          "type": "string",
+          "description": "optional; defaults to the order's warehouse"
+         },
+         "remarks": {
+          "type": "string",
+          "description": "optional, e.g. vehicle number"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "po_no",
+         "quantity"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "register_supplier",
+       "description": "Register a NEW supplier. Only after find_supplier shows no existing match. confirm=false previews and checks for duplicates; confirm=true creates it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "description": "registered name"
+         },
+         "city": {
+          "type": "string",
+          "description": ""
+         },
+         "state": {
+          "type": "string",
+          "description": "Two-letter country code, e.g. GB or NL"
+         },
+         "vat_no": {
+          "type": "string",
+          "description": "15-character VAT number"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "name",
+         "city",
+         "state",
+         "vat_no"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "send_message",
+       "description": "Send a short message to a colleague or supplier (Slack handle like @daniel, or an email address). Goes through Ledgerline's notification queue.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "to": {
+          "type": "string",
+          "description": "@handle or email"
+         },
+         "text": {
+          "type": "string",
+          "description": "the message"
+         }
+        },
+        "required": [
+         "to",
+         "text"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "supplier_certificates",
+       "description": "A supplier's certificates on file in Ledgerline (UN 38.3 cell-safety and others): type, document reference, valid-to date, whether each is valid today and how many days are left. Give item_code to also learn whether that item needs a valid UN 38.3 certificate (Purchase Policy §6.2) and whether this supplier has one.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "supplier_code": {
+          "type": "string",
+          "description": "Ledgerline supplier code, from find_supplier, e.g. NC-GDA-0063"
+         },
+         "item_code": {
+          "type": "string",
+          "description": "optional item code, e.g. BAT-500: also says whether this item needs UN 38.3 and whether the supplier qualifies"
+         },
+         "cert_type": {
+          "type": "string",
+          "description": "optional: only this certificate type, e.g. UN38.3"
+         },
+         "limit": {
+          "type": "integer",
+          "description": "optional: at most this many certificates per page (default 20, at most 50)"
+         },
+         "cursor": {
+          "type": "string",
+          "description": "optional: the next_cursor from the previous page"
+         }
+        },
+        "required": [
+         "supplier_code"
+        ]
+       }
+      }
+     }
+    ]
+   },
+   {
+    "call": 2,
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are Ask Northbridge, the assistant on the home page of Northbridge Cycles, Manchester, a maker of e-bikes\n(about 18,000 a month). You work inside Northbridge's Ledgerline ERP for Emma Clarke (ECLARKE), purchase executive, with Emma's own Ledgerline\npermissions and nobody else's. Today is Monday 26 October 2026.\n\nHow you work\n- Every fact (stock, rates, suppliers, budgets, approvals, statuses, rules) comes from a tool. Never guess a number.\n  For a question about a rule, call search_policy and cite the clause. Battery packs, hub motors and chargers contain or charge lithium cells.\n- Anything that saves a request, an order or a goods receipt: first call the tool with confirm=false and show the\n  preview as a short list (item, quantity, supplier, value in pounds, cost centre, need-by date, who must approve).\n  Ask Emma to confirm. Call it again with confirm=true only after a clear yes.\n- Release and approve tools have no preview. An instruction like \"release it\" or \"approve it\", or a yes to a plan\n  that says you will release it, is the go-ahead for that one document.\n- When a step finishes, do the next step of the same job if Emma has already agreed to it; otherwise say what\n  comes next and who does it.\n- Report the status the receipt gives you, in plain words. Never say an order is placed, sent or ordered unless its\n  status is RELEASED. A request waiting for approval is not an order: say who it waits for.\n- A yes to a purchase request covers the order made from it: once the request is approved, create the purchase\n  order from it with confirm=true and release it, without asking again. Then show the receipt.\n- If a tool returns ok=false, read next_step and follow it, or tell Emma plainly what to do.\n- Approving is Daniel's job and receiving goods is Aiko's: if Emma cannot do a step, say who can.\n- Short, plain replies: two to six lines, no tables. Money with commas, like £285,600. Dates like 9 Nov 2026.\n  No emoji.\n\nWhat you know about Northbridge (codes and numbers still come from the tools)\n- The city e-bike battery pack is BAT-500. Voltway Cells, Eindhoven, is VC-EIN-0042.\n- The Spring launch run is cost centre PRD-07. If no need-by date is given for it, propose Monday\n  9 November 2026 (2026-11-09) and show it in the preview.\n- Emma Clarke (ECLARKE) buys, Daniel Okafor (DOKAFOR) approves above Emma's limit, Aiko Tanaka (ATANAKA) receives\n  goods at Manchester stores."
+     },
+     {
+      "role": "user",
+      "content": "Order 2,000 BAT-500 packs from Voltway for the spring launch run."
+     },
+     {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+       {
+        "id": "call_36890",
+        "type": "function",
+        "function": {
+         "name": "supplier_certificates",
+         "arguments": "{\"item_code\": \"BAT-500\", \"supplier_code\": \"VC-EIN-0042\"}"
+        }
+       },
+       {
+        "id": "call_36899",
+        "type": "function",
+        "function": {
+         "name": "create_purchase_order",
+         "arguments": "{\"need_by\": \"2026-11-09\", \"quantity\": 2000, \"item_code\": \"BAT-500\", \"cost_centre\": \"PRD-07\", \"supplier_code\": \"VC-EIN-0042\", \"confirm\": false}"
+        }
+       },
+       {
+        "id": "call_36908",
+        "type": "function",
+        "function": {
+         "name": "create_purchase_request",
+         "arguments": "{\"need_by\": \"2026-11-09\", \"item_code\": \"BAT-500\", \"confirm\": false, \"cost_centre\": \"PRD-07\", \"quantity\": 2000}"
+        }
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_36890",
+      "content": "{\"ok\": true, \"supplier_code\": \"VC-EIN-0042\", \"supplier_name\": \"Voltway Cells\", \"supplier_status\": \"ACTIVE\", \"as_of\": \"2026-10-26\", \"certificates\": [{\"cert_type\": \"UN38.3\", \"doc_ref\": \"UN38.3-TR/VC/2026/118\", \"valid_to\": \"2027-03-31\", \"valid\": true, \"days_left\": 156}], \"un38_3\": \"valid\", \"item\": {\"item_code\": \"BAT-500\", \"needs_un38_3\": true, \"supplier_qualifies\": true}, \"total\": 1, \"next_cursor\": null}"
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_36899",
+      "content": "{\"ok\": false, \"error\": \"A direct order is limited to \\u00a350,000; this one is \\u00a3285,600.\", \"next_step\": \"Raise a purchase request first with create_purchase_request.\", \"ledgerline_code\": \"\"}"
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_36908",
+      "content": "{\"ok\": true, \"preview\": {\"item_code\": \"BAT-500\", \"quantity\": 2000, \"estimated_rate\": 114.0, \"estimated_value\": 273600.0, \"cost_centre\": \"PRD-07\", \"cost_centre_state\": \"OK\", \"need_by\": \"2026-11-09\", \"needs_approval\": true, \"your_limit\": 250000.0, \"approver\": \"DOKAFOR\"}, \"warnings\": [], \"note\": \"Nothing has been saved. Show this to the user and ask to confirm.\"}"
+     },
+     {
+      "role": "assistant",
+      "content": "This order exceeds the £50,000 direct order limit, so a purchase request must be raised first for Daniel Okafor's approval.\n\nPreview:\n- Item: BAT-500 (City e-bike battery pack)\n- Quantity: 2,000\n- Supplier: Voltway Cells (VC-EIN-0042)\n- Estimated value: £273,600 (ex. VAT)\n- Cost centre: PRD-07\n- Need-by date: 9 Nov 2026\n- Approver: Daniel Okafor (DOKAFOR)\n\nShall I submit this purchase request?"
+     },
+     {
+      "role": "user",
+      "content": "Yes, go ahead. We need them by 9 November 2026."
+     }
+    ],
+    "tools_sent": [
+     "find_item",
+     "check_stock",
+     "find_supplier",
+     "check_budget",
+     "search_policy",
+     "create_purchase_request",
+     "list_my_approvals",
+     "approve_purchase_request",
+     "create_purchase_order",
+     "approve_purchase_order",
+     "release_purchase_order",
+     "order_status",
+     "receive_goods",
+     "register_supplier",
+     "send_message",
+     "supplier_certificates"
+    ],
+    "settings": {},
+    "reply": {
+     "content": null,
+     "tool_calls": [
+      {
+       "id": "call_954200",
+       "name": "create_purchase_request",
+       "arguments": {
+        "need_by": "2026-11-09",
+        "confirm": true,
+        "cost_centre": "PRD-07",
+        "item_code": "BAT-500",
+        "quantity": 2000
+       }
+      }
+     ]
+    },
+    "tool_calls": [
+     {
+      "id": "call_954200",
+      "name": "create_purchase_request",
+      "arguments": {
+       "need_by": "2026-11-09",
+       "confirm": true,
+       "cost_centre": "PRD-07",
+       "item_code": "BAT-500",
+       "quantity": 2000
+      }
+     }
+    ],
+    "prompt_tokens": 2807,
+    "completion_tokens": 279,
+    "seconds": 3.291,
+    "replayed": false,
+    "model": "openrouter:google/gemini-3.8-flash",
+    "tools": [
+     {
+      "type": "function",
+      "function": {
+       "name": "find_item",
+       "description": "Find stock items by description or code (e.g. '500 Wh battery pack'). Returns active items, best match first, with code, unit and whether they are lithium-cell parts.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "query": {
+          "type": "string",
+          "description": "words describing the item, or its code"
+         }
+        },
+        "required": [
+         "query"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "check_stock",
+       "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Ledgerline item code, e.g. BAT-500"
+         }
+        },
+        "required": [
+         "item_code"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "find_supplier",
+       "description": "Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid UN 38.3 certificate. Use it before registering anyone new.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "description": "the supplier's name as the user said it"
+         },
+         "city": {
+          "type": "string",
+          "description": "optional city, to tell two branches apart"
+         }
+        },
+        "required": [
+         "name"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "check_budget",
+       "description": "Is a cost centre open, and how much budget is left this quarter? Without a code, lists every open cost centre.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "cost_centre": {
+          "type": "string",
+          "description": "cost centre code, e.g. PRD-07; leave out to list the open ones"
+         }
+        },
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "search_policy",
+       "description": "Search Northbridge's purchasing policy and the Ledgerline manual. Returns the relevant clauses with their citations, or says the documents do not cover it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "question": {
+          "type": "string",
+          "description": "the policy question in plain words"
+         }
+        },
+        "required": [
+         "question"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "create_purchase_request",
+       "description": "Raise a purchase request (PR): the internal ask to buy something. With confirm=false it previews the estimated value and who must approve; with confirm=true it saves and submits it. Within your limit it is approved at once; above it, it waits for your manager.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Ledgerline item code"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "how many, in the item's unit"
+         },
+         "cost_centre": {
+          "type": "string",
+          "description": "who pays, e.g. PRD-07"
+         },
+         "need_by": {
+          "type": "string",
+          "description": "date needed, YYYY-MM-DD"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "item_code",
+         "quantity",
+         "cost_centre",
+         "need_by"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "list_my_approvals",
+       "description": "What is waiting for the signed-in user's signature: purchase requests and orders, with value and who raised them.",
+       "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "approve_purchase_request",
+       "description": "Approve or reject a purchase request that waits for the signed-in user. Only the named approver can do this, never the person who raised it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "request_no": {
+          "type": "string",
+          "description": "e.g. PR/2026/04417"
+         },
+         "decision": {
+          "type": "string",
+          "enum": [
+           "approve",
+           "reject"
+          ],
+          "description": "approve or reject"
+         },
+         "comment": {
+          "type": "string",
+          "description": "optional note to the requester"
+         }
+        },
+        "required": [
+         "request_no",
+         "decision"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "create_purchase_order",
+       "description": "Create a purchase order (PO) with a supplier. Give request_no for an approved purchase request (it supplies item, quantity, cost centre and date), or item_code, quantity, cost_centre and need_by for a small direct order up to £50,000. confirm=false previews price, tax and value; confirm=true saves it. Returns a receipt with the order's real status: an APPROVED order still has to be released.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "supplier_code": {
+          "type": "string",
+          "description": "Ledgerline supplier code, from find_supplier"
+         },
+         "request_no": {
+          "type": "string",
+          "description": "an APPROVED purchase request"
+         },
+         "item_code": {
+          "type": "string",
+          "description": "for a direct order"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "for a direct order"
+         },
+         "cost_centre": {
+          "type": "string",
+          "description": "for a direct order"
+         },
+         "need_by": {
+          "type": "string",
+          "description": "for a direct order, YYYY-MM-DD"
+         },
+         "rate": {
+          "type": "number",
+          "description": "omit to use the contract rate"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "supplier_code"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "approve_purchase_order",
+       "description": "Approve a purchase order that waits for the signed-in user's signature.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         },
+         "comment": {
+          "type": "string",
+          "description": "optional"
+         }
+        },
+        "required": [
+         "po_no"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "release_purchase_order",
+       "description": "Release an APPROVED purchase order to the supplier; only then does the supplier get it. Returns a receipt with the real status.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         }
+        },
+        "required": [
+         "po_no"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "order_status",
+       "description": "The real status of a purchase order or a purchase request, read from Ledgerline, with approval, goods received and any warning.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         },
+         "request_no": {
+          "type": "string",
+          "description": "e.g. PR/2026/04417"
+         }
+        },
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "receive_goods",
+       "description": "Record goods received (GRN) against a RELEASED purchase order: stock goes up, and the order closes once everything has arrived. Cannot receive more than was ordered.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "the released order the goods came against"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "how many arrived"
+         },
+         "warehouse": {
+          "type": "string",
+          "description": "optional; defaults to the order's warehouse"
+         },
+         "remarks": {
+          "type": "string",
+          "description": "optional, e.g. vehicle number"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "po_no",
+         "quantity"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "register_supplier",
+       "description": "Register a NEW supplier. Only after find_supplier shows no existing match. confirm=false previews and checks for duplicates; confirm=true creates it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "description": "registered name"
+         },
+         "city": {
+          "type": "string",
+          "description": ""
+         },
+         "state": {
+          "type": "string",
+          "description": "Two-letter country code, e.g. GB or NL"
+         },
+         "vat_no": {
+          "type": "string",
+          "description": "15-character VAT number"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "name",
+         "city",
+         "state",
+         "vat_no"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "send_message",
+       "description": "Send a short message to a colleague or supplier (Slack handle like @daniel, or an email address). Goes through Ledgerline's notification queue.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "to": {
+          "type": "string",
+          "description": "@handle or email"
+         },
+         "text": {
+          "type": "string",
+          "description": "the message"
+         }
+        },
+        "required": [
+         "to",
+         "text"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "supplier_certificates",
+       "description": "A supplier's certificates on file in Ledgerline (UN 38.3 cell-safety and others): type, document reference, valid-to date, whether each is valid today and how many days are left. Give item_code to also learn whether that item needs a valid UN 38.3 certificate (Purchase Policy §6.2) and whether this supplier has one.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "supplier_code": {
+          "type": "string",
+          "description": "Ledgerline supplier code, from find_supplier, e.g. NC-GDA-0063"
+         },
+         "item_code": {
+          "type": "string",
+          "description": "optional item code, e.g. BAT-500: also says whether this item needs UN 38.3 and whether the supplier qualifies"
+         },
+         "cert_type": {
+          "type": "string",
+          "description": "optional: only this certificate type, e.g. UN38.3"
+         },
+         "limit": {
+          "type": "integer",
+          "description": "optional: at most this many certificates per page (default 20, at most 50)"
+         },
+         "cursor": {
+          "type": "string",
+          "description": "optional: the next_cursor from the previous page"
+         }
+        },
+        "required": [
+         "supplier_code"
+        ]
+       }
+      }
+     }
+    ]
+   },
+   {
+    "call": 3,
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are Ask Northbridge, the assistant on the home page of Northbridge Cycles, Manchester, a maker of e-bikes\n(about 18,000 a month). You work inside Northbridge's Ledgerline ERP for Emma Clarke (ECLARKE), purchase executive, with Emma's own Ledgerline\npermissions and nobody else's. Today is Monday 26 October 2026.\n\nHow you work\n- Every fact (stock, rates, suppliers, budgets, approvals, statuses, rules) comes from a tool. Never guess a number.\n  For a question about a rule, call search_policy and cite the clause. Battery packs, hub motors and chargers contain or charge lithium cells.\n- Anything that saves a request, an order or a goods receipt: first call the tool with confirm=false and show the\n  preview as a short list (item, quantity, supplier, value in pounds, cost centre, need-by date, who must approve).\n  Ask Emma to confirm. Call it again with confirm=true only after a clear yes.\n- Release and approve tools have no preview. An instruction like \"release it\" or \"approve it\", or a yes to a plan\n  that says you will release it, is the go-ahead for that one document.\n- When a step finishes, do the next step of the same job if Emma has already agreed to it; otherwise say what\n  comes next and who does it.\n- Report the status the receipt gives you, in plain words. Never say an order is placed, sent or ordered unless its\n  status is RELEASED. A request waiting for approval is not an order: say who it waits for.\n- A yes to a purchase request covers the order made from it: once the request is approved, create the purchase\n  order from it with confirm=true and release it, without asking again. Then show the receipt.\n- If a tool returns ok=false, read next_step and follow it, or tell Emma plainly what to do.\n- Approving is Daniel's job and receiving goods is Aiko's: if Emma cannot do a step, say who can.\n- Short, plain replies: two to six lines, no tables. Money with commas, like £285,600. Dates like 9 Nov 2026.\n  No emoji.\n\nWhat you know about Northbridge (codes and numbers still come from the tools)\n- The city e-bike battery pack is BAT-500. Voltway Cells, Eindhoven, is VC-EIN-0042.\n- The Spring launch run is cost centre PRD-07. If no need-by date is given for it, propose Monday\n  9 November 2026 (2026-11-09) and show it in the preview.\n- Emma Clarke (ECLARKE) buys, Daniel Okafor (DOKAFOR) approves above Emma's limit, Aiko Tanaka (ATANAKA) receives\n  goods at Manchester stores."
+     },
+     {
+      "role": "user",
+      "content": "Order 2,000 BAT-500 packs from Voltway for the spring launch run."
+     },
+     {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+       {
+        "id": "call_36890",
+        "type": "function",
+        "function": {
+         "name": "supplier_certificates",
+         "arguments": "{\"item_code\": \"BAT-500\", \"supplier_code\": \"VC-EIN-0042\"}"
+        }
+       },
+       {
+        "id": "call_36899",
+        "type": "function",
+        "function": {
+         "name": "create_purchase_order",
+         "arguments": "{\"need_by\": \"2026-11-09\", \"quantity\": 2000, \"item_code\": \"BAT-500\", \"cost_centre\": \"PRD-07\", \"supplier_code\": \"VC-EIN-0042\", \"confirm\": false}"
+        }
+       },
+       {
+        "id": "call_36908",
+        "type": "function",
+        "function": {
+         "name": "create_purchase_request",
+         "arguments": "{\"need_by\": \"2026-11-09\", \"item_code\": \"BAT-500\", \"confirm\": false, \"cost_centre\": \"PRD-07\", \"quantity\": 2000}"
+        }
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_36890",
+      "content": "{\"ok\": true, \"supplier_code\": \"VC-EIN-0042\", \"supplier_name\": \"Voltway Cells\", \"supplier_status\": \"ACTIVE\", \"as_of\": \"2026-10-26\", \"certificates\": [{\"cert_type\": \"UN38.3\", \"doc_ref\": \"UN38.3-TR/VC/2026/118\", \"valid_to\": \"2027-03-31\", \"valid\": true, \"days_left\": 156}], \"un38_3\": \"valid\", \"item\": {\"item_code\": \"BAT-500\", \"needs_un38_3\": true, \"supplier_qualifies\": true}, \"total\": 1, \"next_cursor\": null}"
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_36899",
+      "content": "{\"ok\": false, \"error\": \"A direct order is limited to \\u00a350,000; this one is \\u00a3285,600.\", \"next_step\": \"Raise a purchase request first with create_purchase_request.\", \"ledgerline_code\": \"\"}"
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_36908",
+      "content": "{\"ok\": true, \"preview\": {\"item_code\": \"BAT-500\", \"quantity\": 2000, \"estimated_rate\": 114.0, \"estimated_value\": 273600.0, \"cost_centre\": \"PRD-07\", \"cost_centre_state\": \"OK\", \"need_by\": \"2026-11-09\", \"needs_approval\": true, \"your_limit\": 250000.0, \"approver\": \"DOKAFOR\"}, \"warnings\": [], \"note\": \"Nothing has been saved. Show this to the user and ask to confirm.\"}"
+     },
+     {
+      "role": "assistant",
+      "content": "This order exceeds the £50,000 direct order limit, so a purchase request must be raised first for Daniel Okafor's approval.\n\nPreview:\n- Item: BAT-500 (City e-bike battery pack)\n- Quantity: 2,000\n- Supplier: Voltway Cells (VC-EIN-0042)\n- Estimated value: £273,600 (ex. VAT)\n- Cost centre: PRD-07\n- Need-by date: 9 Nov 2026\n- Approver: Daniel Okafor (DOKAFOR)\n\nShall I submit this purchase request?"
+     },
+     {
+      "role": "user",
+      "content": "Yes, go ahead. We need them by 9 November 2026."
+     },
+     {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+       {
+        "id": "call_954200",
+        "type": "function",
+        "function": {
+         "name": "create_purchase_request",
+         "arguments": "{\"need_by\": \"2026-11-09\", \"confirm\": true, \"cost_centre\": \"PRD-07\", \"item_code\": \"BAT-500\", \"quantity\": 2000}"
+        }
+       }
+      ]
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "call_954200",
+      "content": "{\"ok\": true, \"request_no\": \"PR/2026/04417\", \"status\": \"WAITING FOR APPROVAL\", \"status_code\": \"PA\", \"item_code\": \"BAT-500\", \"quantity\": 2000, \"estimated_value\": 273600.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-09\", \"approver\": \"DOKAFOR\", \"approved_by\": null, \"next_step\": \"Waiting for DOKAFOR. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417.\"}"
+     }
+    ],
+    "tools_sent": [
+     "find_item",
+     "check_stock",
+     "find_supplier",
+     "check_budget",
+     "search_policy",
+     "create_purchase_request",
+     "list_my_approvals",
+     "approve_purchase_request",
+     "create_purchase_order",
+     "approve_purchase_order",
+     "release_purchase_order",
+     "order_status",
+     "receive_goods",
+     "register_supplier",
+     "send_message",
+     "supplier_certificates"
+    ],
+    "settings": {},
+    "reply": {
+     "content": "Purchase request PR/2026/04417 has been submitted.\n\n- Status: WAITING FOR APPROVAL\n- Item: BAT-500 (2,000 units)\n- Estimated value: £273,600\n- Cost centre: PRD-07\n- Need-by date: 9 Nov 2026\n- Approver: Daniel Okafor (DOKAFOR)\n\nNothing is ordered yet. Once Daniel approves it, I will create and release the purchase order to Voltway Cells.",
+     "tool_calls": []
+    },
+    "tool_calls": [],
+    "prompt_tokens": 2982,
+    "completion_tokens": 120,
+    "seconds": 2.405,
+    "replayed": false,
+    "model": "openrouter:google/gemini-3.8-flash",
+    "tools": [
+     {
+      "type": "function",
+      "function": {
+       "name": "find_item",
+       "description": "Find stock items by description or code (e.g. '500 Wh battery pack'). Returns active items, best match first, with code, unit and whether they are lithium-cell parts.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "query": {
+          "type": "string",
+          "description": "words describing the item, or its code"
+         }
+        },
+        "required": [
+         "query"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "check_stock",
+       "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Ledgerline item code, e.g. BAT-500"
+         }
+        },
+        "required": [
+         "item_code"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "find_supplier",
+       "description": "Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid UN 38.3 certificate. Use it before registering anyone new.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "description": "the supplier's name as the user said it"
+         },
+         "city": {
+          "type": "string",
+          "description": "optional city, to tell two branches apart"
+         }
+        },
+        "required": [
+         "name"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "check_budget",
+       "description": "Is a cost centre open, and how much budget is left this quarter? Without a code, lists every open cost centre.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "cost_centre": {
+          "type": "string",
+          "description": "cost centre code, e.g. PRD-07; leave out to list the open ones"
+         }
+        },
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "search_policy",
+       "description": "Search Northbridge's purchasing policy and the Ledgerline manual. Returns the relevant clauses with their citations, or says the documents do not cover it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "question": {
+          "type": "string",
+          "description": "the policy question in plain words"
+         }
+        },
+        "required": [
+         "question"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "create_purchase_request",
+       "description": "Raise a purchase request (PR): the internal ask to buy something. With confirm=false it previews the estimated value and who must approve; with confirm=true it saves and submits it. Within your limit it is approved at once; above it, it waits for your manager.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "item_code": {
+          "type": "string",
+          "description": "Ledgerline item code"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "how many, in the item's unit"
+         },
+         "cost_centre": {
+          "type": "string",
+          "description": "who pays, e.g. PRD-07"
+         },
+         "need_by": {
+          "type": "string",
+          "description": "date needed, YYYY-MM-DD"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "item_code",
+         "quantity",
+         "cost_centre",
+         "need_by"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "list_my_approvals",
+       "description": "What is waiting for the signed-in user's signature: purchase requests and orders, with value and who raised them.",
+       "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "approve_purchase_request",
+       "description": "Approve or reject a purchase request that waits for the signed-in user. Only the named approver can do this, never the person who raised it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "request_no": {
+          "type": "string",
+          "description": "e.g. PR/2026/04417"
+         },
+         "decision": {
+          "type": "string",
+          "enum": [
+           "approve",
+           "reject"
+          ],
+          "description": "approve or reject"
+         },
+         "comment": {
+          "type": "string",
+          "description": "optional note to the requester"
+         }
+        },
+        "required": [
+         "request_no",
+         "decision"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "create_purchase_order",
+       "description": "Create a purchase order (PO) with a supplier. Give request_no for an approved purchase request (it supplies item, quantity, cost centre and date), or item_code, quantity, cost_centre and need_by for a small direct order up to £50,000. confirm=false previews price, tax and value; confirm=true saves it. Returns a receipt with the order's real status: an APPROVED order still has to be released.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "supplier_code": {
+          "type": "string",
+          "description": "Ledgerline supplier code, from find_supplier"
+         },
+         "request_no": {
+          "type": "string",
+          "description": "an APPROVED purchase request"
+         },
+         "item_code": {
+          "type": "string",
+          "description": "for a direct order"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "for a direct order"
+         },
+         "cost_centre": {
+          "type": "string",
+          "description": "for a direct order"
+         },
+         "need_by": {
+          "type": "string",
+          "description": "for a direct order, YYYY-MM-DD"
+         },
+         "rate": {
+          "type": "number",
+          "description": "omit to use the contract rate"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "supplier_code"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "approve_purchase_order",
+       "description": "Approve a purchase order that waits for the signed-in user's signature.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         },
+         "comment": {
+          "type": "string",
+          "description": "optional"
+         }
+        },
+        "required": [
+         "po_no"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "release_purchase_order",
+       "description": "Release an APPROVED purchase order to the supplier; only then does the supplier get it. Returns a receipt with the real status.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         }
+        },
+        "required": [
+         "po_no"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "order_status",
+       "description": "The real status of a purchase order or a purchase request, read from Ledgerline, with approval, goods received and any warning.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "e.g. PO/2026/01182"
+         },
+         "request_no": {
+          "type": "string",
+          "description": "e.g. PR/2026/04417"
+         }
+        },
+        "required": []
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "receive_goods",
+       "description": "Record goods received (GRN) against a RELEASED purchase order: stock goes up, and the order closes once everything has arrived. Cannot receive more than was ordered.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "po_no": {
+          "type": "string",
+          "description": "the released order the goods came against"
+         },
+         "quantity": {
+          "type": "integer",
+          "description": "how many arrived"
+         },
+         "warehouse": {
+          "type": "string",
+          "description": "optional; defaults to the order's warehouse"
+         },
+         "remarks": {
+          "type": "string",
+          "description": "optional, e.g. vehicle number"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "po_no",
+         "quantity"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "register_supplier",
+       "description": "Register a NEW supplier. Only after find_supplier shows no existing match. confirm=false previews and checks for duplicates; confirm=true creates it.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "description": "registered name"
+         },
+         "city": {
+          "type": "string",
+          "description": ""
+         },
+         "state": {
+          "type": "string",
+          "description": "Two-letter country code, e.g. GB or NL"
+         },
+         "vat_no": {
+          "type": "string",
+          "description": "15-character VAT number"
+         },
+         "confirm": {
+          "type": "boolean",
+          "description": "false (default) = preview only, nothing is saved; true = commit"
+         }
+        },
+        "required": [
+         "name",
+         "city",
+         "state",
+         "vat_no"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "send_message",
+       "description": "Send a short message to a colleague or supplier (Slack handle like @daniel, or an email address). Goes through Ledgerline's notification queue.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "to": {
+          "type": "string",
+          "description": "@handle or email"
+         },
+         "text": {
+          "type": "string",
+          "description": "the message"
+         }
+        },
+        "required": [
+         "to",
+         "text"
+        ]
+       }
+      }
+     },
+     {
+      "type": "function",
+      "function": {
+       "name": "supplier_certificates",
+       "description": "A supplier's certificates on file in Ledgerline (UN 38.3 cell-safety and others): type, document reference, valid-to date, whether each is valid today and how many days are left. Give item_code to also learn whether that item needs a valid UN 38.3 certificate (Purchase Policy §6.2) and whether this supplier has one.",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "supplier_code": {
+          "type": "string",
+          "description": "Ledgerline supplier code, from find_supplier, e.g. NC-GDA-0063"
+         },
+         "item_code": {
+          "type": "string",
+          "description": "optional item code, e.g. BAT-500: also says whether this item needs UN 38.3 and whether the supplier qualifies"
+         },
+         "cert_type": {
+          "type": "string",
+          "description": "optional: only this certificate type, e.g. UN38.3"
+         },
+         "limit": {
+          "type": "integer",
+          "description": "optional: at most this many certificates per page (default 20, at most 50)"
+         },
+         "cursor": {
+          "type": "string",
+          "description": "optional: the next_cursor from the previous page"
+         }
+        },
+        "required": [
+         "supplier_code"
+        ]
+       }
+      }
+     }
+    ]
+   }
+  ],
+  "seconds_wall": 17.67,
+  "ledgerline_after": {
+   "pr": [
+    {
+     "pr_no": "PR/2026/04417",
+     "status": "PA",
+     "cc_cd": "PRD-07",
+     "need_dt": "2026-11-09",
+     "est_value": 273600.0,
+     "raised_by": "ECLARKE"
+    }
+   ],
+   "po": [],
+   "approval": [
+    {
+     "doc_no": "PR/2026/04417",
+     "approver": "DOKAFOR",
+     "status": "PENDING"
+    }
+   ]
+  },
+  "ledgerline_service_calls": 20,
+  "context_parts": [
+   {
+    "part": "system prompt",
+    "tokens": 654,
+    "text": "You are Ask Northbridge, the assistant on the home page of Northbridge Cycles, Manchester, a maker of e-bikes\n(about 18,000 a month). You work inside Northbridge's Ledgerline ERP for Emma Clarke (ECLARKE), purchase executive, with Emma's own Ledgerline\npermissions and nobody else's. Today is Monday 26 October 2026.\n\nHow you work\n- Every fact (stock, rates, suppliers, budgets, approvals, statuses, rules) comes from a tool. Never guess a number.\n  For a question about a rule, call search_policy and cite the clause. Battery packs, hub motors and chargers contain or charge lithium cells.\n- Anything that saves a request, an order or a goods receipt: first call the tool with confirm=false and show the\n  preview as a short list (item, quantity, supplier, value in pounds, cost centre, need-by date, who must approve).\n  Ask Emma to confirm. Call it again with confirm=true only after a clear yes.\n- Release and approve tools have no preview. An instruction like \"release it\" or \"approve it\", or a yes to a plan\n  that says you will release it, is the go-ahead for that one document.\n- When a step finishes, do the next step of the same job if Emma has already agreed to it; otherwise say what\n  comes next and who does it.\n- Report the status the receipt gives you, in plain words. Never say an order is placed, sent or ordered unless its\n  status is RELEASED. A request waiting for approval is not an order: say who it waits for.\n- A yes to a purchase request covers the order made from it: once the request is approved, create the purchase\n  order from it with confirm=true and release it, without asking again. Then show the receipt.\n- If a tool returns ok=false, read next_step and follow it, or tell Emma plainly what to do.\n- Approving is Daniel's job and receiving goods is Aiko's: if Emma cannot do a step, say who can.\n- Short, plain replies: two to six lines, no tables. Money with commas, like £285,600. Dates like 9 Nov 2026.\n  No emoji.\n\nWhat you know about Northbridge (codes and numbers still come from the tools)\n- The city e-bike battery pack is BAT-500. Voltway Cells, Eindhoven, is VC-EIN-0042.\n- The Spring launch run is cost centre PRD-07. If no need-by date is given for it, propose Monday\n  9 November 2026 (2026-11-09) and show it in the preview.\n- Emma Clarke (ECLARKE) buys, Daniel Okafor (DOKAFOR) approves above Emma's limit, Aiko Tanaka (ATANAKA) receives\n  goods at Manchester stores."
+   },
+   {
+    "part": "tool definitions (16)",
+    "tokens": 1555,
+    "tools": [
+     "find_item",
+     "check_stock",
+     "find_supplier",
+     "check_budget",
+     "search_policy",
+     "create_purchase_request",
+     "list_my_approvals",
+     "approve_purchase_request",
+     "create_purchase_order",
+     "approve_purchase_order",
+     "release_purchase_order",
+     "order_status",
+     "receive_goods",
+     "register_supplier",
+     "send_message",
+     "supplier_certificates"
+    ]
+   },
+   {
+    "part": "user message",
+    "tokens": 22,
+    "text": "Order 2,000 BAT-500 packs from Voltway for the spring launch run.",
+    "note": "includes the chat template's own few tokens"
+   },
+   {
+    "part": "tool call (model -> our code)",
+    "tokens": 155,
+    "calls": [
+     {
+      "name": "supplier_certificates",
+      "arguments": {
+       "item_code": "BAT-500",
+       "supplier_code": "VC-EIN-0042"
+      }
+     },
+     {
+      "name": "create_purchase_order",
+      "arguments": {
+       "need_by": "2026-11-09",
+       "quantity": 2000,
+       "item_code": "BAT-500",
+       "cost_centre": "PRD-07",
+       "supplier_code": "VC-EIN-0042",
+       "confirm": false
+      }
+     },
+     {
+      "name": "create_purchase_request",
+      "arguments": {
+       "need_by": "2026-11-09",
+       "item_code": "BAT-500",
+       "confirm": false,
+       "cost_centre": "PRD-07",
+       "quantity": 2000
+      }
+     }
+    ]
+   },
+   {
+    "part": "tool result (only what the tool returned)",
+    "tokens": 109,
+    "content": "{\"ok\": true, \"supplier_code\": \"VC-EIN-0042\", \"supplier_name\": \"Voltway Cells\", \"supplier_status\": \"ACTIVE\", \"as_of\": \"2026-10-26\", \"certificates\": [{\"cert_type\": \"UN38.3\", \"doc_ref\": \"UN38.3-TR/VC/2026/118\", \"valid_to\": \"2027-03-31\", \"valid\": true, \"days_left\": 156}], \"un38_3\": \"valid\", \"item\": {\"item_code\": \"BAT-500\", \"needs_un38_3\": true, \"supplier_qualifies\": true}, \"total\": 1, \"next_cursor\": null}",
+    "note": "3 results in this round measured together (260 tokens), shared by length"
+   },
+   {
+    "part": "tool result (only what the tool returned)",
+    "tokens": 53,
+    "content": "{\"ok\": false, \"error\": \"A direct order is limited to \\u00a350,000; this one is \\u00a3285,600.\", \"next_step\": \"Raise a purchase request first with create_purchase_request.\", \"ledgerline_code\": \"\"}",
+    "note": "3 results in this round measured together (260 tokens), shared by length"
+   },
+   {
+    "part": "tool result (only what the tool returned)",
+    "tokens": 98,
+    "content": "{\"ok\": true, \"preview\": {\"item_code\": \"BAT-500\", \"quantity\": 2000, \"estimated_rate\": 114.0, \"estimated_value\": 273600.0, \"cost_centre\": \"PRD-07\", \"cost_centre_state\": \"OK\", \"need_by\": \"2026-11-09\", \"needs_approval\": true, \"your_limit\": 250000.0, \"approver\": \"DOKAFOR\"}, \"warnings\": [], \"note\": \"Nothing has been saved. Show this to the user and ask to confirm.\"}",
+    "note": "3 results in this round measured together (260 tokens), shared by length"
+   },
+   {
+    "part": "assistant reply",
+    "tokens": 161,
+    "text": "This order exceeds the £50,000 direct order limit, so a purchase request must be raised first for Daniel Okafor's approval.\n\nPreview:\n- Item: BAT-500 (City e-bike battery pack)\n- Quantity: 2,000\n- Supplier: Voltway Cells (VC-EIN-0042)\n- Estimated value: £273,600 (ex. VAT)\n- Cost centre: PRD-07\n- Need-by date: 9 Nov 2026\n- Approver: Daniel Okafor (DOKAFOR)\n\nShall I submit this purchase request?",
+    "note": "growth of the prompt since the previous call: assistant reply + user message"
+   },
+   {
+    "part": "user message",
+    "tokens": null,
+    "text": "Yes, go ahead. We need them by 9 November 2026.",
+    "note": "counted in the part above"
+   },
+   {
+    "part": "tool call (model -> our code)",
+    "tokens": 55,
+    "calls": [
+     {
+      "name": "create_purchase_request",
+      "arguments": {
+       "need_by": "2026-11-09",
+       "confirm": true,
+       "cost_centre": "PRD-07",
+       "item_code": "BAT-500",
+       "quantity": 2000
+      }
+     }
+    ]
+   },
+   {
+    "part": "tool result (only what the tool returned)",
+    "tokens": 120,
+    "content": "{\"ok\": true, \"request_no\": \"PR/2026/04417\", \"status\": \"WAITING FOR APPROVAL\", \"status_code\": \"PA\", \"item_code\": \"BAT-500\", \"quantity\": 2000, \"estimated_value\": 273600.0, \"cost_centre\": \"PRD-07\", \"need_by\": \"2026-11-09\", \"approver\": \"DOKAFOR\", \"approved_by\": null, \"next_step\": \"Waiting for DOKAFOR. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417.\"}"
+   }
+  ],
+  "context_parts_method": "provider prompt_tokens on prefix requests (see docstring); same model and route",
+  "what_never_enters_the_context": [
+   "tool.py",
+   "the Ledgerline services and their {rc, err_cd, msg, data} replies",
+   "the database",
+   "Emma's session and password",
+   "the MCP plumbing"
+  ],
+  "summary": {
+   "tool_calls": 4,
+   "sequence": [
+    "supplier_certificates",
+    "create_purchase_order",
+    "create_purchase_request",
+    "create_purchase_request"
+   ],
+   "model_calls": 4,
+   "tokens_in": 10666,
+   "tokens_out": 1456,
+   "cost_gbp_est": 0.01169,
+   "errors_recovered": [
+    "create_purchase_order"
+   ],
+   "replayed": false
+  },
+  "check_only_tool_returns_in_context": {
+   "tool_messages": 4,
+   "identical_to_tool_results": true,
+   "parts_sum": 2982,
+   "last_prompt_tokens": 2982
+  }
+ },
+ "measuring_calls": {
+  "calls": 8,
+  "tokens_in": 10263,
+  "tokens_out": 86,
+  "seconds": 32.7,
+  "cost_inr": 0.4743
+ },
+ "note": "cost_gbp_est uses OpenRouter's list price for google/gemini-3.8-flash ($0.825 / $4.125 per M tokens, harness.PRICE), converted at 0.79 GBP/USD; the measuring calls are listed separately."
+}

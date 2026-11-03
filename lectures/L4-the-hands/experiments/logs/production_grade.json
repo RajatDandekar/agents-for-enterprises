@@ -1,0 +1,699 @@
+{
+ "generated_from": [
+  "logs/production_grade_before.json",
+  "logs/production_grade_after.json",
+  "logs/host_matrix.json",
+  "logs/mcp_raw.json",
+  "tool folders (change management)"
+ ],
+ "before_commit": "6e6f4d0 (15 tools)",
+ "after": "this commit (16 tools)",
+ "the_fix_for_the_lecture": {
+  "criterion": "Idempotency",
+  "before": {
+   "lost_reply_then_retry": 2,
+   "retry_with_rewritten_arguments": 4,
+   "deliberate_resend": 2,
+   "where": {
+    "A": {
+     "send_message (ntf_send reply lost)": 1,
+     "receive_goods 500 packs (grn_save reply lost)": 1
+    },
+    "B": {
+     "create_purchase_request need_by '9 Nov 2026' then '2026-11-09'": 1,
+     "create_purchase_request need_by '2026-11-9' then '2026-11-09'": 1,
+     "create_purchase_order need_by '09/11/2026' then '2026-11-09'": 1,
+     "create_purchase_request lost reply, retry with '9 Nov 2026'": 1
+    },
+    "C": {
+     "send_message": 1,
+     "receive_goods 500 packs": 1
+    }
+   }
+  },
+  "after": {
+   "lost_reply_then_retry": 0,
+   "retry_with_rewritten_arguments": 0,
+   "deliberate_resend": 2,
+   "where": {
+    "A": {},
+    "B": {},
+    "C": {
+     "send_message": 1,
+     "receive_goods 500 packs": 1
+    }
+   }
+  },
+  "what_changed": [
+   "need_by is checked and rewritten as YYYY-MM-DD at the door (ToolSpec.check, tool.json argument_formats), so the content key is the same however the date is written",
+   "receive_goods and send_message look themselves up after a lost reply instead of returning TIMEOUT (the retry was the duplicate)"
+  ]
+ },
+ "criteria": [
+  {
+   "area": "Schema",
+   "criterion": "Input and output validation",
+   "threshold": "100% of tools; 0 schema violations in regression",
+   "before": {
+    "tools": 15,
+    "with_input_schema": 15,
+    "with_output_schema": 15,
+    "refuse_bad_input_at_the_door": 15,
+    "output_violations_happy_path": 1,
+    "output_violations_detail": {
+     "create_purchase_order": [
+      "warning: None is not of type 'string'"
+     ]
+    },
+    "ok_results_checked_in_fuzzing": null,
+    "output_violations_in_fuzzing": null
+   },
+   "after": {
+    "tools": 16,
+    "with_input_schema": 16,
+    "with_output_schema": 16,
+    "refuse_bad_input_at_the_door": 16,
+    "output_violations_happy_path": 0,
+    "output_violations_detail": {},
+    "ok_results_checked_in_fuzzing": 603,
+    "output_violations_in_fuzzing": 0
+   },
+   "pass_before": false,
+   "pass_after": true,
+   "note": "before: create_purchase_order returned warning=null against a string schema; after, every ok result met in fuzzing is also checked (0 violations)"
+  },
+  {
+   "area": "Reliability",
+   "criterion": "Unhandled or non-business errors",
+   "threshold": "<= 0.1% of calls; 100% in the structured error contract",
+   "before": {
+    "calls": 1743,
+    "by_kind": {
+     "business": 1131,
+     "ok": 577,
+     "non_business": 35
+    },
+    "unhandled_or_non_business_pct": 2.008,
+    "errors_in_structured_contract_pct": 100.0,
+    "nonsense_quantities_saved": 3,
+    "examples": {
+     "create_purchase_request": [
+      "need_by=' ' -> Ledgerline refused pr_save: Bad value for need_dt (ERR-SYS-0422).",
+      "need_by='xxxxxxxxxxxxxxxxxxxx' -> Ledgerline refused pr_save: Bad value for need_dt (ERR-SYS-0422)."
+     ],
+     "create_purchase_order": [
+      "need_by=' ' -> Ledgerline refused po_save: Bad value for need_dt (ERR-SYS-0422).",
+      "need_by='xxxxxxxxxxxxxxxxxxxx' -> Ledgerline refused po_save: Bad value for need_dt (ERR-SYS-0422)."
+     ]
+    }
+   },
+   "after": {
+    "calls": 1919,
+    "by_kind": {
+     "business": 1316,
+     "ok": 603
+    },
+    "unhandled_or_non_business_pct": 0.0,
+    "errors_in_structured_contract_pct": 100.0,
+    "nonsense_quantities_saved": 0,
+    "examples": {}
+   },
+   "pass_before": false,
+   "pass_after": true,
+   "note": "before: bad dates reached Ledgerline (ERR-SYS-0422) and quantities of 0 or below were saved and auto-approved; after: both refused at the door"
+  },
+  {
+   "area": "LLM usability",
+   "criterion": "Right tool, right arguments on a 30-task golden set, per host",
+   "threshold": ">= 95% pass@1, reported per host",
+   "before": "not measured before",
+   "after": {
+    "our harness": {
+     "pass_at_1": 1.0,
+     "passed": 30,
+     "model": "openrouter:google/gemini-3.8-flash",
+     "fails": []
+    },
+    "Gemini": {
+     "pass_at_1": 1.0,
+     "passed": 30,
+     "model": "openrouter:google/gemini-3.8-flash",
+     "fails": []
+    },
+    "OpenAI": {
+     "pass_at_1": 0.967,
+     "passed": 29,
+     "model": "openrouter:openai/gpt-6.1-terra",
+     "fails": [
+      "po_from_pr: wrong tool find_supplier; wrong tool order_status"
+     ]
+    },
+    "Claude (API)": {
+     "pass_at_1": 0.9,
+     "passed": 27,
+     "model": "openrouter:anthropic/claude-sonnet-5.5",
+     "fails": [
+      "release: wrong tool order_status",
+      "approve_pr: wrong tool order_status; wrong tool list_my_approvals",
+      "approve_po: wrong tool order_status; wrong tool list_my_approvals"
+     ]
+    },
+    "Claude Code": {
+     "pass_at_1": 0.933,
+     "passed": 28,
+     "model": "anthropic/claude-sonnet-5.5 (OpenRouter, Anthropic-compatible endpoint)",
+     "fails": [
+      "release: wrong tool order_status",
+      "approve_pr: wrong tool order_status"
+     ]
+    }
+   },
+   "pass_before": null,
+   "pass_after": false,
+   "note": "Claude's misses are all reads before a write (order_status / list_my_approvals before release or approve), not wrong arguments; first-call scoring counts them as misses"
+  },
+  {
+   "area": "Latency",
+   "criterion": "Tool overhead, excluding ERP service time",
+   "threshold": "p50 <= 50 ms, p95 <= 100 ms, p99 <= 200 ms",
+   "before": {
+    "toolbox_overhead_ms": {
+     "p50": 0.177,
+     "p95": 12.409,
+     "p99": 12.62,
+     "n": 3000
+    },
+    "via_mcp_overhead_ms": {
+     "p50": 4.55,
+     "p95": 16.889,
+     "p99": 18.325,
+     "n": 750
+    },
+    "slowest_tool_p99": [
+     "search_policy",
+     13.643
+    ],
+    "where": "Modal container, 2 CPU"
+   },
+   "after": {
+    "toolbox_overhead_ms": {
+     "p50": 0.099,
+     "p95": 9.597,
+     "p99": 9.985,
+     "n": 3200
+    },
+    "via_mcp_overhead_ms": {
+     "p50": 5.138,
+     "p95": 14.742,
+     "p99": 16.943,
+     "n": 800
+    },
+    "slowest_tool_p99": [
+     "search_policy",
+     12.258
+    ],
+    "where": "Modal container, 2 CPU"
+   },
+   "pass_before": true,
+   "pass_after": true,
+   "note": "the p95/p99 tail is search_policy (in-memory hybrid search, no Ledgerline call); every other tool is under 1 ms"
+  },
+  {
+   "area": "Payload",
+   "criterion": "Response size; every list tool paginates",
+   "threshold": "every list tool paginates; nothing above the agreed size limit",
+   "before": {
+    "limit_bytes": 100000,
+    "max_bytes_seed_data": 1966,
+    "max_bytes_at_scale": 167387,
+    "over_limit": [
+     "list_my_approvals"
+    ],
+    "at_scale": {
+     "find_item": {
+      "extra_rows": 500,
+      "bytes": 751,
+      "rows_returned": 6,
+      "says_more": false
+     },
+     "find_supplier": {
+      "extra_rows": 500,
+      "bytes": 920,
+      "rows_returned": 5,
+      "says_more": false
+     },
+     "list_my_approvals": {
+      "extra_rows": 1000,
+      "bytes": 167387,
+      "rows_returned": 1002,
+      "says_more": false
+     }
+    },
+    "list_tools": [
+     "find_item",
+     "find_supplier",
+     "check_budget",
+     "search_policy",
+     "list_my_approvals"
+    ],
+    "list_tools_paginating": []
+   },
+   "after": {
+    "limit_bytes": 100000,
+    "max_bytes_seed_data": 1966,
+    "max_bytes_at_scale": 8526,
+    "over_limit": [],
+    "at_scale": {
+     "find_item": {
+      "extra_rows": 500,
+      "bytes": 751,
+      "rows_returned": 6,
+      "says_more": false
+     },
+     "find_supplier": {
+      "extra_rows": 500,
+      "bytes": 920,
+      "rows_returned": 5,
+      "says_more": false
+     },
+     "list_my_approvals": {
+      "extra_rows": 1000,
+      "bytes": 8526,
+      "rows_returned": 50,
+      "says_more": true
+     },
+     "supplier_certificates": {
+      "extra_rows": 300,
+      "bytes": 2598,
+      "rows_returned": 20,
+      "says_more": true
+     }
+    },
+    "list_tools": [
+     "find_item",
+     "find_supplier",
+     "check_budget",
+     "search_policy",
+     "list_my_approvals",
+     "supplier_certificates"
+    ],
+    "list_tools_paginating": [
+     "supplier_certificates"
+    ]
+   },
+   "pass_before": false,
+   "pass_after": false,
+   "note": "size: list_my_approvals with 1,000 waiting was 167 KB, now capped at 50 rows with total/has_more (8.5 KB). Pagination: only the new supplier_certificates takes limit/cursor; adding them to the five older list tools changes their model-facing schemas, which breaks every recorded run, so it is scheduled as a versioned 1.1 schema change"
+  },
+  {
+   "area": "Idempotency",
+   "criterion": "Duplicate or retried writes",
+   "threshold": "0 duplicate postings",
+   "before": {
+    "lost_reply_then_retry": 2,
+    "retry_with_rewritten_arguments": 4,
+    "deliberate_resend": 2,
+    "where": {
+     "A": {
+      "send_message (ntf_send reply lost)": 1,
+      "receive_goods 500 packs (grn_save reply lost)": 1
+     },
+     "B": {
+      "create_purchase_request need_by '9 Nov 2026' then '2026-11-09'": 1,
+      "create_purchase_request need_by '2026-11-9' then '2026-11-09'": 1,
+      "create_purchase_order need_by '09/11/2026' then '2026-11-09'": 1,
+      "create_purchase_request lost reply, retry with '9 Nov 2026'": 1
+     },
+     "C": {
+      "send_message": 1,
+      "receive_goods 500 packs": 1
+     }
+    }
+   },
+   "after": {
+    "lost_reply_then_retry": 0,
+    "retry_with_rewritten_arguments": 0,
+    "deliberate_resend": 2,
+    "where": {
+     "A": {},
+     "B": {},
+     "C": {
+      "send_message": 1,
+      "receive_goods 500 packs": 1
+     }
+    }
+   },
+   "pass_before": false,
+   "pass_after": true,
+   "note": "the lecture's 'find and fix one failing criterion': 6 duplicates -> 0. A deliberate resend of the same call (C) still posts twice for receive_goods and send_message: two equal deliveries or messages can both be real, so these tools say idempotentHint=false; the fix is a client idempotency key (a 1.1 schema change)"
+  },
+  {
+   "area": "Timeouts",
+   "criterion": "Timeout and retry policy",
+   "threshold": "defined and tested on 100% of tools",
+   "before": {
+    "tools": 15,
+    "declared": 0,
+    "tested": 139,
+    "passed": 139,
+    "tools_all_pass": 15
+   },
+   "after": {
+    "tools": 16,
+    "declared": 16,
+    "tested": 148,
+    "passed": 148,
+    "tools_all_pass": 16
+   },
+   "pass_before": false,
+   "pass_after": true,
+   "note": "the policy was always in the code (reads retry twice, writes look themselves up); before, no tool declared it; now tool.json has policy and the MCP server publishes it in _meta. Tested by injecting a busy server, an outage and a lost reply on every service each tool calls. The sandbox simulates Ledgerline's 30 s reply timeout"
+  },
+  {
+   "area": "Regression",
+   "criterion": "Happy path, validation errors, permission denied, pagination, retries",
+   "threshold": ">= 98% of tools; 100% of write tools",
+   "before": {
+    "tools_passing": 7,
+    "tools": 15,
+    "write_tools_passing": 5,
+    "write_tools": 8,
+    "failing": {
+     "find_item": [
+      "pagination",
+      "pass"
+     ],
+     "find_supplier": [
+      "pagination",
+      "pass"
+     ],
+     "check_budget": [
+      "pagination",
+      "pass"
+     ],
+     "search_policy": [
+      "pagination",
+      "pass"
+     ],
+     "list_my_approvals": [
+      "pagination",
+      "pass"
+     ],
+     "create_purchase_order": [
+      "happy_path",
+      "pass"
+     ],
+     "receive_goods": [
+      "retries",
+      "pass"
+     ],
+     "send_message": [
+      "retries",
+      "pass"
+     ]
+    }
+   },
+   "after": {
+    "tools_passing": 11,
+    "tools": 16,
+    "write_tools_passing": 8,
+    "write_tools": 8,
+    "failing": {
+     "find_item": [
+      "pagination",
+      "pass"
+     ],
+     "find_supplier": [
+      "pagination",
+      "pass"
+     ],
+     "check_budget": [
+      "pagination",
+      "pass"
+     ],
+     "search_policy": [
+      "pagination",
+      "pass"
+     ],
+     "list_my_approvals": [
+      "pagination",
+      "pass"
+     ]
+    }
+   },
+   "pass_before": false,
+   "pass_after": false,
+   "note": "after: all 8 write tools pass; the 5 read tools that fail, fail only on pagination"
+  },
+  {
+   "area": "MCP compliance",
+   "criterion": "Conformance on Claude, OpenAI, Gemini and our harness",
+   "threshold": "100% of tools on all 4",
+   "before": "not measured before",
+   "after": {
+    "hosts": {
+     "our harness": {
+      "definitions_accepted": true,
+      "pass_at_1": 1.0
+     },
+     "Gemini": {
+      "definitions_accepted": true,
+      "pass_at_1": 1.0
+     },
+     "OpenAI": {
+      "definitions_accepted": true,
+      "pass_at_1": 0.967
+     },
+     "Claude (API)": {
+      "definitions_accepted": true,
+      "pass_at_1": 0.9
+     },
+     "Claude Code": {
+      "definitions_accepted": true,
+      "pass_at_1": 0.933
+     }
+    },
+    "tools_right_on_every_host": "12/16",
+    "per_tool": {
+     "check_stock": {
+      "our harness": "3/3",
+      "Gemini": "3/3",
+      "OpenAI": "3/3",
+      "Claude (API)": "3/3",
+      "Claude Code": "3/3"
+     },
+     "find_item": {
+      "our harness": "3/3",
+      "Gemini": "3/3",
+      "OpenAI": "3/3",
+      "Claude (API)": "3/3",
+      "Claude Code": "3/3"
+     },
+     "find_supplier": {
+      "our harness": "3/3",
+      "Gemini": "3/3",
+      "OpenAI": "3/3",
+      "Claude (API)": "3/3",
+      "Claude Code": "3/3"
+     },
+     "check_budget": {
+      "our harness": "3/3",
+      "Gemini": "3/3",
+      "OpenAI": "3/3",
+      "Claude (API)": "3/3",
+      "Claude Code": "3/3"
+     },
+     "search_policy": {
+      "our harness": "2/2",
+      "Gemini": "2/2",
+      "OpenAI": "2/2",
+      "Claude (API)": "2/2",
+      "Claude Code": "2/2"
+     },
+     "supplier_certificates": {
+      "our harness": "3/3",
+      "Gemini": "3/3",
+      "OpenAI": "3/3",
+      "Claude (API)": "3/3",
+      "Claude Code": "3/3"
+     },
+     "create_purchase_request": {
+      "our harness": "1/1",
+      "Gemini": "1/1",
+      "OpenAI": "1/1",
+      "Claude (API)": "1/1",
+      "Claude Code": "1/1"
+     },
+     "create_purchase_order": {
+      "our harness": "2/2",
+      "Gemini": "2/2",
+      "OpenAI": "1/2",
+      "Claude (API)": "2/2",
+      "Claude Code": "2/2"
+     },
+     "order_status": {
+      "our harness": "2/2",
+      "Gemini": "2/2",
+      "OpenAI": "2/2",
+      "Claude (API)": "2/2",
+      "Claude Code": "2/2"
+     },
+     "release_purchase_order": {
+      "our harness": "1/1",
+      "Gemini": "1/1",
+      "OpenAI": "1/1",
+      "Claude (API)": "0/1",
+      "Claude Code": "0/1"
+     },
+     "list_my_approvals": {
+      "our harness": "1/1",
+      "Gemini": "1/1",
+      "OpenAI": "1/1",
+      "Claude (API)": "1/1",
+      "Claude Code": "1/1"
+     },
+     "approve_purchase_request": {
+      "our harness": "2/2",
+      "Gemini": "2/2",
+      "OpenAI": "2/2",
+      "Claude (API)": "1/2",
+      "Claude Code": "1/2"
+     },
+     "approve_purchase_order": {
+      "our harness": "1/1",
+      "Gemini": "1/1",
+      "OpenAI": "1/1",
+      "Claude (API)": "0/1",
+      "Claude Code": "1/1"
+     },
+     "receive_goods": {
+      "our harness": "1/1",
+      "Gemini": "1/1",
+      "OpenAI": "1/1",
+      "Claude (API)": "1/1",
+      "Claude Code": "1/1"
+     },
+     "register_supplier": {
+      "our harness": "1/1",
+      "Gemini": "1/1",
+      "OpenAI": "1/1",
+      "Claude (API)": "1/1",
+      "Claude Code": "1/1"
+     },
+     "send_message": {
+      "our harness": "1/1",
+      "Gemini": "1/1",
+      "OpenAI": "1/1",
+      "Claude (API)": "1/1",
+      "Claude Code": "1/1"
+     }
+    }
+   },
+   "pass_before": null,
+   "pass_after": false,
+   "note": "every host accepted all 16 definitions; the 4 tools not right everywhere are release_purchase_order, approve_purchase_request, approve_purchase_order (Claude reads first) and create_purchase_order (OpenAI, once)"
+  },
+  {
+   "area": "Change management",
+   "criterion": "Versioning, release notes, rollback",
+   "threshold": "documented and signed off by the client",
+   "before": {
+    "tools": 15,
+    "with_version": 15,
+    "version_published_over_mcp": 0,
+    "with_release_notes": 0
+   },
+   "after": {
+    "tools": 16,
+    "with_version": 16,
+    "versions": {
+     "find_item": "1.0",
+     "check_stock": "1.0",
+     "find_supplier": "1.0",
+     "check_budget": "1.0",
+     "search_policy": "1.0",
+     "create_purchase_request": "1.1",
+     "list_my_approvals": "1.1",
+     "approve_purchase_request": "1.1",
+     "create_purchase_order": "1.1",
+     "approve_purchase_order": "1.1",
+     "release_purchase_order": "1.0",
+     "order_status": "1.0",
+     "receive_goods": "1.1",
+     "register_supplier": "1.0",
+     "send_message": "1.1",
+     "supplier_certificates": "1.0"
+    },
+    "version_published_over_mcp": 16,
+    "with_release_notes": 8,
+    "rollback": "git tags ['v3.1'] (L3–L12 notebooks pin v3.1); the default tool set and its schemas are unchanged, so recorded runs still replay (logs/compat_check.json)",
+    "client_sign_off": "not applicable in the sandbox: a process step with the client"
+   },
+   "pass_before": false,
+   "pass_after": false,
+   "note": "after: every tool has a version (7 changed tools are now 1.1, with release notes in tool.json), published over MCP; rollback is a git tag; client sign-off cannot happen in the sandbox, so this stays open"
+  }
+ ],
+ "summary": [
+  {
+   "area": "Schema",
+   "threshold": "100% of tools; 0 schema violations in regression",
+   "pass_before": false,
+   "pass_after": true
+  },
+  {
+   "area": "Reliability",
+   "threshold": "<= 0.1% of calls; 100% in the structured error contract",
+   "pass_before": false,
+   "pass_after": true
+  },
+  {
+   "area": "LLM usability",
+   "threshold": ">= 95% pass@1, reported per host",
+   "pass_before": null,
+   "pass_after": false
+  },
+  {
+   "area": "Latency",
+   "threshold": "p50 <= 50 ms, p95 <= 100 ms, p99 <= 200 ms",
+   "pass_before": true,
+   "pass_after": true
+  },
+  {
+   "area": "Payload",
+   "threshold": "every list tool paginates; nothing above the agreed size limit",
+   "pass_before": false,
+   "pass_after": false
+  },
+  {
+   "area": "Idempotency",
+   "threshold": "0 duplicate postings",
+   "pass_before": false,
+   "pass_after": true
+  },
+  {
+   "area": "Timeouts",
+   "threshold": "defined and tested on 100% of tools",
+   "pass_before": false,
+   "pass_after": true
+  },
+  {
+   "area": "Regression",
+   "threshold": ">= 98% of tools; 100% of write tools",
+   "pass_before": false,
+   "pass_after": false
+  },
+  {
+   "area": "MCP compliance",
+   "threshold": "100% of tools on all 4",
+   "pass_before": null,
+   "pass_after": false
+  },
+  {
+   "area": "Change management",
+   "threshold": "documented and signed off by the client",
+   "pass_before": false,
+   "pass_after": false
+  }
+ ]
+}

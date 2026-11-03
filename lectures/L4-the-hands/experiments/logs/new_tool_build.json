@@ -1,0 +1,779 @@
+{
+ "tool": "supplier_certificates",
+ "1_job": {
+  "questions": [
+   "Is Nordic Cell Co. still UN 38.3 certified?",
+   "When does Voltway Cells' certificate run out, and what is its reference?",
+   "May we buy BAT-500 from this supplier under Purchase Policy §6.2?"
+  ],
+  "who_asks": "Emma Clarke (purchase executive), before she orders lithium-cell parts",
+  "read_only": true,
+  "overlap_with_existing": {
+   "tool": "find_supplier",
+   "gives": "one word per supplier: cell_safety_certificate valid / expired / none",
+   "example": [
+    {
+     "supplier_code": "NC-GDA-0063",
+     "name": "Nordic Cell Co.",
+     "city": "Gdańsk",
+     "state": "PL",
+     "status": "ACTIVE",
+     "match": 1.0,
+     "cell_safety_certificate": "expired"
+    },
+    {
+     "supplier_code": "VC-EIN-0042",
+     "name": "Voltway Cells",
+     "city": "Eindhoven",
+     "state": "NL",
+     "status": "ACTIVE",
+     "match": 0.52,
+     "cell_safety_certificate": "valid"
+    }
+   ],
+   "missing": [
+    "the certificate's reference and valid-to date",
+    "days left",
+    "other certificate types",
+    "whether a given item needs UN 38.3 at all (item.cell_safety)"
+   ],
+   "verdict": "small overlap; the new tool answers the certificate questions find_supplier cannot"
+  }
+ },
+ "2_services_found": {
+  "searched": "the 38 purchasing services (ledgerline/erp/services.py; northbridge-docs/04_service_definitions must match it, but that folder was not generated on this machine on 3 Nov 2026)",
+  "candidates": [
+   {
+    "name": "itm_search",
+    "legacy_title": "ITEM ENQUIRY",
+    "kind": "read",
+    "fields": [
+     "q:str*"
+    ]
+   },
+   {
+    "name": "itm_get",
+    "legacy_title": "ITEM MASTER GET",
+    "kind": "read",
+    "fields": [
+     "itm_cd:str*"
+    ]
+   },
+   {
+    "name": "sup_search",
+    "legacy_title": "SUPPLIER ENQUIRY",
+    "kind": "read",
+    "fields": [
+     "q:str*"
+    ]
+   },
+   {
+    "name": "sup_get",
+    "legacy_title": "SUPPLIER MASTER GET",
+    "kind": "read",
+    "fields": [
+     "sup_cd:str*"
+    ]
+   },
+   {
+    "name": "sup_create",
+    "legacy_title": "SUPPLIER CREATE",
+    "kind": "write",
+    "fields": [
+     "name:str*",
+     "city:str*",
+     "state:str*",
+     "vat_no:str",
+     "pt_cd:str"
+    ]
+   },
+   {
+    "name": "sup_cert_get",
+    "legacy_title": "SUPPLIER CERT LIST",
+    "kind": "read",
+    "fields": [
+     "sup_cd:str*"
+    ]
+   },
+   {
+    "name": "sup_cert_upload",
+    "legacy_title": "SUPPLIER CERT UPLOAD",
+    "kind": "write",
+    "fields": [
+     "sup_cd:str*",
+     "cert_type:str*",
+     "doc_ref:str*",
+     "valid_to:date*"
+    ]
+   },
+   {
+    "name": "sup_rate_get",
+    "legacy_title": "RATE CONTRACT GET",
+    "kind": "read",
+    "fields": [
+     "sup_cd:str*",
+     "itm_cd:str*"
+    ]
+   }
+  ],
+  "chosen": [
+   {
+    "name": "sup_get",
+    "legacy_title": "SUPPLIER MASTER GET",
+    "why": "the supplier exists, its name and status (ACTIVE / BLOCKED)",
+    "fields": [
+     {
+      "name": "sup_cd",
+      "type": "str",
+      "required": true,
+      "desc": "SUP CD"
+     }
+    ],
+    "source": "@service(\"sup_get\", \"SUPPLIER MASTER GET\", [F(\"sup_cd\", req=True, desc=\"SUP CD\")])\ndef sup_get(erp, user, sup_cd):\n    r = erp.q1(\"SELECT * FROM supplier WHERE sup_cd=?\", sup_cd)\n    if not r:\n        raise LedgerlineError(\"ERR-SUP-0030\", \"SUPPLIER NOT FOUND\")\n    return r\n"
+   },
+   {
+    "name": "sup_cert_get",
+    "legacy_title": "SUPPLIER CERT LIST",
+    "why": "every certificate on file: cert_type, doc_ref, valid_to",
+    "fields": [
+     {
+      "name": "sup_cd",
+      "type": "str",
+      "required": true,
+      "desc": "SUP CD"
+     }
+    ],
+    "source": "@service(\"sup_cert_get\", \"SUPPLIER CERT LIST\", [F(\"sup_cd\", req=True, desc=\"SUP CD\")])\ndef sup_cert_get(erp, user, sup_cd):\n    return {\"rows\": erp.q(\"SELECT cert_type,doc_ref,valid_to FROM sup_cert WHERE sup_cd=?\", sup_cd)}\n"
+   },
+   {
+    "name": "itm_get",
+    "legacy_title": "ITEM MASTER GET",
+    "why": "the item's cell_safety flag: does it need UN 38.3?",
+    "fields": [
+     {
+      "name": "itm_cd",
+      "type": "str",
+      "required": true,
+      "desc": "ITEM CD"
+     }
+    ],
+    "source": "@service(\"itm_get\", \"ITEM MASTER GET\", [F(\"itm_cd\", req=True, desc=\"ITEM CD\")])\ndef itm_get(erp, user, itm_cd):\n    r = erp.q1(\"SELECT * FROM item WHERE itm_cd=?\", itm_cd)\n    if not r:\n        raise LedgerlineError(\"ERR-ITM-0010\", \"ITEM NOT FOUND\")\n    return r\n"
+   }
+  ],
+  "not_chosen": {
+   "sup_cert_upload": "a write (Lecture 7's record_certificate)",
+   "sup_search": "find_supplier already does name search"
+  }
+ },
+ "3_schema": {
+  "tool.json": {
+   "name": "supplier_certificates",
+   "title": "Supplier certificates",
+   "category": "Look up",
+   "description": "A supplier's certificates on file in Ledgerline (UN 38.3 cell-safety and others): type, document reference, valid-to date, whether each is valid today and how many days are left. Give item_code to also learn whether that item needs a valid UN 38.3 certificate (Purchase Policy §6.2) and whether this supplier has one.",
+   "writes": false,
+   "version": "1.0",
+   "added_in": "Lecture 4 (built from scratch on 3 Nov 2026)",
+   "services": [
+    "sup_get",
+    "sup_cert_get",
+    "itm_get"
+   ],
+   "input_schema": {
+    "type": "object",
+    "properties": {
+     "supplier_code": {
+      "type": "string",
+      "description": "Ledgerline supplier code, from find_supplier, e.g. NC-GDA-0063"
+     },
+     "item_code": {
+      "type": "string",
+      "description": "optional item code, e.g. BAT-500: also says whether this item needs UN 38.3 and whether the supplier qualifies"
+     },
+     "cert_type": {
+      "type": "string",
+      "description": "optional: only this certificate type, e.g. UN38.3"
+     },
+     "limit": {
+      "type": "integer",
+      "description": "optional: at most this many certificates per page (default 20, at most 50)"
+     },
+     "cursor": {
+      "type": "string",
+      "description": "optional: the next_cursor from the previous page"
+     }
+    },
+    "required": [
+     "supplier_code"
+    ]
+   },
+   "output_schema": {
+    "type": "object",
+    "properties": {
+     "ok": {
+      "type": "boolean",
+      "description": "true when it worked; false comes with error and next_step"
+     },
+     "supplier_code": {
+      "type": "string",
+      "description": ""
+     },
+     "supplier_name": {
+      "type": "string",
+      "description": ""
+     },
+     "supplier_status": {
+      "type": "string",
+      "description": "ACTIVE or BLOCKED"
+     },
+     "as_of": {
+      "type": "string",
+      "description": "Ledgerline's date, YYYY-MM-DD"
+     },
+     "certificates": {
+      "type": "array",
+      "description": "one per certificate on file, newest valid-to first",
+      "items": {
+       "type": "object",
+       "properties": {
+        "cert_type": {
+         "type": "string"
+        },
+        "doc_ref": {
+         "type": "string"
+        },
+        "valid_to": {
+         "type": "string"
+        },
+        "valid": {
+         "type": "boolean"
+        },
+        "days_left": {
+         "type": "integer",
+         "description": "negative once expired"
+        }
+       },
+       "required": [
+        "cert_type",
+        "doc_ref",
+        "valid_to",
+        "valid",
+        "days_left"
+       ]
+      }
+     },
+     "un38_3": {
+      "type": "string",
+      "enum": [
+       "valid",
+       "expired",
+       "none"
+      ],
+      "description": "the supplier's best UN 38.3 certificate today"
+     },
+     "item": {
+      "type": [
+       "object",
+       "null"
+      ],
+      "description": "only when item_code is given",
+      "properties": {
+       "item_code": {
+        "type": "string"
+       },
+       "needs_un38_3": {
+        "type": "boolean",
+        "description": "the item contains or charges lithium cells (Ledgerline's cell_safety flag)"
+       },
+       "supplier_qualifies": {
+        "type": "boolean",
+        "description": "false when the item needs UN 38.3 and the supplier has no valid one"
+       }
+      }
+     },
+     "total": {
+      "type": "integer",
+      "description": "certificates matching, across all pages"
+     },
+     "next_cursor": {
+      "type": [
+       "string",
+       "null"
+      ],
+      "description": "pass as cursor for the next page; null on the last page"
+     }
+    },
+    "required": [
+     "ok"
+    ]
+   },
+   "example": {
+    "supplier_code": "NC-GDA-0063",
+    "item_code": "BAT-500"
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+   },
+   "policy": {
+    "ledgerline_reply_timeout_s": 30,
+    "on_busy_or_lost_reply": "retry the read, at most 2 more times",
+    "after_retries": "ok=false, ledgerline_code ERR-SYS-0503 or TIMEOUT, with next_step"
+   }
+  },
+  "decisions": [
+   "supplier_code is the only required argument: codes come from find_supplier",
+   "item_code is optional: with it, the tool answers the §6.2 question directly",
+   "limit + cursor: a list tool paginates (the production criterion), default 20, at most 50",
+   "output: valid and days_left per certificate, un38_3 summary, item verdict, total, next_cursor"
+  ]
+ },
+ "4_code": {
+  "tool.py": "\"\"\"Supplier certificates: a supplier's certificates on file, and whether one is good enough for an item.\n\nInput and output are described in tool.json next to this file. Built from scratch in Lecture 4:\n    1 the job       Emma asks \"Is Nordic Cell still certified?\" and \"Can Voltway supply BAT-500 under §6.2?\"\n    2 the services  sup_get (SUPPLIER MASTER GET), sup_cert_get (SUPPLIER CERT LIST), itm_get (ITEM MASTER GET)\n    3 the schema    tool.json: supplier_code required; item_code, cert_type, limit, cursor optional\n    4 the code      below: three reads, one clean result\n    5 the errors    a wrong supplier or item code comes back as ok=false with next_step (from ERR-SUP-0030, ERR-ITM-0010)\n    6 the tests     tests_toolbox.py, section \"supplier_certificates\"\n\"\"\"\nimport datetime as dt\n\nfrom ledgerline.agent.tools import ToolError, _ledgerline\n\nPAGE, MAX_PAGE = 20, 50\n\n\ndef run(s, supplier_code, item_code=None, cert_type=None, limit=None, cursor=None):\n    \"\"\"Read the supplier, its certificate list and (optionally) the item; say what is valid today.\"\"\"\n    size = PAGE if limit is None else limit\n    if not 1 <= size <= MAX_PAGE:\n        raise ToolError(f\"limit must be between 1 and {MAX_PAGE}, got {size}.\", f\"Call again with limit up to {MAX_PAGE}.\")\n    try:\n        start = int(cursor) if cursor else 0\n    except ValueError:\n        raise ToolError(f\"{cursor!r} is not a cursor this tool gave out.\", \"Call again without cursor to start at the first page.\")\n    sup = _ledgerline(s, \"sup_get\", sup_cd=supplier_code.strip().upper())\n    today = s.erp.today  # Ledgerline's own date, not the laptop's\n    rows = _ledgerline(s, \"sup_cert_get\", sup_cd=sup[\"sup_cd\"])[\"rows\"]\n    certs = []\n    for c in rows:\n        days = (dt.date.fromisoformat(c[\"valid_to\"]) - dt.date.fromisoformat(today)).days\n        certs.append({\"cert_type\": c[\"cert_type\"], \"doc_ref\": c[\"doc_ref\"], \"valid_to\": c[\"valid_to\"],\n                      \"valid\": days >= 0, \"days_left\": days})\n    un = [c for c in certs if c[\"cert_type\"] == \"UN38.3\"]\n    un38_3 = \"valid\" if any(c[\"valid\"] for c in un) else (\"expired\" if un else \"none\")\n    if cert_type:\n        want = cert_type.replace(\" \", \"\").upper()\n        certs = [c for c in certs if c[\"cert_type\"].replace(\" \", \"\").upper() == want]\n    certs.sort(key=lambda c: c[\"valid_to\"], reverse=True)\n\n    page = certs[start:start + size]\n    nxt = str(start + size) if start + size < len(certs) else None\n\n    out = {\"ok\": True, \"supplier_code\": sup[\"sup_cd\"], \"supplier_name\": sup[\"name\"], \"supplier_status\": sup[\"status\"],\n           \"as_of\": today, \"certificates\": page, \"un38_3\": un38_3, \"item\": None, \"total\": len(certs), \"next_cursor\": nxt}\n    if item_code:\n        item = _ledgerline(s, \"itm_get\", itm_cd=item_code.strip().upper())\n        needs = bool(item[\"cell_safety\"])\n        out[\"item\"] = {\"item_code\": item[\"itm_cd\"], \"needs_un38_3\": needs,\n                       \"supplier_qualifies\": (not needs) or un38_3 == \"valid\"}\n        if needs and un38_3 != \"valid\":\n            out[\"next_step\"] = (f\"{item['itm_cd']} contains lithium cells: Purchase Policy §6.2 needs a valid UN 38.3 \"\n                                f\"certificate, and {sup['name']} has {'an expired one' if un38_3 == 'expired' else 'none'}. \"\n                                \"Do not order from them; use find_supplier for a certified supplier.\")\n    if sup[\"status\"] != \"ACTIVE\":\n        out[\"next_step\"] = (out.get(\"next_step\", \"\") + f\" {sup['sup_cd']} is {sup['status']}: never order from it.\").strip()\n    return out\n",
+  "lines": 58,
+  "services_called": [
+   "sup_get",
+   "sup_cert_get",
+   "itm_get"
+  ],
+  "today_from": "Ledgerline's own date (erp.today = 2026-10-26)"
+ },
+ "5_error_contract": {
+  "contract": "ok=false, error (what went wrong, in words), next_step (what to do), ledgerline_code (the legacy code, kept)",
+  "cases": [
+   {
+    "case": "unknown supplier",
+    "arguments": {
+     "supplier_code": "XX-NOPE-0001"
+    },
+    "result": {
+     "ok": false,
+     "error": "Ledgerline refused sup_get: Supplier not found (ERR-SUP-0030).",
+     "next_step": "No supplier with that code. Use find_supplier with the supplier's name.",
+     "ledgerline_code": "ERR-SUP-0030"
+    },
+    "legacy_replies": [
+     {
+      "service": "sup_get",
+      "rc": "E",
+      "err_cd": "ERR-SUP-0030",
+      "msg": "SUPPLIER NOT FOUND"
+     }
+    ],
+    "ledgerline_calls": 1
+   },
+   {
+    "case": "unknown item",
+    "arguments": {
+     "supplier_code": "VC-EIN-0042",
+     "item_code": "BAT-5000"
+    },
+    "result": {
+     "ok": false,
+     "error": "Ledgerline refused itm_get: Item not found (ERR-ITM-0010).",
+     "next_step": "No item with that code. Use find_item with a description.",
+     "ledgerline_code": "ERR-ITM-0010"
+    },
+    "legacy_replies": [
+     {
+      "service": "sup_get",
+      "rc": "S",
+      "err_cd": null,
+      "msg": ""
+     },
+     {
+      "service": "sup_cert_get",
+      "rc": "S",
+      "err_cd": null,
+      "msg": ""
+     },
+     {
+      "service": "itm_get",
+      "rc": "E",
+      "err_cd": "ERR-ITM-0010",
+      "msg": "ITEM NOT FOUND"
+     }
+    ],
+    "ledgerline_calls": 3
+   },
+   {
+    "case": "missing supplier_code",
+    "arguments": {},
+    "result": {
+     "ok": false,
+     "error": "Missing supplier_code.",
+     "next_step": "Ask the user for supplier_code.",
+     "ledgerline_code": ""
+    },
+    "legacy_replies": [],
+    "ledgerline_calls": 0
+   },
+   {
+    "case": "wrong type",
+    "arguments": {
+     "supplier_code": 42
+    },
+    "result": {
+     "ok": false,
+     "error": "'supplier_code' should be string, got int.",
+     "next_step": "Pass supplier_code as string.",
+     "ledgerline_code": ""
+    },
+    "legacy_replies": [],
+    "ledgerline_calls": 0
+   },
+   {
+    "case": "unknown argument",
+    "arguments": {
+     "supplier_code": "VC-EIN-0042",
+     "vat": "x"
+    },
+    "result": {
+     "ok": false,
+     "error": "supplier_certificates has no argument 'vat'.",
+     "next_step": "Use only: supplier_code, item_code, cert_type, limit, cursor.",
+     "ledgerline_code": ""
+    },
+    "legacy_replies": [],
+    "ledgerline_calls": 0
+   },
+   {
+    "case": "limit out of range",
+    "arguments": {
+     "supplier_code": "VC-EIN-0042",
+     "limit": 500
+    },
+    "result": {
+     "ok": false,
+     "error": "limit must be between 1 and 50, got 500.",
+     "next_step": "Call again with limit up to 50.",
+     "ledgerline_code": ""
+    },
+    "legacy_replies": [],
+    "ledgerline_calls": 0
+   },
+   {
+    "case": "bad cursor",
+    "arguments": {
+     "supplier_code": "VC-EIN-0042",
+     "cursor": "abc"
+    },
+    "result": {
+     "ok": false,
+     "error": "'abc' is not a cursor this tool gave out.",
+     "next_step": "Call again without cursor to start at the first page.",
+     "ledgerline_code": ""
+    },
+    "legacy_replies": [],
+    "ledgerline_calls": 0
+   },
+   {
+    "case": "expired supplier for a lithium item (a business answer, not an error)",
+    "arguments": {
+     "supplier_code": "NC-GDA-0063",
+     "item_code": "BAT-500"
+    },
+    "result": {
+     "ok": true,
+     "supplier_code": "NC-GDA-0063",
+     "supplier_name": "Nordic Cell Co.",
+     "supplier_status": "ACTIVE",
+     "as_of": "2026-10-26",
+     "certificates": [
+      {
+       "cert_type": "UN38.3",
+       "doc_ref": "UN38.3-TR/NC/2025/090",
+       "valid_to": "2026-09-30",
+       "valid": false,
+       "days_left": -26
+      }
+     ],
+     "un38_3": "expired",
+     "item": {
+      "item_code": "BAT-500",
+      "needs_un38_3": true,
+      "supplier_qualifies": false
+     },
+     "total": 1,
+     "next_cursor": null,
+     "next_step": "BAT-500 contains lithium cells: Purchase Policy §6.2 needs a valid UN 38.3 certificate, and Nordic Cell Co. has an expired one. Do not order from them; use find_supplier for a certified supplier."
+    },
+    "legacy_replies": [
+     {
+      "service": "sup_get",
+      "rc": "S",
+      "err_cd": null,
+      "msg": ""
+     },
+     {
+      "service": "sup_cert_get",
+      "rc": "S",
+      "err_cd": null,
+      "msg": ""
+     },
+     {
+      "service": "itm_get",
+      "rc": "S",
+      "err_cd": null,
+      "msg": ""
+     }
+    ],
+    "ledgerline_calls": 3
+   },
+   {
+    "case": "blocked supplier code",
+    "arguments": {
+     "supplier_code": "VC-EIN-0009"
+    },
+    "result": {
+     "ok": true,
+     "supplier_code": "VC-EIN-0009",
+     "supplier_name": "Voltway Cells (old code, do not use)",
+     "supplier_status": "BLOCKED",
+     "as_of": "2026-10-26",
+     "certificates": [],
+     "un38_3": "none",
+     "item": null,
+     "total": 0,
+     "next_cursor": null,
+     "next_step": "VC-EIN-0009 is BLOCKED: never order from it."
+    },
+    "legacy_replies": [
+     {
+      "service": "sup_get",
+      "rc": "S",
+      "err_cd": null,
+      "msg": ""
+     },
+     {
+      "service": "sup_cert_get",
+      "rc": "S",
+      "err_cd": null,
+      "msg": ""
+     }
+    ],
+    "ledgerline_calls": 2
+   }
+  ]
+ },
+ "6_tests": {
+  "file": "ledgerline/tests_toolbox.py",
+  "section": "# ---- Lecture 4: supplier_certificates, built from scratch (an extra: in REGISTRY, served when named)\nfrom ledgerline.toolbox import ALL, DEFAULT, REGISTRY\nassert len(SPECS) == 15 and DEFAULT == list(SPECS) and \"supplier_certificates\" in REGISTRY and \"supplier_certificates\" not in SPECS\nerp4 = ERP(); e4 = Toolbox(erp4, \"ECLARKE\", names=ALL)\nassert \"supplier_certificates\" not in Toolbox(erp4, \"ECLARKE\").names              # the default set is unchanged\nREGISTRY[\"supplier_certificates\"].check(REGISTRY[\"supplier_certificates\"].spec[\"example\"])\nnc = e4.call(\"supplier_certificates\", {\"supplier_code\": \"NC-GDA-0063\", \"item_code\": \"BAT-500\"})\nassert nc[\"ok\"] and nc[\"un38_3\"] == \"expired\" and nc[\"item\"] == {\"item_code\": \"BAT-500\", \"needs_un38_3\": True, \"supplier_qualifies\": False}, nc\nassert nc[\"certificates\"][0][\"days_left\"] == -26 and \"§6.2\" in nc[\"next_step\"], nc\nvc = e4.call(\"supplier_certificates\", {\"supplier_code\": \"vc-ein-0042\", \"item_code\": \"BAT-500\"})   # code case does not matter\nassert vc[\"ok\"] and vc[\"un38_3\"] == \"valid\" and vc[\"item\"][\"supplier_qualifies\"] and \"next_step\" not in vc, vc\npb = e4.call(\"supplier_certificates\", {\"supplier_code\": \"PB-MAN-0017\", \"item_code\": \"BRK-PAD-01\"})  # no cert, none needed\nassert pb[\"un38_3\"] == \"none\" and pb[\"item\"][\"supplier_qualifies\"] and pb[\"certificates\"] == [], pb\nbad = e4.call(\"supplier_certificates\", {\"supplier_code\": \"XX-NOPE-0001\"})\nassert bad[\"ok\"] is False and bad[\"ledgerline_code\"] == \"ERR-SUP-0030\" and \"find_supplier\" in bad[\"next_step\"], bad\nbad = e4.call(\"supplier_certificates\", {\"supplier_code\": \"VC-EIN-0042\", \"item_code\": \"BAT-5000\"})\nassert bad[\"ok\"] is False and bad[\"ledgerline_code\"] == \"ERR-ITM-0010\", bad\nassert e4.call(\"supplier_certificates\", {})[\"ok\"] is False                                         # required\nassert e4.call(\"supplier_certificates\", {\"supplier_code\": 42})[\"ok\"] is False                      # type\nassert e4.call(\"supplier_certificates\", {\"supplier_code\": \"VC-EIN-0042\", \"limit\": 0})[\"ok\"] is False\nfor i in range(45):                                                                                   # pagination\n    erp4.x(\"INSERT INTO sup_cert VALUES (?,?,?,?,?,?)\", \"VC-EIN-0042\", \"ISO9001\", f\"ISO-{i:02d}\", \"2027-01-01\", \"LMORENO\", \"2026-01-01\")\np1 = e4.call(\"supplier_certificates\", {\"supplier_code\": \"VC-EIN-0042\"})\np2 = e4.call(\"supplier_certificates\", {\"supplier_code\": \"VC-EIN-0042\", \"cursor\": p1[\"next_cursor\"]})\np3 = e4.call(\"supplier_certificates\", {\"supplier_code\": \"VC-EIN-0042\", \"cursor\": p2[\"next_cursor\"]})\nassert p1[\"total\"] == 46 and len(p1[\"certificates\"]) == 20 and p3[\"next_cursor\"] is None and \\\n    len({c[\"doc_ref\"] for c in p1[\"certificates\"] + p2[\"certificates\"] + p3[\"certificates\"]}) == 46, (p1[\"total\"], p3)\nassert e4.call(\"supplier_certificates\", {\"supplier_code\": \"VC-EIN-0042\", \"cert_type\": \"UN 38.3\"})[\"total\"] == 1\nimport jsonschema\nfor r in (nc, vc, pb, p1, p3):\n    jsonschema.validate(r, REGISTRY[\"supplier_certificates\"].spec[\"output_schema\"])\nprint(\"SUPPLIER_CERTIFICATES OK\")\n\n",
+  "assertions": 13,
+  "passed": true,
+  "whole_file_passed": true,
+  "markers": [
+   "TOOLBOX OK",
+   "MCP OK",
+   "RETRY OK",
+   "SUPPLIER_CERTIFICATES OK",
+   "IDEMPOTENCY OK",
+   "MCP FIELDS OK"
+  ],
+  "stderr_tail": ""
+ },
+ "mcp_definition": {
+  "name": "supplier_certificates",
+  "title": "Supplier certificates",
+  "description": "A supplier's certificates on file in Ledgerline (UN 38.3 cell-safety and others): type, document reference, valid-to date, whether each is valid today and how many days are left. Give item_code to also learn whether that item needs a valid UN 38.3 certificate (Purchase Policy §6.2) and whether this supplier has one.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "supplier_code": {
+     "type": "string",
+     "description": "Ledgerline supplier code, from find_supplier, e.g. NC-GDA-0063"
+    },
+    "item_code": {
+     "type": "string",
+     "description": "optional item code, e.g. BAT-500: also says whether this item needs UN 38.3 and whether the supplier qualifies"
+    },
+    "cert_type": {
+     "type": "string",
+     "description": "optional: only this certificate type, e.g. UN38.3"
+    },
+    "limit": {
+     "type": "integer",
+     "description": "optional: at most this many certificates per page (default 20, at most 50)"
+    },
+    "cursor": {
+     "type": "string",
+     "description": "optional: the next_cursor from the previous page"
+    }
+   },
+   "required": [
+    "supplier_code"
+   ]
+  },
+  "outputSchema": {
+   "type": "object",
+   "properties": {
+    "ok": {
+     "type": "boolean",
+     "description": "true when it worked; false comes with error and next_step"
+    },
+    "supplier_code": {
+     "type": "string",
+     "description": ""
+    },
+    "supplier_name": {
+     "type": "string",
+     "description": ""
+    },
+    "supplier_status": {
+     "type": "string",
+     "description": "ACTIVE or BLOCKED"
+    },
+    "as_of": {
+     "type": "string",
+     "description": "Ledgerline's date, YYYY-MM-DD"
+    },
+    "certificates": {
+     "type": "array",
+     "description": "one per certificate on file, newest valid-to first",
+     "items": {
+      "type": "object",
+      "properties": {
+       "cert_type": {
+        "type": "string"
+       },
+       "doc_ref": {
+        "type": "string"
+       },
+       "valid_to": {
+        "type": "string"
+       },
+       "valid": {
+        "type": "boolean"
+       },
+       "days_left": {
+        "type": "integer",
+        "description": "negative once expired"
+       }
+      },
+      "required": [
+       "cert_type",
+       "doc_ref",
+       "valid_to",
+       "valid",
+       "days_left"
+      ]
+     }
+    },
+    "un38_3": {
+     "type": "string",
+     "enum": [
+      "valid",
+      "expired",
+      "none"
+     ],
+     "description": "the supplier's best UN 38.3 certificate today"
+    },
+    "item": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "description": "only when item_code is given",
+     "properties": {
+      "item_code": {
+       "type": "string"
+      },
+      "needs_un38_3": {
+       "type": "boolean",
+       "description": "the item contains or charges lithium cells (Ledgerline's cell_safety flag)"
+      },
+      "supplier_qualifies": {
+       "type": "boolean",
+       "description": "false when the item needs UN 38.3 and the supplier has no valid one"
+      }
+     }
+    },
+    "total": {
+     "type": "integer",
+     "description": "certificates matching, across all pages"
+    },
+    "next_cursor": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "description": "pass as cursor for the next page; null on the last page"
+    }
+   },
+   "required": [
+    "ok"
+   ]
+  },
+  "annotations": {
+   "title": "Supplier certificates",
+   "readOnlyHint": true,
+   "destructiveHint": false,
+   "idempotentHint": true,
+   "openWorldHint": false
+  },
+  "_meta": {
+   "ledgerline/version": "1.0",
+   "ledgerline/category": "Look up",
+   "ledgerline/writes": false,
+   "ledgerline/services": [
+    "sup_get",
+    "sup_cert_get",
+    "itm_get"
+   ],
+   "ledgerline/policy": {
+    "ledgerline_reply_timeout_s": 30,
+    "on_busy_or_lost_reply": "retry the read, at most 2 more times",
+    "after_retries": "ok=false, ledgerline_code ERR-SYS-0503 or TIMEOUT, with next_step"
+   },
+   "fastmcp": {
+    "tags": []
+   }
+  }
+ },
+ "mcp_call": {
+  "_meta": {
+   "io.modelcontextprotocol/serverInfo": {
+    "name": "ledgerline-toolbox",
+    "version": "4.1.6"
+   }
+  },
+  "content": [
+   {
+    "type": "text",
+    "text": "{\"ok\": true, \"supplier_code\": \"VC-EIN-0042\", \"supplier_name\": \"Voltway Cells\", \"supplier_status\": \"ACTIVE\", \"as_of\": \"2026-10-26\", \"certificates\": [{\"cert_type\": \"UN38.3\", \"doc_ref\": \"UN38.3-TR/VC/2026/118\", \"valid_to\": \"2027-03-31\", \"valid\": true, \"days_left\": 156}], \"un38_3\": \"valid\", \"item\": {\"item_code\": \"BAT-500\", \"needs_un38_3\": true, \"supplier_qualifies\": true}, \"total\": 1, \"next_cursor\": null}"
+   }
+  ],
+  "structuredContent": {
+   "ok": true,
+   "supplier_code": "VC-EIN-0042",
+   "supplier_name": "Voltway Cells",
+   "supplier_status": "ACTIVE",
+   "as_of": "2026-10-26",
+   "certificates": [
+    {
+     "cert_type": "UN38.3",
+     "doc_ref": "UN38.3-TR/VC/2026/118",
+     "valid_to": "2027-03-31",
+     "valid": true,
+     "days_left": 156
+    }
+   ],
+   "un38_3": "valid",
+   "item": {
+    "item_code": "BAT-500",
+    "needs_un38_3": true,
+    "supplier_qualifies": true
+   },
+   "total": 1,
+   "next_cursor": null
+  },
+  "isError": false,
+  "resultType": "complete"
+ },
+ "registered": {
+  "how": "a folder in ledgerline/toolbox/ is picked up by load_specs(); EXTRAS keeps it out of the default 15 so recorded runs replay; served by name, or with `python -m ledgerline.toolbox.mcp --all`",
+  "tools_with_all": 16
+ }
+}

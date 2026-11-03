@@ -4,7 +4,7 @@
   "category": "Purchasing",
   "description": "Raise a purchase request (PR): the internal ask to buy something. With confirm=false it previews the estimated value and who must approve; with confirm=true it saves and submits it. Within your limit it is approved at once; above it, it waits for your manager.",
   "writes": true,
-  "version": "1.0",
+  "version": "1.1",
   "services": [
     "pr_search",
     "pr_fetch",
@@ -61,7 +61,10 @@
         "description": "WAITING FOR APPROVAL or APPROVED"
       },
       "approver": {
-        "type": "string",
+        "type": [
+          "string",
+          "null"
+        ],
         "description": "who must sign"
       },
       "estimated_value": {
@@ -75,5 +78,25 @@
     "quantity": 2000,
     "cost_centre": "PRD-07",
     "need_by": "2026-11-09"
+  },
+  "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  },
+  "policy": {
+    "ledgerline_reply_timeout_s": 30,
+    "reads_inside": "retried, at most 2 more times",
+    "on_lost_write_reply": "never resent blindly: look the document up (by its key or by what changed) and return it",
+    "on_busy_before_write": "ok=false with next_step; nothing was saved, so the same call is safe to repeat"
+  },
+  "argument_formats": {
+    "need_by": "date",
+    "quantity": "positive"
+  },
+  "release_notes": {
+    "1.1": "3 Nov 2026 (Lecture 4 production-grade pass): need_by is checked and rewritten as YYYY-MM-DD at the door, so a retry that writes the date differently finds the first request instead of raising a second; quantity must be more than 0 (Ledgerline's pr_save saved, and auto-approved, 0 and negative quantities); output_schema: approver may be null.",
+    "1.0": "28 Oct 2026: first toolbox release."
   }
 }

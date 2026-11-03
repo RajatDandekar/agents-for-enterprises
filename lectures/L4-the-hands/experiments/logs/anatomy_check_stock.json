@@ -1,0 +1,329 @@
+{
+ "tool": "check_stock",
+ "files": {
+  "tool.json": "{\n  \"name\": \"check_stock\",\n  \"title\": \"Check stock\",\n  \"category\": \"Look up\",\n  \"description\": \"Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.\",\n  \"writes\": false,\n  \"version\": \"1.0\",\n  \"services\": [\n    \"itm_get\",\n    \"whs_list\",\n    \"stk_query\"\n  ],\n  \"input_schema\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"item_code\": {\n        \"type\": \"string\",\n        \"description\": \"Ledgerline item code, e.g. BAT-500\"\n      }\n    },\n    \"required\": [\n      \"item_code\"\n    ]\n  },\n  \"output_schema\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"ok\": {\n        \"type\": \"boolean\",\n        \"description\": \"true when it worked; false comes with error and next_step\"\n      },\n      \"item_code\": {\n        \"type\": \"string\",\n        \"description\": \"\"\n      },\n      \"warehouses\": {\n        \"type\": \"array\",\n        \"description\": \"per warehouse: on_hand, allocated, on_order, free\"\n      },\n      \"reorder_level\": {\n        \"type\": \"integer\",\n        \"description\": \"\"\n      },\n      \"cover_days\": {\n        \"type\": \"integer\",\n        \"description\": \"days the free stock lasts at the usual daily use\"\n      },\n      \"below_reorder\": {\n        \"type\": \"boolean\",\n        \"description\": \"\"\n      }\n    }\n  },\n  \"example\": {\n    \"item_code\": \"BAT-500\"\n  },\n  \"annotations\": {\n    \"readOnlyHint\": true,\n    \"destructiveHint\": false,\n    \"idempotentHint\": true,\n    \"openWorldHint\": false\n  },\n  \"policy\": {\n    \"ledgerline_reply_timeout_s\": 30,\n    \"on_busy_or_lost_reply\": \"retry the read, at most 2 more times\",\n    \"after_retries\": \"ok=false, ledgerline_code ERR-SYS-0503 or TIMEOUT, with next_step\"\n  }\n}\n",
+  "tool.py": "\"\"\"Check stock: Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover..\n\nInput and output are described in tool.json next to this file.\"\"\"\nfrom ledgerline.agent.tools import ToolError, _ledgerline\n\n\ndef run(s, item_code):\n    \"\"\"Ask Ledgerline's stock enquiry for each warehouse and add it up.\"\"\"\n    item = _ledgerline(s, \"itm_get\", itm_cd=item_code)\n    rows, reorder, daily = [], None, None\n    for w in _ledgerline(s, \"whs_list\")[\"rows\"]:\n        try:\n            r = _ledgerline(s, \"stk_query\", itm_cd=item_code, whs_cd=w[\"whs_cd\"])\n        except ToolError:\n            continue  # no stock record in this warehouse\n        reorder, daily = r[\"reorder_lvl\"], r[\"avg_daily_issue\"]\n        rows.append({\"warehouse\": w[\"whs_cd\"], \"name\": w[\"name\"], \"on_hand\": r[\"on_hand\"], \"allocated\": r[\"allocated\"],\n                     \"on_order\": r[\"on_order\"], \"free\": r[\"on_hand\"] - r[\"allocated\"]})\n    if not rows:\n        raise ToolError(f\"Ledgerline has no stock record for {item_code}.\", \"Check the item code with find_item.\")\n    free = sum(r[\"free\"] for r in rows)\n    on_order = sum(r[\"on_order\"] for r in rows)\n    return {\"ok\": True, \"item_code\": item_code, \"description\": item[\"descr\"], \"unit\": item[\"uom_cd\"],\n            \"warehouses\": rows, \"free_total\": free, \"on_order_total\": on_order, \"reorder_level\": reorder,\n            \"cover_days\": int(free / daily) if daily else None,\n            \"below_reorder\": reorder is not None and free + on_order < reorder}\n",
+  "path": "ledgerline/ledgerline/toolbox/check_stock"
+ },
+ "services": [
+  {
+   "name": "itm_get",
+   "legacy_title": "ITEM MASTER GET",
+   "kind": "read",
+   "screen": null,
+   "fields": [
+    {
+     "name": "itm_cd",
+     "type": "str",
+     "required": true,
+     "desc": "ITEM CD"
+    }
+   ],
+   "source": "@service(\"itm_get\", \"ITEM MASTER GET\", [F(\"itm_cd\", req=True, desc=\"ITEM CD\")])\ndef itm_get(erp, user, itm_cd):\n    r = erp.q1(\"SELECT * FROM item WHERE itm_cd=?\", itm_cd)\n    if not r:\n        raise LedgerlineError(\"ERR-ITM-0010\", \"ITEM NOT FOUND\")\n    return r\n",
+   "defined_in": "ledgerline/ledgerline/erp/services.py"
+  },
+  {
+   "name": "whs_list",
+   "legacy_title": "WAREHOUSE LIST",
+   "kind": "read",
+   "screen": null,
+   "fields": [],
+   "source": "@service(\"whs_list\", \"WAREHOUSE LIST\")\ndef whs_list(erp, user):\n    return {\"rows\": erp.q(\"SELECT * FROM warehouse\")}\n",
+   "defined_in": "ledgerline/ledgerline/erp/services.py"
+  },
+  {
+   "name": "stk_query",
+   "legacy_title": "STOCK STATUS ENQUIRY",
+   "kind": "read",
+   "screen": "INV-STK-02",
+   "fields": [
+    {
+     "name": "itm_cd",
+     "type": "str",
+     "required": true,
+     "desc": "ITEM CD"
+    },
+    {
+     "name": "whs_cd",
+     "type": "str",
+     "required": false,
+     "desc": "WHS CD"
+    }
+   ],
+   "source": "@service(\"stk_query\", \"STOCK STATUS ENQUIRY\", [F(\"itm_cd\", req=True, desc=\"ITEM CD\"), F(\"whs_cd\", desc=\"WHS CD\")],\n         screen=\"INV-STK-02\")\ndef stk_query(erp, user, itm_cd, whs_cd=\"WH-MAN-STR\"):\n    s = erp.q1(\"SELECT * FROM stock WHERE itm_cd=? AND whs_cd=?\", itm_cd, whs_cd)\n    i = erp.q1(\"SELECT avg_daily_issue, reorder_lvl FROM item WHERE itm_cd=?\", itm_cd)\n    if not s or not i:\n        raise LedgerlineError(\"ERR-STK-0001\", \"NO STOCK RECORD\")\n    adi = i[\"avg_daily_issue\"]\n    return {**s, \"avg_daily_issue\": adi, \"reorder_lvl\": i[\"reorder_lvl\"],\n            \"cover_days\": int((s[\"on_hand\"] - s[\"allocated\"]) / adi) if adi else None}\n",
+   "defined_in": "ledgerline/ledgerline/erp/services.py"
+  }
+ ],
+ "services_found_in": "ledgerline/ledgerline/erp/services.py (the 38 purchasing services). The northbridge-docs repo's 04_service_definitions folder must match it exactly (L3 STORY_V4); it was not generated on this machine on 3 Nov 2026, so the definitions here are read from the code.",
+ "model_request": {
+  "source": "logs/our_harness.json (single question, recorded run)",
+  "model": "openrouter:google/gemini-3.8-flash",
+  "assistant_tool_call": {
+   "id": "call_117021",
+   "name": "check_stock",
+   "arguments": {
+    "item_code": "BAT-500"
+   }
+  }
+ },
+ "checked_at_the_door": {
+  "arguments_in": {
+   "item_code": "BAT-500"
+  },
+  "arguments_clean": {
+   "item_code": "BAT-500"
+  },
+  "against": {
+   "type": "object",
+   "properties": {
+    "item_code": {
+     "type": "string",
+     "description": "Ledgerline item code, e.g. BAT-500"
+    }
+   },
+   "required": [
+    "item_code"
+   ]
+  }
+ },
+ "legacy_calls": [
+  {
+   "seq": 1,
+   "service": "itm_get",
+   "request": {
+    "itm_cd": "BAT-500"
+   },
+   "reply": {
+    "rc": "S",
+    "err_cd": null,
+    "msg": "",
+    "data": {
+     "itm_cd": "BAT-500",
+     "descr": "Battery pack, 36 V 500 Wh",
+     "uom_cd": "NOS",
+     "cell_safety": 1,
+     "category": "SPARES",
+     "active": 1,
+     "reorder_lvl": 3000,
+     "avg_daily_issue": 600
+    }
+   },
+   "stored_procedures": []
+  },
+  {
+   "seq": 2,
+   "service": "whs_list",
+   "request": {},
+   "reply": {
+    "rc": "S",
+    "err_cd": null,
+    "msg": "",
+    "data": {
+     "rows": [
+      {
+       "whs_cd": "WH-MAN-STR",
+       "name": "Manchester main stores",
+       "ou_cd": "NBC-MAN-01"
+      },
+      {
+       "whs_cd": "WH-LDS-STR",
+       "name": "Leeds stores",
+       "ou_cd": "NBC-LDS-01"
+      }
+     ]
+    }
+   },
+   "stored_procedures": []
+  },
+  {
+   "seq": 3,
+   "service": "stk_query",
+   "request": {
+    "itm_cd": "BAT-500",
+    "whs_cd": "WH-MAN-STR"
+   },
+   "reply": {
+    "rc": "S",
+    "err_cd": null,
+    "msg": "",
+    "data": {
+     "itm_cd": "BAT-500",
+     "whs_cd": "WH-MAN-STR",
+     "on_hand": 5400,
+     "allocated": 0,
+     "on_order": 0,
+     "avg_daily_issue": 600,
+     "reorder_lvl": 3000,
+     "cover_days": 9
+    }
+   },
+   "stored_procedures": []
+  },
+  {
+   "seq": 4,
+   "service": "stk_query",
+   "request": {
+    "itm_cd": "BAT-500",
+    "whs_cd": "WH-LDS-STR"
+   },
+   "reply": {
+    "rc": "S",
+    "err_cd": null,
+    "msg": "",
+    "data": {
+     "itm_cd": "BAT-500",
+     "whs_cd": "WH-LDS-STR",
+     "on_hand": 1200,
+     "allocated": 0,
+     "on_order": 0,
+     "avg_daily_issue": 600,
+     "reorder_lvl": 3000,
+     "cover_days": 2
+    }
+   },
+   "stored_procedures": []
+  }
+ ],
+ "tool_result": {
+  "ok": true,
+  "item_code": "BAT-500",
+  "description": "Battery pack, 36 V 500 Wh",
+  "unit": "NOS",
+  "warehouses": [
+   {
+    "warehouse": "WH-MAN-STR",
+    "name": "Manchester main stores",
+    "on_hand": 5400,
+    "allocated": 0,
+    "on_order": 0,
+    "free": 5400
+   },
+   {
+    "warehouse": "WH-LDS-STR",
+    "name": "Leeds stores",
+    "on_hand": 1200,
+    "allocated": 0,
+    "on_order": 0,
+    "free": 1200
+   }
+  ],
+  "free_total": 6600,
+  "on_order_total": 0,
+  "reorder_level": 3000,
+  "cover_days": 11,
+  "below_reorder": false
+ },
+ "sizes": {
+  "legacy_replies_bytes": 842,
+  "tool_result_bytes": 457,
+  "legacy_calls": 4
+ },
+ "what_the_model_sees": "Only tool_result, as JSON text (plus, over MCP, the same dict as structuredContent). Not tool.py, not the services, their replies, the database, Emma's session or her password.",
+ "mcp": {
+  "request": {
+   "jsonrpc": "2.0",
+   "id": 2,
+   "method": "tools/call",
+   "params": {
+    "name": "check_stock",
+    "arguments": {
+     "item_code": "BAT-500"
+    }
+   }
+  },
+  "response": {
+   "jsonrpc": "2.0",
+   "id": 2,
+   "result": {
+    "_meta": {
+     "io.modelcontextprotocol/serverInfo": {
+      "name": "ledgerline-toolbox",
+      "version": "4.1.6"
+     }
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "{\"ok\": true, \"item_code\": \"BAT-500\", \"description\": \"Battery pack, 36 V 500 Wh\", \"unit\": \"NOS\", \"warehouses\": [{\"warehouse\": \"WH-MAN-STR\", \"name\": \"Manchester main stores\", \"on_hand\": 5400, \"allocated\": 0, \"on_order\": 0, \"free\": 5400}, {\"warehouse\": \"WH-LDS-STR\", \"name\": \"Leeds stores\", \"on_hand\": 1200, \"allocated\": 0, \"on_order\": 0, \"free\": 1200}], \"free_total\": 6600, \"on_order_total\": 0, \"reorder_level\": 3000, \"cover_days\": 11, \"below_reorder\": false}"
+     }
+    ],
+    "structuredContent": {
+     "ok": true,
+     "item_code": "BAT-500",
+     "description": "Battery pack, 36 V 500 Wh",
+     "unit": "NOS",
+     "warehouses": [
+      {
+       "warehouse": "WH-MAN-STR",
+       "name": "Manchester main stores",
+       "on_hand": 5400,
+       "allocated": 0,
+       "on_order": 0,
+       "free": 5400
+      },
+      {
+       "warehouse": "WH-LDS-STR",
+       "name": "Leeds stores",
+       "on_hand": 1200,
+       "allocated": 0,
+       "on_order": 0,
+       "free": 1200
+      }
+     ],
+     "free_total": 6600,
+     "on_order_total": 0,
+     "reorder_level": 3000,
+     "cover_days": 11,
+     "below_reorder": false
+    },
+    "isError": false,
+    "resultType": "complete"
+   }
+  },
+  "note": "the shape of the messages; logs/mcp_raw.json has the bytes captured from a real stdio session"
+ },
+ "error_path": {
+  "model_request": {
+   "name": "check_stock",
+   "arguments": {
+    "item_code": "BAT-5000"
+   }
+  },
+  "legacy_calls": [
+   {
+    "service": "itm_get",
+    "request": {
+     "itm_cd": "BAT-5000"
+    },
+    "reply": {
+     "rc": "E",
+     "err_cd": "ERR-ITM-0010",
+     "msg": "ITEM NOT FOUND",
+     "data": null
+    }
+   }
+  ],
+  "tool_result": {
+   "ok": false,
+   "error": "Ledgerline refused itm_get: Item not found (ERR-ITM-0010).",
+   "next_step": "No item with that code. Use find_item with a description.",
+   "ledgerline_code": "ERR-ITM-0010"
+  },
+  "how": "_ledgerline() turns rc=E into a ToolError: the message in words, next_step from ERR_HELP, and the legacy code kept as ledgerline_code. Toolbox.call returns it as ok=false."
+ },
+ "error_path_wrong_type": {
+  "model_request": {
+   "name": "check_stock",
+   "arguments": {
+    "item_code": 500
+   }
+  },
+  "tool_result": {
+   "ok": false,
+   "error": "'item_code' should be string, got int.",
+   "next_step": "Pass item_code as string.",
+   "ledgerline_code": ""
+  },
+  "ledgerline_calls": 0
+ }
+}

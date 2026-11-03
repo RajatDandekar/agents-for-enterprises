@@ -263,6 +263,11 @@ class MCPClientTools:
         res = c.call_tool(name, args or {})
         txt = c.text(res)
         if getattr(res, "is_error", None) or (getattr(res, "is_error", None) is None and getattr(res, "isError", False)):
+            try:  # a tool that already speaks the error contract (ok=false, error, next_step): pass it through as is
+                if json.loads(txt).get("ok") is False:
+                    return txt
+            except (ValueError, AttributeError):
+                pass
             return json.dumps({"ok": False, "error": txt})
         return txt
 

@@ -4,7 +4,7 @@
   "category": "Approvals",
   "description": "What is waiting for the signed-in user's signature: purchase requests and orders, with value and who raised them.",
   "writes": false,
-  "version": "1.0",
+  "version": "1.1",
   "services": [
     "po_pending_appr",
     "pr_get",
@@ -25,8 +25,35 @@
       "waiting": {
         "type": "array",
         "description": "doc_type, doc_no, requested_by, value"
+      },
+      "count": {
+        "type": "integer",
+        "description": "how many are listed here"
+      },
+      "total": {
+        "type": "integer",
+        "description": "only when more are waiting than listed"
+      },
+      "has_more": {
+        "type": "boolean",
+        "description": "only when more are waiting than listed (at most 50 are listed)"
       }
     }
   },
-  "example": {}
+  "example": {},
+  "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  },
+  "policy": {
+    "ledgerline_reply_timeout_s": 30,
+    "on_busy_or_lost_reply": "retry the read, at most 2 more times",
+    "after_retries": "ok=false, ledgerline_code ERR-SYS-0503 or TIMEOUT, with next_step"
+  },
+  "release_notes": {
+    "1.1": "3 Nov 2026 (Lecture 4 production-grade pass): lists at most 50; when more are waiting it adds total, has_more and a note (1,000 pending made a 167 KB result).",
+    "1.0": "28 Oct 2026: first toolbox release."
+  }
 }

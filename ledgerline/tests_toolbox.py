@@ -87,3 +87,81 @@ b = k3.call("create_purchase_order", po_args)
 c = k3.call("create_purchase_order", po_args)                          # retry: the PR is now CL, the order is found
 assert b["ok"] and c.get("already_done") and b["po_no"] == c["po_no"], (b, c)
 print("RETRY OK")
+
+# ---- Lecture 4: supplier_certificates, built from scratch (an extra: in REGISTRY, served when named)
+from ledgerline.toolbox import ALL, DEFAULT, REGISTRY
+assert len(SPECS) == 15 and DEFAULT == list(SPECS) and "supplier_certificates" in REGISTRY and "supplier_certificates" not in SPECS
+erp4 = ERP(); e4 = Toolbox(erp4, "ECLARKE", names=ALL)
+assert "supplier_certificates" not in Toolbox(erp4, "ECLARKE").names              # the default set is unchanged
+REGISTRY["supplier_certificates"].check(REGISTRY["supplier_certificates"].spec["example"])
+nc = e4.call("supplier_certificates", {"supplier_code": "NC-GDA-0063", "item_code": "BAT-500"})
+assert nc["ok"] and nc["un38_3"] == "expired" and nc["item"] == {"item_code": "BAT-500", "needs_un38_3": True, "supplier_qualifies": False}, nc
+assert nc["certificates"][0]["days_left"] == -26 and "§6.2" in nc["next_step"], nc
+vc = e4.call("supplier_certificates", {"supplier_code": "vc-ein-0042", "item_code": "BAT-500"})   # code case does not matter
+assert vc["ok"] and vc["un38_3"] == "valid" and vc["item"]["supplier_qualifies"] and "next_step" not in vc, vc
+pb = e4.call("supplier_certificates", {"supplier_code": "PB-MAN-0017", "item_code": "BRK-PAD-01"})  # no cert, none needed
+assert pb["un38_3"] == "none" and pb["item"]["supplier_qualifies"] and pb["certificates"] == [], pb
+bad = e4.call("supplier_certificates", {"supplier_code": "XX-NOPE-0001"})
+assert bad["ok"] is False and bad["ledgerline_code"] == "ERR-SUP-0030" and "find_supplier" in bad["next_step"], bad
+bad = e4.call("supplier_certificates", {"supplier_code": "VC-EIN-0042", "item_code": "BAT-5000"})
+assert bad["ok"] is False and bad["ledgerline_code"] == "ERR-ITM-0010", bad
+assert e4.call("supplier_certificates", {})["ok"] is False                                         # required
+assert e4.call("supplier_certificates", {"supplier_code": 42})["ok"] is False                      # type
+assert e4.call("supplier_certificates", {"supplier_code": "VC-EIN-0042", "limit": 0})["ok"] is False
+for i in range(45):                                                                                   # pagination
+    erp4.x("INSERT INTO sup_cert VALUES (?,?,?,?,?,?)", "VC-EIN-0042", "ISO9001", f"ISO-{i:02d}", "2027-01-01", "LMORENO", "2026-01-01")
+p1 = e4.call("supplier_certificates", {"supplier_code": "VC-EIN-0042"})
+p2 = e4.call("supplier_certificates", {"supplier_code": "VC-EIN-0042", "cursor": p1["next_cursor"]})
+p3 = e4.call("supplier_certificates", {"supplier_code": "VC-EIN-0042", "cursor": p2["next_cursor"]})
+assert p1["total"] == 46 and len(p1["certificates"]) == 20 and p3["next_cursor"] is None and \
+    len({c["doc_ref"] for c in p1["certificates"] + p2["certificates"] + p3["certificates"]}) == 46, (p1["total"], p3)
+assert e4.call("supplier_certificates", {"supplier_code": "VC-EIN-0042", "cert_type": "UN 38.3"})["total"] == 1
+import jsonschema
+for r in (nc, vc, pb, p1, p3):
+    jsonschema.validate(r, REGISTRY["supplier_certificates"].spec["output_schema"])
+print("SUPPLIER_CERTIFICATES OK")
+
+# ---- Lecture 4: idempotency and lost replies (the production-grade fix)
+def count(e, t):
+    return e.q1(f"SELECT count(*) n FROM {t}")["n"]
+erp5 = ERP(); k5 = Toolbox(erp5, "ECLARKE")
+base = {"item_code": "BAT-500", "quantity": 2000, "cost_centre": "PRD-07", "confirm": True}
+n0 = count(erp5, "pr_hdr")
+a = k5.call("create_purchase_request", {**base, "need_by": "9 Nov 2026"})
+b = k5.call("create_purchase_request", {**base, "need_by": "2026-11-09"})       # the same request, the date spelled differently
+assert a["ok"] and b.get("already_done") and count(erp5, "pr_hdr") == n0 + 1, (a, b)
+assert k5.call("create_purchase_request", {**base, "need_by": "next Monday"})["ok"] is False   # refused at the door
+assert k5.call("create_purchase_request", {**base, "need_by": " "})["ok"] is False
+erp6, ctx = None, None
+erp6 = ERP(); e6, d6, a6 = Toolbox(erp6, "ECLARKE"), Toolbox(erp6, "DOKAFOR"), Toolbox(erp6, "ATANAKA")
+pr6 = e6.call("create_purchase_request", {**base, "need_by": "2026-11-09"})
+erp6.inject("pr_approve", "timeout_after_commit")
+ap6 = d6.call("approve_purchase_request", {"request_no": pr6["request_no"], "decision": "approve"})
+assert ap6["ok"] and ap6["status_code"] == "AP", ap6                              # a lost reply is read back, not an error
+po6 = e6.call("create_purchase_order", {"supplier_code": "VC-EIN-0042", "request_no": pr6["request_no"], "confirm": True})
+e6.call("release_purchase_order", {"po_no": po6["po_no"]})
+erp6.inject("grn_save", "timeout_after_commit")
+g6 = a6.call("receive_goods", {"po_no": po6["po_no"], "quantity": 500, "confirm": True})
+assert g6["ok"] and g6["balance"] == 1500 and count(erp6, "grn_hdr") == 1, g6     # found, not posted twice
+m0 = count(erp6, "ntf_queue")
+erp6.inject("ntf_send", "timeout_after_commit")
+s6 = e6.call("send_message", {"to": "@daniel", "text": "PO released"})
+assert s6["ok"] and count(erp6, "ntf_queue") == m0 + 1, s6
+erp6.inject("ntf_send", "error_before")
+assert e6.call("send_message", {"to": "@daniel", "text": "again"})["ok"] is False and count(erp6, "ntf_queue") == m0 + 1
+print("IDEMPOTENCY OK")
+
+# ---- Lecture 4: the MCP definition and result fields
+c = MCPClient(build_toolbox_server(ERP(), "ECLARKE", names=ALL))
+defs = {t.name: t.model_dump(mode="json", by_alias=True, exclude_none=True) for t in c.list_tools()}
+assert len(defs) == 16 and all(d.get("title") and d.get("outputSchema") and d["annotations"].get("readOnlyHint") is not None
+                               and d["_meta"]["ledgerline/version"] for d in defs.values()), defs["check_stock"]
+assert defs["receive_goods"]["annotations"]["idempotentHint"] is False and defs["check_stock"]["annotations"]["readOnlyHint"]
+ok_res = c.call_tool("check_stock", {"item_code": "BAT-500"}).model_dump(mode="json", by_alias=True, exclude_none=True)
+err_res = c.call_tool("check_stock", {"item_code": "BAT-5000"}).model_dump(mode="json", by_alias=True, exclude_none=True)
+assert ok_res["structuredContent"]["free_total"] == 6600 and not ok_res.get("isError"), ok_res
+assert err_res["isError"] is True and err_res["structuredContent"]["ledgerline_code"] == "ERR-ITM-0010", err_res
+mt = MCPClientTools(c)
+assert json.loads(mt.call("check_stock", {"item_code": "BAT-5000"}))["ledgerline_code"] == "ERR-ITM-0010"   # passed through as is
+c.close()
+print("MCP FIELDS OK")

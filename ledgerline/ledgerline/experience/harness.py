@@ -144,7 +144,9 @@ def cell_safety_block(erp, tool: str, args: dict) -> dict | None:
 class AskNorthbridge:
     """One conversation: one player, one person (Emma, Daniel or Aiko), one stage."""
 
-    def __init__(self, erp, user: str = "ECLARKE", stage: str = "agent", guard=None, pid: str = ""):
+    def __init__(self, erp, user: str = "ECLARKE", stage: str = "agent", guard=None, pid: str = "",
+                 names: list[str] | None = None):
+        """names: the tools to serve (default: by stage; Lecture 4's experiments pass a smaller or larger set)."""
         from ..mcp_server import MCPClient, MCPClientTools
         from ..toolbox.mcp import build_toolbox_server
         from .players import locked_toolbox
@@ -156,7 +158,7 @@ class AskNorthbridge:
         self.busy = threading.Lock()
         self.client = self.tools = None
         if stage != "brain":
-            names = ["search_policy"] if stage == "knowledge" else None
+            names = names or (["search_policy"] if stage == "knowledge" else None)
             with erp.lock:
                 server = build_toolbox_server(erp, user, names=names, name="northbridge-toolbox")
             locked_toolbox(server.toolbox, erp.lock)  # every tool call runs under this Northbridge's lock

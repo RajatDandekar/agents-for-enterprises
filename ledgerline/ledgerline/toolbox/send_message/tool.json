@@ -4,7 +4,7 @@
   "category": "Messaging",
   "description": "Send a short message to a colleague or supplier (Slack handle like @daniel, or an email address). Goes through Ledgerline's notification queue.",
   "writes": true,
-  "version": "1.0",
+  "version": "1.1",
   "services": [
     "ntf_send"
   ],
@@ -41,5 +41,21 @@
   "example": {
     "to": "@daniel",
     "text": "PR/2026/04417 needs your approval."
+  },
+  "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": true
+  },
+  "policy": {
+    "ledgerline_reply_timeout_s": 30,
+    "reads_inside": "retried, at most 2 more times",
+    "on_lost_write_reply": "never resent blindly: look the document up (by its key or by what changed) and return it",
+    "on_busy_before_write": "ok=false with next_step; nothing was saved, so the same call is safe to repeat"
+  },
+  "release_notes": {
+    "1.1": "3 Nov 2026 (Lecture 4 production-grade pass): a lost ntf_send reply is looked up in the queue instead of coming back as TIMEOUT, so a retry no longer queues the message twice.",
+    "1.0": "28 Oct 2026: first toolbox release."
   }
 }

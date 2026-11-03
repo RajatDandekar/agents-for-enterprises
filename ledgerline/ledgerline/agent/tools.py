@@ -46,7 +46,7 @@ TOOL_CONTRACT = [
 
 # Legacy error codes, rewritten as instructions a model can act on.
 ERR_HELP = {
-    "ERR-PO-0412": "The tax code does not match the supplier's state. Use a -INTER code for suppliers outside England, -INTRA inside.",
+    "ERR-PO-0412": "The tax code does not match the supplier's country. Use VAT20-RC (reverse charge) for a supplier outside the UK, VAT20-UK inside.",
     "ERR-PO-0610": "Orders above £50,000 gross need a purchase request first. create_purchase_order does this for you; do not call services directly.",
     "ERR-PO-0715": "The order cannot be released in its current status. Check order_status: a DRAFT usually means the cost centre is closed; WAITING FOR APPROVAL means the approver has not signed yet.",
     "ERR-PO-0702": "The order is not waiting for approval, so there is nothing to approve or reject.",

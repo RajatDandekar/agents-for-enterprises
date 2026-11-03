@@ -15,6 +15,17 @@ the MCP server (ledgerline.toolbox.mcp), the workflow studio (each tool is a nod
 Every tool returns a dict with ok=True, or ok=False with `error` and `next_step` (what to do about it).
 Writes preview first (confirm=false) and commit only on confirm=true, carry an idempotency key, and return a
 receipt read back from Ledgerline.
+
+SPECS is the default tool set: the 15 tools in ORDER, exactly as recorded runs (cassettes), the Experience app and
+the Studio see them. Tools added later (EXTRAS, e.g. supplier_certificates, built in Lecture 4) live in REGISTRY,
+which holds every tool folder, and are served when named:
+    Toolbox(erp, "ECLARKE", names=ALL)            # all 16
+    python -m ledgerline.toolbox.mcp --all         # the same over MCP
+
+tool.json fields beyond the model-facing ones (Lecture 4, aligned with MCP):
+    annotations       MCP behaviour hints: readOnlyHint, destructiveHint, idempotentHint, openWorldHint
+    policy            the timeout and retry policy the code follows (reads retry, writes look themselves up)
+    argument_formats  checks done at the door that the model-facing schema does not spell out (e.g. need_by: date)
 """
 from __future__ import annotations
 
@@ -23,7 +34,7 @@ import json
 import pathlib
 
 from ..agent.tools import ToolError
-from ..erp.engine import ERP, ServiceTimeout, Session
+from ..erp.engine import ERP, ServiceTimeout, Session, _date
 from ..erp.receipts import install_receipts
 
 DIR = pathlib.Path(__file__).parent
@@ -31,6 +42,7 @@ ORDER = ["find_item", "check_stock", "find_supplier", "check_budget", "search_po
          "create_purchase_request", "list_my_approvals", "approve_purchase_request",
          "create_purchase_order", "approve_purchase_order", "release_purchase_order", "order_status",
          "receive_goods", "register_supplier", "send_message"]
+EXTRAS = ["supplier_certificates"]  # in SPECS, served when named (not in the default set, so recorded runs replay)
 TYPES = {"string": str, "integer": int, "number": (int, float), "boolean": bool, "object": dict, "array": list}
 
 
@@ -60,8 +72,8 @@ class ToolSpec:
         for k, v in (args or {}).items():
             if k not in props:
                 raise ToolError(f"{self.name} has no argument '{k}'.", f"Use only: {', '.join(props)}.")
-            if v is None or v == "":
-                continue
+            if v is None or v == "" or (isinstance(v, str) and not v.strip()):
+                continue  # empty or blank: treated as not given (so a blank required argument is refused below)
             want = props[k].get("type")
             if want == "integer" and isinstance(v, str) and v.strip().lstrip("-").isdigit():
                 v = int(v)
@@ -73,6 +85,15 @@ class ToolSpec:
                 raise ToolError(f"'{k}' should be {want}, got {type(v).__name__}.", f"Pass {k} as {want}.")
             if "enum" in props[k] and v not in props[k]["enum"]:
                 raise ToolError(f"'{k}' must be one of {props[k]['enum']}.", "Pick one of the allowed values.")
+            fmt = self.spec.get("argument_formats", {}).get(k)
+            if fmt == "positive" and v <= 0:
+                raise ToolError(f"'{k}' must be more than 0, got {v}.", f"Ask the user for the {k}.")
+            if fmt == "date":
+                try:  # the same date forms Ledgerline accepts, rewritten as YYYY-MM-DD before anything uses them
+                    v = _date(v)
+                except ValueError:
+                    raise ToolError(f"'{k}' must be a date written YYYY-MM-DD, got {v!r}.",
+                                    f"Rewrite {k} as YYYY-MM-DD and call again.")
             clean[k] = v
         missing = [r for r in self.spec["input_schema"].get("required", []) if r not in clean]
         if missing:
@@ -89,7 +110,15 @@ def load_specs() -> dict[str, ToolSpec]:
     return {n: found[n] for n in ORDER if n in found} | {n: s for n, s in found.items() if n not in ORDER}
 
 
-SPECS: dict[str, ToolSpec] = load_specs()
+REGISTRY: dict[str, ToolSpec] = load_specs()                                # every tool folder, extras included
+SPECS: dict[str, ToolSpec] = {n: s for n, s in REGISTRY.items() if n not in EXTRAS}  # the default set (15)
+DEFAULT = [n for n in ORDER if n in SPECS]   # what Toolbox() and build_toolbox_server() serve when no names are given
+ALL = list(REGISTRY)                         # every tool folder
+
+
+def spec_of(name: str) -> ToolSpec | None:
+    """A tool's spec: the default set first (a course module may add its own tool there), then the extras."""
+    return SPECS.get(name) or REGISTRY.get(name)
 
 
 class Toolbox:
@@ -99,18 +128,18 @@ class Toolbox:
         install_receipts(erp)
         self.erp, self.user = erp, user
         self.s = erp.session(user) if hasattr(erp, "session") else Session(erp, user)
-        self.names = [n for n in (names or list(SPECS)) if n in SPECS]
+        self.names = [n for n in (names or DEFAULT) if spec_of(n)]
 
     def schemas(self) -> list[dict]:
-        return [SPECS[n].schema() for n in self.names]
+        return [spec_of(n).schema() for n in self.names]
 
     def manifest(self) -> list[dict]:
-        return [SPECS[n].card() for n in self.names]
+        return [spec_of(n).card() for n in self.names]
 
     def call(self, name: str, args: dict | None = None) -> dict:
         if name not in self.names:
             return {"ok": False, "error": f"Unknown tool {name}.", "next_step": f"Use one of {self.names}."}
-        t = SPECS[name]
+        t = spec_of(name)
         try:
             return t.module.run(self.s, **t.check(args or {}))
         except ToolError as e:
@@ -120,6 +149,10 @@ class Toolbox:
                     "next_step": "Check with order_status before trying again.", "ledgerline_code": "TIMEOUT"}
         except TypeError as e:
             return {"ok": False, "error": f"Bad arguments: {e}", "next_step": "Check the tool's parameters."}
+        except Exception as e:  # noqa: BLE001  a bug in a tool must still come back inside the error contract
+            return {"ok": False, "error": f"The {name} tool failed inside ({type(e).__name__}).",
+                    "next_step": "Tell the user the tool failed; do not retry a write before checking its status.",
+                    "ledgerline_code": "INTERNAL"}
 
     def call_json(self, name: str, args: dict | None = None) -> str:
         return json.dumps(self.call(name, args), default=str)

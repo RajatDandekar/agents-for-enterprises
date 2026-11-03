@@ -1,0 +1,1223 @@
+{
+ "harness": "Claude Code 2.1.241, headless (claude -p, stream-json in and out), our stdio MCP server, no built-in tools",
+ "attempts": [
+  {
+   "attempt": 1,
+   "flags": "--safe-mode",
+   "result": "not run: --safe-mode also turns MCP servers off (init listed no servers and no tools); stopped before the model answered",
+   "init_mcp_servers": [],
+   "model_tokens": 0
+  },
+  {
+   "attempt": 2,
+   "flags": "--setting-sources project --disable-slash-commands, CLAUDE_CODE_DISABLE_CLAUDE_MDS=1",
+   "result": "not run on the Claude plan: the CLI is not logged in (`claude auth status` -> loggedIn false); Claude Code answered with its own error message",
+   "message": "Failed to authenticate: OAuth session expired and could not be refreshed",
+   "model_tokens": 0,
+   "but_the_mcp_handshake_ran": [
+    {
+     "dir": ">",
+     "message": {
+      "method": "initialize",
+      "params": {
+       "protocolVersion": "2025-11-25",
+       "capabilities": {
+        "roots": {
+         "listChanged": true
+        },
+        "elicitation": {}
+       },
+       "clientInfo": {
+        "name": "claude-code",
+        "title": "Claude Code",
+        "version": "2.1.241",
+        "description": "Anthropic's agentic coding tool",
+        "websiteUrl": "https://claude.com/claude-code"
+       }
+      },
+      "jsonrpc": "2.0",
+      "id": 0
+     }
+    },
+    {
+     "dir": "<",
+     "message": {
+      "jsonrpc": "2.0",
+      "id": 0,
+      "result": {
+       "protocolVersion": "2025-11-25",
+       "capabilities": {
+        "logging": {},
+        "prompts": {
+         "listChanged": true
+        },
+        "resources": {
+         "subscribe": false,
+         "listChanged": true
+        },
+        "tools": {
+         "listChanged": true
+        }
+       },
+       "serverInfo": {
+        "name": "ledgerline-toolbox",
+        "version": "4.1.6"
+       },
+       "instructions": "Northbridge Cycles' Ledgerline ERP, as ECLARKE. One tool per business activity."
+      }
+     }
+    },
+    {
+     "dir": ">",
+     "message": {
+      "jsonrpc": "2.0",
+      "method": "notifications/initialized"
+     }
+    },
+    {
+     "dir": ">",
+     "message": {
+      "method": "tools/list",
+      "jsonrpc": "2.0",
+      "id": 1
+     }
+    },
+    {
+     "dir": ">",
+     "message": {
+      "method": "prompts/list",
+      "jsonrpc": "2.0",
+      "id": 2
+     }
+    },
+    {
+     "dir": ">",
+     "message": {
+      "method": "resources/list",
+      "jsonrpc": "2.0",
+      "id": 3
+     }
+    },
+    {
+     "dir": "<",
+     "message": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+       "tools": [
+        {
+         "_meta": {
+          "ledgerline/version": "1.0",
+          "ledgerline/category": "Look up",
+          "ledgerline/writes": false,
+          "ledgerline/services": [
+           "itm_get",
+           "whs_list",
+           "stk_query"
+          ],
+          "ledgerline/policy": {
+           "ledgerline_reply_timeout_s": 30,
+           "on_busy_or_lost_reply": "retry the read, at most 2 more times",
+           "after_retries": "ok=false, ledgerline_code ERR-SYS-0503 or TIMEOUT, with next_step"
+          },
+          "fastmcp": {
+           "tags": []
+          }
+         },
+         "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true,
+          "title": "Check stock"
+         },
+         "description": "Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.",
+         "inputSchema": {
+          "properties": {
+           "item_code": {
+            "type": "string",
+            "description": "Ledgerline item code, e.g. BAT-500"
+           }
+          },
+          "required": [
+           "item_code"
+          ],
+          "type": "object"
+         },
+         "name": "check_stock",
+         "outputSchema": {
+          "properties": {
+           "ok": {
+            "type": "boolean",
+            "description": "true when it worked; false comes with error and next_step"
+           },
+           "item_code": {
+            "type": "string",
+            "description": ""
+           },
+           "warehouses": {
+            "type": "array",
+            "description": "per warehouse: on_hand, allocated, on_order, free"
+           },
+           "reorder_level": {
+            "type": "integer",
+            "description": ""
+           },
+           "cover_days": {
+            "type": "integer",
+            "description": "days the free stock lasts at the usual daily use"
+           },
+           "below_reorder": {
+            "type": "boolean",
+            "description": ""
+           }
+          },
+          "type": "object"
+         },
+         "title": "Check stock"
+        },
+        {
+         "_meta": {
+          "ledgerline/version": "1.0",
+          "ledgerline/category": "Look up",
+          "ledgerline/writes": false,
+          "ledgerline/services": [
+           "itm_search",
+           "itm_get"
+          ],
+          "ledgerline/policy": {
+           "ledgerline_reply_timeout_s": 30,
+           "on_busy_or_lost_reply": "retry the read, at most 2 more times",
+           "after_retries": "ok=false, ledgerline_code ERR-SYS-0503 or TIMEOUT, with next_step"
+          },
+          "fastmcp": {
+           "tags": []
+          }
+         },
+         "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true,
+          "title": "Find item"
+         },
+         "description": "Find stock items by description or code (e.g. '500 Wh battery pack'). Returns active items, best match first, with code, unit and whether they are lithium-cell parts.",
+         "inputSchema": {
+          "properties": {
+           "query": {
+            "type": "string",
+            "description": "words describing the item, or its code"
+           }
+          },
+          "required": [
+           "query"
+          ],
+          "type": "object"
+         },
+         "name": "find_item",
+         "outputSchema": {
+          "properties": {
+           "ok": {
+            "type": "boolean",
+            "description": "true when it worked; false comes with error and next_step"
+           },
+           "items": {
+            "type": "array",
+            "description": "item_code, description, unit, cell_safety"
+           }
+          },
+          "type": "object"
+         },
+         "title": "Find item"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "dir": "<",
+     "message": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": {
+       "prompts": []
+      }
+     }
+    },
+    {
+     "dir": "<",
+     "message": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": {
+       "resources": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "attempt": 3,
+   "flags": "as attempt 2, plus ANTHROPIC_BASE_URL=https://openrouter.ai/api (the course's OpenRouter key, never printed) and --model anthropic/claude-sonnet-5.5",
+   "result": "ran: the same Claude Code harness, its model calls billed through OpenRouter instead of the plan"
+  }
+ ],
+ "to_run_on_the_plan": "after `claude auth login`: python claude_harness.py single --setting-sources project --disable-slash-commands (and order, order_3turns), without L4_CLAUDE_VIA_OPENROUTER",
+ "runs": {
+  "single": {
+   "turns": [
+    "How many BAT-500 battery packs do we have in Manchester main stores?"
+   ],
+   "model": "anthropic/claude-sonnet-5.5",
+   "tools_exposed": 2,
+   "tool_sequence": [
+    "check_stock"
+   ],
+   "tool_calls": 1,
+   "tool_errors": 0,
+   "claude_code_turns": [
+    2
+   ],
+   "cost_usd_reported": 0.0167,
+   "seconds": 9.3,
+   "usage_per_user_turn": [
+    {
+     "input_tokens": 180,
+     "cache_creation_input_tokens": 5651,
+     "cache_read_input_tokens": 5236,
+     "output_tokens": 119,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 5651
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard"
+    }
+   ],
+   "final_reply": "Manchester main stores (WH-MAN-STR) has 5,400 BAT-500 battery packs on hand. None are allocated, so all 5,400 are free.",
+   "writes_committed": [],
+   "what_the_model_got_back": [
+    {
+     "tool_call": "toolu_01DDbrA3h9PEwBEjrfFjyVsc",
+     "is_error": null,
+     "looks_like": "structuredContent (compact JSON)"
+    }
+   ],
+   "steps": [
+    {
+     "t": 6.027,
+     "kind": "tool_call",
+     "tool": "check_stock",
+     "id": "toolu_01DDbrA3h9PEwBEjrfFjyVsc",
+     "arguments": {
+      "item_code": "BAT-500"
+     }
+    },
+    {
+     "t": 6.066,
+     "kind": "tool_result",
+     "id": "toolu_01DDbrA3h9PEwBEjrfFjyVsc",
+     "is_error": null,
+     "content": "{\"ok\":true,\"item_code\":\"BAT-500\",\"description\":\"Battery pack, 36 V 500 Wh\",\"unit\":\"NOS\",\"warehouses\":[{\"warehouse\":\"WH-MAN-STR\",\"name\":\"Manchester main stores\",\"on_hand\":5400,\"allocated\":0,\"on_order\":0,\"free\":5400},{\"warehouse\":\"WH-LDS-STR\",\"name\":\"Leeds stores\",\"on_hand\":1200,\"allocated\":0,\"on_order\":0,\"free\":1200}],\"free_total\":6600,\"on_order_total\":0,\"reorder_level\":3000,\"cover_days\":11,\"below_reorder\":false}"
+    },
+    {
+     "t": 7.502,
+     "kind": "assistant_text",
+     "text": "Manchester main stores (WH-MAN-STR) has 5,400 BAT-500 battery packs on hand. None are allocated, so all 5,400 are free."
+    }
+   ]
+  },
+  "order": {
+   "turns": [
+    "Order 2,000 BAT-500 packs from Voltway for the spring launch run.",
+    "Yes, go ahead. We need them by 9 November 2026."
+   ],
+   "model": "anthropic/claude-sonnet-5.5",
+   "tools_exposed": 16,
+   "tool_sequence": [
+    "find_supplier",
+    "find_item",
+    "check_stock",
+    "supplier_certificates",
+    "check_budget",
+    "check_budget",
+    "create_purchase_order",
+    "create_purchase_request"
+   ],
+   "tool_calls": 8,
+   "tool_errors": 1,
+   "claude_code_turns": [
+    7,
+    3
+   ],
+   "cost_usd_reported": 0.0614,
+   "seconds": 24.7,
+   "usage_per_user_turn": [
+    {
+     "input_tokens": 264,
+     "cache_creation_input_tokens": 10315,
+     "cache_read_input_tokens": 27725,
+     "output_tokens": 1109,
+     "output_tokens_details": {
+      "thinking_tokens": 253
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 10315
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard"
+    },
+    {
+     "input_tokens": 127,
+     "cache_creation_input_tokens": 1274,
+     "cache_read_input_tokens": 32340,
+     "output_tokens": 855,
+     "output_tokens_details": {
+      "thinking_tokens": 137
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 1274
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard"
+    }
+   ],
+   "final_reply": "The direct order was refused: 2,000 packs cost £285,600, and the cap is £50,000. Nothing has been saved. The purchase request preview looks like this:\n\n- **Item:** 2,000 × BAT-500.\n- **Cost centre:** PRD-07 (budget left £1,190,000).\n- **Need-by:** 2026-11-09.\n- **Estimated value:** £273,600, at an estimated rate of £114 each.\n- **Approval:** your limit is £250,000, so it will wait for DOKAFOR to approve.\n\nThe order's £285,600 differs from the request's £273,600 estimate. I'll confirm the final price when I create the order.\n\nOnce DOKAFOR approves, I'll create the order with Voltway Cells (VC-EIN-0042) and release it. The 9 November date is tight, so you may want to alert DOKAFOR.\n\nShould I submit the purchase request?",
+   "writes_committed": [],
+   "what_the_model_got_back": [
+    {
+     "tool_call": "toolu_01SwuUEnbamuwnNDA6jFt7w3",
+     "is_error": null,
+     "looks_like": "structuredContent (compact JSON)"
+    },
+    {
+     "tool_call": "toolu_01JFCcvuxaaURGe4nDv5hLrj",
+     "is_error": null,
+     "looks_like": "structuredContent (compact JSON)"
+    },
+    {
+     "tool_call": "toolu_01JQAH44uYv7WPGcLid93D5y",
+     "is_error": null,
+     "looks_like": "structuredContent (compact JSON)"
+    },
+    {
+     "tool_call": "toolu_01Vec3AM7j3tW3tgMx15RK8J",
+     "is_error": null,
+     "looks_like": "structuredContent (compact JSON)"
+    },
+    {
+     "tool_call": "toolu_01LmGSvzX738Ek1gjNmywVV1",
+     "is_error": null,
+     "looks_like": "structuredContent (compact JSON)"
+    },
+    {
+     "tool_call": "toolu_01XZHPGraA8rkXfQ8J8BtTbi",
+     "is_error": null,
+     "looks_like": "structuredContent (compact JSON)"
+    },
+    {
+     "tool_call": "toolu_01Sc4YVk4gM7GF7xuFNU1yR5",
+     "is_error": true,
+     "looks_like": "content text block (our JSON text)"
+    },
+    {
+     "tool_call": "toolu_01PnkiU79BzTGDaKkyjUUZCp",
+     "is_error": null,
+     "looks_like": "structuredContent (compact JSON)"
+    }
+   ],
+   "steps": [
+    {
+     "t": 3.33,
+     "kind": "assistant_text",
+     "text": "I'll start by looking up the supplier and the item."
+    },
+    {
+     "t": 3.585,
+     "kind": "tool_call",
+     "tool": "find_supplier",
+     "id": "toolu_01SwuUEnbamuwnNDA6jFt7w3",
+     "arguments": {
+      "name": "Voltway"
+     }
+    },
+    {
+     "t": 3.608,
+     "kind": "tool_result",
+     "id": "toolu_01SwuUEnbamuwnNDA6jFt7w3",
+     "is_error": null,
+     "content": "{\"ok\":true,\"matches\":[{\"supplier_code\":\"VC-EIN-0042\",\"name\":\"Voltway Cells\",\"city\":\"Eindhoven\",\"state\":\"NL\",\"status\":\"ACTIVE\",\"match\":0.74,\"cell_safety_certificate\":\"valid\"},{\"supplier_code\":\"VPC-ROT-0107\",\"name\":\"Voltway Paints & Coatings\",\"city\":\"Rotterdam\",\"state\":\"NL\",\"status\":\"ACTIVE\",\"match\":0.5,\"cell_safety_certificate\":\"none\"},{\"supplier_code\":\"VC-EIN-0009\",\"name\":\"Voltway Cells (old code, do not use)\",\"city\":\"Eindhoven\",\"state\":\"NL\",\"status\":\"BLOCKED\",\"match\":0.74,\"cell_safety_certificate\":\"none\"}],\"hint\":\"Only partial matches. Show them to the user and ask which one they mean. Blocked codes, never use: VC-EIN-0009.\"}"
+    },
+    {
+     "t": 3.862,
+     "kind": "tool_call",
+     "tool": "find_item",
+     "id": "toolu_01JFCcvuxaaURGe4nDv5hLrj",
+     "arguments": {
+      "query": "BAT-500"
+     }
+    },
+    {
+     "t": 3.875,
+     "kind": "tool_result",
+     "id": "toolu_01JFCcvuxaaURGe4nDv5hLrj",
+     "is_error": null,
+     "content": "{\"ok\":true,\"items\":[{\"item_code\":\"BAT-500\",\"description\":\"Battery pack, 36 V 500 Wh\",\"unit\":\"NOS\",\"cell_safety\":true},{\"item_code\":\"BAT-500-R\",\"description\":\"Battery pack, 36 V 500 Wh (refurbished)\",\"unit\":\"NOS\",\"cell_safety\":true}],\"note\":\"\"}"
+    },
+    {
+     "t": 3.948,
+     "kind": "tool_call",
+     "tool": "check_stock",
+     "id": "toolu_01JQAH44uYv7WPGcLid93D5y",
+     "arguments": {
+      "item_code": "BAT-500"
+     }
+    },
+    {
+     "t": 3.967,
+     "kind": "tool_result",
+     "id": "toolu_01JQAH44uYv7WPGcLid93D5y",
+     "is_error": null,
+     "content": "{\"ok\":true,\"item_code\":\"BAT-500\",\"description\":\"Battery pack, 36 V 500 Wh\",\"unit\":\"NOS\",\"warehouses\":[{\"warehouse\":\"WH-MAN-STR\",\"name\":\"Manchester main stores\",\"on_hand\":5400,\"allocated\":0,\"on_order\":0,\"free\":5400},{\"warehouse\":\"WH-LDS-STR\",\"name\":\"Leeds stores\",\"on_hand\":1200,\"allocated\":0,\"on_order\":0,\"free\":1200}],\"free_total\":6600,\"on_order_total\":0,\"reorder_level\":3000,\"cover_days\":11,\"below_reorder\":false}"
+    },
+    {
+     "t": 9.201,
+     "kind": "thinking",
+     "chars": 514
+    },
+    {
+     "t": 9.202,
+     "kind": "tool_call",
+     "tool": "supplier_certificates",
+     "id": "toolu_01Vec3AM7j3tW3tgMx15RK8J",
+     "arguments": {
+      "supplier_code": "VC-EIN-0042",
+      "item_code": "BAT-500"
+     }
+    },
+    {
+     "t": 9.206,
+     "kind": "tool_call",
+     "tool": "check_budget",
+     "id": "toolu_01LmGSvzX738Ek1gjNmywVV1",
+     "arguments": {}
+    },
+    {
+     "t": 9.214,
+     "kind": "tool_result",
+     "id": "toolu_01Vec3AM7j3tW3tgMx15RK8J",
+     "is_error": null,
+     "content": "{\"ok\":true,\"supplier_code\":\"VC-EIN-0042\",\"supplier_name\":\"Voltway Cells\",\"supplier_status\":\"ACTIVE\",\"as_of\":\"2026-10-26\",\"certificates\":[{\"cert_type\":\"UN38.3\",\"doc_ref\":\"UN38.3-TR/VC/2026/118\",\"valid_to\":\"2027-03-31\",\"valid\":true,\"days_left\":156}],\"un38_3\":\"valid\",\"item\":{\"item_code\":\"BAT-500\",\"needs_un38_3\":true,\"supplier_qualifies\":true},\"total\":1,\"next_cursor\":null}"
+    },
+    {
+     "t": 9.215,
+     "kind": "tool_result",
+     "id": "toolu_01LmGSvzX738Ek1gjNmywVV1",
+     "is_error": null,
+     "content": "{\"ok\":true,\"open\":[{\"code\":\"PRD-07\",\"name\":\"Spring launch run\"},{\"code\":\"PRD-03\",\"name\":\"Cargo e-bike line\"},{\"code\":\"MNT-01\",\"name\":\"Plant maintenance\"},{\"code\":\"ADM-01\",\"name\":\"Administration\"}]}"
+    },
+    {
+     "t": 11.699,
+     "kind": "thinking",
+     "chars": 173
+    },
+    {
+     "t": 11.7,
+     "kind": "tool_call",
+     "tool": "check_budget",
+     "id": "toolu_01XZHPGraA8rkXfQ8J8BtTbi",
+     "arguments": {
+      "cost_centre": "PRD-07"
+     }
+    },
+    {
+     "t": 11.72,
+     "kind": "tool_result",
+     "id": "toolu_01XZHPGraA8rkXfQ8J8BtTbi",
+     "is_error": null,
+     "content": "{\"ok\":true,\"code\":\"PRD-07\",\"name\":\"Spring launch run\",\"open\":true,\"closed_on\":null,\"budget_left\":1190000}"
+    },
+    {
+     "t": 15.909,
+     "kind": "assistant_text",
+     "text": "I haven't created anything yet. I need two answers from you first.\n\n1. **Which Voltway?** The search returned only partial matches. I assume you mean **Voltway Cells (VC-EIN-0042), Eindhoven**. It's active, and its UN 38.3 certificate is valid until 2027-03-31, so it qualifies for BAT-500. The other two are Voltway Paints & Coatings, which is the wrong business, and an old Voltway Cells code (VC-EIN-0009) that is blocked.\n2. **Need-by date?** You didn't give one, and the order needs it.\n\nHere's what I'll use unless you say otherwise:\n- **Item:** BAT-500, 36 V 500 Wh battery pack.\n- **Quantity:** 2,000.\n- **Cost centre:** PRD-07 (Spring launch run). It's open, with £1,190,000 of budget left.\n- **Route:** a direct order is capped at £50,000, so I'll try that first. If 2,000 packs go over the cap, I'll raise a purchase request, which needs approval, and then create the order from it.\n\nCurrent stock is 6,600 free (5,400 in Manchester and 1,200 in Leeds), with nothing on order. That's about 11 days of cover and above the reorder level of 3,000.\n\nOnce you confirm the supplier and give me the date, I'll run a preview and show you the price before saving anything."
+    },
+    {
+     "t": 17.169,
+     "kind": "assistant_text",
+     "text": "Running a preview of the direct order first."
+    },
+    {
+     "t": 17.876,
+     "kind": "tool_call",
+     "tool": "create_purchase_order",
+     "id": "toolu_01Sc4YVk4gM7GF7xuFNU1yR5",
+     "arguments": {
+      "supplier_code": "VC-EIN-0042",
+      "item_code": "BAT-500",
+      "quantity": 2000,
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-09",
+      "confirm": false
+     }
+    },
+    {
+     "t": 17.928,
+     "kind": "tool_result",
+     "id": "toolu_01Sc4YVk4gM7GF7xuFNU1yR5",
+     "is_error": true,
+     "content": "{\"ok\": false, \"error\": \"A direct order is limited to \\u00a350,000; this one is \\u00a3285,600.\", \"next_step\": \"Raise a purchase request first with create_purchase_request.\", \"ledgerline_code\": \"\"}"
+    },
+    {
+     "t": 19.394,
+     "kind": "assistant_text",
+     "text": "The order comes to £285,600, over the direct-order cap, so I'll preview a purchase request instead."
+    },
+    {
+     "t": 19.97,
+     "kind": "tool_call",
+     "tool": "create_purchase_request",
+     "id": "toolu_01PnkiU79BzTGDaKkyjUUZCp",
+     "arguments": {
+      "item_code": "BAT-500",
+      "quantity": 2000,
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-09",
+      "confirm": false
+     }
+    },
+    {
+     "t": 19.984,
+     "kind": "tool_result",
+     "id": "toolu_01PnkiU79BzTGDaKkyjUUZCp",
+     "is_error": null,
+     "content": "{\"ok\":true,\"preview\":{\"item_code\":\"BAT-500\",\"quantity\":2000,\"estimated_rate\":114,\"estimated_value\":273600,\"cost_centre\":\"PRD-07\",\"cost_centre_state\":\"OK\",\"need_by\":\"2026-11-09\",\"needs_approval\":true,\"your_limit\":250000,\"approver\":\"DOKAFOR\"},\"warnings\":[],\"note\":\"Nothing has been saved. Show this to the user and ask to confirm.\"}"
+    },
+    {
+     "t": 23.872,
+     "kind": "thinking",
+     "chars": 253
+    },
+    {
+     "t": 23.897,
+     "kind": "assistant_text",
+     "text": "The direct order was refused: 2,000 packs cost £285,600, and the cap is £50,000. Nothing has been saved. The purchase request preview looks like this:\n\n- **Item:** 2,000 × BAT-500.\n- **Cost centre:** PRD-07 (budget left £1,190,000).\n- **Need-by:** 2026-11-09.\n- **Estimated value:** £273,600, at an estimated rate of £114 each.\n- **Approval:** your limit is £250,000, so it will wait for DOKAFOR to approve.\n\nThe order's £285,600 differs from the request's £273,600 estimate. I'll confirm the final price when I create the order.\n\nOnce DOKAFOR approves, I'll create the order with Voltway Cells (VC-EIN-0042) and release it. The 9 November date is tight, so you may want to alert DOKAFOR.\n\nShould I submit the purchase request?"
+    }
+   ]
+  },
+  "order_3turns": {
+   "turns": [
+    "Order 2,000 BAT-500 packs from Voltway for the spring launch run.",
+    "Yes, go ahead. We need them by 9 November 2026.",
+    "Yes, submit the purchase request."
+   ],
+   "model": "anthropic/claude-sonnet-5.5",
+   "tools_exposed": 16,
+   "tool_sequence": [
+    "find_supplier",
+    "find_item",
+    "check_stock",
+    "supplier_certificates",
+    "check_budget",
+    "create_purchase_order",
+    "check_budget",
+    "create_purchase_request",
+    "create_purchase_request"
+   ],
+   "tool_calls": 9,
+   "tool_errors": 1,
+   "claude_code_turns": [
+    5,
+    5,
+    2
+   ],
+   "cost_usd_reported": 0.0505,
+   "seconds": 30.1,
+   "usage_per_user_turn": [
+    {
+     "input_tokens": 222,
+     "cache_creation_input_tokens": 1539,
+     "cache_read_input_tokens": 25894,
+     "output_tokens": 801,
+     "output_tokens_details": {
+      "thinking_tokens": 111
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 1539
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard"
+    },
+    {
+     "input_tokens": 169,
+     "cache_creation_input_tokens": 1768,
+     "cache_read_input_tokens": 41696,
+     "output_tokens": 1014,
+     "output_tokens_details": {
+      "thinking_tokens": 160
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 1768
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard"
+    },
+    {
+     "input_tokens": 85,
+     "cache_creation_input_tokens": 740,
+     "cache_read_input_tokens": 23499,
+     "output_tokens": 307,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 740
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard"
+    }
+   ],
+   "final_reply": "I submitted purchase request PR/2026/04417 for 2,000 BAT-500 (£273,600 estimated, cost centre PRD-07, need by 2026-11-09). It is waiting for DOKAFOR's approval, and nothing has been ordered yet. Once it's approved, I can create the purchase order with Voltway Cells and release it. Do you want me to message DOKAFOR to speed it up?",
+   "writes_committed": [
+    {
+     "tool": "create_purchase_request",
+     "arguments": {
+      "item_code": "BAT-500",
+      "quantity": 2000,
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-09",
+      "confirm": true
+     },
+     "result": {
+      "ok": true,
+      "request_no": "PR/2026/04417",
+      "status": "WAITING FOR APPROVAL",
+      "status_code": "PA",
+      "item_code": "BAT-500",
+      "quantity": 2000,
+      "estimated_value": 273600.0,
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-09",
+      "approver": "DOKAFOR",
+      "approved_by": null,
+      "next_step": "Waiting for DOKAFOR. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+     },
+     "ms": 1.92,
+     "ledgerline_calls": [
+      {
+       "seq": 29,
+       "screen": null,
+       "task": null,
+       "svc": "pr_search",
+       "payload": {
+        "raised_by": "ECLARKE"
+       },
+       "rc": "S",
+       "err_cd": null,
+       "msg": "",
+       "sps": [],
+       "timed_out": false
+      },
+      {
+       "seq": 30,
+       "screen": null,
+       "task": null,
+       "svc": "pr_fetch",
+       "payload": {
+        "itm_cd": "BAT-500"
+       },
+       "rc": "S",
+       "err_cd": null,
+       "msg": "",
+       "sps": [],
+       "timed_out": false
+      },
+      {
+       "seq": 31,
+       "screen": null,
+       "task": null,
+       "svc": "usr_get",
+       "payload": {
+        "user_id": "ECLARKE"
+       },
+       "rc": "S",
+       "err_cd": null,
+       "msg": "",
+       "sps": [],
+       "timed_out": false
+      },
+      {
+       "seq": 32,
+       "screen": null,
+       "task": null,
+       "svc": "bud_check",
+       "payload": {
+        "cc_cd": "PRD-07",
+        "amount": 0
+       },
+       "rc": "S",
+       "err_cd": null,
+       "msg": "",
+       "sps": [
+        "sp_budget_chk"
+       ],
+       "timed_out": false
+      },
+      {
+       "seq": 33,
+       "screen": null,
+       "task": null,
+       "svc": "pr_save",
+       "payload": {
+        "cc_cd": "PRD-07",
+        "need_dt": "2026-11-09",
+        "itm_cd": "BAT-500",
+        "qty": 2000,
+        "est_rate": 114.0,
+        "remarks": "key:KC3584E779519"
+       },
+       "rc": "S",
+       "err_cd": null,
+       "msg": "PR/2026/04417 SAVED",
+       "sps": [
+        "sp_pr_save",
+        "sp_doc_no_next"
+       ],
+       "timed_out": false
+      },
+      {
+       "seq": 34,
+       "screen": null,
+       "task": null,
+       "svc": "pr_submit",
+       "payload": {
+        "pr_no": "PR/2026/04417"
+       },
+       "rc": "S",
+       "err_cd": null,
+       "msg": "PR/2026/04417 SUBMITTED FOR APPROVAL",
+       "sps": [
+        "sp_appr_route",
+        "sp_ntf_enqueue"
+       ],
+       "timed_out": false
+      },
+      {
+       "seq": 35,
+       "screen": null,
+       "task": null,
+       "svc": "pr_get",
+       "payload": {
+        "pr_no": "PR/2026/04417"
+       },
+       "rc": "S",
+       "err_cd": null,
+       "msg": "",
+       "sps": [],
+       "timed_out": false
+      }
+     ]
+    }
+   ],
+   "what_the_model_got_back": [
+    {
+     "tool_call": "toolu_01VDdqMXpMBVesrmQWnujHeQ",
+     "is_error": null,
+     "looks_like": "structuredContent (compact JSON)"
+    },
+    {
+     "tool_call": "toolu_01PvXSTY1h48y1E5R9hGgR8C",
+     "is_error": null,
+     "looks_like": "structuredContent (compact JSON)"
+    },
+    {
+     "tool_call": "toolu_01MyyAWqiVVCBpjpghvbSJ6r",
+     "is_error": null,
+     "looks_like": "structuredContent (compact JSON)"
+    },
+    {
+     "tool_call": "toolu_01PHbtmD59UsHA8KNYD3TtfP",
+     "is_error": null,
+     "looks_like": "structuredContent (compact JSON)"
+    },
+    {
+     "tool_call": "toolu_01ChRbCT1sEqhUvME3LkJ35o",
+     "is_error": null,
+     "looks_like": "structuredContent (compact JSON)"
+    },
+    {
+     "tool_call": "toolu_016zE3oH6K3PaKkkv6UvBvrc",
+     "is_error": true,
+     "looks_like": "content text block (our JSON text)"
+    },
+    {
+     "tool_call": "toolu_01JHXJSx1hHCbnjX923iAKrf",
+     "is_error": null,
+     "looks_like": "structuredContent (compact JSON)"
+    },
+    {
+     "tool_call": "toolu_0129yZ6XtccC837EXDzzBvyx",
+     "is_error": null,
+     "looks_like": "structuredContent (compact JSON)"
+    },
+    {
+     "tool_call": "toolu_01VKdWhHZgaQKxZ1UtqTrD9e",
+     "is_error": null,
+     "looks_like": "structuredContent (compact JSON)"
+    }
+   ],
+   "steps": [
+    {
+     "t": 6.68,
+     "kind": "assistant_text",
+     "text": "I'll start by looking up the supplier and the item in parallel."
+    },
+    {
+     "t": 6.705,
+     "kind": "tool_call",
+     "tool": "find_supplier",
+     "id": "toolu_01VDdqMXpMBVesrmQWnujHeQ",
+     "arguments": {
+      "name": "Voltway"
+     }
+    },
+    {
+     "t": 6.724,
+     "kind": "tool_result",
+     "id": "toolu_01VDdqMXpMBVesrmQWnujHeQ",
+     "is_error": null,
+     "content": "{\"ok\":true,\"matches\":[{\"supplier_code\":\"VC-EIN-0042\",\"name\":\"Voltway Cells\",\"city\":\"Eindhoven\",\"state\":\"NL\",\"status\":\"ACTIVE\",\"match\":0.74,\"cell_safety_certificate\":\"valid\"},{\"supplier_code\":\"VPC-ROT-0107\",\"name\":\"Voltway Paints & Coatings\",\"city\":\"Rotterdam\",\"state\":\"NL\",\"status\":\"ACTIVE\",\"match\":0.5,\"cell_safety_certificate\":\"none\"},{\"supplier_code\":\"VC-EIN-0009\",\"name\":\"Voltway Cells (old code, do not use)\",\"city\":\"Eindhoven\",\"state\":\"NL\",\"status\":\"BLOCKED\",\"match\":0.74,\"cell_safety_certificate\":\"none\"}],\"hint\":\"Only partial matches. Show them to the user and ask which one they mean. Blocked codes, never use: VC-EIN-0009.\"}"
+    },
+    {
+     "t": 6.983,
+     "kind": "tool_call",
+     "tool": "find_item",
+     "id": "toolu_01PvXSTY1h48y1E5R9hGgR8C",
+     "arguments": {
+      "query": "BAT-500"
+     }
+    },
+    {
+     "t": 6.994,
+     "kind": "tool_result",
+     "id": "toolu_01PvXSTY1h48y1E5R9hGgR8C",
+     "is_error": null,
+     "content": "{\"ok\":true,\"items\":[{\"item_code\":\"BAT-500\",\"description\":\"Battery pack, 36 V 500 Wh\",\"unit\":\"NOS\",\"cell_safety\":true},{\"item_code\":\"BAT-500-R\",\"description\":\"Battery pack, 36 V 500 Wh (refurbished)\",\"unit\":\"NOS\",\"cell_safety\":true}],\"note\":\"\"}"
+    },
+    {
+     "t": 7.065,
+     "kind": "tool_call",
+     "tool": "check_stock",
+     "id": "toolu_01MyyAWqiVVCBpjpghvbSJ6r",
+     "arguments": {
+      "item_code": "BAT-500"
+     }
+    },
+    {
+     "t": 7.083,
+     "kind": "tool_result",
+     "id": "toolu_01MyyAWqiVVCBpjpghvbSJ6r",
+     "is_error": null,
+     "content": "{\"ok\":true,\"item_code\":\"BAT-500\",\"description\":\"Battery pack, 36 V 500 Wh\",\"unit\":\"NOS\",\"warehouses\":[{\"warehouse\":\"WH-MAN-STR\",\"name\":\"Manchester main stores\",\"on_hand\":5400,\"allocated\":0,\"on_order\":0,\"free\":5400},{\"warehouse\":\"WH-LDS-STR\",\"name\":\"Leeds stores\",\"on_hand\":1200,\"allocated\":0,\"on_order\":0,\"free\":1200}],\"free_total\":6600,\"on_order_total\":0,\"reorder_level\":3000,\"cover_days\":11,\"below_reorder\":false}"
+    },
+    {
+     "t": 11.092,
+     "kind": "thinking",
+     "chars": 314
+    },
+    {
+     "t": 11.098,
+     "kind": "tool_call",
+     "tool": "supplier_certificates",
+     "id": "toolu_01PHbtmD59UsHA8KNYD3TtfP",
+     "arguments": {
+      "supplier_code": "VC-EIN-0042",
+      "item_code": "BAT-500"
+     }
+    },
+    {
+     "t": 11.142,
+     "kind": "tool_result",
+     "id": "toolu_01PHbtmD59UsHA8KNYD3TtfP",
+     "is_error": null,
+     "content": "{\"ok\":true,\"supplier_code\":\"VC-EIN-0042\",\"supplier_name\":\"Voltway Cells\",\"supplier_status\":\"ACTIVE\",\"as_of\":\"2026-10-26\",\"certificates\":[{\"cert_type\":\"UN38.3\",\"doc_ref\":\"UN38.3-TR/VC/2026/118\",\"valid_to\":\"2027-03-31\",\"valid\":true,\"days_left\":156}],\"un38_3\":\"valid\",\"item\":{\"item_code\":\"BAT-500\",\"needs_un38_3\":true,\"supplier_qualifies\":true},\"total\":1,\"next_cursor\":null}"
+    },
+    {
+     "t": 14.352,
+     "kind": "assistant_text",
+     "text": "I need a few details from you before I can create the order.\n\n**Supplier:** \"Voltway\" matched more than one record:\n- **VC-EIN-0042, Voltway Cells (Eindhoven):** active. It holds a valid UN 38.3 certificate (UN38.3-TR/VC/2026/118, valid to 2027-03-31). BAT-500 needs this certificate, so this supplier qualifies.\n- VPC-ROT-0107, Voltway Paints & Coatings (Rotterdam): active, but has no cell-safety certificate.\n- VC-EIN-0009, Voltway Cells (old code): blocked, so I won't use it.\n\nI assume you mean Voltway Cells, VC-EIN-0042. Please confirm.\n\n**Missing details:**\n1. Which cost centre should pay?\n2. What is the need-by date for the spring launch run?\n\n**Stock:** There are 6,600 BAT-500 free across Manchester (5,400) and Leeds (1,200), which is about 11 days of cover. Nothing is on order, and stock is above the reorder level of 3,000.\n\nOnce I have these, I'll preview the order (price, tax and value) before saving anything."
+    },
+    {
+     "t": 17.084,
+     "kind": "thinking",
+     "chars": 179
+    },
+    {
+     "t": 17.092,
+     "kind": "tool_call",
+     "tool": "check_budget",
+     "id": "toolu_01ChRbCT1sEqhUvME3LkJ35o",
+     "arguments": {}
+    },
+    {
+     "t": 17.122,
+     "kind": "tool_result",
+     "id": "toolu_01ChRbCT1sEqhUvME3LkJ35o",
+     "is_error": null,
+     "content": "{\"ok\":true,\"open\":[{\"code\":\"PRD-07\",\"name\":\"Spring launch run\"},{\"code\":\"PRD-03\",\"name\":\"Cargo e-bike line\"},{\"code\":\"MNT-01\",\"name\":\"Plant maintenance\"},{\"code\":\"ADM-01\",\"name\":\"Administration\"}]}"
+    },
+    {
+     "t": 19.771,
+     "kind": "thinking",
+     "chars": 130
+    },
+    {
+     "t": 19.779,
+     "kind": "assistant_text",
+     "text": "The open cost centre \"Spring launch run\" is PRD-07, so I'll use that for a preview. Nothing is saved yet."
+    },
+    {
+     "t": 19.784,
+     "kind": "tool_call",
+     "tool": "create_purchase_order",
+     "id": "toolu_016zE3oH6K3PaKkkv6UvBvrc",
+     "arguments": {
+      "supplier_code": "VC-EIN-0042",
+      "item_code": "BAT-500",
+      "quantity": 2000,
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-09",
+      "confirm": false
+     }
+    },
+    {
+     "t": 19.805,
+     "kind": "tool_result",
+     "id": "toolu_016zE3oH6K3PaKkkv6UvBvrc",
+     "is_error": true,
+     "content": "{\"ok\": false, \"error\": \"A direct order is limited to \\u00a350,000; this one is \\u00a3285,600.\", \"next_step\": \"Raise a purchase request first with create_purchase_request.\", \"ledgerline_code\": \"\"}"
+    },
+    {
+     "t": 19.951,
+     "kind": "tool_call",
+     "tool": "check_budget",
+     "id": "toolu_01JHXJSx1hHCbnjX923iAKrf",
+     "arguments": {
+      "cost_centre": "PRD-07"
+     }
+    },
+    {
+     "t": 19.964,
+     "kind": "tool_result",
+     "id": "toolu_01JHXJSx1hHCbnjX923iAKrf",
+     "is_error": null,
+     "content": "{\"ok\":true,\"code\":\"PRD-07\",\"name\":\"Spring launch run\",\"open\":true,\"closed_on\":null,\"budget_left\":1190000}"
+    },
+    {
+     "t": 22.306,
+     "kind": "thinking",
+     "chars": 157
+    },
+    {
+     "t": 22.316,
+     "kind": "assistant_text",
+     "text": "The order comes to £285,600, which is over the £50,000 direct-order limit, so it needs a purchase request first. I'll preview that request."
+    },
+    {
+     "t": 22.339,
+     "kind": "tool_call",
+     "tool": "create_purchase_request",
+     "id": "toolu_0129yZ6XtccC837EXDzzBvyx",
+     "arguments": {
+      "item_code": "BAT-500",
+      "quantity": 2000,
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-09",
+      "confirm": false
+     }
+    },
+    {
+     "t": 22.35,
+     "kind": "tool_result",
+     "id": "toolu_0129yZ6XtccC837EXDzzBvyx",
+     "is_error": null,
+     "content": "{\"ok\":true,\"preview\":{\"item_code\":\"BAT-500\",\"quantity\":2000,\"estimated_rate\":114,\"estimated_value\":273600,\"cost_centre\":\"PRD-07\",\"cost_centre_state\":\"OK\",\"need_by\":\"2026-11-09\",\"needs_approval\":true,\"your_limit\":250000,\"approver\":\"DOKAFOR\"},\"warnings\":[],\"note\":\"Nothing has been saved. Show this to the user and ask to confirm.\"}"
+    },
+    {
+     "t": 25.715,
+     "kind": "assistant_text",
+     "text": "Here is the preview of the purchase request. Nothing is saved yet.\n\n- **Item:** 2,000 × BAT-500 (36 V 500 Wh battery pack)\n- **Cost centre:** PRD-07, Spring launch run. £1,190,000 budget is left.\n- **Need by:** 2026-11-09\n- **Estimated value:** £273,600 at £114 each\n- **Approval:** This is above your £250,000 limit, so it will wait for DOKAFOR to approve.\n\nThe direct-order check priced the order at £285,600 including tax, so the final figure may differ slightly from the estimate. Once DOKAFOR approves, I would create the purchase order with Voltway Cells (VC-EIN-0042) and release it.\n\nI also want to flag the timing. The need-by date is 6 days away, and approval and supplier lead time come before that.\n\nShould I submit the request?"
+    },
+    {
+     "t": 27.434,
+     "kind": "tool_call",
+     "tool": "create_purchase_request",
+     "id": "toolu_01VKdWhHZgaQKxZ1UtqTrD9e",
+     "arguments": {
+      "item_code": "BAT-500",
+      "quantity": 2000,
+      "cost_centre": "PRD-07",
+      "need_by": "2026-11-09",
+      "confirm": true
+     }
+    },
+    {
+     "t": 27.445,
+     "kind": "tool_result",
+     "id": "toolu_01VKdWhHZgaQKxZ1UtqTrD9e",
+     "is_error": null,
+     "content": "{\"ok\":true,\"request_no\":\"PR/2026/04417\",\"status\":\"WAITING FOR APPROVAL\",\"status_code\":\"PA\",\"item_code\":\"BAT-500\",\"quantity\":2000,\"estimated_value\":273600,\"cost_centre\":\"PRD-07\",\"need_by\":\"2026-11-09\",\"approver\":\"DOKAFOR\",\"approved_by\":null,\"next_step\":\"Waiting for DOKAFOR. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417.\"}"
+    },
+    {
+     "t": 29.277,
+     "kind": "assistant_text",
+     "text": "I submitted purchase request PR/2026/04417 for 2,000 BAT-500 (£273,600 estimated, cost centre PRD-07, need by 2026-11-09). It is waiting for DOKAFOR's approval, and nothing has been ordered yet. Once it's approved, I can create the purchase order with Voltway Cells and release it. Do you want me to message DOKAFOR to speed it up?"
+    }
+   ]
+  }
+ },
+ "findings": [
+  "Claude Code's MCP client: protocolVersion 2025-11-25, capabilities roots + elicitation; after initialize it asks tools/list, prompts/list and resources/list (logs/wire/claude_single_attempt2_auth.jsonl).",
+  "For an ok result Claude Code gave the model structuredContent (compact JSON, no spaces); for an isError result it gave the text block. Either way only the tool's returned JSON reached the model.",
+  "Claude knows nothing about Northbridge beyond the server's one-line instructions: on the order it looked up the supplier, item, stock, certificate and cost centres itself (8 calls) and asked which Voltway and which date; our harness's system prompt already names BAT-500, VC-EIN-0042 and PRD-07, so it made 4 calls.",
+  "With the same two user turns, our harness submitted the request (PR/2026/04417, waiting for Daniel); Claude Code previewed it and asked again. With a third turn ('Yes, submit the purchase request.') it submitted the same request.",
+  "Both harnesses tried a direct order first, got the £50,000 limit error from the tool, and recovered by raising a purchase request: the error contract's next_step did the steering."
+ ],
+ "comparison": {
+  "single": {
+   "ours": {
+    "sequence": [
+     "check_stock"
+    ],
+    "model_calls": 2,
+    "tokens_in": 1850,
+    "cost_gbp_est": 0.00167,
+    "model": "openrouter:google/gemini-3.8-flash"
+   },
+   "claude_code": {
+    "sequence": [
+     "check_stock"
+    ],
+    "cost_usd_reported": 0.0167,
+    "model": "anthropic/claude-sonnet-5.5"
+   }
+  },
+  "order_two_turns": {
+   "ours": {
+    "sequence": [
+     "supplier_certificates",
+     "create_purchase_order",
+     "create_purchase_request",
+     "create_purchase_request"
+    ],
+    "model_calls": 4,
+    "tokens_in": 10666,
+    "errors_recovered": [
+     "create_purchase_order"
+    ],
+    "cost_gbp_est": 0.01169,
+    "outcome": [
+     {
+      "pr_no": "PR/2026/04417",
+      "status": "PA",
+      "cc_cd": "PRD-07",
+      "need_dt": "2026-11-09",
+      "est_value": 273600.0,
+      "raised_by": "ECLARKE"
+     }
+    ]
+   },
+   "claude_code": {
+    "sequence": [
+     "find_supplier",
+     "find_item",
+     "check_stock",
+     "supplier_certificates",
+     "check_budget",
+     "check_budget",
+     "create_purchase_order",
+     "create_purchase_request"
+    ],
+    "tool_errors": 1,
+    "cost_usd_reported": 0.0614,
+    "outcome": "previewed the request, asked to confirm again (nothing saved)"
+   }
+  },
+  "order_three_turns_claude_code": {
+   "sequence": [
+    "find_supplier",
+    "find_item",
+    "check_stock",
+    "supplier_certificates",
+    "check_budget",
+    "create_purchase_order",
+    "check_budget",
+    "create_purchase_request",
+    "create_purchase_request"
+   ],
+   "cost_usd_reported": 0.0505,
+   "outcome": [
+    "PR/2026/04417 WAITING FOR APPROVAL"
+   ]
+  },
+  "in_our_control": [
+   "model (gemini-3.8-flash) and route",
+   "system prompt (who Emma is, the date, the codes, the rules)",
+   "which tools each person and stage sees",
+   "the battery-safety guard before every write",
+   "loop limit (14 rounds), wrap-up, empty-reply nudge",
+   "identity: the MCP server is bound to Emma's session",
+   "logging, tokens and cost per call (cassettes)"
+  ],
+  "left_to_claude": [
+   "Anthropic's system prompt and its orchestration",
+   "the order and number of steps",
+   "how results are shown to the model (structuredContent vs text)",
+   "per-call approval (pre-approved here with --allowedTools, since headless has no one to click)"
+  ]
+ }
+}
