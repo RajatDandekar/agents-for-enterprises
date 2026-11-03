@@ -1,0 +1,63 @@
+{
+ "film": "context",
+ "title": "What the model sees",
+ "kicker": "Lecture 4  ·  Section 8: what the LLM sees",
+ "section": 8,
+ "note": "text = subtitles; say = spelled for the voice. Numbers: experiments/logs/our_harness.json, run single (context_parts, steps[].prompt_tokens/completion_tokens) and run order_hands (context_parts, steps[].prompt_tokens, summary.tokens_in); tool definitions for 16 tools from run order.",
+ "blocks": [
+  {
+   "id": "b1",
+   "shot": "belief",
+   "text": "A common belief: when the model uses a tool, it sees everything inside it, the code, the old system, the database. It does not. It sees one thing: its context window. Let's fill it, part by part, with the real tokens from Emma's question.",
+   "say": "A common belief: when the model uses a tool, it sees everything inside it, the code, the old system, the database. It does not. It sees one thing: its context window. Let's fill it, part by part, with the real tokens from Emma's question."
+  },
+  {
+   "id": "b2",
+   "shot": "system",
+   "text": "First, the system prompt: who Emma is, today's date, and how to work. 654 tokens.",
+   "say": "First, the system prompt: who Emma is, today's date, and how to work. Six hundred and fifty-four tokens."
+  },
+  {
+   "id": "b3",
+   "shot": "defs",
+   "text": "Next, the tool definitions: a name, a description and an input schema for each tool. Two tools: 128 tokens. All 16 tools: 1,555 tokens, sent on every call.",
+   "say": "Next, the tool definitions: a name, a description and an input schema for each tool. Two tools: a hundred and twenty-eight tokens. All sixteen tools: fifteen hundred and fifty-five tokens, sent on every call."
+  },
+  {
+   "id": "b4",
+   "shot": "user",
+   "text": "Then Emma's question: 17 tokens. The model reads all 799, and answers with a tool call, not with words: check_stock, BAT-500. 23 tokens.",
+   "say": "Then Emma's question: seventeen tokens. The model reads all seven hundred and ninety-nine, and answers with a tool call, not with words: check stock, bat five hundred. Twenty-three tokens."
+  },
+  {
+   "id": "b5",
+   "shot": "wall",
+   "text": "Now the tool runs, on the other side of this wall. tool.py, four legacy services, the database, Emma's session and her password. None of it enters the context. The model cannot see past the wall.",
+   "say": "Now the tool runs, on the other side of this wall. Tool dot pie, four legacy services, the database, Emma's session and her password. None of it enters the context. The model cannot see past the wall."
+  },
+  {
+   "id": "b6",
+   "shot": "result",
+   "text": "One thing comes back through the slot: the JSON the tool returned. 229 tokens. The 5,400 is in there, and it is all the model knows about Ledgerline.",
+   "say": "One thing comes back through the slot: the JSON the tool returned. Two hundred and twenty-nine tokens. The five thousand four hundred is in there, and it is all the model knows about Ledgerline."
+  },
+  {
+   "id": "b7",
+   "shot": "reply",
+   "text": "The second call reads all 1,051 tokens again, and writes the answer in 57: Manchester main stores has 5,400 packs.",
+   "say": "The second call reads all one thousand and fifty-one tokens again, and writes the answer in fifty-seven: Manchester main stores has five thousand four hundred packs."
+  },
+  {
+   "id": "b8",
+   "shot": "order",
+   "text": "Now Emma's full order, on a prompt with no codes, and all 16 tools. Every call re-sends the whole context, plus each new call and result. One policy search returned 610 tokens, and it rides along on every later call. Over eleven calls the context grows from 1,916 to 4,035 tokens: 34,984 read in all.",
+   "say": "Now Emma's full order, on a prompt with no codes, and all sixteen tools. Every call re-sends the whole context, plus each new call and result. One policy search returned six hundred and ten tokens, and it rides along on every later call. Over eleven calls the context grows from nineteen hundred and sixteen to four thousand and thirty-five tokens: thirty-four thousand, nine hundred and eighty-four read in all."
+  },
+  {
+   "id": "b9",
+   "shot": "close",
+   "text": "So the model never sees inside a tool. It sees what you expose, the calls it makes, and what your tools return. Write those well. They are all it has.",
+   "say": "So the model never sees inside a tool. It sees what you expose, the calls it makes, and what your tools return. Write those well. They are all it has."
+  }
+ ]
+}

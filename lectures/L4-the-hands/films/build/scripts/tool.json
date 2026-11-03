@@ -1,0 +1,57 @@
+{
+ "film": "tool",
+ "title": "Inside a tool",
+ "kicker": "Lecture 4  ·  Section 3: open a tool",
+ "section": 3,
+ "note": "text = subtitles; say = spelled for the voice. Every number from experiments/logs/anatomy_check_stock.json (the recorded check_stock call: model request from logs/our_harness.json run single, the 4 legacy calls, the tool result, the error paths).",
+ "blocks": [
+  {
+   "id": "b1",
+   "shot": "ask",
+   "text": "Emma asks: how many BAT-500 battery packs do we have in Manchester main stores? The model cannot open Ledgerline. It can only write text, so it writes a request.",
+   "say": "Emma asks: how many bat five hundred battery packs do we have in Manchester main stores? The model cannot open Ledgerline. It can only write text, so it writes a request."
+  },
+  {
+   "id": "b2",
+   "shot": "request",
+   "text": "Here is the request, a tool call: the name check_stock, and one argument, item_code BAT-500. Nothing has happened yet.",
+   "say": "Here is the request, a tool call: the name check stock, and one argument, item code bat five hundred. Nothing has happened yet."
+  },
+  {
+   "id": "b3",
+   "shot": "door",
+   "text": "First it meets tool.json, the tool's contract. The input schema asks for one field, item_code: a string, required. This request passes. But what if the model sent the number 500? The door refuses it: item_code should be string, got int. Zero calls reach Ledgerline.",
+   "say": "First it meets tool dot JSON, the tool's contract. The input schema asks for one field, item code: a string, required. This request passes. But what if the model sent the number five hundred? The door refuses it: item code should be string, got int. Zero calls reach Ledgerline."
+  },
+  {
+   "id": "b4",
+   "shot": "inside",
+   "text": "Behind the door is tool.py: 26 lines of Python, running in Emma's own Ledgerline session. It calls the legacy services: itm_get for the item, whs_list for the warehouses, then stk_query twice, for Manchester and for Leeds.",
+   "say": "Behind the door is tool dot pie: twenty-six lines of Python, running in Emma's own Ledgerline session. It calls the legacy services: item get for the item, warehouse list for the warehouses, then stock query twice, for Manchester and for Leeds."
+  },
+  {
+   "id": "b5",
+   "shot": "legacy",
+   "text": "Ledgerline answers in terse envelopes. rc: S. err_cd: null. An empty msg, and a data block of short codes. Manchester: 5,400 on hand. Leeds: 1,200.",
+   "say": "Ledgerline answers in terse envelopes. R C: S. Error code: null. An empty message, and a data block of short codes. Manchester: five thousand four hundred on hand. Leeds: twelve hundred."
+  },
+  {
+   "id": "b6",
+   "shot": "result",
+   "text": "The tool turns four envelopes into one clean, typed result. Each warehouse with its free stock, 6,600 in total, and 11 days of cover. 842 bytes of legacy replies become 457. Only this goes back to the model.",
+   "say": "The tool turns four envelopes into one clean, typed result. Each warehouse with its free stock, six thousand six hundred in total, and eleven days of cover. Eight hundred and forty-two bytes of legacy replies become four hundred and fifty-seven. Only this goes back to the model."
+  },
+  {
+   "id": "b7",
+   "shot": "error",
+   "text": "And when the request is wrong? Ask for BAT-5000, which does not exist. itm_get answers rc E, ERR-ITM-0010, ITEM NOT FOUND. The tool turns that into ok: false, the error in words, and a next step: use find_item with a description.",
+   "say": "And when the request is wrong? Ask for bat five thousand, which does not exist. Item get answers R C, E: error I T M zero zero one zero, item not found. The tool turns that into OK: false, the error in words, and a next step: use find item with a description."
+  },
+  {
+   "id": "b8",
+   "shot": "close",
+   "text": "So every tool has three parts: a contract the request must meet, code that talks to the old system, and one clean result or a clear error. Open any tool in the toolbox, and you will find the same three.",
+   "say": "So every tool has three parts: a contract the request must meet, code that talks to the old system, and one clean result or a clear error. Open any tool in the toolbox, and you will find the same three."
+  }
+ ]
+}
