@@ -111,6 +111,10 @@ def chain_steps(rec, kind_label):
                                      "chosen from the index") + f" (decided by call {t})",
                           "next_links": nxt, "call": t, "tokens_in": call.get("tokens_in"),
                           "tokens_out": call.get("tokens_out"), "seconds": call.get("llm_seconds")})
+        elif c["step"] == "rule":
+            steps.append({"kind": "rule", "label": c["what"], "page": c["what"],
+                          "detail": f"a rule that applies: linked from [[{c.get('from')}]] ({c.get('votes')} page(s) read "
+                                    "link to it), opened by code before the answer, no LLM call"})
         elif c["step"] == "source":
             ex = next((i for i in rec.get("items", []) if i.get("text") and c.get("what") and
                        (c["what"].rsplit("/", 1)[-1][:25] in (i.get("cite") or "") or
@@ -155,11 +159,14 @@ def build_chains():
                         cited.append(rec["items"][n - 1].get("cite") or rec["items"][n - 1]["id"])
                 ti = (rec.get("tokens_in") or 0) + (rec.get("answer_tokens_in") or 0)
                 to = (rec.get("tokens_out") or 0) + (rec.get("answer_tokens_out") or 0)
-                out[key] = {"note": CHAIN_NOTE, "question": rec["question"], "kind": "LLM Wiki (navigation)" if kind == "wiki" else
-                            "Hybrid (search wiki sections, then navigate)", "steps": chain_steps(rec, kind),
+                out[key] = {"note": CHAIN_NOTE, "question": rec["question"], "kind": {"wiki": "LLM Wiki (navigation)",
+                            "wiki-rules": "LLM Wiki (navigation + rules that apply)"}.get(kind,
+                            "Hybrid (search wiki sections, then navigate)"), "steps": chain_steps(rec, kind),
                             "answer": rec.get("answer"), "cited": cited, "fact": rec.get("fact"),
                             "totals": {"llm_calls": (rec.get("nav_calls") or 0) + 1, "tokens_in": ti, "tokens_out": to,
-                                       "seconds": round((rec.get("seconds") or 0) + (rec.get("answer_seconds") or 0), 2)}}
+                                       "seconds": round(sum(c.get("llm_seconds") or 0 for c in rec.get("calls") or [])
+                                                        + (rec.get("search_ms") or 0) / 1000
+                                                        + (rec.get("answer_seconds") or 0), 2)}}
         fb = d.get("fileback") or {}
         for label, rec in (fb.get("again") or {}).items():
             out[f"Q-EMMA after file-back ({label})"] = {

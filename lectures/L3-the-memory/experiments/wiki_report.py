@@ -9,7 +9,11 @@ from collections import Counter
 LOGS = pathlib.Path(__file__).resolve().parent / "logs"
 TYPES = ["single_lookup", "procedure", "rule", "service_field", "table_lookup", "multi_hop", "version_conflict",
          "exact_code", "not_in_docs", "permission"]
-LABEL = {"wiki": "LLM Wiki (index navigation)", "hybrid": "Hybrid (search wiki sections, then navigate)",
+LATENCY_NOTE = ("Latency = recorded API seconds of every LLM call on the question's path (navigation calls + the answer "
+                "call) + measured section-search time. Navigation calls replayed from cassettes keep their original "
+                "seconds, so replayed and live questions are timed the same way; 429 waits are excluded. The harness's "
+                "own wall-clock retrieval_s is ~0 for replayed questions and is kept only as harness_wall_retrieval_p50_s.")
+LABEL = {"wiki-rules": "LLM Wiki + rules that apply (multi-hop subset only)", "wiki": "LLM Wiki (index navigation)", "hybrid": "Hybrid (search wiki sections, then navigate)",
          "hybrid-search": "Wiki sections as RAG units (search only, no navigation)"}
 
 
@@ -27,13 +31,19 @@ def table(rep):
     recs = rep["records"]
     s = rep["summary"]
 
+    def api_lat(r):
+        c = r.get("chain") or {}
+        nav = sum(x.get("llm_seconds") or 0 for x in c.get("calls") or []) + (c.get("search_ms") or 0) / 1000
+        return nav, nav + (r.get("llm_seconds") or 0)
+
     def row(rs, agg):
         calls = [(r.get("chain") or {}).get("nav_calls", 0) + 1 for r in rs]
+        lat = [api_lat(r) for r in rs]
         return {"n": agg.get("n"), "answer_correct": agg.get("answer_correct"), "fact_correct": agg.get("fact_correct"),
                 "citation_correct": agg.get("citation_correct"), "citation_precision": agg.get("citation_precision"),
-                "retrieval_p50_s": (agg.get("retrieval_s") or {}).get("p50"),
-                "retrieval_p95_s": (agg.get("retrieval_s") or {}).get("p95"),
-                "answer_p50_s": (agg.get("total_s") or {}).get("p50"), "answer_p95_s": (agg.get("total_s") or {}).get("p95"),
+                "retrieval_p50_s": pct([x[0] for x in lat], 50), "retrieval_p95_s": pct([x[0] for x in lat], 95),
+                "answer_p50_s": pct([x[1] for x in lat], 50), "answer_p95_s": pct([x[1] for x in lat], 95),
+                "harness_wall_retrieval_p50_s": (agg.get("retrieval_s") or {}).get("p50"),
                 "llm_calls_mean": round(sum(calls) / len(calls), 2) if calls else None,
                 "llm_calls_max": max(calls) if calls else None, "cost_per_q_usd": agg.get("cost_per_q_usd"),
                 "tokens_in_per_q": agg.get("tokens_in_per_q"), "tokens_out_per_q": agg.get("tokens_out_per_q")}
@@ -64,13 +74,19 @@ def main():
     res = {"note": "Every number here is computed from the logged golden-set runs (records in wiki_eval_<method>.json). "
                    "Same harness (ledgerline/course/l3/evaluate.py), answer model, prompt, judge and prices as RAG.",
            "methods": {}}
-    for kind in ("wiki", "hybrid", "hybrid-search"):
-        p = LOGS / f"wiki_eval_{kind}.json"
+    res["latency_note"] = LATENCY_NOTE
+    for kind in ("wiki", "hybrid", "hybrid-search", "wiki-rules"):
+        p = LOGS / f"wiki_eval_{kind}.json" if kind != "wiki-rules" else LOGS / "wiki_eval_wiki-rules_21.json"
         if not p.exists():
             res["methods"][kind] = {"label": LABEL[kind], "status": "NOT RUN"}
             continue
         rep = json.loads(p.read_text())
+        provs = {}
         res["methods"][kind] = {"label": LABEL[kind], "answer_model": rep.get("answer_model"),
+                                "provider_live_calls": rep.get("provider_live_calls", "openrouter"),
+                                "live_calls_this_run": rep.get("live_calls_this_run"),
+                                "live_usd_this_run": rep.get("live_usd_this_run"),
+                                "replayed_calls_this_run": rep.get("replayed_calls_this_run"),
                                 "shards": rep.get("shards"), "wall_seconds": rep.get("wall_seconds"), **table(rep)}
     # navigation methods whose golden-set run stopped at the answer step (OpenRouter key out of credit, HTTP 402):
     # retrieval scored by replaying the recorded navigation calls (no new calls), compared on the same questions
@@ -95,8 +111,9 @@ def main():
 
         lat = [r["retrieval_s"] for r in recs]
         calls = [r["nav_calls"] for r in recs]
-        res["methods"][kind] = {**res["methods"].get(kind, {}), "label": LABEL[kind],
-            "status": "PARTIAL: navigation ran for every question; the run stopped before the shared answer step "
+        res["methods"].setdefault(kind + "_replay_3nov", {})
+        res["methods"][kind + "_replay_3nov"] = {"label": LABEL[kind] + ", retrieval replay before the provider switch",
+            "status": "SUPERSEDED by the full run above; kept for the record. PARTIAL: navigation ran for every question; the run stopped before the shared answer step "
                       "(OpenRouter key limit, HTTP 402). Retrieval below is from replaying the recorded calls; "
                       "answer accuracy, citations and end-to-end latency were NOT measured.",
             "n_questions_scored": d["n_scored"], "n_questions_missing": d["n_missing"],
@@ -111,6 +128,11 @@ def main():
             "hybrid_search_on_same_questions": agg([hs_by[i]["retrieval"] for i in ids if i in hs_by]) if hs_by else None,
             "chain_steps_total": dict(Counter(c["step"] for r in recs for c in (r.get("chain") or [])))}
     (LOGS / "wiki_eval.json").write_text(json.dumps(res, indent=1, ensure_ascii=False))
+    ab = LOGS / "wiki_provider_ab.json"
+    if ab.exists():
+        a = json.loads(ab.read_text())
+        res["answer_model_consistency"] = {k: a[k] for k in ("provider_a", "provider_b", "n", "same_retrieved_items",
+                                                            "judge_agree", "summary")}
     for k, m in res["methods"].items():
         if "overall" in m:
             o = m["overall"]

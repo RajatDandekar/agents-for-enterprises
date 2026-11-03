@@ -66,7 +66,20 @@ image = (
 )
 app = modal.App("northbridge-wiki", image=image)
 vol = modal.Volume.from_name("northbridge-wiki", create_if_missing=True)
-secret = modal.Secret.from_dict({"OPENROUTER_API_KEY": _key()}) if modal.is_local() else modal.Secret.from_dict({})
+def _gkey():
+    """Google's key for gemini-3.8-flash direct (Rajat, 3 Nov: continue on it after the OpenRouter key's limit)."""
+    if not modal.is_local():
+        return ""
+    for line in open("/Users/raj/Claude_Brain/wm-lecture6-ijepa/.env"):
+        if line.startswith("GEMINI_API_KEY"):
+            return line.split("=", 1)[1].strip().strip('"').strip("'")
+    return ""
+
+
+PROVIDER = os.environ.get("LEDGER_WIKI_PROVIDER", "google-direct")
+secret = (modal.Secret.from_dict({"OPENROUTER_API_KEY": _key(), "GEMINI_API_KEY": _gkey(),
+                                  "LEDGER_WIKI_PROVIDER": PROVIDER})
+          if modal.is_local() else modal.Secret.from_dict({}))
 
 
 def _log(*a):
@@ -119,9 +132,11 @@ def _methods(kind: str, wiki_dir: str, suffix: str = ""):
 
     w = WQ.Wiki(wiki_dir, dump="/dump")
     w.units()  # parse the dump once (cached on the volume) before any timing
-    nav_llm = WikiLLM("L3v4_wiki_nav" + suffix, max_tokens=4000)
+    nav_llm = WikiLLM("L3v4_wiki_nav" + suffix, max_tokens=4000, read_also=["L3v4_wiki_nav"])
     if kind == "wiki":
         m = WQ.Navigator(w, nav_llm)
+    elif kind == "wiki-rules":
+        m = WQ.Navigator(w, nav_llm, expand_rules=3)
     else:
         si = WQ.SectionIndex(w, qcache=f"queries_bge-small{suffix}.jsonl")
         si.qvec("warm-up: load the embedding model before any question is timed")
@@ -174,14 +189,18 @@ def eval_shard(kind: str, shard: int, nshards: int, ids: str = "", wiki_dir: str
                                                     "search_ms", "backoff_s")}
         return out
 
-    ans = WikiLLM("L3v4_wiki_answers" + sfx, max_tokens=2048)
-    jud = WikiLLM("L3v4_wiki_judge" + sfx, max_tokens=512)
+    ans = WikiLLM("L3v4_wiki_answers" + sfx, max_tokens=2048, read_also=["L3v4_wiki_answers"])
+    jud = WikiLLM("L3v4_wiki_judge" + sfx, max_tokens=512, read_also=["L3v4_wiki_judge"])
     rep = E.run(method, name=kind, G=G, qs=qs, answer_llm=ans, judge_llm=jud, workers=8)
+    from ledgerline.course.l3.wiki_llm import live_stats
+
     for r in rep["records"]:
         q = G.by_id[r["id"]]
         r["chain"] = chains.get(q["question"])
     vol.commit()
-    return rep["records"]
+    return {"records": rep["records"], "live": {"nav": live_stats(nav_llm), "answer": live_stats(ans),
+                                                "judge": live_stats(jud)},
+            "replayed_calls": sum(1 for l in (nav_llm, ans, jud) for r in l.log if r.replayed)}
 
 
 @app.function(volumes={"/vol": vol}, secrets=[secret], timeout=6 * 3600, cpu=2, memory=4096)
@@ -201,13 +220,25 @@ def eval_run(kind: str = "wiki", nshards: int = 4, ids: str = "", wiki_src: str 
         WQ.SectionIndex(WQ.Wiki(wiki_dir, dump="/dump"))
     vol.commit()
     t0 = time.time()
-    recs = []
+    recs, live, replayed = [], {}, 0
     for part in eval_shard.starmap([(kind, i, nshards, ids, wiki_dir) for i in range(nshards)]):
-        recs += part
+        recs += part["records"]
+        replayed += part["replayed_calls"]
+        for role, byp in part["live"].items():
+            for prov, d in byp.items():
+                t = live.setdefault(role, {}).setdefault(prov, {"calls": 0, "tokens_in": 0, "tokens_out": 0, "usd": 0.0})
+                for k in t:
+                    t[k] = round(t[k] + d[k], 5)
     import hashlib
 
     ev = pathlib.Path(E.__file__).read_bytes()
-    rep = {"name": kind, "records": recs, "summary": E.summarize(recs), "shards": nshards,
+    rep = {"name": kind, "provider_live_calls": os.environ.get("LEDGER_WIKI_PROVIDER", "openrouter"),
+           "live_calls_this_run": live, "replayed_calls_this_run": replayed,
+           "live_usd_this_run": round(sum(d["usd"] for byp in live.values() for d in byp.values()), 4),
+           "provider_note": "calls replayed from cassettes were served by openrouter (google/gemini-3.8-flash) on 3 Nov "
+                            "before its key limit; live calls in this run went to the provider named here. Each "
+                            "cassette record's 'model' field names its provider.",
+           "records": recs, "summary": E.summarize(recs), "shards": nshards,
            "wall_seconds": round(time.time() - t0, 1), "evaluate_py_sha1": hashlib.sha1(ev).hexdigest()[:12],
            "answer_system_sha1": hashlib.sha1(E.ANSWER_SYSTEM.encode()).hexdigest()[:12]}
     pathlib.Path("/vol/logs").mkdir(exist_ok=True)
@@ -266,8 +297,8 @@ def chains_run(ids: str = "Q-EMMA,Q-0412", fileback: str = "Q-EMMA"):
 
     vol.reload()
     G = E.Golden("/dump")
-    ans = WikiLLM("L3v4_wiki_answers__chains", max_tokens=2048)
-    nav_llm = WikiLLM("L3v4_wiki_nav__chains", max_tokens=4000)
+    ans = WikiLLM("L3v4_wiki_answers__chains", max_tokens=2048, read_also=["L3v4_wiki_answers"])
+    nav_llm = WikiLLM("L3v4_wiki_nav__chains", max_tokens=4000, read_also=["L3v4_wiki_nav"])
     w = WQ.Wiki("/vol/wiki_v4", dump="/dump")
     w.units()
     si = WQ.SectionIndex(w, qcache="queries_bge-small__chains.jsonl")
@@ -275,8 +306,9 @@ def chains_run(ids: str = "Q-EMMA,Q-0412", fileback: str = "Q-EMMA"):
     out = {"chains": {}, "fileback": {}}
     for qid in ids.split(","):
         q = G.by_id[qid]
-        for kind in ("wiki", "hybrid"):
-            m = WQ.Navigator(w, nav_llm) if kind == "wiki" else WQ.Hybrid(w, nav_llm, si)
+        for kind in ("wiki", "wiki-rules", "hybrid"):
+            m = (WQ.Navigator(w, nav_llm) if kind == "wiki" else WQ.Navigator(w, nav_llm, expand_rules=3)
+                 if kind == "wiki-rules" else WQ.Hybrid(w, nav_llm, si))
             r = m.method(q["question"], E.C.role_of(q))
             a = E.answer(q, r["items"], ans)
             out["chains"].setdefault(qid, {})[kind] = {
@@ -292,19 +324,19 @@ def chains_run(ids: str = "Q-EMMA,Q-0412", fileback: str = "Q-EMMA"):
     wd = _wiki_copy("/vol/wiki_v4", "/vol/wiki_v4_fileback")
     w2 = WQ.Wiki(wd, dump="/dump")
     q = G.by_id[fileback]
-    r = WQ.Navigator(w2, nav_llm).navigate(q["question"], "PUR-EXEC")
+    r = WQ.Navigator(w2, nav_llm, expand_rules=3).navigate(q["question"], "PUR-EXEC")
     a = E.answer(q, r["items"], ans)
     fb = WQ.file_back(w2, q["question"], a["answer"], r["items"], a["cited"])
     w3 = WQ.Wiki(wd, dump="/dump")
     again = {}
     for label, text in (("same", q["question"]), ("paraphrase", "Brightcell Energy offers battery packs at £104. "
                                                                   "Are we allowed to order from them?")):
-        r2 = WQ.Navigator(w3, nav_llm).navigate(text, "PUR-EXEC")
+        r2 = WQ.Navigator(w3, nav_llm, expand_rules=3).navigate(text, "PUR-EXEC")
         a2 = E.answer({**q, "question": text}, r2["items"], ans)
         again[label] = {"question": text, "chain": r2["chain"], "nav_calls": r2["nav_calls"], "seconds": r2["seconds"],
                         "tokens_in": r2["tokens_in"], "answer": a2["answer"], "opened": r2["opened"],
                         "fact": E.fact_check(q, a2["answer"], G)}
-    out["fileback"] = {"before": {"nav_calls": r["nav_calls"], "seconds": r["seconds"], "tokens_in": r["tokens_in"],
+    out["fileback"] = {"navigator": "wiki-rules (expand_rules=3)", "before": {"nav_calls": r["nav_calls"], "seconds": r["seconds"], "tokens_in": r["tokens_in"],
                                   "opened": r["opened"], "chain": r["chain"], "answer": a["answer"]},
                        "filed": fb, "page": (pathlib.Path(wd) / "pages" / f"{fb['slug']}.md").read_text(),
                        "again": again,
@@ -319,6 +351,10 @@ def chains_run(ids: str = "Q-EMMA,Q-0412", fileback: str = "Q-EMMA"):
         demo.append({"question": text, "user": user, "ms": hits[0]["ms"] if hits else None,
                      "hits": [{k: h[k] for k in ("page", "section", "score", "citations")} for h in hits]})
     out["wiki_search"] = demo
+    from ledgerline.course.l3.wiki_llm import live_stats
+
+    out["provider_live_calls"] = os.environ.get("LEDGER_WIKI_PROVIDER", "openrouter")
+    out["live_calls_this_run"] = {"nav": live_stats(nav_llm), "answer": live_stats(ans)}
     pathlib.Path("/vol/logs/wiki_query_chains.json").write_text(json.dumps(out, indent=1, ensure_ascii=False))
     vol.commit()
     return out
@@ -406,7 +442,8 @@ def eval_replay(kind: str = "wiki"):
     summ = E.summarize_retrieval(recs)
     import statistics as st
 
-    rep = {"name": kind, "mode": "replay of recorded navigation calls; retrieval only (no answer, judge or citation "
+    rep = {"name": kind, "provider": "openrouter (all replayed calls were recorded through OpenRouter)",
+           "mode": "replay of recorded navigation calls; retrieval only (no answer, judge or citation "
                                  "scores: the answer step was never reached before the key ran out of credit)",
            "n_scored": len(recs), "n_missing": len(missing), "missing": missing, "summary": summ,
            "nav_calls_mean": round(st.mean(r["nav_calls"] for r in recs), 2) if recs else None,
@@ -416,6 +453,71 @@ def eval_replay(kind: str = "wiki"):
     pathlib.Path(f"/vol/logs/wiki_eval_{kind}_retrieval_replay.json").write_text(json.dumps(rep, indent=1, ensure_ascii=False))
     vol.commit()
     return rep
+
+
+@app.function(volumes={"/vol": vol}, secrets=[secret], timeout=600)
+def probe_google():
+    """One tiny live call through the provider in use, to check the model id, JSON mode and the usage fields."""
+    from ledgerline.course.l3.wiki_llm import REASONING_LOW, WikiLLM, live_stats
+
+    llm = WikiLLM("L3v4_wiki_probe", mode="live", max_tokens=200)
+    r = llm.chat([{"role": "user", "content": 'Reply with JSON {"ok": true, "model": "<your name>"}'}],
+                 response_format={"type": "json_object"}, **REASONING_LOW)
+    return {"content": r.content, "model": r.model, "tokens_in": r.tokens_in, "tokens_out": r.tokens_out,
+            "seconds": r.seconds, "live": live_stats(llm), "provider": os.environ.get("LEDGER_WIKI_PROVIDER")}
+
+
+@app.function(volumes={"/vol": vol}, secrets=[secret], timeout=1800, cpu=4, memory=8192)
+def provider_ab(n: int = 30):
+    """Answer-model consistency: the same answer prompts (wiki sections as RAG units, the first n golden questions in
+    a fixed spread across types) answered and judged once through OpenRouter (recorded on 3 Nov) and once through
+    Google direct (now). Compares verdicts and the answer's form."""
+    import re as _re
+
+    from ledgerline.course.l3 import evaluate as E
+    from ledgerline.course.l3 import wiki_query as WQ
+    from ledgerline.course.l3.wiki_llm import WikiLLM, live_stats
+
+    vol.reload()
+    G = E.Golden("/dump")
+    old = {r["id"]: r for r in json.loads(pathlib.Path("/vol/logs/wiki_eval_hybrid-search.json").read_text())["records"]}
+    w = WQ.Wiki("/vol/wiki_v4_eval_hybrid-search", dump="/dump")
+    si = WQ.SectionIndex(w, qcache="queries_bge-small__ab.jsonl")
+    hyb = WQ.Hybrid(w, None, si, navigate=False)
+    ans = WikiLLM("L3v4_wiki_answers__ab_google", mode="live", max_tokens=2048)
+    jud = WikiLLM("L3v4_wiki_judge__ab_google", mode="live", max_tokens=512)
+    qs = G.qs[::max(1, len(G.qs) // n)][:n]
+
+    def form(t):
+        t = t or ""
+        return {"words": len(t.split()), "bullets": bool(_re.search(r"(?m)^\s*([-*]|\d+\.)\s", t)),
+                "bold": "**" in t, "cites": len(E.cited_numbers(t, 99)), "abstain": bool(E.ABSTAIN.search(t))}
+
+    rows = []
+    for q in qs:
+        items = hyb.method(q["question"], E.C.role_of(q))["items"]
+        a = E.answer(q, items, ans)
+        j = E.judge(q, a["answer"], jud, G)
+        o = old[q["id"]]
+        rows.append({"id": q["id"], "type": q["type"], "openrouter": {"judge": o["judge"]["ok"], "fact": o["fact"]["ok"],
+                     "llm_s": o["llm_seconds"], **form(o["answer"])},
+                     "google": {"judge": j["ok"], "fact": E.fact_check(q, a["answer"], G)["ok"], "llm_s": a["llm_seconds"],
+                                **form(a["answer"])},
+                     "same_items": [i["id"] for i in items[:10]] == [i["id"] for i in o["items"]][:10]})
+
+    def mean(side, k):
+        xs = [r[side][k] for r in rows if r[side][k] is not None]
+        return round(sum(float(x) for x in xs) / len(xs), 3) if xs else None
+
+    out = {"provider_a": "openrouter (recorded 3 Nov)", "provider_b": "google-direct (live)", "n": len(rows),
+           "same_retrieved_items": sum(r["same_items"] for r in rows),
+           "judge_agree": sum(r["openrouter"]["judge"] == r["google"]["judge"] for r in rows),
+           "summary": {side: {k: mean(side, k) for k in ("judge", "fact", "words", "bullets", "bold", "cites", "abstain",
+                                                           "llm_s")} for side in ("openrouter", "google")},
+           "rows": rows, "live": {"answer": live_stats(ans), "judge": live_stats(jud)}}
+    pathlib.Path("/vol/logs/wiki_provider_ab.json").write_text(json.dumps(out, indent=1, ensure_ascii=False))
+    vol.commit()
+    return out
 
 
 @app.function(volumes={"/vol": vol}, timeout=1800, cpu=4, memory=8192)
@@ -481,6 +583,12 @@ def main(cmd: str = "build", files: str = "", tag: str = "", workers: int = 32, 
         name = f"wiki_build{('_' + tag) if tag else ''}.json"
         (LOGS / name).write_text(json.dumps(rep, indent=1))
         _log(json.dumps({k: v for k, v in rep.items() if k not in ("merge_map", "orphans")}, indent=1)[:4000])
+    elif cmd == "ab":
+        rep = provider_ab.remote()
+        (LOGS / "wiki_provider_ab.json").write_text(json.dumps(rep, indent=1, ensure_ascii=False))
+        _log(json.dumps({k: rep[k] for k in ("n", "same_retrieved_items", "judge_agree", "summary", "live")}, indent=1))
+    elif cmd == "probe":
+        _log(json.dumps(probe_google.remote()))
     elif cmd == "search":
         rep = search_demo.remote()
         (LOGS / "wiki_search_demo.json").write_text(json.dumps(rep, indent=1, ensure_ascii=False))

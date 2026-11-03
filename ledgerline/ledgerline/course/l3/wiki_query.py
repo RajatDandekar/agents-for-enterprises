@@ -208,8 +208,9 @@ Rules:
 
 
 class Navigator:
-    def __init__(self, wiki: Wiki, llm, max_calls: int = 4, reasoning: dict | None = None):
+    def __init__(self, wiki: Wiki, llm, max_calls: int = 4, reasoning: dict | None = None, expand_rules: int = 0):
         self.w, self.llm, self.max_calls = wiki, llm, max_calls
+        self.expand_rules = expand_rules  # >0: before answering, open up to this many "rules that apply" (see below)
         self.kw = reasoning if reasoning is not None else {"extra_body": {"reasoning": {"effort": "low"}}}
 
     def _call(self, msgs):
@@ -292,6 +293,26 @@ class Navigator:
             else:
                 chain.append({"step": "done", "why": a.get("why", "")[:200], "turn": turn + 1})
                 break
+        if self.expand_rules:
+            # "Rules that apply": every policy, amendment, procedure, release-note or decision page linked from the
+            # pages read is opened before the answer (by code, no extra call), most-linked first, up to expand_rules.
+            # Navigation alone tends to stop at the entity page on multi-hop questions (3 Nov run).
+            rule_types = {"policy", "procedure", "release", "decision"}
+            votes = {}
+            for o in opened:
+                if self.w.is_list(o):
+                    continue
+                for l in self.w.links_of(o):
+                    if l in opened or l not in self.w.pages or self.w.pages[l]["type"] not in rule_types:
+                        continue
+                    if not self.w.may_open(l, role):
+                        continue
+                    votes[l] = votes.get(l, 0) + 1
+            for l in sorted(votes, key=lambda x: (-votes[x], x))[: self.expand_rules]:
+                chain.append({"step": "rule", "what": l, "from": next((o for o in opened if l in self.w.links_of(o)), None),
+                              "votes": votes[l]})
+                opened.append(l)
+                items.append(self.w.page_item(l))
         if start is not None:  # the hybrid: searched sections keep their rank; an opened page takes its section's place
             by_id = {i["id"]: i for i in items}
             ranked, used = [], set()
