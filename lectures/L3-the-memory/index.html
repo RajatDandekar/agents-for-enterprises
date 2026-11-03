@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 3 · The Memory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../../engine/plates.css">
+<link rel="stylesheet" href="l3.css">
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- ============================== OPENER ============================== -->
+<section class="slide" data-plain="1">
+  <div class="center">
+    <div class="kicker">Agentic Systems Engineering · Lecture 3 of 12 · Sat 7 Nov 2026 · Dr. Rajat Dandekar, Vizuara</div>
+    <h1>The Memory: retrieving from Northbridge’s documents</h1>
+    <p class="lede" style="margin-top:26px">Henrik has shared 28 years of documentation. Today we audit it, decide what “good” means, build RAG and an LLM Wiki from scratch, race them, and put the winner inside Ask Northbridge.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Where We Are in the Course">
+  <div class="lec-top"><h2>Lecture 3 of 12: the memory</h2><p class="sub">Each lecture adds one part to Ask Northbridge, the assistant on Northbridge’s home page.</p></div>
+  <div class="map11" style="grid-template-columns:repeat(4,1fr);top:250px">
+    <div class="card"><b>Lecture 1 · Before and after</b>Henrik’s letter, the Ledgerline screens, and the AI-native home page we are building</div>
+    <div class="card"><b>Lecture 2 · The brain</b>Tokens, blocks, heads, weights. Alone, it made up Emma’s stock number every time</div>
+    <div class="card fl"><b>Lecture 3 · The memory · today</b>Northbridge’s own documents, found and cited in under a second</div>
+    <div class="card"><b>Lecture 4 · The hands</b>Tools, MCP, two harnesses: it acts in Ledgerline</div>
+  </div>
+  <div class="opens step" style="top:520px;background:var(--g1)"><span class="k" style="color:var(--after)">Why a memory</span>The brain was trained on public text up to its cutoff. Northbridge’s Purchase Policy, its supplier master and Luis’s e-mails were never in it. They are in Henrik’s documents.</div>
+</section>
+
+<section class="slide" data-plate="Monday, 9:40 AM">
+  <div class="col" style="width:440px">
+    <h2>Where we end today</h2>
+    <p>Emma Clarke, purchase executive, has a cheaper quote for the battery packs.</p>
+    <p class="step">Ask Northbridge, at the knowledge stage, has one tool, <code>search_docs</code>, and calls it twice.</p>
+    <p class="step">It answers with the rule, the reason and the documents. This is the recorded run we deploy today.</p>
+  </div>
+  <div class="fig" data-fig="chatk" data-turns="0" style="left:600px;top:110px;width:900px;height:720px"></div>
+</section>
+
+<section class="slide" data-plate="One Question, Eleven Sources">
+  <div class="lec-top"><h2>One sentence from Emma needs eleven passages</h2><p class="sub">“Can I buy the battery packs from Brightcell Energy? They quote £104.” The golden set’s list of what a complete answer uses.</p></div>
+  <div class="fig" data-fig="goldmap" style="left:100px;top:230px;width:1400px;height:560px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · <span class="qnum"></span></p>
+    <h2 class="q-text">Where should an assistant get <em>Northbridge’s own rules</em> from?</h2>
+    <div class="q-opts"><span class="q-opt"><b>1</b> What the model learned in training</span><span class="q-opt"><b>2</b> A web search</span><span class="q-opt"><b>3</b> Northbridge’s documents, searched each time</span><span class="q-opt"><b>4</b> A wiki the model wrote from them</span></div>
+    <p class="q-cue">Type 1 to 4 in the chat. Keep your answer: Sections 6 to 8 settle it</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Today’s Question">
+  <div class="center" style="left:140px;right:140px">
+    <p class="big">Twenty-eight years of documents. How do we find <em>the right three paragraphs</em> for Emma, in under a second, and prove it?</p>
+    <p class="lede step" style="margin-top:34px">With the real dump, a golden set of 224 questions, every knob measured, and a race between two methods on numbers we agree before we start.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Today’s Map">
+  <div class="lec-top"><h2>Eleven sections</h2><p class="sub">Blue cards end with a film. Every number on every slide comes from a recorded run.</p></div>
+  <div class="map11">
+    <div class="card"><b>1 · The documents</b>Henrik’s letter, then his repository</div>
+    <div class="card"><b>2 · The audit</b>What is in it, in tokens; what is messy</div>
+    <div class="card"><b>3 · The questions</b>Genesis, analytical, documentation</div>
+    <div class="card"><b>4 · The metrics</b>Accuracy and latency, decided first</div>
+    <div class="card"><b>5 · Paste everything?</b>4.69 million tokens against the windows</div>
+    <div class="card fl"><b>6 · RAG from scratch</b>Parse, chunk, BM25, embeddings, rerank · film</div>
+    <div class="card fl"><b>7 · The LLM Wiki</b>Karpathy’s idea, built for Northbridge · film</div>
+    <div class="card fl"><b>8 · The race</b>Same 224 questions, four methods · film</div>
+    <div class="card"><b>9 · Ask Northbridge remembers</b>The winner, live, as a tool</div>
+    <div class="card"><b>10 · Any domain</b>Twelve rules; pharma, healthcare, banking, legal</div>
+    <div class="card"><b>11 · NB3 and A3</b>Replicate the class, then your own domain</div>
+    <div class="card" style="background:var(--g3)"><b>Next · Lecture 4</b>The Hands</div>
+  </div>
+</section>
+
+<!-- ============================== 1 · THE DOCUMENTS ============================== -->
+<section class="slide part" data-plain="1" data-num="1">
+  <div class="center"><span class="num">Section 1 of 11 · The documents</span>
+    <div class="recall"><b>Lecture 1</b>Henrik asked us to change how Northbridge works on Ledgerline.</div>
+    <h1 class="q2">What do we need before we change anything?</h1></div>
+</section>
+
+<section class="slide" data-plate="Gladly. But First…">
+  <div class="two" style="top:150px">
+    <div class="letter"><div class="from">Henrik Weber · Northbridge Cycles · Manchester</div><p>Our e-bikes are good. Our ordering is not. Every purchase, every approval and every delivery still goes through Ledgerline ERP 7.2, a system we bought in 1998.</p><p><b>We need an engineer we can trust. Please read what is happening here. Then tell me what you would do.</b></p><p class="small" style="margin:0">From his letter in Lecture 1</p></div>
+    <div class="card af step"><span class="tag af">Our reply</span><h3>Gladly. But first we need your documentation.</h3>A 1998 system holds 28 years of rules: in policies, procedures, vendor manuals, spreadsheets on the share and e-mails that never reached a policy. We cannot make it AI-native without the knowledge of how it actually works.</div>
+  </div>
+  <div class="opens step" style="top:640px;background:var(--g1)"><span class="k" style="color:var(--after)">What real clients do</span>They hand over a share, a SharePoint, or a repository: everything, untidied. Henrik shares a GitHub repository.</div>
+</section>
+
+<section class="slide" data-plate="Henrik Shares a Repository">
+  <div class="col" style="width:470px">
+    <h2>The hand-over note</h2>
+    <p>The repository’s README, as Henrik wrote it.</p>
+    <p class="step">He warns us: old versions, duplicates, documents that disagree, a few not in force yet.</p>
+    <p class="step">And one private folder that must never reach anyone outside HR.</p>
+    <div class="nbcell step" style="position:static;margin-top:14px;width:470px"><span class="hd">Clone it, live</span><span class="ln hl">git clone https://github.com/RajatDandekar/northbridge-docs</span></div>
+  </div>
+  <div class="fig" data-fig="note" style="left:620px;top:110px;width:880px;height:700px"></div>
+</section>
+
+<section class="slide" data-plate="The Repository">
+  <div class="lec-top"><h2>Fourteen folders, as Henrik describes them</h2><p class="sub">Then what the audit counted in each. Click to add the counts.</p></div>
+  <div class="fig" data-fig="tree" style="left:100px;top:220px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · Section 1 · <span class="qnum"></span></p>
+    <h2 class="q-text">You have 693 files and no index. <em>What do you measure first,</em> before you build anything?</h2>
+    <p class="q-cue">Answer in one line in the chat</p>
+  </div>
+</section>
+
+<!-- ============================== 2 · THE AUDIT ============================== -->
+<section class="slide part" data-plain="1" data-num="2">
+  <div class="center"><span class="num">Section 2 of 11 · The audit</span>
+    <div class="recall"><b>Last section</b>Henrik shared everything, untidied. Now: what is actually in it?</div>
+    <h1 class="q2">What is really in the dump, and how big is it?</h1></div>
+</section>
+
+<section class="slide" data-plate="The Dump Explorer">
+  <div class="lec-top" style="top:80px"><h2 style="font-size:40px">The Dump Explorer</h2><p class="sub">Every file, sized by its tokens. Click a folder to open it. Colour: how the content is shaped.</p></div>
+  <div class="fig" data-fig="treemap" style="left:100px;top:200px;width:1400px;height:620px"></div>
+</section>
+
+<section class="slide" data-plate="Structured, Semi-Structured, Unstructured">
+  <div class="lec-top"><h2>Most files are text. Most tokens are tables.</h2><p class="sub">The three shapes of content, by files and then by tokens.</p></div>
+  <div class="fig" data-fig="classes" style="left:100px;top:230px;width:1400px;height:420px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="cap" style="left:100px;top:700px;width:1400px">Tokens: tiktoken o200k_base on the structured parser’s text (every table row as “column: value” pairs, OCR for the scans). <code>experiments/logs/audit.json</code>.</div>
+</section>
+
+<section class="slide" data-plate="The Numbers">
+  <div class="lec-top"><h2>The dump, counted</h2><p class="sub">Audit run on Modal, 3 Nov 2026. No file failed to parse, with either parser.</p></div>
+  <div class="tiles3" style="position:absolute;left:100px;right:100px;top:240px">
+    <div class="stat"><b data-l3="audit.totals.files" data-f="n"></b>files</div>
+    <div class="stat"><b data-l3="audit.totals.pages" data-f="n"></b>PDF pages</div>
+    <div class="stat"><b data-l3="audit.totals.rows" data-f="n"></b>spreadsheet rows</div>
+    <div class="stat"><b data-l3="audit.totals.words" data-f="n"></b>words</div>
+    <div class="stat step"><b data-l3="audit.totals.tokens_o200k" data-f="tok"></b>tokens, o200k (GPT-style)</div>
+    <div class="stat step"><b data-l3="audit.totals.tokens_qwen" data-f="tok"></b>tokens, Qwen2.5’s tokenizer</div>
+    <div class="stat step"><b data-l3="audit.totals.plain_tokens_o200k" data-f="tok"></b>tokens with the plain parser</div>
+    <div class="stat step"><b data-l3="audit.units.structured" data-f="n"></b>units from the structured parser</div>
+  </div>
+  <div class="opens step" style="top:600px;background:var(--g1)"><span class="k" style="color:var(--after)">Why two tokenizers</span>Each model counts its own tokens, and that count is what you pay for and what must fit the window. Writing every row as “column: value” costs about 40% more tokens than values alone, and it is what makes a row findable.</div>
+</section>
+
+<section class="slide" data-plate="What Henrik Warned Us About">
+  <div class="lec-top"><h2>Real documentation is messy, on purpose here</h2><p class="sub">The kinds of problem planted in the dump, each as the log describes it.</p></div>
+  <div class="fig" data-fig="messy" style="left:100px;top:220px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Parse by Document Type">
+  <div class="lec-top"><h2>The parser decides what can ever be found</h2><p class="sub">The same file through our two parsers. Click a file type.</p></div>
+  <div class="fig" data-fig="parsers" style="left:100px;top:220px;width:1000px;height:560px"></div>
+  <div class="callout" style="left:1140px;top:230px;width:360px"><b>Planted facts visible</b><br>plain <span data-l3="audit.facts_visible.plain.visible"></span> of <span data-l3="audit.facts_visible.plain.present"></span>; structured <span data-l3="audit.facts_visible.structured.visible"></span> of <span data-l3="audit.facts_visible.structured.present"></span>.</div>
+  <div class="callout step" style="left:1140px;top:360px;width:360px"><b>What plain loses</b><br><span data-l3="audit.plain_vs_structured.docx_table_units_dropped_by_plain" data-f="n"></span> DOCX tables, <span data-l3="audit.plain_vs_structured.eml_quoted_printable_soft_breaks_in_plain" data-f="n"></span> broken e-mail lines, the headers of <span data-l3="audit.plain_vs_structured.xlsx_rows_without_headers_in_plain" data-f="n"></span> spreadsheet rows, and every scan.</div>
+  <div class="callout step" style="left:1140px;top:560px;width:360px"><b>Industry practice</b><br>Tools such as docling or Unstructured do this for you; OCR (here Tesseract) for scans. We wrote ours, one reader per format, in <code>corpus.py</code>, so you can see each decision.</div>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · Section 2 · <span class="qnum"></span></p>
+    <h2 class="q-text">The structured parser costs 40% more tokens. <em>Why is it still the right choice?</em></h2>
+    <p class="q-cue">Answer in one line in the chat</p>
+  </div>
+</section>
+
+<!-- ============================== 3 · THE QUESTIONS ============================== -->
+<section class="slide part" data-plain="1" data-num="3">
+  <div class="center"><span class="num">Section 3 of 11 · The questions</span>
+    <div class="recall"><b>Last section</b>We know what is in the dump. Now: what will people ask of it?</div>
+    <h1 class="q2">What will Emma, Luis and Daniel actually ask?</h1></div>
+</section>
+
+<section class="slide" data-plate="Three Kinds of Question">
+  <div class="lec-top"><h2>Three kinds of question, three kinds of system</h2><p class="sub">A sample of 304 staff questions, sorted. <code>northbridge-docs/eval/questions.jsonl</code>.</p></div>
+  <div class="fig" data-fig="taxonomy" style="left:0;top:220px;width:1600px;height:560px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Ten Kinds of Documentation Question">
+  <div class="lec-top"><h2>224 documentation questions, ten types</h2><p class="sub">Each has a reference answer, its gold sources (file and page, sheet and row) and the facts it must contain.</p></div>
+  <div class="fig" data-fig="doctypes" style="left:100px;top:220px;width:1400px;height:520px"></div>
+  <span class="step" style="display:none"></span>
+  <div class="cap" style="left:100px;top:740px;width:1400px">Every reference answer was checked against the dump’s fact registry by script (<code>eval/check_gold.py</code>, 100% pass).</div>
+</section>
+
+<section class="slide" data-plate="Today’s Two Questions">
+  <div class="lec-top"><h2>Two running examples</h2><p class="sub">One that needs many documents, one that needs one exact code.</p></div>
+  <div class="two" style="top:240px">
+    <div class="card af"><span class="tag af">Multi-hop · hard</span><h3>“<span data-l3="questions.emma.q"></span>”</h3>The rule (§6.2 and §6.4), the supplier master (Brightcell is not in it), the onboarding SOP, an amendment, a patch note, the change-board minutes, the quotation e-mail and the rate contract.</div>
+    <div class="card step"><span class="tag nt">Exact code · medium</span><h3>“<span data-l3="questions.q0412.q"></span>”</h3>One error code, written exactly. Four gold sources: the manual, the error reference and the quick-reference card QRC-03.</div>
+  </div>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · Section 3 · <span class="qnum"></span></p>
+    <h2 class="q-text">“What was our total spend with Voltway Cells from May to September 2026?” <em>Which kind is it?</em></h2>
+    <div class="q-opts"><span class="q-opt"><b>1</b> Genesis</span><span class="q-opt"><b>2</b> Analytical</span><span class="q-opt"><b>3</b> Documentation</span></div>
+    <p class="q-cue">Type 1, 2 or 3. And: could a document search answer it?</p>
+  </div>
+</section>
+
+<!-- ============================== 4 · THE METRICS ============================== -->
+<section class="slide part" data-plain="1" data-num="4">
+  <div class="center"><span class="num">Section 4 of 11 · The metrics</span>
+    <div class="recall"><b>Last section</b>Today is documentation questions. Before building: how will we know it works?</div>
+    <h1 class="q2">What does “good” mean, before we build?</h1></div>
+</section>
+
+<section class="slide" data-plate="Metrics First">
+  <div class="lec-top"><h2>We decide the metrics and the targets first</h2><p class="sub">Then we test both methods against them, on the same golden set.</p></div>
+  <table class="t" style="position:absolute;left:100px;width:1400px;top:220px">
+    <tr><th>Metric</th><th>How we measure it</th><th class="step">Target</th></tr>
+    <tr><td><b>Retrieval recall@5</b></td><td>Is a gold source in the top 5 passages?</td><td class="step">≥ 90%</td></tr>
+    <tr><td>MRR</td><td>How high the first gold source ranks (1 / rank)</td><td class="step">report</td></tr>
+    <tr><td><b>Answer correct</b></td><td>An LLM judge against the reference answer, plus an exact-fact check (the strings it must contain)</td><td class="step">≥ 90%</td></tr>
+    <tr><td><b>Citation correct</b></td><td>The cited source really contains the fact</td><td class="step">≥ 95%</td></tr>
+    <tr><td><b>Search latency</b></td><td>Milliseconds to find the passages, p50 and p95, same machine for every method</td><td class="step">p95 ≤ 200 ms</td></tr>
+    <tr><td><b>Time to answer</b></td><td>Seconds from question to answer, p50 and p95</td><td class="step">p95 ≤ 4 s</td></tr>
+    <tr><td>Cost</td><td>Tokens in and out × the price, per question</td><td class="step">report</td></tr>
+    <tr><td>Update cost</td><td>Time and money to absorb one changed document</td><td class="step">report</td></tr>
+  </table>
+</section>
+
+<section class="slide" data-plate="Why Latency Weighs Heavily">
+  <div class="lec-top"><h2>Latency is a feature Emma can feel</h2><p class="sub">She asks at her desk, between two screens of Ledgerline. Three reasons it weighs as much as accuracy.</p></div>
+  <div class="three" style="top:260px">
+    <div class="card"><span class="tag nt">p95, not the average</span><h3>The slow one is the one remembered</h3>One answer in twenty at p95 is what she waits for every morning. We set targets on p95.</div>
+    <div class="card step"><span class="tag nt">A budget per part</span><h3>Search ≤ 200 ms, answer ≤ 4 s</h3>Search runs on every question, and later inside agents many times per task. It must stay a rounding error.</div>
+    <div class="card step"><span class="tag nt">Agents multiply it</span><h3>Lecture 5 loops</h3>An agent that searches six times turns a 5-second search into half a minute before it acts.</div>
+  </div>
+</section>
+
+<section class="slide" data-plate="The Golden Set, One Record">
+  <div class="lec-top"><h2>One question in the golden set</h2><p class="sub">The record we score every method against. Judge and exact-fact check agreed on <span data-l3="best.judge_vs_fact.agree" data-f="pct"></span> of 224 answers (Cohen’s κ <span data-l3="best.judge_vs_fact.kappa" data-f="r2"></span>).</p></div>
+  <div class="fig" data-fig="code" data-src="questions.q0412" data-title="northbridge-docs/eval/questions.jsonl · Q-0412 (gold sources and must_contain)" data-hl="2;4-8;9-26" style="left:100px;top:230px;width:1400px;height:560px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · Section 4 · <span class="qnum"></span></p>
+    <h2 class="q-text">Method A is right 93% of the time and answers in 13 s. Method B: 89% in 6 s. <em>Which ships for Emma?</em></h2>
+    <p class="q-cue">Answer in one line in the chat. We meet these two again in Section 8</p>
+  </div>
+</section>
+
+<!-- ============================== 5 · PASTE EVERYTHING ============================== -->
+<section class="slide part" data-plain="1" data-num="5">
+  <div class="center"><span class="num">Section 5 of 11 · Paste everything?</span>
+    <div class="recall"><b>Last section</b>The metrics and targets are agreed. The simplest method first.</div>
+    <h1 class="q2">Why not paste every document into the prompt?</h1></div>
+</section>
+
+<section class="slide" data-plate="The Whole Dump Against the Windows">
+  <div class="lec-top"><h2>It does not fit any model</h2><p class="sub">The whole dump, then the largest context windows on offer.</p></div>
+  <div class="fig" data-fig="windows" style="left:100px;top:220px;width:1400px;height:560px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="A Measured Sample">
+  <div class="lec-top"><h2>On a part that fits, it is right, slow and expensive</h2><p class="sub">12 questions whose sources all sit in 648 files (no master data, no transactions, no HR folder), pasted whole.</p></div>
+  <div class="tiles3" style="position:absolute;left:100px;right:100px;top:250px">
+    <div class="stat"><b><span data-l3="paste.sample.answer_correct" data-f="pct0"></span></b>answers correct (12 of 12)</div>
+    <div class="stat step"><b><span data-l3="paste.sample.seconds.p50" data-f="r2"></span> s</b>to answer, p50 (p95 <span data-l3="paste.sample.seconds.p95" data-f="r2"></span> s)</div>
+    <div class="stat step"><b data-l3="paste.sample.tokens_in_per_q" data-f="tok"></b>tokens read per question</div>
+    <div class="stat step"><b data-l3="paste.sample.cost_per_q_usd" data-f="usd2"></b>per question</div>
+  </div>
+  <div class="opens step" style="top:560px;background:var(--g4)"><span class="k" style="color:var(--before)">The lesson</span>A big window is not a memory. It rereads everything for every question. The whole dump would cost about <span data-l3="paste.usd_everything" data-f="usd2"></span> a question if any model could take it. We need to find the few passages that matter.</div>
+</section>
+
+<section class="slide q hero chk" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">✓</span>
+  <div class="qbox">
+    <p class="q-label">Check · Section 5</p>
+    <ol class="chk-list">
+      <li><span class="chk-q"><b>1</b>How many tokens is the whole dump, and the largest window we found?</span><span class="chk-a step"><span data-l3="paste.total" data-f="n"></span> tokens against <span data-l3="paste.largest" data-f="n"></span>.</span></li>
+      <li><span class="chk-q"><b>2</b>Pasting the 648-file part: what did one question cost, and how long did it take?</span><span class="chk-a step"><span data-l3="paste.sample.cost_per_q_usd" data-f="usd2"></span> and <span data-l3="paste.sample.seconds.p50" data-f="r2"></span> s at p50. 224 questions a day would cost about $138.</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================== 6 · RAG ============================== -->
+<section class="slide part" data-plain="1" data-num="6">
+  <div class="center"><span class="num">Section 6 of 11 · RAG from scratch</span>
+    <div class="recall"><b>Last section</b>Pasting everything does not fit and costs too much. So: find the few passages that matter.</div>
+    <h1 class="q2">How do you find three paragraphs in 28,953 chunks?</h1></div>
+</section>
+
+<section class="slide" data-plate="Retrieval-Augmented Generation">
+  <div class="lec-top"><h2>RAG: search first, then answer from what you found</h2><p class="sub">Six steps. The first three happen once; the last three on every question.</p></div>
+  <div class="three" style="top:230px">
+    <div class="card"><span class="tag nt">Once · 1</span><h3>Parse</h3>Each file into units with a location: a PDF section, a sheet row, a service.</div>
+    <div class="card step"><span class="tag nt">Once · 2</span><h3>Chunk</h3>Units into pieces of about 200 tokens, each with its document’s header.</div>
+    <div class="card step"><span class="tag nt">Once · 3</span><h3>Index</h3>A keyword index (BM25) and vectors in a vector database (Chroma).</div>
+    <div class="card af step"><span class="tag af">Every question · 4</span><h3>Search</h3>The question against the index: the top 20 candidates.</div>
+    <div class="card af step"><span class="tag af">Every question · 5</span><h3>Rerank</h3>A model reads the question with each candidate and reorders them; keep 10.</div>
+    <div class="card af step"><span class="tag af">Every question · 6</span><h3>Answer</h3>The model answers only from those passages, citing each one.</div>
+  </div>
+</section>
+
+<section class="slide" data-plate="The RAG Pipeline">
+  <div class="pfig" style="left:180px;top:100px;width:1240px;height:698px"><img src="figs/rag_pipeline.jpg" alt="RAG: parse, chunk and index once; search, rerank and answer on every question"></div>
+  <div class="cap" style="left:180px;top:812px;width:1240px"><b>Fig. 1.</b> RAG as we built it: 693 files, 51,325 units, chunks of about 200 tokens. The race winner searches with the BM25 side; the grid measured both.</div>
+</section>
+
+<section class="slide" data-plate="Chunking, Three Ways">
+  <div class="lec-top"><h2>Where you cut decides what you find</h2><p class="sub">The real Purchase Policy (POL-PUR-001 v4.1), chunked at 200 tokens. Click to change the chunker.</p></div>
+  <div class="fig" data-fig="chunks" data-doc="policy" style="left:100px;top:220px;width:1400px;height:560px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="cap" style="left:100px;top:796px;width:1400px">Fixed windows cut wherever 200 tokens end, even inside clause “3.3”; structure-aware chunks start at headings. Each chunk carries its document’s header (green). <code>experiments/logs/deck_extract.json</code>.</div>
+</section>
+
+<section class="slide" data-plate="Two Knobs: Parser and Chunk Size">
+  <div class="lec-top"><h2>Two knobs, measured on all 224 questions</h2><p class="sub">The best recall@5 any configuration reached with each setting.</p></div>
+  <div style="position:absolute;left:100px;top:240px;width:660px"><h3 style="margin:0 0 14px">Parser</h3><div class="fig" data-fig="bars" data-src="grid.by_parser" data-f="r" data-max="1" data-hi="structured" style="position:relative;height:120px"></div></div>
+  <div class="step" style="position:absolute;left:840px;top:240px;width:660px"><h3 style="margin:0 0 14px">Chunk size, tokens</h3><div class="fig" data-fig="bars" data-src="grid.by_size" data-f="r" data-max="1" data-hi="200" style="position:relative;height:200px"></div></div>
+  <div class="opens step" style="top:560px;background:var(--g1)"><span class="k" style="color:var(--after)">Read it</span>The structured parser wins by about seven points. Small chunks win: a 200-token chunk is about one clause, so the match is not diluted by the rest of the page.</div>
+</section>
+
+<section class="slide" data-plate="Embeddings">
+  <div class="col" style="width:520px">
+    <h2>Embeddings: meaning as numbers</h2>
+    <p>An embedding model turns a passage into a vector: 384 or 768 numbers. Similar meaning lands close together.</p>
+    <p class="step">The question is embedded too; the nearest vectors are the candidates.</p>
+    <p class="step">We measured five open models. The best, dense alone, reached <b><span data-l3="grid.dense_by_model.nomic" data-f="r3"></span></b> recall@5. BM25 alone reached <b><span data-l3="grid.by_mode.bm25" data-f="r3"></span></b>.</p>
+  </div>
+  <div style="position:absolute;left:700px;top:180px;width:800px"><h3 style="margin:0 0 14px">Dense retrieval alone, best recall@5 per model</h3>
+    <div class="fig" data-fig="bars" data-src="grid.dense_by_model" data-f="r" data-max="1" data-hi="nomic" data-names="bge-small=bge-small-en-v1.5 · 384|bge-base=bge-base-en-v1.5 · 768|e5-small=e5-small-v2 · 384|gte-small=gte-small · 384|nomic=nomic-embed-text-v1.5 · 768" style="position:relative;height:260px"></div></div>
+  <div class="fig step" data-fig="code" data-src="code.embedder" data-title="rag.py · Embedder (sentence-transformers, normalised vectors)" data-rows="11" data-hl0="1-11" style="left:700px;top:520px;width:800px;height:300px"></div>
+</section>
+
+<section class="slide" data-plate="BM25, From Scratch">
+  <div class="lec-top"><h2>BM25: rare words that appear, in short chunks</h2><p class="sub">The keyword ranking every search engine grew up on, in our own code. Click through the formula.</p></div>
+  <div class="fig" data-fig="code" data-src="code.bm25" data-title="ledgerline/course/l3/rag.py · class BM25" data-rows="20" data-hl="1-3;28;32-33;37-43" style="left:100px;top:220px;width:1000px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="callout" style="left:1140px;top:230px;width:360px"><b>idf</b>: a word in few chunks (ERR-PO-0412) counts far more than one in many (order).</div>
+  <div class="callout" style="left:1140px;top:390px;width:360px"><b>Saturation</b>: the tenth “battery” in a chunk adds little (k1 = 1.2).</div>
+  <div class="callout" style="left:1140px;top:530px;width:360px"><b>Length</b>: long chunks are damped (b = 0.75). Built once for all chunks in <span data-l3="grid.builds.structured-structure-200-o15.bm25_build_s"></span> s.</div>
+</section>
+
+<section class="slide" data-plate="Keep Codes Whole">
+  <div class="lec-top"><h2>The tokenizer keeps codes whole</h2><p class="sub">A detail that decides whether ERR-PO-0412 is findable.</p></div>
+  <div class="fig" data-fig="code" data-src="code.tokenize" data-title="rag.py · tokenize" data-hl="5;8-10" style="left:100px;top:230px;width:1400px;height:330px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="nbcell step" style="left:100px;top:600px;width:1400px"><span class="hd">NB3 · section 6</span><span class="ln hl">rag.tokenize("What does ERR-PO-0412 mean? Rule 6.2, UN 38.3, BAT-500")</span><span class="ln">['err-po-0412', 'err', 'po', '0412', 'mean', 'rule', '6.2', 'un', '38.3', '38', 'bat-500', 'bat', '500']</span></div>
+</section>
+
+<section class="slide" data-plate="Exact Codes: Who Finds ERR-PO-0412?">
+  <div class="lec-top"><h2>Embeddings blur exact codes</h2><p class="sub">The 27 exact-code questions, and Emma’s second question.</p></div>
+  <div class="fig" data-fig="codes" style="left:100px;top:220px;width:1400px;height:560px"></div>
+  <span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Hybrid Search and RRF">
+  <div class="col" style="width:520px">
+    <h2>Hybrid: fuse the two lists</h2>
+    <p>Reciprocal rank fusion gives each chunk 1 / (60 + rank) from each list and adds them up. No scores to calibrate.</p>
+    <p class="step">On our dump, hybrid alone reached <b><span data-l3="grid.by_mode.hybrid" data-f="r3"></span></b>, below BM25 alone (<span data-l3="grid.by_mode.bm25" data-f="r3"></span>): the dense list adds noise on codes and tables.</p>
+    <p class="step">With a reranker on top, hybrid reached <span data-l3="grid.by_mode.hybrid+rerank" data-f="r3"></span> and BM25 <b><span data-l3="grid.by_mode.bm25+rerank" data-f="r3"></span></b>. We measure before we believe.</p>
+  </div>
+  <div class="fig" data-fig="code" data-src="code.rrf" data-title="rag.py · rrf" data-hl0="1-6" style="left:700px;top:200px;width:800px;height:220px"></div>
+</section>
+
+<section class="slide" data-plate="The Reranker">
+  <div class="col" style="width:520px">
+    <h2>The reranker reads the question with each passage</h2>
+    <p>A cross-encoder (bge-reranker-base) scores each (question, passage) pair together. Too slow for 28,953 chunks; fine for the top 20.</p>
+    <p class="step">Over <span data-l3="grid.rerank.n" data-f="n"></span> matched pairs of configurations, it raised recall@5 in <b><span data-l3="grid.rerank.better" data-f="n"></span></b>: a median of +<span data-l3="grid.rerank.median_delta" data-f="r2"></span>.</p>
+    <p class="step">For a median <b>+<span data-l3="grid.rerank.median_added_p95_s" data-f="s"></span></b> at p95. Inside the budget.</p>
+  </div>
+  <div class="fig" data-fig="code" data-src="code.reranker" data-title="rag.py · Reranker" data-hl0="1-15" style="left:700px;top:180px;width:800px;height:420px"></div>
+</section>
+
+<section class="slide" data-plate="Query Rewriting">
+  <div class="lec-top"><h2>Rewriting the question made search worse</h2><p class="sub">One LLM call turns Emma’s words into a search query. A popular trick, measured.</p></div>
+  <div class="three" style="top:250px">
+    <div class="card bf"><span class="tag bf">Recall</span><h3>Worse in <span data-l3="grid.rewrite.worse" data-f="n"></span> of <span data-l3="grid.rewrite.n" data-f="n"></span> pairs</h3>Mean change in recall@5: <span data-l3="grid.rewrite.mean_delta" data-f="r3"></span>.</div>
+    <div class="card bf step"><span class="tag bf">Latency</span><h3>+<span data-l3="grid.rewrite.median_added_p95_s" data-f="s"></span> at p95</h3>An extra model call before every search: fifty times the whole search budget.</div>
+    <div class="card step"><span class="tag nt">Why</span><h3>It paraphrases away the words that match</h3>Codes, product names and clause numbers get rewritten into general language. One exception in the failures: Emma’s question, where it brought §6.2 back.</div>
+  </div>
+</section>
+
+<section class="slide" data-plate="Chroma and HNSW">
+  <div class="col" style="width:520px">
+    <h2>A vector database is an approximate search</h2>
+    <p>Chroma stores the vectors and finds neighbours with HNSW, a graph it walks instead of comparing against every vector.</p>
+    <p class="step">With its defaults it returned only about three quarters of the true nearest chunks for our questions.</p>
+    <p class="step">Raising <code>ef_search</code> to 4,000 returns 99.9% in about 7 ms. One setting, measured, now in <code>rag.HNSW</code>.</p>
+  </div>
+  <div class="fig" data-fig="hnsw" style="left:700px;top:200px;width:800px;height:400px"></div>
+  <span class="step" style="display:none"></span>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · Section 6 · <span class="qnum"></span></p>
+    <h2 class="q-text">Parser, chunker, size, overlap, five models, three search modes, reranker, rewriting. <em>Which knob moved recall the most?</em></h2>
+    <p class="q-cue">Guess in the chat, then we look at all 2,112 configurations</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="The Grid: 2,112 Configurations">
+  <div class="fig" data-fig="scatter" style="left:60px;top:90px;width:1480px;height:720px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="cap" style="left:60px;top:820px;width:1480px">Each dot: one configuration, all 224 questions. Click through: dense, BM25, hybrid, + reranker, + rewriting, then the one we chose. <code>experiments/logs/rag_grid.json</code>.</div>
+</section>
+
+<section class="slide" data-plate="From Retrieval to Answers">
+  <div class="lec-top"><h2>Then we answered with nine of them</h2><p class="sub">Good retrieval is the means; the answer is what Emma reads. The same answer model and prompt for each.</p></div>
+  <div class="fig" data-fig="answers9" style="left:100px;top:220px;width:1400px;height:520px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="The Configuration We Chose">
+  <div class="lec-top"><h2>The configuration we chose</h2><p class="sub">Structured parse · structure-aware 200-token chunks, 15% overlap · BM25 · reranker · top 10. The rule: the best answers among configurations whose search p95 is inside 200 ms.</p></div>
+  <table class="t" style="position:absolute;left:100px;width:1400px;top:270px">
+    <tr><th>Metric</th><th class="n">Measured</th><th class="n">Target</th><th></th></tr>
+    <tr><td>Recall@5 · recall@10</td><td class="n"><span data-l3="best.retrieval.recall@5" data-f="r3"></span> · <span data-l3="best.retrieval.recall@10" data-f="r3"></span></td><td class="n">≥ 0.90</td><td class="b">just missed at 5; why k = 10 won</td></tr>
+    <tr class="step"><td>MRR</td><td class="n"><span data-l3="best.retrieval.mrr" data-f="r3"></span></td><td class="n">report</td><td></td></tr>
+    <tr class="step"><td>Search p50 · p95</td><td class="n"><span data-l3="best.retrieval.latency_s.p50" data-f="s"></span> · <span data-l3="best.retrieval.latency_s.p95" data-f="s"></span></td><td class="n">≤ 200 ms</td><td class="g">met</td></tr>
+    <tr class="step"><td>Answer correct · exact facts</td><td class="n"><span data-l3="best.answers.answer_correct" data-f="pct"></span> · <span data-l3="best.answers.fact_correct" data-f="pct"></span></td><td class="n">≥ 90%</td><td class="b">missed</td></tr>
+    <tr class="step"><td>Citation correct</td><td class="n"><span data-l3="best.answers.citation_correct" data-f="pct"></span></td><td class="n">≥ 95%</td><td class="b">missed</td></tr>
+    <tr class="step"><td>Time to answer p50 · p95</td><td class="n"><span data-l3="best.answers.total_s.p50" data-f="r2"></span> s · <span data-l3="best.answers.total_s.p95" data-f="r2"></span> s</td><td class="n">p95 ≤ 4 s</td><td class="b">missed: the answer model’s own time</td></tr>
+    <tr class="step"><td>Cost</td><td class="n">$<span data-l3="best.answers.cost_per_q_usd"></span></td><td class="n">report</td><td></td></tr>
+  </table>
+  <div class="cap" style="left:100px;top:760px;width:1400px">Answers at the 150-word cap, before the race (<code>rag_best.json</code>). Section 8 reruns every method at 250 words.</div>
+</section>
+
+<section class="slide" data-plate="Where RAG Still Fails">
+  <div class="lec-top"><h2>Where it still fails, honestly</h2><p class="sub">From <code>rag_failures.json</code>, on the chosen chunking.</p></div>
+  <div class="quad" style="position:absolute;left:100px;right:100px;top:220px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card"><span class="tag bf">Multi-hop</span><h3>Never all the pieces</h3>Some gold source is in the top 5 for <span data-l3="fail.multi_hop.any_gold@5" data-f="pct0"></span> of the <span data-l3="fail.multi_hop.n"></span> multi-hop questions; all of them, for <span data-l3="fail.multi_hop.all_gold@5" data-f="pct0"></span>. Even at 10: <span data-l3="fail.multi_hop.all_gold@10" data-f="pct0"></span>.</div>
+    <div class="card step"><span class="tag bf">Versions</span><h3>Old copies rank well</h3>A superseded or future-dated chunk is in the top 5 for <span data-l3="fail.version_conflict.stale_in_top5"></span> of <span data-l3="fail.version_conflict.n"></span> version questions, above the gold source for <span data-l3="fail.version_conflict.stale_ranked_above_gold"></span>.</div>
+    <div class="card step"><span class="tag bf">Tables</span><h3>Rows need their headers</h3>Table lookups, recall@5: plain parser with dense <span data-l3="fail.tables.plain dense" data-f="r2"></span>; structured with BM25 <span data-l3="fail.tables.structured bm25" data-f="r2"></span>.</div>
+    <div class="card step"><span class="tag bf">Emma’s question</span><h3><span data-l3="fail.emma.found@5"></span> of <span data-l3="fail.emma.gold_sources"></span> sources found</h3>Both e-mails; §6.2 is missed. Her words never say “certificate”.</div>
+  </div>
+</section>
+
+<section class="slide" data-plate="What RAG Read for Emma">
+  <div class="col" style="width:460px">
+    <h2>What RAG brought back for Emma</h2>
+    <p>The race’s passages for her question, best first.</p>
+    <p class="step">E-mails and a meeting note about Brightcell: they share her words.</p>
+    <p class="step">The policy clause that decides the answer never says “Brightcell”. A question’s words and its rule’s words can be far apart.</p>
+  </div>
+  <div class="fig" data-fig="ragitems" data-q="Q-EMMA" data-n="6" style="left:600px;top:120px;width:900px;height:680px"></div>
+</section>
+
+<section class="slide" data-plate="The RAG Lab">
+  <div class="lec-top" style="top:76px"><h2 style="font-size:40px">The RAG Lab: turn the knobs yourself</h2><p class="sub">Every index of the grid, searched live in Chroma, with the gold sources marked and a class leaderboard: the best recall@5 under 200 ms.</p></div>
+  <div class="fig" data-fig="frame" data-url="https://rajatworkspace--northbridge-raglab.us-east.modal.run" data-label="northbridge-raglab" style="left:100px;top:200px;width:1400px;height:640px"></div>
+</section>
+
+<section class="slide" data-plate="Industry Practice">
+  <div class="lec-top"><h2>What teams use in production</h2><p class="sub">The same pieces, packaged. Pick by measurement, as we did.</p></div>
+  <div class="dom4" style="position:absolute;left:100px;right:100px;top:240px">
+    <div class="card"><span class="tag nt">Vector databases</span><h3>Chroma, pgvector, Qdrant, Weaviate, Pinecone, OpenSearch</h3><p>Chroma for a laptop and a class; pgvector when Postgres is already there; OpenSearch when you need BM25 and vectors in one engine.</p></div>
+    <div class="card step"><span class="tag nt">Frameworks</span><h3>LangChain, LlamaIndex</h3><p>Loaders, splitters, retrievers. Useful, but every default (chunk size, k, rewriting) is a hyperparameter you should measure.</p></div>
+    <div class="card step"><span class="tag nt">Search pieces</span><h3>Hybrid, rerankers, metadata filters</h3><p>Filter by permission and by version before ranking. Rerank only a short list.</p></div>
+    <div class="card step"><span class="tag nt">Evaluation</span><h3>A golden set in CI</h3><p>Ragas-style metrics, or your own as here: recall@k, answer, citation, latency. Rerun on every change.</p></div>
+  </div>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · Section 6 · <span class="qnum"></span></p>
+    <h2 class="q-text">Between Emma’s words and the ten passages, <em>what happens, in order?</em></h2>
+    <p class="q-cue">Name the steps in the chat · then we watch the film</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Film · 1 · How RAG works">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:44px">Film · 1 · How RAG works</h2></div>
+  <div class="fig" data-fig="film" data-name="rag" data-what="Emma’s question through parse, chunk, index, search, rerank, the top passages and a cited answer, with the measured numbers." style="left:250px;top:180px;width:1100px;height:619px"></div>
+</section>
+
+<section class="slide q hero chk" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">✓</span>
+  <div class="qbox">
+    <p class="q-label">Check · after Film 1</p>
+    <ol class="chk-list">
+      <li><span class="chk-q"><b>1</b>Why does BM25 find ERR-PO-0412 when dense search does not?</span><span class="chk-a step">The code is one rare, whole token; BM25 matches it exactly and weights it by rarity. Dense recall@5 on codes was <span data-l3="fail.exact_code.dense.recall@5" data-f="r2"></span>, BM25’s <span data-l3="fail.exact_code.bm25.recall@5" data-f="r2"></span>.</span></li>
+      <li><span class="chk-q"><b>2</b>What does the reranker cost, and what does it buy?</span><span class="chk-a step">About <span data-l3="grid.rerank.median_added_p95_s" data-f="s"></span> at p95, for a median +<span data-l3="grid.rerank.median_delta" data-f="r2"></span> recall@5.</span></li>
+      <li><span class="chk-q"><b>3</b>How many chunks does the chosen index hold, and how big is each?</span><span class="chk-a step"><span data-l3="best.index.n_chunks" data-f="n"></span> chunks, <span data-l3="best.index.tokens_mean"></span> tokens on average.</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================== 7 · THE LLM WIKI ============================== -->
+<section class="slide part" data-plain="1" data-num="7">
+  <div class="center"><span class="num">Section 7 of 11 · The LLM Wiki</span>
+    <div class="recall"><b>Last section</b>RAG searches the raw documents on every question. A different idea:</div>
+    <h1 class="q2">What if the model wrote Northbridge’s wiki first?</h1></div>
+</section>
+
+<section class="slide" data-plate="Karpathy’s LLM Wiki">
+  <div class="lec-top"><h2>The LLM Wiki: compile the knowledge once</h2><p class="sub">Andrej Karpathy, “LLM Wiki”, a GitHub gist, April 2026. Read it: <a class="live" href="https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f" target="_blank" rel="noopener">gist.github.com/karpathy <code>LLM Wiki</code></a></p></div>
+  <div class="wiki3" style="position:absolute;left:100px;right:100px;top:270px">
+    <div class="card"><span class="tag nt">Layer 1</span><h3>Raw sources</h3>Henrik’s 693 files. Immutable: nobody edits them.</div>
+    <div class="card step"><span class="tag nt">Layer 2</span><h3>The wiki</h3>Markdown pages the LLM writes and owns: one per supplier, policy, screen, error. Plus <code>index.md</code> and <code>log.md</code>.</div>
+    <div class="card step"><span class="tag nt">Layer 3</span><h3>The schema</h3><code>AGENTS.md</code>: the conventions every agent follows. Written by people.</div>
+    <div class="card af step"><span class="tag af">Operation</span><h3>Ingest</h3>Read each new source once; create and update the pages it touches.</div>
+    <div class="card af step"><span class="tag af">Operation</span><h3>Query</h3>Read the index, open pages, follow links. File good answers back.</div>
+    <div class="card af step"><span class="tag af">Operation</span><h3>Lint</h3>Find contradictions, orphans, stale claims, missing citations.</div>
+  </div>
+  <div class="cap step" style="left:100px;top:740px;width:1400px">In the gist’s words: “Obsidian is the IDE, the LLM is the programmer, the wiki is the codebase.” Its ancestors: Vannevar Bush’s Memex (1945), and Wikipedia itself.</div>
+</section>
+
+<section class="slide" data-plate="Three Layers, Three Operations">
+  <div class="pfig" style="left:180px;top:100px;width:1240px;height:698px"><img src="figs/wiki_layers.jpg" alt="The LLM Wiki: raw sources, the wiki, the schema; ingest, query, lint"></div>
+  <div class="cap" style="left:180px;top:812px;width:1240px"><b>Fig. 2.</b> The LLM Wiki for Northbridge: Henrik’s files at the bottom, never edited; the pages the model writes; the schema people write.</div>
+</section>
+
+<section class="slide" data-plate="A Wikipedia Page, Read as a Design">
+  <div class="fig wp" data-fig="wikipedia" data-img="figs/wikipedia/electric_bicycle_top.jpg" data-alt="The Wikipedia article E-bike, top of the page"
+       data-boxes="18.3,8.6,63.4,7.4|18,39.6,41.6,26.4|59.9,39.6,22,26.4|3.5,13.4,12.6,48.6|40.2,39.8,18.4,5|37.4,41.8,5.8,2.6|24.4,27,51,12.4|73.8,13,6,2.8|18.2,1.1,33.4,4" style="left:100px;top:110px;width:820px;height:570px"></div>
+  <ul class="wp-map" style="position:absolute;left:960px;top:110px;width:540px">
+    <li><b>Title</b><span class="ar">→</span><span>one page per entity, named by a slug</span></li>
+    <li><b>Lead</b><span class="ar">→</span><span>the summary in the page’s front matter</span></li>
+    <li><b>Infobox</b><span class="ar">→</span><span>the fact table at the top of a page</span></li>
+    <li><b>Contents</b><span class="ar">→</span><span>fixed sections per page type</span></li>
+    <li><b>Blue links</b><span class="ar">→</span><span><code>[[wikilinks]]</code> between pages</span></li>
+    <li><b>[1] [2]</b><span class="ar">→</span><span>references to the raw source and page</span></li>
+    <li><b>“Needs citations”</b><span class="ar">→</span><span>lint findings</span></li>
+    <li><b>View history</b><span class="ar">→</span><span><code>log.md</code>, append-only</span></li>
+    <li><b>Search</b><span class="ar">→</span><span><code>index.md</code>, the catalogue read first</span></li>
+  </ul>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="cap" style="left:100px;top:700px;width:1400px">“E-bike” (redirected from “Electric bicycle”), English Wikipedia, captured 3 Nov 2026: 15 sections, 116 references. Text CC BY-SA 4.0, Wikipedia contributors. <code>figs/wikipedia/</code>.</div>
+</section>
+
+<section class="slide" data-plate="The Schema: AGENTS.md">
+  <div class="lec-top"><h2>The schema is the wiki’s constitution</h2><p class="sub">People write it; every agent that ingests, queries or lints reads it first.</p></div>
+  <div class="fig" data-fig="code" data-src="wiki.agents_md" data-title="ledgerline/ledgerline/wiki_v4/AGENTS.md" data-rows="24" data-hl="1-6;10-16;18-36" style="left:100px;top:220px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Ingest: Building Northbridge’s Wiki">
+  <div class="lec-top"><h2>Ingest: 693 files became <span data-l3="wiki.build.pages" data-f="n"></span> pages</h2><p class="sub">One model call per part of a source to read it, one per page to write it. Every claim keeps its reference.</p></div>
+  <div class="tiles3" style="position:absolute;left:100px;width:820px;top:240px;grid-template-columns:repeat(2,1fr)">
+    <div class="stat"><b data-l3="wiki.build.parts" data-f="n"></b>source parts read</div>
+    <div class="stat"><b data-l3="wiki.build.links" data-f="n"></b>links (<span data-l3="wiki.build.links_resolved" data-f="n"></span> resolve)</div>
+    <div class="stat step"><b data-l3="wiki.build.references" data-f="n"></b>references to raw sources</div>
+    <div class="stat step"><b data-l3="wiki.build.facts_quote_verified" data-f="n"></b>of <span data-l3="wiki.build.facts" data-f="n"></span> facts quote-verified</div>
+    <div class="stat step"><b>$<span data-l3="wiki.build.usd_at_harness_price.total"></span></b>to build, gemini-3.8-flash</div>
+    <div class="stat step"><b>~11 min</b>wall clock, 40 workers</div>
+  </div>
+  <div style="position:absolute;left:980px;top:230px;width:520px"><h3 style="margin:0 0 12px">Pages by type</h3><div class="fig" data-fig="bars" data-src="wiki.build.pages_by_type" data-f="n" style="position:relative;height:520px"></div></div>
+</section>
+
+<section class="slide" data-plate="A Real Page">
+  <div class="col" style="width:400px">
+    <h2>One page: Brightcell Energy</h2>
+    <p>Written by the ingest from four sources. Click through its parts.</p>
+    <p class="step small">Front matter: type, summary, audience, sources.</p>
+    <p class="step small">The fact table and the lead.</p>
+    <p class="step small">Links to other pages.</p>
+    <p class="step small">Fixed sections for a supplier.</p>
+    <p class="step small">Every sentence cites a reference.</p>
+  </div>
+  <div class="fig" data-fig="wikipage" style="left:540px;top:100px;width:960px;height:730px"></div>
+</section>
+
+<section class="slide" data-plate="index.md and log.md">
+  <div class="lec-top"><h2>The catalogue and the history</h2><p class="sub"><code>index.md</code> is read first on every query. <code>log.md</code> records every operation, oldest first.</p></div>
+  <div class="fig" data-fig="code" data-src="wiki.index_head" data-title="wiki_v4/index.md (the first lines)" data-hl0="3" style="left:100px;top:220px;width:1400px;height:300px"></div>
+  <div class="fig step" data-fig="code" data-src="wiki.log_head" data-title="wiki_v4/log.md (the first lines)" data-hl0="5-7" style="left:100px;top:540px;width:1400px;height:280px"></div>
+</section>
+
+<section class="slide" data-plate="Query by Navigation">
+  <div class="lec-top"><h2>Query: the model reads the wiki the way you would</h2><p class="sub">Emma’s question. The recorded chain: index, then pages, then enough.</p></div>
+  <div class="fig" data-fig="chain" data-m="wiki" style="left:100px;top:220px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Search Over the Wiki">
+  <div class="col" style="width:520px">
+    <h2>Or search the wiki’s sections</h2>
+    <p>Navigation costs model calls. The cheap version searches the wiki’s sections, BM25 and bge-small fused, with no model at all.</p>
+    <p class="step">p50 <b><span data-l3="wiki.search_ms.p50"></span> ms</b>, p95 <span data-l3="wiki.search_ms.p95"></span> ms over the 224 questions.</p>
+    <p class="step"><b>Hybrid</b> = search the sections, then let the model navigate from them. All three go into the race.</p>
+  </div>
+  <div class="fig" data-fig="code" data-src="code.wiki_search" data-title="wiki_query.py · wiki_search" data-hl0="1-15" style="left:700px;top:200px;width:800px;height:420px"></div>
+</section>
+
+<section class="slide" data-plate="When a Document Changes">
+  <div class="lec-top"><h2>Updates: the wiki rewrites pages, RAG re-indexes</h2><p class="sub">One real change: patch note RN-7.2.3-P6 arrives.</p></div>
+  <div class="two" style="top:240px">
+    <div class="card"><span class="tag nt">LLM Wiki</span><h3><span data-l3="wiki.update.pages_touched"></span> pages touched, <span data-l3="wiki.update.seconds.total"></span> s, $<span data-l3="wiki.update.usd"></span></h3>Updated: <span data-l3="wiki.update.updated"></span>. Created: <span data-l3="wiki.update.created"></span>. <span data-l3="wiki.update.facts_added"></span> facts added, each cited.</div>
+    <div class="card step"><span class="tag nt">RAG</span><h3>No model call</h3><span data-l3="race.update_cost.rag.note"></span>.</div>
+  </div>
+  <div class="opens step" style="top:600px;background:var(--g1)"><span class="k" style="color:var(--after)">File back</span>A good answer can be filed back as a page of its own, so the next asker finds it. Emma’s answer became <code>qa-can-i-buy-the-battery-packs-from-brightcell-energy…</code>, built from <span data-l3="wiki.fileback.filed.refs"></span> references.</div>
+</section>
+
+<section class="slide" data-plate="Lint: The Wiki Checks Itself">
+  <div class="lec-top"><h2>Lint: the wiki found what was wrong with the dump</h2><p class="sub">Code checks plus a model review, against the 40 problems we planted.</p></div>
+  <div class="fig" data-fig="lint" style="left:100px;top:220px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="The Wiki Explorer">
+  <div class="lec-top" style="top:76px"><h2 style="font-size:40px">The Wiki Explorer</h2><p class="sub">Browse Northbridge’s wiki like Wikipedia, and replay a query’s chain step by step.</p></div>
+  <div class="fig" data-fig="frame" data-url="wiki_explorer/index.html" data-label="wiki_explorer" style="left:100px;top:200px;width:1400px;height:640px"></div>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · Section 7 · <span class="qnum"></span></p>
+    <h2 class="q-text">When Emma asks, <em>what does the model read first,</em> and when does it stop?</h2>
+    <p class="q-cue">Answer in one line in the chat · then we watch the film</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Film · 2 · How the LLM Wiki works">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:44px">Film · 2 · How the LLM Wiki works</h2></div>
+  <div class="fig" data-fig="film" data-name="wiki" data-what="raw sources, ingest, pages, links, index and log, then one query’s chain to a cited answer." style="left:250px;top:180px;width:1100px;height:619px"></div>
+</section>
+
+<section class="slide q hero chk" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">✓</span>
+  <div class="qbox">
+    <p class="q-label">Check · after Film 2</p>
+    <ol class="chk-list">
+      <li><span class="chk-q"><b>1</b>Name the three layers and the three operations.</span><span class="chk-a step">Raw sources, the wiki, the schema. Ingest, query, lint.</span></li>
+      <li><span class="chk-q"><b>2</b>How many of the 40 planted problems did lint find?</span><span class="chk-a step"><span data-l3="wiki.lint.messiness.found"></span>. It missed both legacy-abbreviation items and most contradictions.</span></li>
+      <li><span class="chk-q"><b>3</b>What did one changed patch note cost the wiki, and RAG?</span><span class="chk-a step">Wiki: <span data-l3="wiki.update.pages_touched"></span> pages, $<span data-l3="wiki.update.usd"></span>. RAG: no model call; rebuild BM25.</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================== 8 · THE RACE ============================== -->
+<section class="slide part" data-plain="1" data-num="8">
+  <div class="center"><span class="num">Section 8 of 11 · The race</span>
+    <div class="recall"><b>So far</b>Two ways to give Ask Northbridge a memory. Now we measure them, on the metrics from Section 4.</div>
+    <h1 class="q2">RAG or the wiki?</h1></div>
+</section>
+
+<section class="slide" data-plate="The Rules of the Race">
+  <div class="lec-top"><h2>One race, the same for every method</h2><p class="sub">Only the retrieval differs.</p></div>
+  <div class="three" style="top:250px">
+    <div class="card"><span class="tag nt">Questions</span><h3>All 224</h3>The documentation questions, every type.</div>
+    <div class="card step"><span class="tag nt">Answer step</span><h3>One prompt, 250 words</h3>The same answer model and judge: gemini-3.8-flash. The same 9,000-character cap per source.</div>
+    <div class="card step"><span class="tag nt">Machine</span><h3>One Modal L4 each</h3>4 vCPU, 16 GiB; search timed one question at a time.</div>
+    <div class="card step"><span class="tag nt">Permissions</span><h3>The same withheld notice</h3>If a confidential HR passage would have matched, the answer step is told so, without its content.</div>
+    <div class="card step"><span class="tag nt">Methods</span><h3>RAG, wiki ×3</h3>RAG best; wiki navigation; wiki hybrid; wiki sections only. Paste-all from the 12-question sample.</div>
+    <div class="card step"><span class="tag nt">Spend</span><h3>$<span data-l3="race.spend_usd.race_runs" data-f="r2"></span></h3>All answer and judge calls, recorded to cassettes.</div>
+  </div>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · Section 8 · <span class="qnum"></span></p>
+    <h2 class="q-text">Place your bet: <em>which method wins on our metrics?</em></h2>
+    <div class="q-opts"><span class="q-opt"><b>1</b> RAG</span><span class="q-opt"><b>2</b> Wiki navigation</span><span class="q-opt"><b>3</b> Wiki hybrid</span><span class="q-opt"><b>4</b> Wiki sections only</span></div>
+    <p class="q-cue">Type 1 to 4 in the chat</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="The Result">
+  <div class="lec-top"><h2>The race, 224 questions</h2><p class="sub">Click: accuracy, then latency, then cost. Green meets our target; orange misses it.</p></div>
+  <div class="fig" data-fig="racetable" style="left:100px;top:220px;width:1400px;height:420px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="opens step" style="top:660px;background:var(--g1)"><span class="k" style="color:var(--after)">Paste-all, for scale</span>12 of 12 right on its sample, at <span data-l3="race.paste_all.answer_p50_s" data-f="r2"></span> s and <span data-l3="race.paste_all.cost_per_q_usd" data-f="usd2"></span> a question. And the whole dump fits no model.</div>
+</section>
+
+<section class="slide" data-plate="Accuracy Against the Wait">
+  <div class="lec-top"><h2>Accuracy against the wait</h2><p class="sub">Bubble size: cost per question. Click for the cascade.</p></div>
+  <div class="fig" data-fig="racescatter" style="left:100px;top:200px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="By Question Type">
+  <div class="lec-top"><h2>Where each method wins</h2><p class="sub">Click: where the wiki wins, where RAG wins, where all of them struggle.</p></div>
+  <div class="fig" data-fig="heat" style="left:250px;top:200px;width:1100px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Emma’s Question, Four Answers">
+  <div class="lec-top" style="top:76px"><h2 style="font-size:40px">Emma’s question, every method’s answer</h2><p class="sub">Verbatim from the race. Click a method.</p></div>
+  <div class="fig" data-fig="side" data-q="Q-EMMA" style="left:100px;top:190px;width:1400px;height:640px"></div>
+</section>
+
+<section class="slide" data-plate="ERR-PO-0412, Four Answers">
+  <div class="lec-top" style="top:76px"><h2 style="font-size:40px">ERR-PO-0412, every method’s answer</h2><p class="sub">Verbatim from the race. Click a method.</p></div>
+  <div class="fig" data-fig="side" data-q="Q-0412" style="left:100px;top:190px;width:1400px;height:640px"></div>
+</section>
+
+<section class="slide" data-plate="Was It the Word Cap?">
+  <div class="lec-top"><h2>Was the 150-word cap holding them back?</h2><p class="sub">We reran every method at 250 words. Barely.</p></div>
+  <div class="fig" data-fig="cap" style="left:100px;top:230px;width:1400px;height:400px"></div>
+  <div class="opens step" style="top:640px;background:var(--g1)"><span class="k" style="color:var(--after)">The lesson</span>Emma’s answer is still incomplete for every method at 250 words. What it lacks was never retrieved: the rate-contract row (£119) and the Ledgerline setting PUR.CERT_CHK. Retrieval, not length, is the bottleneck.</div>
+</section>
+
+<section class="slide" data-plate="The Withheld Notice">
+  <div class="col" style="width:520px">
+    <h2>The biggest single fix: say what you may not show</h2>
+    <p>Confidential HR chunks are filtered out before ranking. Then the model only sees that nothing answers, and says “not in the documents”.</p>
+    <p class="step">The notice tells the answer step that a restricted source exists: no title, no content, who to ask.</p>
+  </div>
+  <div class="fig" data-fig="withheld" style="left:700px;top:200px;width:800px;height:420px"></div>
+</section>
+
+<section class="slide" data-plate="The Decision">
+  <div class="lec-top"><h2>RAG ships. Here is why, as the log records it.</h2><p class="sub"><code>race.json → decision</code>. Click through.</p></div>
+  <div class="fig" data-fig="why" style="left:100px;top:210px;width:1000px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="callout" style="left:1140px;top:230px;width:360px"><b>The next step, measured: a cascade</b><br>Answer with RAG; ask the wiki hybrid only when RAG finds nothing (<span data-l3="race.cascade.fallbacks"></span> of 224). <span data-l3="race.cascade.answer_correct" data-f="pct"></span> correct, <span data-l3="race.cascade.citation_correct" data-f="pct"></span> citations, but p95 <span data-l3="race.cascade.answer_p95_s" data-f="r2"></span> s. Not shipped.</div>
+</section>
+
+<section class="slide" data-plate="Film · 3 · The race">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:44px">Film · 3 · The race</h2></div>
+  <div class="fig" data-fig="film" data-name="race" data-what="the same questions, four methods, the clock running; where each wins." style="left:250px;top:180px;width:1100px;height:619px"></div>
+</section>
+
+<section class="slide q hero chk" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">✓</span>
+  <div class="qbox">
+    <p class="q-label">Check · after Film 3</p>
+    <ol class="chk-list">
+      <li><span class="chk-q"><b>1</b>The hybrid was most accurate. Why did RAG win?</span><span class="chk-a step">Latency weighs most: RAG searches in <span data-l3="race.overall.rag.retrieval_p95_s" data-f="s"></span> at p95, the hybrid in <span data-l3="race.overall.hybrid.retrieval_p95_s" data-f="s"></span>; it answers in half the time at a fifth of the cost, for about 8 fewer right answers in 224.</span></li>
+      <li><span class="chk-q"><b>2</b>Which metric did no method meet?</span><span class="chk-a step">Time to answer p95 ≤ 4 s (the answer model’s own time), and citations ≥ 95%.</span></li>
+      <li><span class="chk-q"><b>3</b>What lifted permission questions for RAG, and from what to what?</span><span class="chk-a step">The withheld notice: <span data-l3="race.withheld_notice.per_method.rag.permission_correct_before" data-f="pct0"></span> → <span data-l3="race.withheld_notice.per_method.rag.permission_correct_after" data-f="pct0"></span>.</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================== 9 · ASK NORTHBRIDGE ============================== -->
+<section class="slide part" data-plain="1" data-num="9">
+  <div class="center"><span class="num">Section 9 of 11 · Ask Northbridge remembers</span>
+    <div class="recall"><b>Last section</b>RAG won the race on our metrics. Now it goes inside the product.</div>
+    <h1 class="q2">How does the winner reach Emma?</h1></div>
+</section>
+
+<section class="slide" data-plate="The Winner as a Tool">
+  <div class="col" style="width:470px">
+    <h2>One tool: <code>search_docs</code></h2>
+    <p>The race winner, wrapped so the model can ask for it. Lecture 4 opens tools properly; this is a first look.</p>
+    <p class="step">The description tells the model when to use it.</p>
+    <p class="step">The input: the question, in plain words or with the exact code.</p>
+    <p class="step">The output: cited passages with their status, and the withheld flag.</p>
+  </div>
+  <div class="fig" data-fig="code" data-src="knowledge.tool_json" data-title="ledgerline/ledgerline/toolbox/search_docs/tool.json" data-rows="26" data-hl0="2-3" data-hl="5;10-25;26-46" style="left:620px;top:110px;width:880px;height:700px"></div>
+</section>
+
+<section class="slide" data-plate="Three Recorded Turns">
+  <div class="lec-top" style="top:76px"><h2 style="font-size:40px">Three questions at the knowledge stage</h2><p class="sub">Emma’s two, and one she may not see the answer to. Click a question.</p></div>
+  <div class="fig" data-fig="chatk" data-turns="0,1,2" style="left:250px;top:180px;width:1100px;height:660px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Try It Live">
+  <div class="center" style="text-align:center;align-items:center">
+    <h2 style="font-size:56px">Ask Northbridge, knowledge stage, live</h2>
+    <p class="lede" style="max-width:1050px;margin:18px auto 30px">Deployed on 3 Nov 2026. Ask about a rule, an error code, a supplier. Ask for a salary band, and watch it refuse.</p>
+    <a class="live" href="https://rajatworkspace--northbridge-experience.us-east.modal.run/after?stage=knowledge" target="_blank" rel="noopener" style="font-size:22px;align-self:center">Open Ask Northbridge <code>/after?stage=knowledge</code></a>
+    <p class="small step" style="margin-top:30px">The live check after deploying: Emma’s question took <span data-l3="knowledge.live.turns.0.wall_s" data-f="r2"></span> s end to end on a cold start, ERR-PO-0412 <span data-l3="knowledge.live.turns.1.wall_s" data-f="r2"></span> s. Search runs on a GPU worker; most of the wait is the model.</p>
+  </div>
+</section>
+
+<section class="slide q hero chk" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">✓</span>
+  <div class="qbox">
+    <p class="q-label">Check · Section 9</p>
+    <ol class="chk-list">
+      <li><span class="chk-q"><b>1</b>For the salary question, what did search_docs return, and why did the model refuse?</span><span class="chk-a step">Passages without HR content, plus the withheld notice: a confidential document matched that Emma may not open. The model pointed her to HR (NBC-HR-CONF).</span></li>
+      <li><span class="chk-q"><b>2</b>Where do the permissions live: in the prompt or in the search?</span><span class="chk-a step">In the search. Confidential chunks sit in their own collection that Emma’s searches never query; the prompt only explains the notice.</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================== 10 · ANY DOMAIN ============================== -->
+<section class="slide part" data-plain="1" data-num="10">
+  <div class="center"><span class="num">Section 10 of 11 · Any domain</span>
+    <div class="recall"><b>So far</b>One company, one dump, one race. What carries over to yours?</div>
+    <h1 class="q2">What would you do the same in pharma, a hospital or a bank?</h1></div>
+</section>
+
+<section class="slide" data-plate="Twelve Rules">
+  <div class="lec-top"><h2>Twelve rules, in the order we used them</h2><p class="sub">Each one is a step from today, not a slogan.</p></div>
+  <div class="rules12" style="position:absolute;left:100px;right:100px;top:220px">
+    <div>Audit the corpus: files, shapes, tokens, the mess.</div>
+    <div>Collect real questions and sort them: genesis, analytical, documentation.</div>
+    <div class="step">Set metrics and targets with the users, latency included.</div>
+    <div class="step">Build a golden set from real questions, with gold sources.</div>
+    <div class="step">Parse by document type; never one reader for all.</div>
+    <div class="step">Chunk by structure, small, with each document’s header.</div>
+    <div class="step">Pick an embedding model by measurement (domain models for medicine).</div>
+    <div class="step">Use BM25 or hybrid search wherever codes matter.</div>
+    <div class="step">Filter by permission before ranking, and say what was withheld.</div>
+    <div class="step">Handle versions and effective dates explicitly.</div>
+    <div class="step">Choose a wiki when synthesis across documents matters and the corpus changes slowly.</div>
+    <div class="step">Measure again after every change, in CI.</div>
+  </div>
+</section>
+
+<section class="slide" data-plate="Four Domains">
+  <div class="lec-top"><h2>The same method, four domains</h2><p class="sub">What changes is what you must never get wrong.</p></div>
+  <div class="dom4" style="position:absolute;left:100px;right:100px;top:230px">
+    <div class="card"><span class="tag nt">Pharma</span><h3>SOPs, batch records, regulatory filings</h3><p><b>Versions:</b> only the approved, effective SOP may answer.</p><p><b>Audit trail:</b> every answer logged with the exact document version.</p><p><b>Codes:</b> product and batch numbers need BM25.</p></div>
+    <div class="card step"><span class="tag nt">Healthcare</span><h3>Guidelines, formularies, protocols</h3><p><b>Permissions:</b> patient data never in the shared index.</p><p><b>Embeddings:</b> a medical model, measured against a general one.</p><p><b>Refuse</b> outside the documents, always.</p></div>
+    <div class="card step"><span class="tag nt">Banking</span><h3>Policies, product terms, circulars</h3><p><b>Effective dates:</b> the rule in force on the transaction date.</p><p><b>Wiki</b> for products that combine many circulars.</p><p><b>Latency</b> matters at the branch counter.</p></div>
+    <div class="card step"><span class="tag nt">Legal</span><h3>Contracts, clauses, precedents</h3><p><b>Citations</b> to the clause, checked by script.</p><p><b>Multi-hop</b> is the norm: a wiki of parties and clauses helps.</p><p><b>Confidential</b> matters filtered before ranking.</p></div>
+  </div>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · Section 10 · <span class="qnum"></span></p>
+    <h2 class="q-text">In your domain, <em>which of the ten question types</em> would people ask most, and which method would you try first?</h2>
+    <p class="q-cue">Answer in two lines in the chat</p>
+  </div>
+</section>
+
+<!-- ============================== 11 · NB3 AND A3 ============================== -->
+<section class="slide part" data-plain="1" data-num="11">
+  <div class="center"><span class="num">Section 11 of 11 · NB3 and A3</span>
+    <div class="recall"><b>Today</b>An audit, a golden set, RAG, a wiki, a race, a tool. Now you do it.</div>
+    <h1 class="q2">A3 · Replicate the class, then your domain</h1></div>
+</section>
+
+<section class="slide" data-plate="NB3 · The Memory">
+  <div class="lec-top"><h2>NB3: the whole lecture, runnable, no key</h2><p class="sub">Retrieval runs on your machine; every model call replays from our recorded runs. <code>NB3_the_memory.ipynb</code>, open in Colab from the course page.</p></div>
+  <div class="map11" style="grid-template-columns:repeat(5,1fr)">
+    <div class="card"><b>1 · Clone and audit</b>git clone, files by class, tokens</div>
+    <div class="card"><b>2 · Two parsers</b>an e-mail, a scan, a spreadsheet row</div>
+    <div class="card"><b>3 · Questions</b>the golden set, one record</div>
+    <div class="card"><b>4 · Paste all</b>the arithmetic</div>
+    <div class="card"><b>5 · Chunking</b>three ways, then the winner’s</div>
+    <div class="card fl"><b>6 · BM25</b>from scratch, on all 224 questions</div>
+    <div class="card fl"><b>7 · Reranker, Chroma</b>dense against BM25 on codes</div>
+    <div class="card"><b>8 · The answer step</b>Emma’s answer, replayed</div>
+    <div class="card"><b>9 · The wiki</b>a page, search, a chain</div>
+    <div class="card"><b>10 · The race</b>read from the log</div>
+  </div>
+</section>
+
+<section class="slide" data-plate="NB3 · Section 6 · BM25 on the Golden Set">
+  <div class="lec-top"><h2>NB3 section 6: score BM25 on all 224 questions</h2><p class="sub">The exact cell, then its output when we ran NB3 on a CPU machine with a fresh clone.</p></div>
+  <div class="nbcell" style="left:100px;top:230px;width:1400px"><span class="hd">NB3 · section 6</span><span class="ln">bm25_cfg = rag.Config(parser="structured", chunker="structure", size=200, overlap=0.15, retrieval="bm25", rerank=False, k=10)</span><span class="ln">bm25_only = rag.Retriever(idx, bm25_cfg)</span><span class="ln hl">rep = E.retrieval_only(lambda q, role: bm25_only.search(q, role=role), G)</span><span class="ln">s = rep["summary"]["overall"]</span><span class="ln hl">print(f"BM25 alone: recall@5 {s['recall@5']:.3f}, recall@10 {s['recall@10']:.3f}, MRR {s['mrr']:.3f}; " ...)</span></div>
+  <div class="card step" style="position:absolute;left:100px;top:450px;width:1400px;font-size:16px"><span class="tag af">NB3’s output</span><pre id="nb3-out-bm25" data-nb3="bm25">(run NB3)</pre></div>
+</section>
+
+<section class="slide" data-plate="NB3 · Section 8 · The Answer Step">
+  <div class="lec-top"><h2>NB3 section 8: Emma’s answer, rebuilt and replayed</h2><p class="sub">The race’s ten passages, by chunk id, into the shared prompt; the recorded answer and judge calls replay.</p></div>
+  <div class="nbcell" style="left:100px;top:230px;width:1400px"><span class="hd">NB3 · section 8</span><span class="ln">q = G.by_id["Q-EMMA"]</span><span class="ln hl">items = [by_id[i].as_item() for i in RX["questions"]["Q-EMMA"]["items"]]</span><span class="ln hl">a = E.answer(q, items, ans_llm, answer_words=RX["answer_words"])</span><span class="ln">print(E.fact_check(q, a["answer"], G))</span><span class="ln">print(E.judge(q, a["answer"], judge_llm, G))</span></div>
+  <div class="card step" style="position:absolute;left:100px;top:440px;width:1400px;font-size:15px"><span class="tag af">NB3’s output</span><pre data-nb3="answer">(run NB3)</pre></div>
+</section>
+
+<section class="slide" data-plate="A3 · The Memory, Replicated">
+  <div class="lec-top"><h2>A3 · Four parts, then your domain</h2><p class="sub">Due before Lecture 5. Details in <code>A3.md</code>.</p></div>
+  <div class="dom4" style="position:absolute;left:100px;right:100px;top:230px">
+    <div class="card"><span class="tag nt">Part 1 · 2 points</span><h3>Audit and metrics</h3><p>Audit northbridge-docs (or your corpus); set targets for recall, answers, citations, latency, cost.</p></div>
+    <div class="card step"><span class="tag nt">Part 2 · 3 points</span><h3>RAG, tuned</h3><p>BM25 and Chroma; vary parser, chunk size, k, reranker on a 40-question golden subset; pick by your rule.</p></div>
+    <div class="card step"><span class="tag nt">Part 3 · 3 points</span><h3>A mini LLM Wiki</h3><p>Ingest one folder into pages with an index, a log and a schema; query by navigation; lint.</p></div>
+    <div class="card step"><span class="tag nt">Part 4 · 2 points</span><h3>Your race</h3><p>Both methods on your subset, on your metrics, by question type. Decide, and write why.</p></div>
+  </div>
+  <div class="opens step" style="top:640px;background:var(--g1)"><span class="k" style="color:var(--after)">Domain transfer</span>Then 20 real questions from your own work or domain: sort them, build a tiny golden set, and run your winner on it.</div>
+</section>
+
+<section class="slide" data-plain="1">
+  <div class="center" style="text-align:center;align-items:center">
+    <div class="kicker">Next time · Lecture 4 · Sun 8 Nov 2026</div>
+    <h1 style="font-size:96px">The Hands</h1>
+    <p class="lede" style="max-width:1050px;margin-top:24px">Ask Northbridge now tells Emma that Brightcell is not allowed, and why. Then she asks it to order 2,000 BAT-500 from Voltway. It knows the rules, but it cannot act. Tomorrow: tools, MCP, and two harnesses.</p>
+  </div>
+</section>
+
+</div>
+<script src="figdata.js"></script>
+<script src="figs.js"></script>
+<script src="figs2.js"></script>
+<script>
+(() => { let q = 0; document.querySelectorAll('.qnum').forEach((e) => { e.textContent = String(++q); }); if (window.FIGS && FIGS._fill) FIGS._fill();
+  const o = (window.L3 && L3.nb3) || {}; document.querySelectorAll('[data-nb3]').forEach((p) => { if (o[p.dataset.nb3]) p.textContent = o[p.dataset.nb3]; }); })();
+</script>
+<script src="../../engine/plates.js"></script>
+</body>
+</html>

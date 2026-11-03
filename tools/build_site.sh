@@ -19,6 +19,8 @@ for d in "$ROOT"/lectures/L*/; do
   for f in "$d"*.js "$d"*.css; do [ -f "$f" ] && cp "$f" "$OUT/lectures/$n/"; done   # figs.js, figdata.js, deck css/js
   for sub in figs shots; do [ -d "$d$sub" ] && rsync -a --exclude '*.json' "$d$sub/" "$OUT/lectures/$n/$sub/"; done
   # the 3D figures (code, trace, posters, audio; not their QA renders or scripts)
+  # a static explorer page a deck embeds (Lecture 3's Wiki Explorer)
+  [ -d "$d"wiki_explorer ] && rsync -a --exclude '*.py' "$d"wiki_explorer/ "$OUT/lectures/$n/wiki_explorer/"
   for fig3d in flow3d brain3d; do
     [ -d "$d$fig3d" ] && rsync -a --exclude qa --exclude '*.py' --exclude '*.md' --exclude 'envision_amaranth_cove.mp3' "$d$fig3d/" "$OUT/lectures/$n/$fig3d/"
   done
