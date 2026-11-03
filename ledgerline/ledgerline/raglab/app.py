@@ -21,7 +21,7 @@ import re
 import threading
 import time
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Body, FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
@@ -92,17 +92,24 @@ class Guard:
         self.hits = collections.defaultdict(collections.deque)
         self.lock = threading.Lock()
 
-    def flags(self) -> dict:
-        return {"enabled": True, "reason": "", "cap_usd": self.cap_default, **(self.store.get("flags") or {})}
+    def flags(self, fresh: bool = False) -> dict:
+        now = time.time()
+        if fresh or now - getattr(self, "_ft", 0) > 5:  # read the shared Dict at most every 5 s per container
+            self._f = {"enabled": True, "reason": "", "cap_usd": self.cap_default, **(self.store.get("flags") or {})}
+            self._s = round((self.store.get(f"spend:{today()}") or 0.0) * RATE_USD_S, 4)
+            self._ft = now
+        return dict(self._f)
 
     def set_flags(self, **kw):
-        f = self.flags()
+        f = self.flags(fresh=True)
         f.update({k: v for k, v in kw.items() if v is not None})
         self.store.put("flags", f)
+        self._ft = 0
         return f
 
     def spent_usd(self) -> float:
-        return round((self.store.get(f"spend:{today()}") or 0.0) * RATE_USD_S, 4)
+        self.flags()
+        return self._s
 
     def add_seconds(self, s: float):
         k = f"spend:{today()}"
@@ -203,7 +210,9 @@ def create_app(engine: Engine | None = None, store: Store | None = None, heartbe
 
     @app.post("/api/search")
     async def search(req: Request):
-        guard.check(who(req))
+        import anyio
+
+        await anyio.to_thread.run_sync(guard.check, who(req))
         body = await req.json()
         q = str(body.get("question") or "").strip()[:400]
         if not q:
@@ -213,7 +222,6 @@ def create_app(engine: Engine | None = None, store: Store | None = None, heartbe
         e = eng()
         if cfg.chunking not in e.built():
             raise HTTPException(404, f"The index for {cfg.chunking} is not built yet.")
-        import anyio
 
         t0 = time.perf_counter()
         res = await anyio.to_thread.run_sync(lambda: e.search(cfg, q, role))
@@ -256,9 +264,8 @@ def create_app(engine: Engine | None = None, store: Store | None = None, heartbe
 
     # ------------------------------------------------------------------ the leaderboard
     @app.post("/api/leaderboard")
-    async def submit(req: Request):
+    def submit(req: Request, body: dict = Body(...)):
         guard.check(who(req))
-        body = await req.json()
         name = _clean_name(body.get("name"))
         if not name:
             raise HTTPException(400, "Type your name first.")

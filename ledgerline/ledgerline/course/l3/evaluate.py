@@ -279,7 +279,9 @@ def fact_check(q, text: str, G: Golden) -> dict:
     exp = G.expected(q)
     t = norm_loose(text or "")
     if exp == "abstain":
-        bad = [a for a in q.get("absent_terms", []) if norm_loose(a) in t]
+        # absent_terms are what must not exist in the corpus; in an answer only an invented CODE counts against it
+        # ("I cannot find the Wi-Fi password" repeats the question, it does not invent anything)
+        bad = [a for a in q.get("absent_terms", []) if re.search(r"[\d/]", a) and norm_loose(a) in t]
         ok = bool(ABSTAIN.search(text or "")) and not bad
         return {"ok": ok, "expected": exp, "abstained": bool(ABSTAIN.search(text or "")), "bad_terms": bad}
     if exp == "refuse":
@@ -352,6 +354,14 @@ def citation_check(q, rec: dict, items, G: Golden) -> dict | None:
             loc_match(G, g, f, l) for g in golds for f, l in _item_locs(it))
         good += int(bool(ok))
     return {"ok": good > 0, "n_cited": len(cited), "precision": round(good / len(cited), 3)}
+
+
+def rescore(rep: dict, G: Golden) -> dict:
+    """Recompute the deterministic checks (fact, citation needs items so it is kept) from stored answers, and the summary."""
+    for r in rep["records"]:
+        r["fact"] = fact_check(G.by_id[r["id"]], r["answer"], G)
+    rep["summary"] = summarize(rep["records"])
+    return rep
 
 
 def kappa(a: list[bool], b: list[bool]) -> float | None:

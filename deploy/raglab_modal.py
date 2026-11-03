@@ -45,7 +45,7 @@ image = (
         "python -c \"import tiktoken; tiktoken.get_encoding('o200k_base')\"")
     .env({"HF_HUB_OFFLINE": "1", "PYTHONPATH": "/app/ledgerline", "PYTHONUNBUFFERED": "1", "TOKENIZERS_PARALLELISM": "false",
           "NORTHBRIDGE_DOCS": "/dump", "RAGLAB_VOL": "/vol", "RAGLAB_DICT": "northbridge-raglab-state",
-          "RAGLAB_PRELOAD": "structured-structure-400-o0", "LEDGER_CASSETTES": "/tmp/cassettes"})
+          "RAGLAB_PRELOAD": "structured-structure-400-o0,structured-structure-200-o15", "LEDGER_CASSETTES": "/tmp/cassettes"})
     .add_local_dir(ROOT / "ledgerline" / "ledgerline", "/app/ledgerline/ledgerline",
                    ignore=lambda p: any(x in SKIP for x in pathlib.Path(p).parts) or str(p).endswith((".png", ".mp4", ".jsonl", ".env")))
     .add_local_dir(DUMP / "eval", "/dump/eval")
@@ -56,9 +56,9 @@ vol = modal.Volume.from_name("northbridge-raglab", create_if_missing=True)
 secret = modal.Secret.from_name("northbridge-raglab")
 
 
-@app.cls(image=image, gpu="L4", cpu=4, memory=16384, min_containers=0, max_containers=3, scaledown_window=900,
-         timeout=600, volumes={"/vol": vol}, secrets=[secret])
-@modal.concurrent(max_inputs=60, target_inputs=30)
+@app.cls(image=image, gpu="L4", cpu=4, memory=32768, min_containers=0, max_containers=2,
+         scaledown_window=900, timeout=600, volumes={"/vol": vol}, secrets=[secret])
+@modal.concurrent(max_inputs=80, target_inputs=60)
 class Lab:
     @modal.enter()
     def load(self):
@@ -71,7 +71,7 @@ class Lab:
         for m in R.EMBED_MODELS:
             R.Embedder(m).query("warm up")
         R.Reranker().score("warm up", ["warm up"])
-        self.engine = Engine(preload=[os.environ["RAGLAB_PRELOAD"]])
+        self.engine = Engine(preload=os.environ["RAGLAB_PRELOAD"].split(","))
         self.web = create_app(self.engine)
 
         def follow():  # new grid results, answers and indexes become visible without a redeploy
@@ -88,6 +88,7 @@ class Lab:
         import threading
 
         threading.Thread(target=follow, daemon=True).start()
+        threading.Thread(target=self.engine.prefetch, args=(self.engine.built(),), daemon=True).start()
         print(f"lab loaded in {time.time() - t0:.1f}s; {len(self.engine.built())} indexes built, {len(self.engine.grid)} grid rows")
 
     @modal.asgi_app(label=APP)

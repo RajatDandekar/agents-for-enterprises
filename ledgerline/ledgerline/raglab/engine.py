@@ -26,7 +26,8 @@ from ..course.l3 import rag as R
 
 VOL = pathlib.Path(os.environ.get("RAGLAB_VOL", "/vol"))
 LOCAL = pathlib.Path(os.environ.get("RAGLAB_LOCAL", "/tmp/raglab"))
-LOCAL_MAX = int(os.environ.get("RAGLAB_LOCAL_MAX", "8"))
+LOCAL_MAX = int(os.environ.get("RAGLAB_LOCAL_MAX", "64"))  # never evict in class: a deleted directory under a live
+#            Chroma client broke queries in the 30-student load test ("Collection ... does not exist")
 BUDGET_S = 0.200     # the latency budget the class agreed: retrieval p95 <= 200 ms
 OPTIONS = {
     "parser": ["plain", "structured"], "chunker": ["fixed", "recursive", "structure"], "size": [200, 400, 800, 1200],
@@ -192,6 +193,14 @@ class Engine:
                     old, _ = self.idx.popitem(last=False)
                     shutil.rmtree(LOCAL / old, ignore_errors=True)
             return idx
+
+    def prefetch(self, cids: list[str]):
+        """Copy every index to local disk in the background, so a student's first search on a setting is fast."""
+        for cid in cids:
+            try:
+                self.index(cid)
+            except Exception as e:  # noqa: BLE001
+                print("prefetch failed", cid, e)
 
     def _pca(self, cid: str, model: str):
         import numpy as np

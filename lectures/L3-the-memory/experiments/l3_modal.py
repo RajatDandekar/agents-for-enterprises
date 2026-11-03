@@ -908,10 +908,11 @@ def publish_best_remote(best: dict) -> dict:
     for f in ("chunks.jsonl.gz", "bm25.pkl", "build.json"):
         shutil.copy(src / f, dst / f)
     chunks = R.load_chunks(dst / "chunks.jsonl.gz")
-    if cfg.retrieval != "bm25":
-        v = np.load(f"/vol/vec/{cfg.chunking}/{cfg.embed}.npy").astype(np.float32)
-        v /= np.linalg.norm(v, axis=1, keepdims=True) + 1e-12
-        R.add_vectors(chromadb.PersistentClient(path=str(dst / "chroma")), cfg.embed, chunks, v)
+    # the dense collection of the config's model (bge-small for a BM25 config, so the same index also serves hybrid)
+    model = cfg.embed if cfg.retrieval != "bm25" else "bge-small"
+    v = np.load(f"/vol/vec/{cfg.chunking}/{model}.npy").astype(np.float32)
+    v /= np.linalg.norm(v, axis=1, keepdims=True) + 1e-12
+    R.add_vectors(chromadb.PersistentClient(path=str(dst / "chroma")), model, chunks, v)
     (dst / "rag_best.json").write_text(json.dumps(best, indent=1))
     out = pathlib.Path("/vol/best_index.tar.gz")
     with tarfile.open(out, "w:gz") as tf:
@@ -919,6 +920,12 @@ def publish_best_remote(best: dict) -> dict:
     pathlib.Path("/vol/rag_best.json").write_text(json.dumps(best, indent=1))
     vol.commit()
     return {"bytes": out.stat().st_size, "chunking": cfg.chunking}
+
+
+@app.local_entrypoint()
+def publish_best():
+    best = json.loads((LOGS / "rag_best.json").read_text())
+    print(publish_best_remote.remote(best))
 
 
 @app.function(image=gpu_img, gpu=GPU_G, volumes={"/vol": vol}, cpu=4, memory=16384, timeout=1800)
@@ -1053,3 +1060,35 @@ def failures(best: str):
     print(json.dumps({k: v for k, v in r.items() if k not in ("multi_hop", "version_conflict")}, indent=1)[:4000])
     print("multi-hop:", {k: v for k, v in r["multi_hop"].items() if k != "questions"})
     print("versions:", {k: v for k, v in r["version_conflict"].items() if k != "questions"})
+
+
+# =============================================================================== rag_search, as NB3 and Ask Northbridge use it
+@app.function(image=gpu_img, gpu=GPU_G, cpu=4, memory=16384, timeout=1800)
+def rag_search_check_remote() -> dict:
+    os.environ["RAG_INDEX_DIR"] = "/tmp/rag_index"
+    sys.path.insert(0, "/course/ledgerline")
+    from ledgerline.course.l3 import rag as R
+
+    out = {"config": R.best_config().id}
+    t = time.time()
+    hits = R.rag_search("What does ERR-PO-0412 mean and how do I fix it?", user="ECLARKE", k=5)
+    out["first_call_s (fetch + load + first query)"] = round(time.time() - t, 1)
+    out["0412"] = [h["cite"] for h in hits]
+    lat = []
+    for q, u in [("Can I buy the battery packs from Brightcell Energy? They quote £104.", "ECLARKE"),
+                 ("What is the salary band for a senior buyer?", "ECLARKE"), ("What is the salary band for a senior buyer?", "HR-MGR"),
+                 ("Who signs box 7 of the onboarding form?", "DOKAFOR")]:
+        t = time.perf_counter()
+        hs = R.rag_search(q, user=u, k=5)
+        lat.append(time.perf_counter() - t)
+        out[f"{u}: {q}"] = [(h["cite"], h["score"]) for h in hs]
+    out["warm_query_s"] = [round(x, 4) for x in lat]
+    out["keys"] = sorted(hits[0])
+    return out
+
+
+@app.local_entrypoint()
+def rag_search_check():
+    r = rag_search_check_remote.remote()
+    _write_log("rag_search_check.json", r)
+    print(json.dumps(r, indent=1, ensure_ascii=False))

@@ -30,7 +30,7 @@ const KNOBS = [
   ['rewrite', 'Query rewriting', 'One LLM call rewrites the question into a search query before searching (recorded for the golden questions).', { false: 'off', true: 'on' }],
   ['k', 'Top-k', 'How many chunks go to the answer model.', { 3: '3', 5: '5', 10: '10' }],
 ];
-let cfg = { parser: 'structured', chunker: 'structure', size: 400, overlap: 0, embed: 'bge-small', retrieval: 'hybrid', rerank: true, rewrite: false, k: 5 };
+let cfg = { parser: 'structured', chunker: 'structure', size: 400, overlap: 0, embed: 'bge-small', retrieval: 'hybrid', rerank: false, rewrite: false, k: 5 };
 try { const s = JSON.parse(store.get('rl_cfg') || 'null'); if (s) cfg = { ...cfg, ...s }; } catch (e) { /* ignore */ }
 let OPT = null, lastSearch = null, mapData = null, mapKey = '';
 const PALETTE = ['#0b57d0', '#138a60', '#c4511f', '#7b3fd1', '#d93f87', '#0a8a9a', '#b8860b', '#5f6368', '#2a78d6', '#3c9d5d', '#e8710a', '#9334e6', '#1a73e8', '#a50e0e', '#795548'];
@@ -73,7 +73,7 @@ function latBars(r) {
   const total = rows.reduce((a, [, v]) => a + v, 0);
   return `<div class="lat">${rows.map(([k, v]) => `<div class="bar"><span>${esc(k)}</span><span class="bw"><i style="width:${Math.max(1, 100 * v / max)}%"></i></span><span class="num">${v.toFixed(1)} ms</span></div>`).join('')}
     <div class="bar${total > 200 ? ' over' : ''}"><b>retrieval</b><span class="bw"><i style="width:${Math.min(100, 100 * total / max)}%"></i></span><b class="num">${total.toFixed(1)} ms</b></div></div>
-    <p class="small muted">Measured inside the search on the GPU container (the 200 ms budget is the red line beyond the scale's 200). Waiting for the GPU behind other students: ${r.queue_ms} ms; loading this index from the volume: ${r.index_load_ms} ms; round trip from your browser: <span id="rt"></span>.</p>`;
+    <p class="small muted">Measured inside the search on the GPU container; the total turns red above the 200 ms budget. Waiting for the GPU behind other students: ${r.queue_ms} ms; loading this index from the volume: ${r.index_load_ms} ms; round trip from your browser: <span id="rt"></span>.</p>`;
 }
 async function runSearch(q, quiet) {
   if (!q) return;

@@ -41,7 +41,9 @@ def e2e(url: str = URL) -> dict:
         w = pg.evaluate("[document.documentElement.scrollWidth, window.innerWidth]")
         rep["overflow"][name] = w
         if w[0] > w[1] + 1:
-            rep["errors"].append(f"horizontal overflow on {name}: {w}")
+            wide = pg.evaluate("""[...document.querySelectorAll('body *')].filter(e => e.getBoundingClientRect().right > window.innerWidth + 1)
+                .slice(0, 6).map(e => e.tagName + (e.id ? '#' + e.id : '') + '.' + (e.className || '') + ' ' + Math.round(e.getBoundingClientRect().right))""")
+            rep["errors"].append(f"horizontal overflow on {name}: {w} {wide}")
         return w[0] <= w[1] + 1
 
     def run(b, tag, vp):
