@@ -299,54 +299,56 @@ estimated_value (2,000 × £114.00 × 1.20) includes VAT. Seen once, not in the 
 
 **79 · What our harness adds.** Identity, the guard, 14 rounds, logs. [click ×4] Lecture 5 writes the loop.
 
-**80 · Ask the class 10: who decides the order, and what stops a wrong one?** The model decides; the tools (door, error
+**80 · Try it live.** Open `/after?stage=hands` and ask how many BAT-500 packs are in stock (4 Nov check: 5,400 Manchester + 1,200 Leeds, 4.7 s). Then ask for Emma's whole order: it takes one step and stops. That is the cliffhanger for Lecture 5. [click ×1]
+
+**81 · Ask the class 10: who decides the order, and what stops a wrong one?** The model decides; the tools (door, error
 contract, preview) and our harness (guard, limits, identity) stop a wrong one.
 
-**81 · Film 3 · Many tools, one request** (`films/orchestra`).
+**82 · Film 3 · Many tools, one request** (`films/orchestra`).
 
-**82 · Check.** 11 vs 8; search_policy, twice (the approval limit; the need-by date, which no clause had); 2027-02-01.
+**83 · Check.** 11 vs 8; search_policy, twice (the approval limit; the need-by date, which no clause had); 2027-02-01.
 
 ## 10 · Production grade (8:47–8:56) · 83–90
 
-**83 · Part.**
+**84 · Part.**
 
-**84 · The ten criteria.** Read the thresholds. [click] Before (commit 6e6f4d0, 15 tools): 1 pass. [click] After (16
+**85 · The ten criteria.** Read the thresholds. [click] Before (commit 6e6f4d0, 15 tools): 1 pass. [click] After (16
 tools): schema, reliability, latency, idempotency, timeouts pass; usability, payload, regression, MCP compliance and
 change management do not yet.
 
-**85 · How each was measured.** Fuzzing 1,919 calls: 2.008% non-business before (bad dates reaching Ledgerline, 3
+**86 · How each was measured.** Fuzzing 1,919 calls: 2.008% non-business before (bad dates reaching Ledgerline, 3
 nonsense quantities saved), 0 after. [click] Latency over MCP: p99 16.943 ms vs 200. [click] Timeouts: 148 of 148.
 
-**86 · Find and fix: duplicate orders (the live moment).** Ask first: "If the model retries with '9 Nov 2026' and then
+**87 · Find and fix: duplicate orders (the live moment).** Ask first: "If the model retries with '9 Nov 2026' and then
 '2026-11-09', how many requests does Ledgerline hold?" [click] Before: two. [click] The key is built from the
 arguments as written. [click] The fix. Right: 4 rewritten-date cases + 2 lost-reply cases = 6 duplicates → 0. [click] Still
 open on purpose: a deliberate resend of receive_goods / send_message posts twice (2): two equal deliveries can both be
 real, so they say idempotentHint=false.
 
-**87 · The fix in code.** `content_key` (what the order *is*); the door's date rule. [click]
+**88 · The fix in code.** `content_key` (what the order *is*); the door's date rule. [click]
 **Live option (1 minute):** NB4 section 8 runs the retried write: one PR, `already_done: True`, and shows the two keys.
 
-**88 · Usability per host.** 30 golden tasks: ours 100%, Gemini 100%, OpenAI 96.7%, Claude (API) 90%, Claude Code
+**89 · Usability per host.** 30 golden tasks: ours 100%, Gemini 100%, OpenAI 96.7%, Claude (API) 90%, Claude Code
 93.3%. [click] Claude's misses are a read first (order_status, list_my_approvals) before release or approve.
 
-**89 · Honest open items.** Payload/pagination (only supplier_certificates paginates; the other five list tools need a
+**90 · Honest open items.** Payload/pagination (only supplier_certificates paginates; the other five list tools need a
 versioned 1.1 schema); regression (8/8 write tools, 11/16 overall, the reads fail only on pagination); usability under
 95% on two hosts and 12/16 tools right on every host; change management needs the client's sign-off.
 
-**90 · Ask the class 11: which criterion first?** Most answers: idempotency or reliability for writes; take two.
+**91 · Ask the class 11: which criterion first?** Most answers: idempotency or reliability for writes; take two.
 
 ## 11 · NB4, A4, next (8:56–9:00) · 91–97
 
-**91 · Part.**
+**92 · Part.**
 
-**92 · NB4.** Colab, no key; replayed on Modal top to bottom: 30 code cells, 0 errors. Five exercises.
+**93 · NB4.** Colab, no key; replayed on Modal top to bottom: 30 code cells, 0 errors. Five exercises.
 
-**93 · A4.** Four parts, 10 points. [click] the words to use.
+**94 · A4.** Four parts, 10 points. [click] the words to use.
 
 **94–96 · A4 walkthrough.** The highlighted lines are NB4's real cells: exercise 3 (`payment_terms`) is the Part 1
 template; section 5 the raw wire; sections 6–7 the harness and `show_context`; section 8 the retried write.
 
-**97 · Next: Lecture 5, The Loop.**
+**98 · Next: Lecture 5, The Loop.**
 
 ---
 
