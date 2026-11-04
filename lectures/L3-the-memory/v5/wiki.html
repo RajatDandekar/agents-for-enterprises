@@ -1,0 +1,174 @@
+<!-- ============================== 7 · THE LLM WIKI (v5: one document, one question) ==============================
+     Needs: v5/wiki.css, v5/wiki_data.js, v5/wiki.js (after figs2.js, before plates.js). Data: experiments/v5_wiki_data.py.
+     Film 2 is placed by the lead (old slide "Film · 2 · How the LLM Wiki works"). -->
+<section class="slide part" data-plain="1" data-num="7">
+  <div class="center"><span class="num">Section 7 of 11 · The LLM Wiki</span>
+    <div class="recall"><b>Last section</b>RAG cuts the documents into chunks and searches them on every question. A different idea:</div>
+    <h1 class="q2">What if the model wrote Northbridge’s wiki first?</h1></div>
+</section>
+
+<section class="slide" data-plate="The Idea in One Picture">
+  <div class="lec-top"><h2>Compile the knowledge once, then read it</h2><p class="sub">Andrej Karpathy, “LLM Wiki”, a GitHub gist, April 2026: <a class="live" href="https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f" target="_blank" rel="noopener">gist.github.com/karpathy <code>LLM Wiki</code></a></p></div>
+  <div class="fig" data-fig="wiki_idea" style="left:100px;top:250px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="A Wikipedia Page, Read as a Design">
+  <div class="fig wp" data-fig="wikipedia" data-img="figs/wikipedia/electric_bicycle_top.jpg" data-alt="The Wikipedia article E-bike, top of the page"
+       data-boxes="18.3,8.6,63.4,7.4|18,39.6,41.6,26.4|59.9,39.6,22,26.4|3.5,13.4,12.6,48.6|40.2,39.8,18.4,5|37.4,41.8,5.8,2.6|24.4,27,51,12.4|73.8,13,6,2.8|18.2,1.1,33.4,4" style="left:100px;top:110px;width:820px;height:570px"></div>
+  <ul class="wp-map" style="position:absolute;left:960px;top:110px;width:540px">
+    <li><b>Title</b><span class="ar">→</span><span>one page per entity, named by a slug</span></li>
+    <li><b>Lead</b><span class="ar">→</span><span>the summary in the page’s front matter</span></li>
+    <li><b>Infobox</b><span class="ar">→</span><span>the fact table at the top of a page</span></li>
+    <li><b>Contents</b><span class="ar">→</span><span>fixed sections per page type</span></li>
+    <li><b>Blue links</b><span class="ar">→</span><span><code>[[wikilinks]]</code> between pages</span></li>
+    <li><b>[1] [2]</b><span class="ar">→</span><span>references to the raw source and page</span></li>
+    <li><b>“Needs citations”</b><span class="ar">→</span><span>lint findings</span></li>
+    <li><b>View history</b><span class="ar">→</span><span><code>log.md</code>, append-only</span></li>
+    <li><b>Search</b><span class="ar">→</span><span><code>index.md</code>, the catalogue read first</span></li>
+  </ul>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="cap" style="left:100px;top:700px;width:1400px">“E-bike” (redirected from “Electric bicycle”), English Wikipedia, captured 3 Nov 2026: 15 sections, 116 references. Text CC BY-SA 4.0, Wikipedia contributors. <code>figs/wikipedia/</code>.</div>
+</section>
+
+<section class="slide" data-plate="One Document, Read by Hand">
+  <div class="lec-top"><h2>What pages would you write from D?</h2><p class="sub">D is the Purchase Policy, the same document as in RAG. Read it first as a careful person would.</p></div>
+  <div class="fig" data-fig="wiki_hand" style="left:100px;top:230px;width:1400px;height:640px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Ingest, Step 1: The Prompt">
+  <div class="lec-top"><h2>The prompt the ingest sent for D</h2><p class="sub">One model call reads all of D. Click a part to read what the model was given.</p></div>
+  <div class="fig" data-fig="wiki_prompt" style="left:100px;top:240px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Ingest, Step 2: The Reply">
+  <div class="lec-top"><h2>The reply: pages, facts, quotes</h2><p class="sub">The model’s real JSON for D: which pages D touches, and the facts for each, every fact with a quote copied from D.</p></div>
+  <div class="fig" data-fig="wiki_reply" style="left:100px;top:240px;width:1400px;height:610px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Ingest, Step 3: The Quote Check">
+  <div class="lec-top"><h2>Code checks every quote against D</h2><p class="sub">No model here: a string search. If the quote is not in D, the fact is marked unverified.</p></div>
+  <div class="fig" data-fig="wiki_quote" style="left:100px;top:232px;width:1400px;height:620px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Ingest, Step 4: The Written Page">
+  <div class="lec-top"><h2>One call per page writes the markdown</h2><p class="sub">The writer sees the facts, not D. Every sentence ends with a key; follow it back to the clause.</p></div>
+  <div class="fig" data-fig="wiki_page" style="left:100px;top:230px;width:1400px;height:640px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Links, index.md and log.md">
+  <div class="lec-top"><h2>Six pages, linked, listed and logged</h2><p class="sub">The one-source wiki the ingest of D produced, as written: no file edited by hand.</p></div>
+  <div class="fig" data-fig="wiki_links" style="left:100px;top:240px;width:1400px;height:560px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="A Second Source Arrives">
+  <div class="lec-top"><h2>The amendment lands: the page is rewritten</h2><p class="sub">AMD-SUP-2026-02 is ingested into the one-source wiki. The diff below is the real before and after.</p></div>
+  <div class="fig" data-fig="wiki_diff" style="left:100px;top:240px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="The Same Change in RAG">
+  <div class="lec-top"><h2>The same amendment, in RAG</h2><p class="sub">The wiki rewrites what it knows. RAG re-cuts one file and leaves the rest to question time.</p></div>
+  <div class="fig" data-fig="wiki_ragchange" style="left:100px;top:240px;width:1400px;height:560px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="The Rules It Followed: AGENTS.md">
+  <div class="lec-top"><h2>The schema made those choices</h2><p class="sub"><code>AGENTS.md</code> is in every ingest prompt (part 1). People write it. Five of its lines, and what each produced.</p></div>
+  <div class="fig" data-fig="wiki_schema" style="left:100px;top:236px;width:1400px;height:610px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Query, Call by Call">
+  <div class="lec-top"><h2>Emma asks. What does the model see?</h2><p class="sub">The full wiki, the race’s recorded run. Each bar is one call’s context window, part by part, in tokens.</p></div>
+  <div class="fig" data-fig="wiki_query" style="left:100px;top:236px;width:1400px;height:610px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Chunks or Pages">
+  <div class="lec-top"><h2>Ten chunks, or three pages</h2><p class="sub">The same question, drawn to one scale. Colours mark the four source files behind one wiki page.</p></div>
+  <div class="fig" data-fig="wiki_chunks" style="left:100px;top:236px;width:1400px;height:610px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Where It Fails: Never Compiled">
+  <div class="lec-top"><h2>A fact that never reached any page</h2><p class="sub">The wiki can only answer from what the ingest wrote down.</p></div>
+  <div class="fig" data-fig="wiki_fail" data-kind="never" style="left:100px;top:236px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Where It Fails: Wrong at Compile Time">
+  <div class="lec-top"><h2>Written wrong once, read wrong every time</h2><p class="sub">Two real compile-time errors: one by the model, one by the build code.</p></div>
+  <div class="fig" data-fig="wiki_fail" data-kind="wrong" style="left:100px;top:236px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Where It Fails: Stale Until Re-ingested">
+  <div class="lec-top"><h2>The wiki is as new as its last ingest</h2><p class="sub">Our one-source wiki, before and after the amendment.</p></div>
+  <div class="fig" data-fig="wiki_fail" data-kind="stale" style="left:100px;top:236px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Where It Fails: Cost and Time of Ingest">
+  <div class="lec-top"><h2>Every source costs model calls</h2><p class="sub">Measured, from our runs.</p></div>
+  <div class="fig" data-fig="wiki_fail" data-kind="cost" style="left:100px;top:236px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Where It Fails: Stopped Early, Dropped Facts">
+  <div class="lec-top"><h2>The reader stopped, and the answer dropped facts</h2><p class="sub">Navigation decides when it has enough; then the answer step decides what to keep. Emma’s question, fact by fact.</p></div>
+  <div class="fig" data-fig="wiki_fail" data-kind="early" style="left:100px;top:236px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Where It Fails: Exact Codes">
+  <div class="lec-top"><h2>Codes get paraphrased</h2><p class="sub">A rewrite in plain words loses the exact string a user types.</p></div>
+  <div class="fig" data-fig="wiki_fail" data-kind="codes" style="left:100px;top:236px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Lint: The Wiki Checks Itself">
+  <div class="lec-top"><h2>Lint fixes some of these, not all</h2><p class="sub">Code checks, notes recorded at ingest, and a model review of the pages, on the full wiki.</p></div>
+  <div class="fig" data-fig="wiki_lint" style="left:100px;top:236px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="The Wiki, Measured">
+  <div class="lec-top"><h2>What a question costs, and how we test it</h2><p class="sub">The same golden set, the same answer step and the same metrics as RAG.</p></div>
+  <div class="fig" data-fig="wiki_eng" style="left:100px;top:236px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Where the Wiki Lives">
+  <div class="lec-top"><h2>Files, a search index, and a lock on every page</h2><p class="sub">What we built, and what production adds.</p></div>
+  <div class="fig" data-fig="wiki_store" style="left:100px;top:236px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · Section 7 · <span class="qnum"></span></p>
+    <h2 class="q-text">An amendment lands at 9:00. Emma asks at 9:05. <em>Which memory knows the new rule?</em></h2>
+    <div class="q-opts"><span class="q-opt"><b>1</b> RAG</span><span class="q-opt"><b>2</b> The LLM Wiki</span><span class="q-opt"><b>3</b> Both</span><span class="q-opt"><b>4</b> It depends on something else</span></div>
+    <p class="q-cue">Type 1 to 4 in the chat, and one line on what it depends on</p>
+  </div>
+</section>
+
+<section class="slide q hero chk" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">✓</span>
+  <div class="qbox">
+    <p class="q-label">Check · Section 7</p>
+    <ol class="chk-list">
+      <li><span class="chk-q"><b>1</b>Every quote on <code>pol-pur-001</code> passed the check. Can the page still say something D does not?</span><span class="chk-a step">Yes. The check tests the quote, not the sentence written from it, and infobox lines carry no key at all. Our one-source UN 38.3 page said “Ledgerline order blocking”; Ledgerline does not block (PUR.CERT_CHK is N).</span></li>
+      <li><span class="chk-q"><b>2</b>Emma’s wiki answer missed “12 months” and “60 days”. Did the model ever see them?</span><span class="chk-a step">Yes. They were on <code>pol-sup-003</code>, source [2] of the answer call, and the answer left them out. Three other missing facts (NBC-F-112, £119.00, PUR.CERT_CHK) were on pages the reader never opened.</span></li>
+      <li><span class="chk-q"><b>3</b>Why does one amendment cost the wiki model calls and RAG none?</span><span class="chk-a step">The wiki rewrites the pages the source touches (5 calls, 25 s, $0.038 here). RAG re-cuts the file into 3 chunks in about 50 ms and reconciles old and new text only at question time.</span></li>
+    </ol>
+  </div>
+</section>

@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 3 · The Memory · lexical preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../../../engine/plates.css">
+<link rel="stylesheet" href="../l3.css">
+<link rel="stylesheet" href="lexical.css">
+</head>
+<body>
+<div class="deck" id="deck">
+<!-- ============================== v5 · lexical: BM25, hybrid (RRF) and the reranker, on D and Q ==============================
+     Data: v5/lexical_data.js (window.L3V5.lexical) from experiments/v5_lexical_modal.py -> logs/v5_lexical*.json.
+     Figures: v5/lexical.js (FIGS.lexical_*). Styles: v5/lexical.css. Notes: v5/lexical_NOTES.md. -->
+
+<section class="slide part" data-plain="1">
+  <div class="center"><span class="num">Keyword search, fusion and reranking</span>
+    <div class="recall"><b>Last section</b>Dense search finds meaning, but it ranked the ERR-PO-0412 entry 87th and the BAT-500 row 102nd.</div>
+    <h1 class="q2">Can plain word counting find what the vectors missed?</h1></div>
+</section>
+
+<section class="slide" data-plate="Keyword Search From Zero">
+  <div class="lec-top"><h2>First, cut the question into words</h2><p class="sub">Emma’s question through <code>rag.tokenize</code>, one rule per click. The same function cuts every chunk.</p></div>
+  <div class="fig" data-fig="lexical_tok" style="left:100px;top:250px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Keep Codes Whole, and Split Them">
+  <div class="lec-top"><h2>A code is kept whole, and split as well</h2><p class="sub">“What does ERR-PO-0412 mean and how do I fix it?” searched in MAN-ERR-72 (88 chunks) with three tokenizers. Same BM25, only the cutting changes.</p></div>
+  <div class="fig" data-fig="lexical_codes" style="left:100px;top:250px;width:1400px;height:360px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="opens step" style="top:650px;background:var(--g3)"><span class="k" style="color:var(--gold)">Why both</span>The whole token <code>err-po-0412</code> is in only <span data-lx="df.err-po-0412.df_all" data-f="n"></span> of 28,953 chunks, so it separates ERR-PO-0412 from ERR-MAT-0412. The parts let “PO error 0412” match too: <code>0412</code> is in <span data-lx="df.0412.df_all" data-f="n"></span> chunks, <code>po</code> in <span data-lx="df.po.df_all" data-f="n"></span>.</div>
+  <div class="lexical-src" style="left:100px;top:842px">logs/v5_lexical_extra.json · variants (experiments/v5_lexical_modal.py::variants)</div>
+</section>
+
+<section class="slide" data-plate="Which Chunks Hold Which Words">
+  <div class="lec-top"><h2>Five of Emma’s eight words never appear in D</h2><p class="sub">How often each token occurs in each of D’s 15 chunks (after <code>rag.tokenize</code>, header line included).</p></div>
+  <div class="fig" data-fig="lexical_tf" style="left:100px;top:240px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Rare Words Matter">
+  <div class="col" style="width:470px;top:118px">
+    <h2>A word that is everywhere tells you nothing</h2>
+    <p><b>purchase</b> is in all 15 chunks of D: the header line puts it there. Finding it says nothing about which chunk you want.</p>
+    <p><b>battery</b> is in 3 of 15. Finding it narrows the search to those three.</p>
+    <p class="step">Across the whole dump, <b>order</b> is in <span data-lx="df.order.df_all" data-f="n"></span> chunks, <b>brightcell</b> in <span data-lx="df.brightcell.df_all" data-f="n"></span>, <b>buy</b> in just <span data-lx="df.buy.df_all" data-f="n"></span>. Staff write “purchase” and “order”, not “buy”.</p>
+  </div>
+  <div class="fig" data-fig="lexical_df" style="left:640px;top:130px;width:860px;height:700px"></div>
+</section>
+
+<section class="slide" data-plate="From Counts to a Weight: idf">
+  <div class="col" style="width:560px;top:118px">
+    <h2>idf turns “how rare” into a weight</h2>
+    <div class="lexical-box lexical-f" style="margin:6px 0 20px">idf(t) = ln<span style="font-size:1.4em">(</span>1 + <span class="lexical-frac"><span>N − df + 0.5</span><span>df + 0.5</span></span><span style="font-size:1.4em">)</span></div>
+    <p style="font-size:22px">N is the number of chunks, df the number that contain t.</p>
+    <p class="step" style="font-size:22px"><b>brightcell</b> in the dump: N = 28,953, df = 6. ln(1 + 28,947.5 / 6.5) = <b class="lexical-bm"><span data-lx="df.brightcell.idf_all" data-f="2"></span></b>.<br><b>order</b>: df = 6,269, idf = <span data-lx="df.order.idf_all" data-f="2"></span>.</p>
+    <p class="step" style="font-size:22px">The same word weighs differently in different collections: idf is about the chunks you search, not about English.</p>
+  </div>
+  <div class="fig" data-fig="lexical_idf" style="left:740px;top:150px;width:760px;height:680px"></div>
+  <span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="The Tenth “Battery” Adds Little">
+  <div class="lec-top"><h2>Ten mentions are not ten times better</h2><p class="sub">Term frequency saturates. The weight rises fast, then flattens towards a ceiling set by k1. Drag k1.</p></div>
+  <div class="fig" data-fig="lexical_sat" style="left:100px;top:250px;width:880px;height:560px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div style="position:absolute;left:1030px;top:270px;width:470px">
+    <div class="lexical-box lexical-f" style="font-size:23px">weight = idf · <span class="lexical-frac"><span>tf · (k1 + 1)</span><span>tf + k1</span></span><div class="lexical-note" style="margin-top:6px">for a chunk of average length</div></div>
+    <p class="step lexical-note" id="lexical-sat-out" style="font-size:21px;margin-top:22px"></p>
+    <p class="step lexical-note" style="font-size:20px;margin-top:10px">In D, §6 (chunk 5) says “supplier” <span data-lx="tf.supplier.5"></span> times. BM25 counts that as about twice one mention, not ten times.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Long Chunks Are Damped">
+  <div class="lec-top"><h2>The same word counts more in a short chunk</h2><p class="sub">Both chunks say “battery” once and “packs” once. BM25 divides by length relative to the average (b = 0.75). Drag b.</p></div>
+  <div class="fig" data-fig="lexical_len" style="left:100px;top:240px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="BM25 for Emma’s Question, on D">
+  <div class="lec-top"><h2>Add the pieces: BM25 ranks D’s chunks</h2><p class="sub">Each cell is idf × saturation × length for one token in one chunk. A chunk’s score is the sum of its row.</p></div>
+  <div class="fig" data-fig="lexical_score" style="left:100px;top:240px;width:1400px;height:400px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="opens step" style="top:660px;background:var(--g3)"><span class="k" style="color:var(--gold)">Read it</span>First, the FAQ that restates §6.2 and §6.4: it says “battery packs” twice. Second, a version-history line: short, so its two words weigh more. The rule itself, §6, is third. “they” adds 2.02 to §5 for “an order they raised”: noise.</div>
+</section>
+
+<section class="slide" data-plate="The Same Idea in Code">
+  <div class="fig" data-fig="lexical_code" style="left:100px;top:110px;width:960px;height:740px"></div>
+  <div style="position:absolute;left:1100px;top:118px;width:400px">
+    <h2 style="font-size:44px">rag.BM25 is the formula, computed once</h2>
+    <div class="lexical-box lexical-f" style="font-size:19px;line-height:1.6;padding:16px 18px">
+      score(q, d) = <span class="p" data-g="4">sum over the question’s tokens t</span> of
+      <div style="margin-top:8px;white-space:nowrap"><span class="p" data-g="1">idf(t)</span> ·
+      <span class="lexical-frac"><span><span class="p" data-g="0">tf</span> · (k1 + 1)</span><span><span class="p" data-g="0">tf</span> + <span class="p" data-g="2">k1 · (1 − b + b · <span class="p" data-g="0">|d|</span> / avgdl)</span></span></span></div>
+      <div class="p" data-g="3" style="margin-top:6px;font-size:16px">one weight per (chunk, token), stored in W</div>
+    </div>
+    <ol class="lexical-note" style="font-size:18px;padding-left:22px;margin-top:16px">
+      <li class="step">Count each token in each chunk: tf, and the chunk length |d|.</li>
+      <li class="step">Count the chunks that hold each token: df, then idf.</li>
+      <li class="step">The length factor and the denominator.</li>
+      <li class="step">The weight for every (chunk, token), stored once.</li>
+      <li class="step">A question: add the columns of its tokens.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="slide" data-plate="Where BM25 Wins">
+  <div class="lec-top"><h2>On codes, amounts and rare names, BM25 wins</h2><p class="sub">The dense section’s failure cases, searched over all 28,953 chunks. Rank of the first chunk that holds the answer.</p></div>
+  <div class="fig" data-fig="lexical_wins" style="left:100px;top:240px;width:1400px;height:470px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="opens step" style="top:730px;background:var(--g3)"><span class="k" style="color:var(--gold)">Over the golden set</span>Recall@5 on the 27 exact-code questions: dense <span data-lx="by_type.exact_code.dense" data-f="2"></span>, BM25 <b><span data-lx="by_type.exact_code.bm25" data-f="2"></span></b>. On the 34 table lookups: <span data-lx="by_type.table_lookup.dense" data-f="2"></span> against <b><span data-lx="by_type.table_lookup.bm25" data-f="2"></span></b>. The superseded copy is the honest exception: neither method reads the version, only metadata can.</div>
+</section>
+
+<section class="slide" data-plate="Where BM25 Loses">
+  <div class="lec-top"><h2>BM25 matches letters, not meaning</h2><p class="sub">Three real losses, on D, on the dense section’s own win, and on Emma’s question over the whole dump.</p></div>
+  <div class="lexical-cards" style="left:100px;right:100px;top:250px;grid-template-columns:1fr 1fr 1fr">
+    <div class="lexical-card lexical-c-bad"><span class="lexical-k">On D · different word forms</span><h3>buy ≠ bought, quote ≠ quotation</h3>Emma writes <b>buy</b> and <b>quote</b>. D writes “may be <b>bought</b>”, “<b>buys</b>” and “a cheaper <b>quotation</b>”. Our stemmer only drops a plural s, so these score 0.</div>
+    <div class="lexical-card lexical-c-bad step"><span class="lexical-k">The dense section’s win</span><h3>“How do I onboard a new supplier?”</h3>The token <b>onboard</b> is in no chunk at all: the procedure says “Onboarding”. BM25 ranks it <b><span data-lx="cby.Q-101.bm25_rank" data-f="n"></span></b>; dense ranks it <b class="lexical-de"><span data-lx="cby.Q-101.dense_rank"></span></b>.</div>
+    <div class="lexical-card lexical-c-bad step"><span class="lexical-k">Emma’s question, whole dump</span><h3>Rare names pull in the e-mails</h3><b>brightcell</b> (idf <span data-lx="df.brightcell.idf_all" data-f="2"></span>) and <b>£104</b> (<span data-lx="df.£104.idf_all" data-f="2"></span>) fill BM25’s top 6 with the Brightcell e-mails and a meeting note. D’s §6 falls to rank <b><span data-lx="key.s6_bm25_dump" data-f="n"></span></b>. Emma never wrote the rule’s words: lithium-cell, UN 38.3, certificate.</div>
+  </div>
+  <div class="opens step" style="top:600px;background:var(--g1)"><span class="k" style="color:var(--after)">So</span>Dense search misses codes; BM25 misses meaning. Real stemmers and synonym lists help BM25 a little. The usual fix is to run both and merge the two lists: hybrid search.</div>
+  <div class="lexical-src" style="left:100px;top:842px">logs/v5_lexical.json (D, dump) · logs/v5_lexical_cases.json (BM25) · logs/v5_dense_failures.json (dense ranks)</div>
+</section>
+
+<section class="slide" data-plate="Two Lists, Two Scales">
+  <div class="lec-top"><h2>Two rankings of D, in two different units</h2><p class="sub">Emma’s question. BM25 scores run from 0 to <span data-lx="key.bm_max" data-f="2"></span>; cosines are squeezed between <span data-lx="key.cos_min" data-f="2"></span> and <span data-lx="key.cos_max" data-f="2"></span>.</p></div>
+  <div class="fig" data-fig="lexical_lists" style="left:100px;top:232px;width:1300px;height:540px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="opens step" style="top:735px;background:var(--g2);padding:12px 22px;font-size:21px"><span class="k" style="color:var(--lx-rf)">Why not add the scores</span>BM25 would decide almost alone, and its range moves with the question: on the whole dump it reaches <span data-lx="dump.Q-EMMA.bm25.0.score" data-f="1"></span> for Emma, while the best cosine is <span data-lx="dump.Q-EMMA.dense.0.cos" data-f="3"></span>.</div>
+</section>
+
+<section class="slide" data-plate="Reciprocal Rank Fusion">
+  <div class="lec-top"><h2>RRF adds 1 / (60 + rank) from each list</h2><p class="sub">Reciprocal rank fusion ignores the scores and uses only positions. Emma’s question on D, the six best fused chunks.</p></div>
+  <div class="fig" data-fig="lexical_rrf" style="left:100px;top:240px;width:1400px;height:390px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="opens step" style="top:650px;background:var(--g2)"><span class="k" style="color:var(--lx-rf)">No model in RRF</span>Chunks 12 and 1 tie at 0.032522: ranks (1, 2) and (2, 1) give the same sum. RRF has no LLM and no weights to learn. It is the six lines of <code>rag.rrf</code>, and it cannot read a word of the chunks.</div>
+</section>
+
+<section class="slide" data-plate="The k in RRF">
+  <div class="lec-top"><h2>k decides what a top place in one list is worth</h2><p class="sub">Drag k, or switch question. Small k: the top of either list wins. Large k: agreement between the lists wins.</p></div>
+  <div class="fig" data-fig="lexical_k" style="left:100px;top:240px;width:1400px;height:540px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="lexical-src" style="left:100px;top:800px;width:1400px;font-size:17px;color:var(--ink-2)">The alternative is <b>weighted score fusion</b>: rescale each list’s scores to 0–1 and add them as α · dense + (1 − α) · BM25, with α tuned on the golden set. The course uses RRF, k = 60 (<code>rag.RRF_K</code>).</div>
+</section>
+
+<section class="slide" data-plate="RRF Is Arithmetic. The Reranker Is a Model.">
+  <div class="lec-top"><h2>Two different things, often confused</h2><p class="sub">Both reorder a list. Only one of them reads the text.</p></div>
+  <div class="lexical-cards" style="left:100px;right:100px;top:250px;grid-template-columns:1fr 1fr">
+    <div class="lexical-card lexical-c-rf"><span class="lexical-k" style="color:var(--lx-rf)">Reciprocal rank fusion</span><h3>Arithmetic on positions</h3>
+      <ul style="margin:6px 0 0;padding-left:22px"><li>In: two ranked lists. Out: one list.</li><li>Reads no text. No model, no LLM, nothing trained.</li><li>Adds 1 / (60 + rank) per list.</li><li>Cost: a few additions.</li></ul></div>
+    <div class="lexical-card lexical-c-rr step"><span class="lexical-k">The reranker</span><h3>A cross-encoder: <span class="lexical-mono" style="font-size:22px">BAAI/bge-reranker-base</span></h3>
+      <ul style="margin:6px 0 0;padding-left:22px"><li>In: the question and one chunk, together. Out: one relevance number.</li><li>A transformer with <span data-lx="key.rr_params_m"></span> million weights, trained to score pairs.</li><li><b>Not a generative LLM</b>: it never writes text, it only scores.</li><li>Run on the top 20 only.</li></ul></div>
+  </div>
+  <div class="lexical-box step" style="position:absolute;left:100px;right:100px;top:560px;font-size:21px">
+    <span class="lexical-k">The same two chunks of D, for Emma’s question</span>
+    <table class="lexical-t" style="margin-top:4px"><thead><tr><th>Chunk</th><th class="n">BM25 rank</th><th class="n">Dense rank</th><th class="n" style="color:var(--lx-rf)">RRF score</th><th class="n">Reranker score</th></tr></thead><tbody>
+      <tr><td>chunk 12 · FAQ: battery packs, hub motors, chargers</td><td class="n">1</td><td class="n">2</td><td class="n"><span data-lx="chunks.12.rrf" data-f="6"></span></td><td class="n"><span data-lx="chunks.12.rr" data-f="5"></span></td></tr>
+      <tr><td>chunk 1 · Version history 4.0, 4.1</td><td class="n">2</td><td class="n">1</td><td class="n"><span data-lx="chunks.1.rrf" data-f="6"></span></td><td class="n"><span data-lx="chunks.1.rr" data-f="5"></span></td></tr>
+    </tbody></table>
+    <p class="lexical-note" style="margin:10px 0 0">RRF cannot tell them apart. The reranker read both and scores the FAQ almost twice as high.</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="Bi-Encoder and Cross-Encoder">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:50px">Dense search encodes apart; the reranker reads together</h2></div>
+  <div class="fig" data-fig="lexical_xenc" style="left:100px;top:230px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="The Reranker on D">
+  <div class="lec-top"><h2>The reranker puts the rule first</h2><p class="sub">D’s 15 chunks for Emma’s question: BM25’s order, then bge-reranker-base reading each chunk with the question.</p></div>
+  <div class="fig" data-fig="lexical_rrD" style="left:100px;top:232px;width:1300px;height:540px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="opens step" style="top:735px;background:#f4f5f7;padding:12px 22px;font-size:21px"><span class="k" style="color:var(--ink)">Small numbers, right order</span>§6 rises from 3rd to 1st; the version-history line drops from 2nd to 4th. Every score is low (top <span data-lx="chunks.5.rr" data-f="4"></span>) because no chunk of D says whether Brightcell may supply. We use the order, not the size.</div>
+</section>
+
+<section class="slide" data-plate="The Real Top 20, Reordered">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:50px">The pipeline: BM25’s top 20 over the dump, reranked</h2><p class="sub">The default configuration for Emma’s question. Amber: holds golden-set facts. Blue tag: D’s FAQ chunk.</p></div>
+  <div class="fig" data-fig="lexical_rr20" style="left:100px;top:226px;width:1360px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="lexical-src step" style="left:100px;top:806px;width:1400px;font-size:17px;color:var(--ink-2)">The quotation e-mail moves from 2nd to 1st; D’s FAQ from 16th to 10th, inside k = 10. D’s §6 is BM25’s <span data-lx="key.s6_bm25_dump" data-f="n"></span>th, so it is not among the 20: a reranker only reorders what search hands it.</div>
+</section>
+
+<section class="slide" data-plate="What Reranking Costs">
+  <div class="lec-top"><h2>Reading every pair is why the reranker sees only 20</h2><p class="sub">Measured on Modal, median of repeated runs, Emma’s question. Log scale: each grid step is ten times slower.</p></div>
+  <div class="fig" data-fig="lexical_cost" style="left:100px;top:250px;width:1400px;height:420px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="opens step" style="top:600px;background:#f4f5f7"><span class="k" style="color:var(--ink)">The costlier variant</span>Hosted rerank APIs run a reranking model for you, over the network. Or you prompt a generative LLM with the question and the 20 passages and ask for an order. We did that with gemini-3.8-flash: <span data-lx="llm.runs.0.tokens_in" data-f="n"></span> tokens in per call. It put D’s FAQ 3rd or 4th (the cross-encoder: 10th), but each of the three runs gave a different order, and each took over 20 seconds. The cross-encoder gave the same order in <span data-lx="key.rr_repeat_n"></span> of <span data-lx="key.rr_repeat_n"></span> runs.</div>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · <span class="qnum"></span></p>
+    <h2 class="q-text">Over the whole dump, BM25 ranks D’s §6 <em>255th</em> for Emma, and the reranker sees only the top 20. <em>What would you change?</em></h2>
+    <div class="q-opts"><span class="q-opt"><b>1</b> Rerank the top 300</span><span class="q-opt"><b>2</b> Add dense search (hybrid)</span><span class="q-opt"><b>3</b> Change k in RRF</span><span class="q-opt"><b>4</b> Search a second time, with the rule’s words</span></div>
+    <p class="q-cue">Type 1 to 4 in the chat, with one reason</p>
+  </div>
+</section>
+
+<section class="slide q hero chk" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">✓</span>
+  <div class="qbox">
+    <p class="q-label">Check · BM25, RRF and the reranker</p>
+    <ol class="chk-list">
+      <li><span class="chk-q"><b>1</b>D is all about buying. Why does “buy” score nothing in it?</span><span class="chk-a step">D writes “bought”, “buys” and “purchase”, never “buy”. BM25 matches tokens exactly, and our stemmer only drops a plural s from words longer than four letters.</span></li>
+      <li><span class="chk-q"><b>2</b>RRF gave chunks 12 and 1 the same score. Why, and what breaks the tie?</span><span class="chk-a step">Ranks (1, 2) and (2, 1) both give 1/61 + 1/62 = 0.032522: RRF sees only positions. The reranker reads them: §6 first, the FAQ second, the version line fourth.</span></li>
+      <li><span class="chk-q"><b>3</b>Why not rerank all 28,953 chunks?</span><span class="chk-a step">20 pairs take <span data-lx="lat.gpu.rerank_20.p50_ms" data-f="ms"></span> on an L4 GPU, so all of them would take about <span data-lx="key.all_pairs_gpu_s"></span> s per question at that rate; on 4 CPU cores, 20 pairs already take <span data-lx="lat.cpu.rerank_20.p50_ms" data-f="ms"></span>.</span></li>
+    </ol>
+  </div>
+</section>
+
+</div>
+<script src="../figdata.js"></script>
+<script src="../figs.js"></script>
+<script src="../figs2.js"></script>
+<script>
+(() => { let q = 0; document.querySelectorAll('.qnum').forEach((e) => { e.textContent = String(++q); }); if (window.FIGS && FIGS._fill) FIGS._fill();
+  const o = (window.L3 && L3.nb3) || {}; document.querySelectorAll('[data-nb3]').forEach((p) => { if (o[p.dataset.nb3]) p.textContent = o[p.dataset.nb3]; }); })();
+</script>
+<script src="lexical_data.js"></script>
+<script src="lexical.js"></script>
+<script src="../../../engine/plates.js"></script>
+</body>
+</html>

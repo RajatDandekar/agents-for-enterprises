@@ -1,0 +1,159 @@
+<!-- ============================== 2b · PARSING, ONE REAL FILE AT A TIME (v5) ==============================
+     Replaces old slides 18–19 ("Parse by Document Type" and its class question). Every image is a real render of a real
+     file (experiments/v5_parse_modal.py on Modal); every text is a parser's real output (v5_parse_build.py → parse_data.js). -->
+
+<section class="slide part" data-plain="1" data-num="2">
+  <div class="center"><span class="num">Section 2 of 11 · The audit · parsing</span>
+    <div class="recall"><b>So far</b>We counted the dump: <span data-l3="audit.totals.files" data-f="n"></span> files, every count made on the structured parser’s text.</div>
+    <h1 class="q2">What does a program actually see when it opens a file?</h1></div>
+</section>
+
+<!-- 1 · a table in a native PDF -->
+<section class="slide" data-plate="A Table in a PDF">
+  <div class="lec-top"><h2 style="font-size:46px">A table in a PDF: the words survive, the rows do not</h2><p class="sub" style="font-size:21px"><code>01_policies/POL-APR-002 Approval Matrix v3.0.pdf</code> · page 1 · a PDF with a text layer</p></div>
+  <div class="fig" data-fig="parse_img" data-key="apr" data-im="crop" style="left:100px;top:420px;width:760px;height:231px"></div>
+  <div class="parse-note" style="left:100px;top:664px;width:760px">The page as printed, rendered with PyMuPDF (zoomed on § 3).</div>
+  <div class="step"><div class="fig" data-fig="parse_txt" data-key="apr" data-tx="naive" style="left:900px;top:222px;width:600px;height:330px"></div></div>
+  <div class="step"><div class="fig" data-fig="parse_txt" data-key="apr" data-tx="struct" style="left:900px;top:572px;width:600px;height:270px"></div></div>
+  <div class="parse-q" style="left:100px;top:222px;width:760px"><span class="k"><span data-pv="files.apr.q.id"></span> · Emma’s role</span><b data-pv="files.apr.q.question"></b>
+    <span class="ans step">Answer: <span data-pv="files.apr.q.answer"></span> Plain has the same words, one cell per line: “£250,000” sits between “Purchase executive” and “PUR-SR”. Only the row says whose it is.</span></div>
+</section>
+
+<!-- 2 · a long policy: furniture removed, headings become units -->
+<section class="slide" data-plate="Headings Become Units">
+  <div class="lec-top"><h2 style="font-size:46px">A long policy: headings become units, with a place</h2><p class="sub" style="font-size:21px"><code>01_policies/POL-PUR-001_Purchase_Policy_v4.1.pdf</code> · page 2 of 4 · document D</p></div>
+  <div class="fig" data-fig="parse_img" data-key="pur" data-im="page" style="left:100px;top:206px;width:450px;height:636px"></div>
+  <div class="step"><div class="fig" data-fig="parse_txt" data-key="pur" data-tx="naive" style="left:590px;top:326px;width:440px;height:280px"></div></div>
+  <div class="step"><div class="fig" data-fig="parse_txt" data-key="pur" data-tx="units" style="left:1050px;top:326px;width:450px;height:280px"></div></div>
+  <div class="step"><div class="fig" data-fig="parse_img" data-key="pur" data-im="crop6" style="left:590px;top:626px;width:540px;height:215px"></div>
+  <div class="fig" data-fig="parse_txt" data-key="pur" data-tx="chunk" style="left:1150px;top:620px;width:350px;height:222px"></div></div>
+  <div class="parse-q" style="left:590px;top:206px;width:910px"><span class="k" data-pv="files.pur.q.id"></span><b data-pv="files.pur.q.question"></b>
+    <span class="ans step" style="margin-top:4px">Answer from D: <span data-pv="files.pur.q.answer"></span></span></div>
+</section>
+
+<!-- 3 · a scan -->
+<section class="slide" data-plate="A Scan Is a Picture">
+  <div class="lec-top"><h2 style="font-size:46px">A scan: the PDF holds a picture, not text</h2><p class="sub" style="font-size:21px"><code>99_scans/2026_signed_approval_PO-2026-00452.pdf</code> · one page, scanned at 200 dpi</p></div>
+  <div class="fig" data-fig="parse_img" data-key="scan" data-im="thumb" style="left:100px;top:206px;width:300px;height:424px"></div>
+  <div class="fig" data-fig="parse_img" data-key="scan" data-im="orig" style="left:420px;top:206px;width:640px;height:372px"></div>
+  <div class="step"><div class="fig" data-fig="parse_txt" data-key="scan" data-tx="naive" style="left:1090px;top:206px;width:410px;height:150px"></div></div>
+  <div class="step"><div class="fig" data-fig="parse_txt" data-key="scan" data-tx="tess" style="left:1090px;top:376px;width:410px;height:466px"></div></div>
+  <div class="parse-q" style="left:100px;top:652px;width:960px"><span class="k" data-pv="files.scan.q.id"></span><b data-pv="files.scan.q.question"></b>
+    <span class="ans step">Found in the OCR text: <span data-pv="files.scan.q.answer"></span> The signature came out as two words, “of Ne”: OCR reads every mark as letters.</span></div>
+</section>
+
+<!-- 4 · a poor copy of the same scan -->
+<section class="slide" data-plate="A Poor Scan: Tesseract or a Vision Model">
+  <div class="lec-top"><h2 style="font-size:46px">A poor copy: Tesseract, or a vision model?</h2><p class="sub" style="font-size:20px">The six scans in the dump are clean. Real ones often are not, so we made a poor copy of the same page: rotated 1.5°, half the resolution, blurred, speckled, saved as a low-quality JPEG.</p></div>
+  <div class="fig" data-fig="parse_img" data-key="scan" data-im="degraded" style="left:100px;top:236px;width:560px;height:325px"></div>
+  <div class="parse-q" style="left:700px;top:236px;width:800px"><span class="k"><span data-pv="files.scan.q.id"></span> again</span><b data-pv="files.scan.q.question"></b></div>
+  <div class="step"><div class="fig" data-fig="parse_txt" data-key="scan" data-tx="tess_bad" style="left:700px;top:326px;width:390px;height:362px"></div></div>
+  <div class="step"><div class="fig" data-fig="parse_txt" data-key="scan" data-tx="vision_bad" style="left:1110px;top:326px;width:390px;height:362px"></div></div>
+  <div class="step">
+    <div class="parse-cost" style="left:100px;top:584px;width:560px">
+      <div class="stat"><b><span data-pv="nums.ocr.page.tesseract_secs"></span> s</b><span>Tesseract, this page, CPU, no fee</span></div>
+      <div class="stat"><b><span data-pv="nums.ocr.page.vision_secs"></span> s</b><span>gemini-3.8-flash, this page, API</span></div>
+      <div class="stat"><b data-pv="nums.ocr.page.vision_usd_s"></b><span><span data-pv="nums.ocr.page.prompt_tokens"></span> tokens in, <span data-pv="nums.ocr.page.out_tokens"></span> out + <span data-pv="nums.ocr.page.thought_tokens"></span> thinking</span></div>
+    </div>
+    <div class="opens" style="top:704px;left:700px;right:100px;padding:12px 18px;font-size:19px;background:var(--g1)"><span class="k" style="color:var(--after)">All six scans, clean and poor (12 runs)</span>The golden fact was found by Tesseract in <span data-pv="nums.ocr.text.tesseract_original"></span> clean and <span data-pv="nums.ocr.text.tesseract_degraded"></span> poor copies; by the vision model in <span data-pv="nums.ocr.text.vision_original"></span> and <span data-pv="nums.ocr.text.vision_degraded"></span>. On average <span data-pv="nums.ocr.all12.tesseract_mean_s"></span> s against <span data-pv="nums.ocr.all12.vision_mean_s"></span> s and <span data-pv="nums.ocr.all12.vision_mean_usd_s"></span> a page. It also adds what you did not ask for: on the poor VAT memo, Markdown <code>**</code> marks.</div>
+    <div class="parse-note" style="left:100px;top:724px;width:560px;font-size:15.5px">Price: OpenRouter’s list price for this model (input $0.825, output $4.125 per million tokens), fetched with the run. Called directly on Google’s API.</div>
+  </div>
+</section>
+
+<!-- 5 · a spreadsheet row -->
+<section class="slide" data-plate="A Row Without Its Headers">
+  <div class="lec-top"><h2 style="font-size:46px">A spreadsheet: a row without its headers is a list of numbers</h2><p class="sub" style="font-size:21px"><code>05_master_data/ITEM_MASTER_2026-10-26.xlsx</code> · sheet Items · rendered with LibreOffice</p></div>
+  <div class="fig" data-fig="parse_img" data-key="item" data-im="crop" style="left:100px;top:318px;width:1400px;height:278px"></div>
+  <div class="step"><div class="fig" data-fig="parse_txt" data-key="item" data-tx="naive" style="left:100px;top:622px;width:640px;height:220px"></div></div>
+  <div class="step"><div class="fig" data-fig="parse_txt" data-key="item" data-tx="struct" style="left:770px;top:622px;width:730px;height:220px"></div></div>
+  <div class="parse-q" style="left:100px;top:206px;width:1400px"><span class="k" data-pv="files.item.q.id"></span><b data-pv="files.item.q.question"></b>
+    <span class="ans step">Answer: <span data-pv="files.item.q.answer"></span> In plain, which of “1 1 3000 600 42” is it?</span></div>
+</section>
+
+<!-- 6 · an e-mail -->
+<section class="slide" data-plate="An E-mail on Disk">
+  <div class="lec-top"><h2 style="font-size:46px">An e-mail: what is on disk is not what was written</h2><p class="sub" style="font-size:21px"><code>09_email_archive/2026/2026-10-22_Quotation Q-BE-26-0917 - Brightcell Energy.eml</code></p></div>
+  <div class="fig" data-fig="parse_txt" data-key="email" data-tx="raw" style="left:100px;top:200px;width:770px;height:650px"></div>
+  <div class="step"><span class="parse-note" style="left:900px;top:372px;width:600px">Every <b>=</b> at a line end is a soft break; <b>=C2=A3</b> is the two bytes of “£”. The mail gateway encoded the text this way to send it.</span></div>
+  <div class="step"><div class="fig" data-fig="parse_txt" data-key="email" data-tx="struct" style="left:900px;top:436px;width:600px;height:416px"></div></div>
+  <div class="parse-q" style="left:900px;top:200px;width:600px"><span class="k" data-pv="files.email.q.id"></span><b data-pv="files.email.q.question"></b>
+    <span class="ans step">The quote: <span data-pv="files.email.q.answer"></span> In the raw file, “£104.00” does not occur at all.</span></div>
+</section>
+
+<!-- 7 · a Word file with tables -->
+<section class="slide" data-plate="A Word Table Goes Missing">
+  <div class="lec-top"><h2 style="font-size:46px">A Word file: a paragraph reader skips every table</h2><p class="sub" style="font-size:21px"><code>01_policies/old/Approval_Matrix_v2.0_2024.docx</code> · rendered with LibreOffice</p></div>
+  <div class="fig" data-fig="parse_img" data-key="apr2" data-im="page" style="left:100px;top:206px;width:700px;height:487px"></div>
+  <div class="step"><div class="fig" data-fig="parse_txt" data-key="apr2" data-tx="naive" style="left:840px;top:338px;width:660px;height:186px"></div>
+    <div class="parse-note" style="left:100px;top:712px;width:700px">Both tables are gone: the limits and the box that says <b>SUPERSEDED</b>. In the whole dump, plain drops <b data-l3="audit.plain_vs_structured.docx_table_units_dropped_by_plain" data-f="n"></b> Word tables; the onboarding checklist NBC-F-113 keeps <b data-pv="nums.apr2.f113_plain_tokens"></b> of its <b data-pv="nums.apr2.f113_struct_tokens"></b> tokens.</div></div>
+  <div class="step"><div class="fig" data-fig="parse_txt" data-key="apr2" data-tx="struct" style="left:840px;top:530px;width:660px;height:320px"></div></div>
+  <div class="parse-q" style="left:840px;top:206px;width:660px"><span class="k"><span data-pv="files.apr2.q.id"></span>, the history</span><b data-pv="files.apr2.q.question"></b>
+    <span class="ans step"><span data-pv="files.apr2.q.answer"></span></span></div>
+</section>
+
+<!-- 8 · an old intranet page -->
+<section class="slide" data-plate="An Old Intranet Page">
+  <div class="lec-top"><h2 style="font-size:46px">A web page: the menu is on every page</h2><p class="sub" style="font-size:21px"><code>11_training/intranet_export_2016/approval_limits.html</code> · in a browser, as exported (no stylesheet)</p></div>
+  <div class="fig" data-fig="parse_img" data-key="intra" data-im="page" data-fit="width" style="left:100px;top:206px;width:640px;height:498px"></div>
+  <div class="step"><div class="fig" data-fig="parse_txt" data-key="intra" data-tx="naive" style="left:780px;top:320px;width:720px;height:332px"></div>
+    <div class="parse-note" style="left:100px;top:722px;width:640px">The banner and <b data-pv="nums.intra.nav_links"></b> menu links repeat on all 23 pages of the export. Indexed as text, every page carries “How to raise an order” and “Approval limits”, whatever it is about.</div></div>
+  <div class="step"><div class="fig" data-fig="parse_txt" data-key="intra" data-tx="struct" style="left:780px;top:664px;width:720px;height:188px"></div></div>
+  <div class="parse-q" style="left:780px;top:206px;width:720px"><span class="k"><span data-pv="files.intra.q.id"></span>, in 2016</span><b data-pv="files.intra.q.question"></b>
+    <span class="ans step"><span data-pv="files.intra.q.answer"></span></span></div>
+</section>
+
+<!-- 9 · metadata -->
+<section class="slide" data-plate="Metadata the Parser Keeps">
+  <div class="lec-top"><h2 style="font-size:46px">Three answers to one question. Which is in force?</h2><p class="sub" style="font-size:21px">Q-605 found £250,000, £200,000 and £150,000. The parser also keeps what each file says about itself: <code>corpus.file_meta</code>, as it ran.</p></div>
+  <div class="fig parse-meta" data-fig="parse_meta" data-files="0,1,2" data-k0="0" style="left:100px;top:214px;width:1400px;grid-template-columns:repeat(3,1fr)"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="step"><div class="fig parse-meta" data-fig="parse_meta" data-files="3,4" data-k0="0" style="left:100px;top:566px;width:920px;grid-template-columns:repeat(2,1fr)"></div>
+    <div class="opens" style="left:1050px;right:100px;top:566px;padding:14px 18px;font-size:19px;background:var(--g1)"><span class="k" style="color:var(--after)">They become filters</span>Not in force or superseded: the chunk header says so, and the answer must too. Confidential: <code>may_read</code> removes the file before ranking, for anyone not in HR. The 2016 page says nothing about itself, so its metadata is empty: a parser keeps only what the file states.</div></div>
+</section>
+
+<!-- 10 · summary -->
+<section class="slide" data-plate="Parsing, Format by Format">
+  <div class="lec-top"><h2 style="font-size:46px">Parsing, format by format</h2><p class="sub" style="font-size:21px">What we saw on each real file, what <code>corpus.py</code> does about it, and tools that do the same job.</p></div>
+  <table class="parse-sum" style="left:100px;top:198px;width:1400px">
+    <tr><th style="width:150px">Format</th><th style="width:400px">What goes wrong</th><th>What our parser does</th><th style="width:300px">Tools that do this</th></tr>
+    <tr><td>PDF, text</td><td>Tables flatten to one cell per line; headers and footers land mid-text</td><td>Tables as “a | b | c” rows; one unit per heading, with page and section; repeated lines and “Page x of y” removed</td><td class="tl">docling, Unstructured, LlamaParse, Azure Document Intelligence</td></tr>
+    <tr><td>PDF, scan</td><td>No text layer: nothing to search</td><td>Tesseract OCR on the page image (a vision model for poor copies)</td><td class="tl">docling (OCR), Unstructured (ocr_only), Azure, a vision LLM</td></tr>
+    <tr><td>Spreadsheet</td><td>A row is numbers without their headers</td><td>One unit per row as “column: value”, with the sheet’s title lines</td><td class="tl">docling, Unstructured (partition_xlsx), Azure</td></tr>
+    <tr><td>E-mail</td><td>Quoted-printable: soft breaks, “=C2=A3” for £</td><td>Decode it; keep Subject, From, To, Date; the date becomes metadata</td><td class="tl">Unstructured (partition_email), docling (Email)</td></tr>
+    <tr><td>Word</td><td>A paragraph reader skips every table</td><td>Walk the body in order, tables included; one unit per heading</td><td class="tl">docling, Unstructured (partition_docx), Azure</td></tr>
+    <tr><td>Web page</td><td>Banner and menu on every page</td><td>Drop them; tables as rows; units by heading</td><td class="tl">docling, Unstructured (partition_html), Azure</td></tr>
+    <tr><td>Every file</td><td>Which version, in force or not, who may read it</td><td>doc_id, version, effective, status, superseded, future, confidential</td><td class="tl">your own rules: no tool knows Henrik’s folders</td></tr>
+  </table>
+  <div class="step"><div class="parse-tools" style="left:100px;top:682px;width:1400px">
+    <div class="card"><b>Docling</b>Open source, from IBM Research. PDF, Office, HTML, images: layout, reading order, tables, OCR. Markdown or JSON.</div>
+    <div class="card"><b>Unstructured</b>Open source. One <code>partition_*</code> per format. For PDFs, <code>hi_res</code> uses a layout model; <code>ocr_only</code> runs Tesseract.</div>
+    <div class="card"><b>LlamaParse</b>LlamaIndex’s hosted parser: 130+ file types to Markdown, text or JSON, using generative models.</div>
+    <div class="card"><b>Azure Document Intelligence</b>Microsoft’s layout model: tables, section headings, page headers and footers. Markdown out.</div>
+    <div class="card"><b>Vision-LLM OCR</b>Send the page image to a model. Here: <span data-pv="nums.ocr.all12.vision_mean_s"></span> s and <span data-pv="nums.ocr.all12.vision_mean_usd_s"></span> a page, 12 runs.</div>
+  </div></div>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · Section 2 · <span class="qnum"></span></p>
+    <h2 class="q-text">Henrik’s dump has 6 scans among 693 files. <em>Where would you spend a vision model?</em></h2>
+    <div class="q-opts"><span class="q-opt"><b>1</b> Every page of every file</span><span class="q-opt"><b>2</b> The 6 scans only</span><span class="q-opt"><b>3</b> Scans, and any page where Tesseract is unsure</span><span class="q-opt"><b>4</b> Nowhere: Tesseract read all 6</span></div>
+    <p class="q-cue">Type 1 to 4 in the chat, with one reason</p>
+  </div>
+</section>
+
+<!-- checks -->
+<section class="slide" data-plate="Check: Which Unit Answers?">
+  <div class="lec-top"><h2 style="font-size:46px">Check: which unit can answer this?</h2><p class="sub" style="font-size:21px">The same spreadsheet, another row. Both parsers’ real output.</p></div>
+  <div class="fig" data-fig="parse_txt" data-key="check_item" data-tx="naive" style="left:100px;top:350px;width:1400px;height:150px"></div>
+  <div class="fig" data-fig="parse_txt" data-key="check_item" data-tx="struct" style="left:100px;top:530px;width:1400px;height:190px"></div>
+  <div class="parse-q" style="left:100px;top:214px;width:1400px"><span class="k" data-pv="files.check_item.q.id"></span><b data-pv="files.check_item.q.question"></b>
+    <span class="ans step">Only the structured one: <span data-pv="files.check_item.q.answer"></span> In plain, “1 1 200 20 42” could be any five columns.</span></div>
+</section>
+
+<section class="slide" data-plate="Check: Keep, Decode or Drop?">
+  <div class="lec-top"><h2 style="font-size:46px">Check: keep it, decode it, or drop it?</h2><p class="sub" style="font-size:21px">Three real snippets from the dump. What should a parser do with each? Click for the answers.</p></div>
+  <div class="fig" data-fig="parse_snips" style="left:100px;top:250px;width:1400px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>

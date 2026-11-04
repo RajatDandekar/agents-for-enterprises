@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 3 · The Memory · dense preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../../../engine/plates.css">
+<link rel="stylesheet" href="../l3.css">
+<link rel="stylesheet" href="dense.css">
+</head>
+<body>
+<div class="deck" id="deck">
+<!-- ============================== DENSE RETRIEVAL, ON ONE DOCUMENT (v5 section `dense`) ==============================
+     Numbers: window.L3V5.dense (v5/dense_data.js, from experiments/logs/v5_dense*.json). Figures: v5/dense.js. CSS: v5/dense.css. -->
+
+<section class="slide part" data-plain="1" data-num="6">
+  <div class="center"><span class="num">Dense retrieval, by hand</span>
+    <div class="recall"><b>Last section</b>Pasting every document does not fit and costs too much. We must find the few passages that answer.</div>
+    <h1 class="q2">How does a computer find the one clause that answers Emma?</h1></div>
+</section>
+
+<section class="slide" data-plate="One Document, One Question">
+  <div class="lec-top"><h2>One document, one question</h2><p class="sub">Before 28,953 chunks: one policy and Emma’s question, small enough to check every step by eye.</p></div>
+  <div class="fig" data-fig="dense_thumbs" style="left:100px;top:250px;width:860px;height:320px"></div>
+  <div class="dense-kv" style="left:100px;top:640px;width:860px;flex-direction:row">
+    <div style="flex:1"><b>Document D</b><code>01_policies/POL-PUR-001_Purchase_Policy_v4.1.pdf</code></div>
+    <div><b>Parsed</b><span data-dn="n_units"></span> units · <span data-dn="doc_tokens" data-f="n"></span> tokens</div>
+  </div>
+  <div class="step" style="position:absolute;left:1010px;top:250px;width:490px">
+    <div class="dense-q"><span class="who">Emma Clarke, purchase executive · Q-EMMA</span>Can I buy the battery packs from Brightcell Energy? They quote £104.</div>
+  </div>
+  <p class="step" style="position:absolute;left:1010px;top:450px;width:490px;font-size:23px">First we read D ourselves and write the ideal answer. Then we ask the machine to find it, and check each step against what we know.</p>
+</section>
+
+<section class="slide" data-plate="Reading D · The Front Page">
+  <div class="fig" data-fig="dense_page" data-page="1" data-view="40,22,520" data-marks="title;docid,version,effective,status;history;h41" style="left:100px;top:100px;width:860px;height:720px"></div>
+  <ol class="dense-notes" style="left:1010px;top:130px;width:490px">
+    <li>A title, then a header table: what this document is.</li>
+    <li class="step">Four fields decide whether it applies today: id <b>POL-PUR-001</b>, version <b>4.1</b>, effective <b>2026-04-01</b>, status <b>CURRENT</b>.</li>
+    <li class="step">A version history: five versions since 1998. Copies of older versions are still in the dump.</li>
+    <li class="step">The 4.1 row: <b>§6.2 extended to chargers; §6.4 added</b>. Keep those two numbers in mind.</li>
+  </ol>
+</section>
+
+<section class="slide" data-plate="Reading D · Sections and Clauses">
+  <div class="fig" data-fig="dense_page" data-page="1" data-view="40,340,520" data-marks="s1,s2,s3,s4;c31,c32,c33,c34,c41,c42,c43;c33" style="left:100px;top:100px;width:860px;height:720px"></div>
+  <ol class="dense-notes" style="left:1010px;top:130px;width:490px">
+    <li>Numbered sections: 1 Purpose, 2 Scope, 3 Requests before orders … nine in all, on pages 1 and 2.</li>
+    <li class="step">Inside each section, numbered clauses: 3.1, 3.2, 3.3 … one rule each. A clause is what a person quotes.</li>
+    <li class="step">§3.3: a direct order without a request only up to <b>£50,000</b>. An amount we will meet again.</li>
+  </ol>
+</section>
+
+<section class="slide" data-plate="Reading D · §6 and the Appendices">
+  <div class="fig" data-fig="dense_page" data-page="2" data-view="40,196,520;40,196,520;40,196,520;40,420,520" data-marks="s6;c61,c62,c63,c64;c62,c64;appA,lit" style="left:100px;top:100px;width:860px;height:720px"></div>
+  <ol class="dense-notes" style="left:1010px;top:130px;width:490px">
+    <li>§6 Supplier qualification: who we may buy from.</li>
+    <li class="step">6.1 active suppliers only · 6.2 lithium-cell parts need a UN 38.3 certificate · 6.3 onboarding first · 6.4 prefer the supplier with a rate contract.</li>
+    <li class="step">Battery packs are lithium-cell parts, so §6.2 and §6.4 are the two clauses about Emma’s question.</li>
+    <li class="step">Appendix A defines the words: a lithium-cell part is an item with <code>cell_safety = 1</code>. Appendix B, on page 3, repeats the rules as staff questions.</li>
+  </ol>
+</section>
+
+<section class="slide" data-plate="The Ideal Answer, From D Alone">
+  <div class="fig" data-fig="dense_page" data-page="2" data-view="40,200,520" data-marks=";c62;c64" style="left:100px;top:110px;width:700px;height:330px"></div>
+  <div style="position:absolute;left:100px;top:470px;width:700px" class="dense-q"><span class="who">Emma · Q-EMMA</span>Can I buy the battery packs from Brightcell Energy? They quote £104.</div>
+  <div class="dense-ans" style="position:absolute;left:850px;top:110px;width:650px">
+    <h3>Not on price, and not before the certificate is on file</h3>
+    <div class="dense-quote step"><b>§6.2</b> Lithium-cell parts (battery packs, …) may be bought only from a supplier holding a valid UN 38.3 certificate on file in Ledgerline. The certificate must be uploaded and checked before the first order is placed.</div>
+    <div class="dense-quote step"><b>§6.4</b> A cheaper quotation from a new supplier does not by itself justify a change of supplier for a lithium-cell part.</div>
+  </div>
+  <div class="dense-cant step" style="position:absolute;left:850px;top:600px;width:650px"><span class="k">What D cannot answer</span>Is Brightcell an active supplier? Does it hold a certificate? Who supplies battery packs today, at what rate? D never names Brightcell, Voltway, BAT-500 or £104 (checked in the parsed text). Those answers are in other documents: a multi-hop question, for later.</div>
+  <p class="cap" style="left:100px;top:620px;width:700px">Quotes copied from the parsed text of D (structured parser, unit “6. Supplier qualification”). The golden set’s facts F-PUR-6.2 and F-PUR-6.4 point at the same two clauses.</p>
+</section>
+
+<section class="slide" data-plate="D in 15 Chunks">
+  <div class="lec-top" style="top:88px"><h2 style="font-size:50px">The chunker cuts D into <span data-dn="play.s200-o15.n"></span> pieces</h2><p class="sub">Structure-aware, about 200 tokens, 15% overlap, a header line on each. Every chunk of D, in reading order; colour = section.</p></div>
+  <div class="fig" data-fig="dense_chunks" style="left:100px;top:226px;width:1400px;height:462px"></div>
+  <div class="dense-callouts" style="left:100px;top:700px;width:1400px">
+    <div class="card step"><b class="k">Header prefix</b>Each chunk starts with <span class="dense-mono">[Purchase Policy · POL-PUR-001 · v4.1 · effective 2026-04-01]</span> and its section path. That text is embedded too.</div>
+    <div class="card step"><b class="k">Overlap</b>15% of 200 = 30 tokens, used only when one section must be cut. In D only the header table is cut (#0, #1), between rows longer than 30 tokens, so nothing repeats. At 50 tokens #11 starts with “<span class="dense-hl" data-dn="play.s50-o15.chunks.11.ovl_text"></span>”.</div>
+    <div class="card af step"><b class="k">We follow #5</b>§6 Supplier qualification, 194 tokens: §6.1 to §6.4 in one chunk, so both answer clauses travel together.</div>
+  </div>
+</section>
+
+<section class="slide" data-plate="The Chunk We Follow">
+  <div class="lec-top"><h2>Chunk #5, exactly as it is embedded</h2><p class="sub">Header lines in green, then the body. The two answer clauses are inside.</p></div>
+  <div class="fig" data-fig="dense_full" style="left:100px;top:230px;width:900px;height:560px"></div>
+  <span class="step" style="display:none"></span>
+  <div class="dense-kv" style="left:1040px;top:230px;width:460px">
+    <div><b>Chunk id</b><code data-dn="selected.cid"></code></div>
+    <div><b>Citation, as the course code writes it</b><span data-dn="selected.cite"></span></div>
+    <div><b>Size</b><span data-dn="selected.o200k_tokens"></span> tokens (o200k, our ruler for chunk size)</div>
+    <div class="step"><b>Why this chunk</b>It holds the §6.2 sentence (fact F-PUR-6.2) and §6.4 (F-PUR-6.4). If retrieval returns it, the answer step has what it needs from D.</div>
+  </div>
+</section>
+
+<section class="slide" data-plate="From Chunk to 384 Numbers">
+  <div class="lec-top" style="top:88px"><h2 style="font-size:50px">From chunk #5 to 384 numbers</h2><p class="sub">bge-small-en-v1.5 (<code>rag.EMBED_MODELS["bge-small"]</code>), run on Modal. Every value below is this chunk’s.</p></div>
+  <div class="fig" data-fig="dense_flow" style="left:100px;top:226px;width:1400px;height:620px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="The Pieces the Model Reads">
+  <div class="fig" data-fig="dense_pieces" style="left:100px;top:100px;width:980px;height:740px"></div>
+  <ol class="dense-notes" style="left:1120px;top:110px;width:380px">
+    <li><b data-dn="selected.n_pieces"></b> WordPiece pieces for chunk #5, from <code>[CLS]</code> to <code>[SEP]</code>. The model never sees letters, only these.</li>
+    <li class="step">Common words are one piece. Rarer ones split, and <code>##</code> joins a piece to the one before: ledger ##line, quota ##tion, onboard ##ed.</li>
+    <li class="step">Codes break into fragments: pol - pu ##r - 001, un 38 . 3. ERR-PO-0412 becomes <code>er ##r - po - 04 ##12</code>. Remember this for the failure cases.</li>
+  </ol>
+</section>
+
+<section class="slide" data-plate="Cosine Similarity, in Two Dimensions">
+  <div class="fig" data-fig="dense_cos2d" style="left:100px;top:150px;width:860px;height:680px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <ol class="dense-notes" style="left:1010px;top:150px;width:490px">
+    <li>Two arrows and the angle between them. Cosine of the angle: 1 when they point the same way, 0 at a right angle.</li>
+    <li class="step">The angles drawn are the real ones between Emma’s question and three chunks of D: θ = arccos of their 384-number cosine.</li>
+    <li class="step">They are close: 47.7° to 62.6°. In this model even unrelated text sits near 60°. What matters is the order, not the size.</li>
+  </ol>
+</section>
+
+<section class="slide" data-plate="384 Numbers, One Cosine">
+  <div class="lec-top" style="top:88px"><h2 style="font-size:50px">In 384 dimensions it is the same sum</h2><p class="sub">Multiply the two vectors position by position and add up. Each cell is one of the 384 numbers.</p></div>
+  <div class="fig" data-fig="dense_vec" style="left:100px;top:230px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Every Chunk of D, in 3D">
+  <div class="fig" data-fig="dense_space" data-mode="chunks" style="left:100px;top:90px;width:980px;height:760px"></div>
+  <span class="step" style="display:none"></span>
+  <ol class="dense-notes" style="left:1120px;top:120px;width:380px">
+    <li>Each point is one chunk’s 384 numbers, turned into 3 by PCA fitted on these <span data-dn="pca.n"></span> chunks. Colour = section.</li>
+    <li>The 3 axes keep <b data-dn="pca.explained3" data-f="pct0"></b> of the spread. Close in 3D usually means close in 384, not always: every distance we use is the full 384.</li>
+    <li class="step">Blue ring: chunk #5, holding §6.2 and §6.4. Dashed ring: Appendix B’s battery question, which restates them in plain words.</li>
+  </ol>
+</section>
+
+<section class="slide" data-plate="Emma’s Question Lands">
+  <div class="fig" data-fig="dense_space" data-mode="query" style="left:100px;top:90px;width:900px;height:760px"></div>
+  <span class="step" style="display:none"></span>
+  <div style="position:absolute;left:1040px;top:110px;width:460px">
+    <p style="font-size:21px;margin-bottom:12px">The question goes through the same model, with bge’s search instruction in front: <i>“<span data-dn="model_info.query_prefix"></span>”</i>. Projected with the same PCA.</p>
+    <div class="step"><div class="dense-h4">Nearest 5, cosine in 384 dimensions</div><div class="fig" data-fig="dense_ranked" data-n="5" style="position:relative"></div></div>
+    <p class="step" style="font-size:20px;margin-top:14px">All three nearest are about the battery rule: the change log, the plain-words restatement, the rule itself. None of them says Brightcell.</p>
+  </div>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · <span class="qnum"></span></p>
+    <h2 class="q-text">You may pick one chunk size for D. <em>Which, and why?</em></h2>
+    <div class="q-opts"><span class="q-opt"><b>1</b> 50 tokens</span><span class="q-opt"><b>2</b> 100</span><span class="q-opt"><b>3</b> 200</span><span class="q-opt"><b>4</b> 400</span><span class="q-opt"><b>5</b> 800</span><span class="q-opt"><b>6</b> The whole document</span></div>
+    <p class="q-cue">Hint: the §6.2 clause is <span data-dn="play.s200-o15.clause_tokens.6.2"></span> tokens long · then we try them all</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="The Chunk-Size Playground">
+  <div class="lec-top" style="top:84px"><h2 style="font-size:44px">Same document, seven chunk sizes</h2><p class="sub" style="font-size:21px">Click a size. The axes stay fixed (the PCA of the 200-token chunks), so every configuration lands in the same space.</p></div>
+  <div class="fig" data-fig="dense_play" data-preset="size" style="left:100px;top:200px;width:1400px;height:650px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Too Small, Too Large">
+  <div class="lec-top"><h2>Too small cuts the rule; too large drowns it</h2><p class="sub">Emma’s question on D, every size (15% overlap). Top 5 = what the answer step would read.</p></div>
+  <div class="fig" data-fig="dense_sizetab" style="left:100px;top:230px;width:1400px;height:360px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="opens step" style="top:640px;background:var(--g1)"><span class="k" style="color:var(--after)">For D, by reasoning</span>200 tokens, or one chunk per section, keeps §6 whole, ranks it 3rd (2nd), and sends 765 (686) tokens for five chunks. Smaller cuts the clause and loses its context; larger blurs the vector, floods the prompt, and past 512 pieces the model stops reading.</div>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · <span class="qnum"></span></p>
+    <h2 class="q-text">One document is not a test. On all 224 questions and 28,953 chunks, <em>which size wins for dense search?</em></h2>
+    <div class="q-opts"><span class="q-opt"><b>1</b> 200</span><span class="q-opt"><b>2</b> 400</span><span class="q-opt"><b>3</b> 800</span><span class="q-opt"><b>4</b> 1,200</span></div>
+    <p class="q-cue">And by how much? · the grid measured all four</p>
+  </div>
+</section>
+
+<section class="slide" data-plate="The Whole Dump, One Knob at a Time">
+  <div class="lec-top"><h2>The grid agrees, by a little</h2><p class="sub">Recall@5 of dense search alone, 205 answerable golden questions, one knob at a time (<code>rag_grid.json</code>).</p></div>
+  <div class="fig" data-fig="dense_gridbars" style="left:100px;top:262px;width:900px;height:580px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <ol class="dense-notes" style="left:1060px;top:250px;width:440px">
+    <li>200 tokens wins, as we reasoned on D. But 200 to 800 differ by one point; only 1,200 falls away.</li>
+    <li class="step">Overlap adds one point; the structured parser adds seven.</li>
+    <li class="step">Even the best size finds a gold chunk in the top 5 for only <b data-dn="grid.sizes.200.recall@5" data-f="pct0"></b> of questions. Chunk size is not where dense search loses most.</li>
+  </ol>
+</section>
+
+<section class="slide" data-plate="Other Knobs: k, the Header, the Model">
+  <div class="lec-top" style="top:84px"><h2 style="font-size:44px">Three more knobs, on the same space</h2><p class="sub" style="font-size:21px">Click through: k = 1, k = 10, the header prefix off, a second model. Each model has its own space.</p></div>
+  <div class="fig" data-fig="dense_play" data-preset="knobs" style="left:100px;top:200px;width:1400px;height:650px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Where Dense Fails · Exact Codes">
+  <div class="lec-top" style="top:84px"><h2 style="font-size:44px">“What does ERR-PO-0412 mean and how do I fix it?”</h2><p class="sub" style="font-size:21px">Q-0412 on MAN-ERR-72, the error-code reference: <span data-dn="err.n"></span> chunks, one entry per code.</p></div>
+  <div class="fig" data-fig="dense_errspace" style="left:100px;top:200px;width:820px;height:650px"></div>
+  <div style="position:absolute;left:960px;top:200px;width:540px">
+    <div class="dense-h4">Inside MAN-ERR-72 · nearest 6</div>
+    <div class="fig" data-fig="dense_errlist" style="position:relative"></div>
+    <div class="dense-why step" style="margin-top:12px"><span class="k">Why</span>The nearest is ERR-MAT-0412: same digits, different error. The model reads a code as a few pieces (<code>er ##r - po - 04 ##12</code>); change one piece and the vector barely moves. In the whole dump the entry ranks <b data-dn="fail.Q-0412.shown.dense_rank" data-f="ord"></b>.</div>
+  </div>
+  <span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Where Dense Fails · Codes a Digit Apart">
+  <div class="lec-top" style="top:84px"><h2 style="font-size:44px">BAT-500 or BAT-375? To a vector, the same row</h2></div>
+  <div class="fig" data-fig="dense_fail" data-case="Q-401" data-extra="digits" data-n="8" data-why="The question names BAT-500. The top places go to rows of an old 2025 export and to sibling items (BAT-375, BAT-625, BAT-250). Item rows differ only in a few digits, and their vectors are almost identical." style="left:100px;top:180px;width:1400px;height:680px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Where Dense Fails · Amounts and Dates">
+  <div class="lec-top" style="top:84px"><h2 style="font-size:44px">£40,000, next month: the numbers barely count</h2></div>
+  <div class="fig" data-fig="dense_fail" data-case="Q-510" data-extra="numbers" data-n="8" data-why="The answer needs §3.3 (£50,000) and Amendment 3 (£25,000 from 1 December). Dense matches sales-order rows full of orders and amounts. Editing the rule’s amount moves its vector very little, and the question is as close to £5,000,000 as to £50,000." style="left:100px;top:180px;width:1400px;height:680px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Where Dense Fails · Before or After">
+  <div class="lec-top" style="top:84px"><h2 style="font-size:44px">One word flips the rule, not the vector</h2></div>
+  <div class="fig" data-fig="dense_fail" data-case="Q-612" data-extra="negation" data-n="8" data-needle="6.2 Lithium" data-why="§6.2 says the certificate is checked before the first order. Swap ‘before’ for ‘after’ and the vector hardly changes; the question, which says ‘after’, is even a little closer to the wrong sentence. Inside D the rule chunk ranks 7th of 15." style="left:100px;top:180px;width:1400px;height:680px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Where Dense Fails · Old Copies">
+  <div class="lec-top" style="top:84px"><h2 style="font-size:44px">The 2019 copy ranks first</h2></div>
+  <div class="fig" data-fig="dense_fail" data-case="Q-202" data-extra="versions" data-n="8" data-needle="3.3 A direct" data-why="The old v3.0 copy says £30,000 and its header says SUPERSEDED, yet it ranks first: the vector does not treat ‘superseded’ as ‘do not use’. Old and current copies of the same text are near-identical vectors. Only metadata separates them, so filter on it before ranking." style="left:100px;top:180px;width:1400px;height:680px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Where Dense Fails · Table Rows">
+  <div class="lec-top"><h2>A row needs its column names</h2><p class="sub">Q-407 “Is cost centre PRD-05 open?”, the same spreadsheet parsed two ways (grid indexes, bge-small).</p></div>
+  <div class="dense-row2" style="position:absolute;left:100px;top:240px;width:1400px;gap:22px">
+    <div class="dense-gold" style="box-shadow:var(--shadow)"><div class="k">Plain parser · rows as text <span>rank <span data-dn="tables.Q-407.plain.rank"></span></span></div><div class="x" data-dn="tables.Q-407.plain.text"></div></div>
+    <div class="dense-gold"><div class="k">Structured parser · column: value <span>rank <span data-dn="tables.Q-407.structured.rank"></span></span></div><div class="x" data-dn="tables.Q-407.structured.text"></div></div>
+  </div>
+  <div class="opens step" style="top:500px;background:var(--g4)"><span class="k">Why</span>In the plain chunk the column names sit once, on a line of their own; the row itself is codes and words (“PRD-05 … CLOSED 2026-10-15”). Rows further down the sheet have no names at all. Writing <code>status: CLOSED</code> next to each value helps, but not always (Q-401: plain <span data-dn="tables.Q-401.plain.rank"></span>, structured <span data-dn="tables.Q-401.structured.rank"></span>). Over all 34 table questions dense recall@5 is <span data-dn="grid.parser.plain.tables@5" data-f="r2"></span> plain, <span data-dn="grid.parser.structured.tables@5" data-f="r2"></span> structured.</div>
+</section>
+
+<section class="slide" data-plate="Where Dense Fails · A Crowded Topic">
+  <div class="lec-top" style="top:84px"><h2 style="font-size:44px">The battery words outweigh “carrier service”</h2></div>
+  <div class="fig" data-fig="dense_fail" data-case="Q-003" data-extra="crowd" data-n="8" data-why="The top of the list is all battery handling and transport: the topic words dominate the question’s vector. The words that pick the answer, ‘carrier service’, are a small part of it, so the carrier notes score only 0.595 and 2,173 chunks of every kind rank above them." style="left:100px;top:180px;width:1400px;height:680px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Where Dense Wins · Different Words">
+  <div class="lec-top" style="top:84px"><h2 style="font-size:44px">Same meaning, different words: dense wins</h2></div>
+  <div class="fig" data-fig="dense_fail" data-case="Q-101" data-extra="wins" data-n="10" data-why="‘Onboard a new supplier’ and ‘Supplier Onboarding … sets up new trade vendors’ share meaning, not exact words. Dense fills its top ten with onboarding text. A keyword match, built in the next section, ranks the procedure far down. Each method fails where the other is strong." style="left:100px;top:180px;width:1400px;height:680px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Where Dense Retrieval Fails, Summed Up">
+  <div class="lec-top"><h2>Eight cases, one pattern</h2><p class="sub">Dense search matches meaning. It fails when the answer turns on exact strings, numbers, single words or metadata.</p></div>
+  <div class="dense-sum" style="left:100px;top:230px;width:1400px">
+    <div class="card"><h3>Exact codes</h3><span class="q">Q-0412 · ERR-PO-0412</span><span class="r"><span data-dn="fail.Q-0412.shown.dense_rank" data-f="ord"></span></span><span class="f">Needs exact match on the code</span></div>
+    <div class="card"><h3>Codes a digit apart</h3><span class="q">Q-401 · BAT-500 vs BAT-375</span><span class="r"><span data-dn="fail.Q-401.shown.dense_rank" data-f="ord"></span></span><span class="f">Needs exact match on the code</span></div>
+    <div class="card"><h3>Amounts and dates</h3><span class="q">Q-510 · £40,000 next month</span><span class="r"><span data-dn="fail.Q-510.shown.dense_rank" data-f="ord"></span></span><span class="f">Needs exact numbers, then reasoning</span></div>
+    <div class="card"><h3>Before or after</h3><span class="q">Q-612 · one word flips it</span><span class="r"><span data-dn="fail.Q-612.shown.dense_rank" data-f="ord"></span></span><span class="f">Needs a reader of the sentence</span></div>
+    <div class="card step"><h3>Old copies</h3><span class="q">Q-202 · v3.0 ranks 1st</span><span class="r">0.998</span><span class="f">Near-identical vectors: needs a metadata filter</span></div>
+    <div class="card step"><h3>Table rows</h3><span class="q">Q-407 · plain vs structured</span><span class="r"><span data-dn="tables.Q-407.plain.rank" data-f="ord"></span> → <span data-dn="tables.Q-407.structured.rank" data-f="ord"></span></span><span class="f">Needs column names in the row</span></div>
+    <div class="card step"><h3>A crowded topic</h3><span class="q">Q-003 · carrier for batteries</span><span class="r"><span data-dn="fail.Q-003.shown.dense_rank" data-f="ord"></span></span><span class="f">Needs the rare words weighted</span></div>
+    <div class="card ok af step"><h3>Different words</h3><span class="q">Q-101 · onboard a supplier</span><span class="r"><span data-dn="fail.Q-101.shown.dense_rank" data-f="ord"></span></span><span class="f">Dense wins; a keyword match ranks it <span data-dn="fail.Q-101.bm25_rank_first_answer_chunk" data-f="ord"></span></span></div>
+  </div>
+  <p class="cap step" style="left:100px;top:620px;width:1400px">Ranks over 28,953 chunks of the whole dump, bge-small, exact search, the first chunk holding a gold fact. <code>experiments/logs/v5_dense_failures.json</code>. Next: a search that counts words.</p>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · Dense retrieval · <span class="qnum"></span></p>
+    <h2 class="q-text">Four real questions. <em>Which two will dense search get right first time?</em></h2>
+    <div class="q-opts"><span class="q-opt"><b>1</b> How do I change an approved order’s supplier?</span><span class="q-opt"><b>2</b> What does ERR-SUP-0031 mean?</span><span class="q-opt"><b>3</b> What do I do with a dropped battery pack?</span><span class="q-opt"><b>4</b> How long do we keep e-mail?</span></div>
+    <p class="q-cue">Type two numbers in the chat, with a reason</p>
+  </div>
+</section>
+
+<section class="slide q hero chk" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">✓</span>
+  <div class="qbox">
+    <p class="q-label">Check · dense retrieval</p>
+    <ol class="chk-list">
+      <li><span class="chk-q"><b>1</b>Which two did dense get right, and why not the others?</span><span class="chk-a step">1 and 3: a gold chunk at rank <span data-dn="classq.Q-117.dense_rank"></span> and <span data-dn="classq.Q-108.dense_rank"></span>, plain words. ERR-SUP-0031 ranked <span data-dn="classq.Q-704.dense_rank" data-f="ord"></span> (a code); e-mail retention <span data-dn="classq.Q-021.dense_rank" data-f="ord"></span>.</span></li>
+      <li><span class="chk-q"><b>2</b>How does bge-small turn a chunk into one vector?</span><span class="chk-a step">WordPiece pieces, 12 BERT layers, keep the [CLS] row, divide by its length: 384 numbers of length 1, so cosine is a dot product.</span></li>
+      <li><span class="chk-q"><b>3</b>The whole document as one chunk “ranks first”. Why is it still a bad choice?</span><span class="chk-a step">It is the only chunk; it sends <span data-dn="play.whole.topk.0.tokens" data-f="n"></span> tokens, and its vector reads only the first <span data-dn="play.whole.chunks.0.seen_pct"></span>% (512 pieces), before §6.</span></li>
+    </ol>
+  </div>
+</section>
+
+</div>
+<script src="../figdata.js"></script>
+<script src="../figs.js"></script>
+<script src="../figs2.js"></script>
+<script>
+(() => { let q = 0; document.querySelectorAll('.qnum').forEach((e) => { e.textContent = String(++q); }); if (window.FIGS && FIGS._fill) FIGS._fill();
+  const o = (window.L3 && L3.nb3) || {}; document.querySelectorAll('[data-nb3]').forEach((p) => { if (o[p.dataset.nb3]) p.textContent = o[p.dataset.nb3]; }); })();
+</script>
+<script src="dense_data.js"></script>
+<script src="dense.js"></script>
+<script src="../../../engine/plates.js"></script>
+</body>
+</html>

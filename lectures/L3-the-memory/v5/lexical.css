@@ -1,0 +1,126 @@
+/* L3 v5 · section `lexical` (BM25, hybrid/RRF, the reranker). Every class starts with lexical-.
+   Inks: BM25 green, dense blue (as the dense section), RRF violet, the reranker ink-black, answer chunks amber. */
+:root{--lx-bm:#138a60;--lx-bm-soft:#e3f5ec;--lx-de:#0b57d0;--lx-de-soft:#e6f1ff;--lx-rf:#7a5af5;--lx-rf-soft:#efeafe;
+  --lx-rr:#121317;--lx-gold:#b7791f;--lx-gold-soft:#fff4dc;--lx-zero:#c9ccd3}
+.lexical-hide{opacity:0!important;pointer-events:none}
+.lexical-tr{transition:opacity .45s ease,transform .45s ease,background .35s ease,color .35s ease}
+.lexical-k{font:600 13px/1 var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.lexical-mono{font-family:var(--mono)}
+.lexical-bm{color:var(--lx-bm);font-weight:600}.lexical-de{color:var(--lx-de);font-weight:600}.lexical-rf{color:var(--lx-rf);font-weight:600}
+.lexical-gold{display:inline-flex;align-items:center;gap:5px;font:600 12.5px/1 var(--font);letter-spacing:.04em;color:var(--lx-gold);background:var(--lx-gold-soft);border-radius:999px;padding:5px 8px;white-space:nowrap}
+.lexical-gold::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--lx-gold)}
+.lexical-src{position:absolute;font:400 15px/1.4 var(--font);color:var(--ink-3)}
+.lexical-src code{font-size:13.5px}
+
+/* tokenizer */
+.lexical-tok{display:flex;flex-direction:column;gap:20px}
+.lexical-tok .row{display:grid;grid-template-columns:330px 1fr;gap:20px;align-items:center}
+.lexical-tok .lab{font-size:19px;line-height:1.3;color:var(--ink-2)}
+.lexical-tok .lab b{display:block;font:600 13px/1.2 var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+.lexical-sent{font:450 34px/1.25 var(--font);letter-spacing:-.015em;background:#fff;border-radius:20px;box-shadow:var(--shadow);padding:18px 24px}
+.lexical-chips{display:flex;flex-wrap:wrap;gap:8px}
+.lexical-chip{display:inline-flex;align-items:center;gap:6px;font:500 21px/1 var(--mono);padding:10px 12px;border-radius:11px;background:var(--card);color:var(--ink);transition:all .45s ease;white-space:nowrap}
+.lexical-chip.stop{background:transparent;color:var(--lx-zero);text-decoration:line-through;box-shadow:inset 0 0 0 1.5px var(--rule)}
+.lexical-chip.stem{background:var(--gold-soft);color:var(--lx-bm)}
+.lexical-chip.tok{background:var(--lx-bm);color:#fff}
+.lexical-chip.warn{background:var(--before-soft);color:var(--before)}
+.lexical-chip .ar{font-family:var(--font);color:var(--ink-3)}
+.lexical-note{font-size:18px;line-height:1.4;color:var(--ink-2)}
+
+/* generic tables in this section */
+table.lexical-t{border-collapse:separate;border-spacing:0;width:100%;font-size:19px}
+table.lexical-t th{font:600 13px/1.25 var(--font);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:bottom}
+table.lexical-t td{padding:9px 10px;border-bottom:1px solid var(--rule);vertical-align:middle;transition:opacity .45s ease,background .35s ease}
+table.lexical-t td.n,table.lexical-t th.n{text-align:right;white-space:nowrap}
+table.lexical-t td.n{font-family:var(--mono);font-size:17px}
+table.lexical-t td.c,table.lexical-t th.c{text-align:center}
+table.lexical-t tr.hi td{background:var(--lx-bm-soft)}
+table.lexical-t tr.hi2 td{background:var(--lx-gold-soft)}
+table.lexical-t td.z{color:var(--lx-zero)}
+table.lexical-t .sub{display:block;font-size:14px;color:var(--ink-3);margin-top:2px;font-family:var(--font)}
+
+/* term x chunk grid */
+.lexical-tf td.lexical-cnt{width:58px;text-align:center;font:500 18px/1 var(--mono);color:var(--lx-zero);padding:9px 0}
+.lexical-tf td.lexical-cnt.on{color:#fff;background:var(--lx-bm);border-radius:8px;box-shadow:inset 0 0 0 3px #fff}
+.lexical-tf td.lexical-cnt.on.alt{background:var(--before-2)}
+.lexical-tf td.lexical-cnt.on.hd{background:#8a8f99}
+.lexical-tf th.cn{text-align:center;padding:6px 0;font-family:var(--mono);font-size:15px;letter-spacing:0;color:var(--ink-2)}
+.lexical-tf td.lexical-term{font:500 19px/1 var(--mono);white-space:nowrap}
+.lexical-tf tr.empty td.lexical-term{color:var(--before)}
+.lexical-tf tr.empty td{background:var(--before-soft)}
+.lexical-tf td.lexical-sum{font:500 16px/1.2 var(--font);color:var(--ink-3);white-space:nowrap;padding-left:14px}
+
+/* bars */
+.lexical-bars{display:flex;flex-direction:column;gap:9px}
+.lexical-bar{display:grid;grid-template-columns:150px 1fr 120px;gap:12px;align-items:center;font-size:18px}
+.lexical-bar .w{font:500 18px/1 var(--mono);text-align:right}
+.lexical-bar .trk{height:24px;background:var(--card);border-radius:8px;overflow:hidden}
+.lexical-bar .trk i{display:block;height:100%;border-radius:8px;background:var(--lx-bm);transition:width .7s cubic-bezier(.3,.7,.2,1)}
+.lexical-bar.ctr .tr i{background:#9aa0aa}
+.lexical-bar .v{font:500 17px/1 var(--mono);color:var(--ink-2);white-space:nowrap}
+.lexical-bar.none .v{color:var(--lx-zero);font-family:var(--font);font-size:16px}
+
+/* formula */
+.lexical-f{font:450 25px/1.5 var(--font);letter-spacing:-.005em}
+.lexical-f .p{border-radius:8px;padding:1px 4px;transition:background .35s ease,color .35s ease}
+.lexical-f .p.on{background:var(--lx-bm);color:#fff}
+.lexical-frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 4px}
+.lexical-frac>span:first-child{border-bottom:2px solid currentColor;padding:0 6px 2px}
+.lexical-frac>span:last-child{padding:2px 6px 0}
+.lexical-box{background:#fff;border-radius:20px;box-shadow:var(--shadow);padding:18px 22px}
+
+/* controls */
+.lexical-ctl{display:flex;gap:10px;align-items:center;font:500 16px/1 var(--font);color:var(--ink-2);flex-wrap:wrap}
+.lexical-ctl button{font:500 15px/1 var(--font);padding:10px 15px;border:1px solid var(--pill-line);border-radius:999px;background:var(--glass);color:var(--ink);cursor:pointer}
+.lexical-ctl button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.lexical-ctl input[type=range]{width:300px;accent-color:var(--lx-bm)}
+.lexical-ctl output{font:600 17px/1 var(--mono);color:var(--lx-bm);min-width:70px}
+
+/* code */
+.lexical-code{position:absolute;background:#121317;color:#e8eaf0;font:400 13.2px/1.58 var(--mono);border-radius:20px;padding:16px 0;box-shadow:var(--shadow);overflow:hidden}
+.lexical-code .hd{display:block;padding:0 20px 10px;font:500 13px/1 var(--font);letter-spacing:.08em;text-transform:uppercase;color:#8b93a7}
+.lexical-code .ln{display:block;padding:0 20px;white-space:pre;transition:background .3s ease,opacity .3s ease}
+.lexical-code .ln .no{display:inline-block;width:34px;margin-right:12px;color:#5c6478;text-align:right}
+.lexical-code .ln.on{background:rgba(27,175,122,.22);box-shadow:inset 4px 0 0 #2fd08d}
+.lexical-code.dim .ln:not(.on){opacity:.45}
+.lexical-code .cmt{color:#8b93a7}.lexical-code .kw{color:#9cc3ff}.lexical-code .st{color:#a8e6b8}.lexical-code .nu{color:#f6c38f}
+
+/* ranked lists and slopes */
+.lexical-slope{position:absolute;inset:0}
+.lexical-slope svg{position:absolute;left:0;top:0;overflow:visible}
+.lexical-li{position:absolute;display:grid;align-items:center;gap:8px;font-size:17px;line-height:1.2;transition:top .8s cubic-bezier(.3,.7,.2,1),opacity .45s ease}
+.lexical-li .r{font:600 15px/1 var(--mono);color:var(--ink-3);text-align:right}
+.lexical-li .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lexical-li .tg{white-space:nowrap;display:flex;gap:4px;justify-content:flex-end}
+.lexical-li .s{font:500 15px/1 var(--mono);color:var(--ink-2);text-align:right;white-space:nowrap}
+.lexical-li.lexical-g .nm{font-weight:600}
+.lexical-colh{position:absolute;font:600 13px/1.3 var(--font);letter-spacing:.07em;text-transform:uppercase}
+
+/* cards */
+.lexical-cards{position:absolute;display:grid;gap:18px}
+.lexical-card{background:var(--card);border-radius:22px;padding:18px 22px;font-size:20px;line-height:1.42}
+.lexical-card h3{font-size:25px;margin:0 0 8px}
+.lexical-card .lexical-k{display:block;margin-bottom:8px}
+.lexical-card.lexical-c-bm{background:linear-gradient(155deg,#effaf5 0%,#d9f2e6 100%)}
+.lexical-card.lexical-c-de{background:var(--g1)}
+.lexical-card.lexical-c-rf{background:var(--g2)}
+.lexical-card.lexical-c-rr{background:#f4f5f7;box-shadow:inset 0 0 0 1.5px rgba(18,19,23,.12)}
+.lexical-card.lexical-c-bad{background:var(--g4)}
+.lexical-quote{font-size:18px;line-height:1.45;background:#fff;border-radius:14px;padding:10px 14px;margin-top:10px;color:var(--ink-2);white-space:pre-wrap}
+.lexical-quote mark{background:#bfe9d4;color:var(--ink);border-radius:4px;padding:0 2px}
+.lexical-quote mark.no{background:#ffd9c4}
+
+/* the encoder diagram */
+.lexical-enc text{font-family:var(--font)}
+.lexical-tokrow{display:flex;flex-wrap:wrap;gap:4px;font:450 14.5px/1 var(--mono)}
+.lexical-tokrow span{background:#fff;border-radius:6px;padding:6px 6px;box-shadow:inset 0 0 0 1px var(--rule)}
+.lexical-tokrow span.sp{background:#121317;color:#fff;box-shadow:none}
+.lexical-tokrow span.q{background:var(--lx-gold-soft)}
+
+/* latency bars (log scale) */
+.lexical-lat .lexical-bar{grid-template-columns:420px 1fr 190px}
+.lexical-lat .lexical-bar .w{font-family:var(--font);font-size:19px;text-align:right;line-height:1.25}
+.lexical-lat .lexical-bar .w small{display:block;font-size:14.5px;color:var(--ink-3)}
+.lexical-lat .lexical-bar .trkk{height:30px}
+.lexical-lat .lexical-bar .v{font-size:18px}
+.lexical-box .lexical-k{display:block;margin-bottom:6px}

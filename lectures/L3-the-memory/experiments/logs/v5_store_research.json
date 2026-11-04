@@ -1,0 +1,354 @@
+{
+ "checked": "2026-11-04",
+ "how": "Vendors' own current docs and pricing pages, read on 4 Nov 2026 (WebSearch/WebFetch). Only facts found there are stated; 'not verified' where a page did not say. Our size: 28,953 chunks x 384-d float32 = 44.5 MB of vectors, about 30 MB of text and metadata.",
+ "considerations": [
+  [
+   "Hybrid in one engine",
+   "Dense + BM25 fused inside the store, so one call returns the fused list (we fuse with RRF, k = 60)"
+  ],
+  [
+   "Filters during the search",
+   "HR-CONFIDENTIAL must never reach Emma: the filter must hold before ranking, not after a top-k is cut"
+  ],
+  [
+   "Scale",
+   "28,953 chunks now; ten times that in a few years"
+  ],
+  [
+   "Latency",
+   "The whole search inside 200 ms at p95, network included"
+  ],
+  [
+   "Managed or self-hosted",
+   "Who patches, scales and wakes up at night"
+  ],
+  [
+   "Data residency",
+   "UK preferred, EU acceptable"
+  ],
+  [
+   "Backups and re-indexing",
+   "A new embedding model means re-embedding every chunk: build a new collection, then switch"
+  ],
+  [
+   "Multi-tenancy",
+   "Departments, or one index per customer in a SaaS"
+  ],
+  [
+   "Cost at our size",
+   "About 75 MB raw: every free tier is the question, not the price list"
+  ],
+  [
+   "Operations",
+   "Dashboards, snapshots, upgrades, one more system to run"
+  ]
+ ],
+ "dedicated": [
+  {
+   "name": "Qdrant (OSS + Cloud)",
+   "hybrid": [
+    "y",
+    "Query API: prefetch dense + BM25, fused by RRF in the engine; BM25 on a full-text index since v1.20 (Oct 2026)"
+   ],
+   "filter": [
+    "y",
+    "During HNSW, using payload indexes"
+   ],
+   "region": [
+    "~",
+    "EU: GCP Frankfurt on our free cluster; London not verified"
+   ],
+   "free": [
+    "y",
+    "Free forever: 1 GB RAM, 4 GB disk; paused after a week idle"
+   ],
+   "ops": "Both · atomic alias swap · snapshots",
+   "src": [
+    "https://qdrant.tech/documentation/concepts/hybrid-queries/",
+    "https://qdrant.tech/blog/qdrant-1.20.x/",
+    "https://qdrant.tech/documentation/concepts/indexing/",
+    "https://qdrant.tech/pricing/",
+    "https://qdrant.tech/documentation/cloud/create-cluster/",
+    "https://qdrant.tech/documentation/concepts/collections/"
+   ]
+  },
+  {
+   "name": "Pinecone (serverless)",
+   "hybrid": [
+    "~",
+    "Dense + sparse in one index with a weight; full-text (GA Sep 2026) is a separate search, fused by you"
+   ],
+   "filter": [
+    "y",
+    "Metadata filters apply before scoring"
+   ],
+   "region": [
+    "~",
+    "No London; EU (Ireland, Frankfurt) from the $20/month Builder plan"
+   ],
+   "free": [
+    "~",
+    "Starter is free but us-east-1 only"
+   ],
+   "ops": "Managed (BYOC on Enterprise) · namespaces",
+   "src": [
+    "https://docs.pinecone.io/guides/search/hybrid-search",
+    "https://docs.pinecone.io/guides/search/full-text-search",
+    "https://docs.pinecone.io/release-notes/2026",
+    "https://www.pinecone.io/pricing/"
+   ]
+  },
+  {
+   "name": "Weaviate (OSS + Cloud)",
+   "hybrid": [
+    "y",
+    "BM25F + vector in one query, fused in the engine"
+   ],
+   "filter": [
+    "y",
+    "Pre-filter during HNSW (ACORN by default)"
+   ],
+   "region": [
+    "?",
+    "Not verified"
+   ],
+   "free": [
+    "~",
+    "100,000 objects, no backups: fits now, not at ten times"
+   ],
+   "ops": "Both · collection aliases (v1.32)",
+   "src": [
+    "https://docs.weaviate.io/weaviate/search/hybrid",
+    "https://docs.weaviate.io/weaviate/concepts/filtering",
+    "https://weaviate.io/pricing"
+   ]
+  },
+  {
+   "name": "Milvus / Zilliz Cloud",
+   "hybrid": [
+    "y",
+    "Built-in BM25 function (2.5+); hybrid_search with an RRF ranker on the server"
+   ],
+   "filter": [
+    "?",
+    "Expression filters; during the search not verified"
+   ],
+   "region": [
+    "y",
+    "London (AWS eu-west-2), free tier included"
+   ],
+   "free": [
+    "y",
+    "5 GB free"
+   ],
+   "ops": "Both",
+   "src": [
+    "https://milvus.io/docs/full-text-search.md",
+    "https://milvus.io/docs/multi-vector-search.md",
+    "https://docs.zilliz.com/docs/cloud-providers-and-regions",
+    "https://docs.zilliz.com/docs/register-with-zilliz-cloud"
+   ]
+  },
+  {
+   "name": "Chroma Cloud",
+   "hybrid": [
+    "~",
+    "Sparse index + RRF in the Search API; the BM25 vectors are computed on your side"
+   ],
+   "filter": [
+    "?",
+    "Not verified"
+   ],
+   "region": [
+    "~",
+    "US East and GCP Belgium; no London"
+   ],
+   "free": [
+    "y",
+    "$5 of free credit a month; our size costs pennies"
+   ],
+   "ops": "Managed (open-source Chroma on a laptop)",
+   "src": [
+    "https://docs.trychroma.com/cloud/search-api/hybrid-search",
+    "https://docs.trychroma.com/cloud/getting-started",
+    "https://www.trychroma.com/pricing"
+   ]
+  },
+  {
+   "name": "Turbopuffer",
+   "hybrid": [
+    "y",
+    "Vector + BM25, fused by RRF on the server"
+   ],
+   "filter": [
+    "?",
+    "Not verified"
+   ],
+   "region": [
+    "y",
+    "London (AWS eu-west-2) and EU"
+   ],
+   "free": [
+    "n",
+    "No free tier; $16/month minimum"
+   ],
+   "ops": "Managed (BYOC on Enterprise) · Notion, Linear, Atlassian (vendor-stated)",
+   "src": [
+    "https://turbopuffer.com/docs/hybrid",
+    "https://turbopuffer.com/pricing",
+    "https://turbopuffer.com/docs/regions",
+    "https://turbopuffer.com/customers"
+   ]
+  }
+ ],
+ "existing": [
+  {
+   "name": "Postgres + pgvector",
+   "hybrid": [
+    "~",
+    "Dense, plus Postgres full-text (not BM25), fused in your own SQL; real BM25 needs ParadeDB pg_search, which Neon retired on 21 Sep 2026"
+   ],
+   "filter": [
+    "~",
+    "HNSW filters after the index scan; iterative scans (0.8+) restore recall"
+   ],
+   "region": [
+    "y",
+    "London: Neon, Supabase (eu-west-2)"
+   ],
+   "free": [
+    "y",
+    "Neon 1 GB; Supabase 500 MB"
+   ],
+   "ops": "Both · row-level security, backups, the database you already run",
+   "src": [
+    "https://github.com/pgvector/pgvector",
+    "https://supabase.com/docs/guides/ai/hybrid-search",
+    "https://neon.com/docs/changelog/2026-04-03",
+    "https://neon.com/docs/extensions/migrate-pg-search-to-lakebase-text",
+    "https://neon.com/docs/introduction/regions",
+    "https://neon.com/pricing",
+    "https://supabase.com/pricing"
+   ]
+  },
+  {
+   "name": "Elasticsearch / OpenSearch",
+   "hybrid": [
+    "y",
+    "BM25 native + kNN, RRF retriever; self-managed Elastic needs the Enterprise licence for RRF; OpenSearch RRF since 2.19"
+   ],
+   "filter": [
+    "y",
+    "A filter inside the kNN query applies during the search"
+   ],
+   "region": [
+    "y",
+    "London: Elastic Cloud, Amazon OpenSearch"
+   ],
+   "free": [
+    "n",
+    "No lasting free tier (Elastic Serverless example: about $24/month)"
+   ],
+   "ops": "Both · document-level security",
+   "src": [
+    "https://www.elastic.co/docs/reference/elasticsearch/rest-apis/reciprocal-rank-fusion",
+    "https://www.elastic.co/search-labs/blog/hybrid-search-elasticsearch",
+    "https://www.elastic.co/docs/deploy-manage/deploy/elastic-cloud/regions",
+    "https://www.elastic.co/pricing/serverless-search",
+    "https://docs.aws.amazon.com/general/latest/gr/opensearch-service.html"
+   ]
+  },
+  {
+   "name": "Azure AI Search",
+   "hybrid": [
+    "y",
+    "BM25 + HNSW in one request, RRF on the server, optional semantic reranker"
+   ],
+   "filter": [
+    "y",
+    "Pre-filter during HNSW; security trimming by group filter"
+   ],
+   "region": [
+    "y",
+    "UK South, UK West"
+   ],
+   "free": [
+    "n",
+    "Free tier is 50 MB: our 75 MB does not fit"
+   ],
+   "ops": "Managed · the natural pick in a Microsoft shop",
+   "src": [
+    "https://learn.microsoft.com/en-us/azure/search/hybrid-search-overview",
+    "https://learn.microsoft.com/en-us/azure/search/vector-search-filters",
+    "https://learn.microsoft.com/en-us/azure/search/search-security-trimming-for-azure-search",
+    "https://learn.microsoft.com/en-us/azure/search/search-limits-quotas-capacity"
+   ]
+  },
+  {
+   "name": "Google Vertex AI Vector Search",
+   "hybrid": [
+    "~",
+    "Dense + sparse in one index with RRF; you compute the sparse (BM25) vectors"
+   ],
+   "filter": [
+    "y",
+    "Filtering supported"
+   ],
+   "region": [
+    "y",
+    "London (europe-west2)"
+   ],
+   "free": [
+    "?",
+    "Not verified"
+   ],
+   "ops": "Managed",
+   "src": [
+    "https://docs.cloud.google.com/vertex-ai/docs/vector-search/about-hybrid-search",
+    "https://docs.cloud.google.com/vertex-ai/docs/general/locations"
+   ]
+  },
+  {
+   "name": "AWS: S3 Vectors · Bedrock KB",
+   "hybrid": [
+    "n",
+    "S3 Vectors: vectors only, no keyword search; Bedrock KB hybrid only on RDS, OpenSearch Serverless, MongoDB"
+   ],
+   "filter": [
+    "y",
+    "S3 Vectors: metadata filters"
+   ],
+   "region": [
+    "y",
+    "London (eu-west-2)"
+   ],
+   "free": [
+    "?",
+    "Pay per use; not verified"
+   ],
+   "ops": "Managed · S3 Vectors GA Dec 2025",
+   "src": [
+    "https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-vectors.html",
+    "https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-vectors-regions-quotas.html",
+    "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-test-config.html"
+   ]
+  }
+ ],
+ "pick": {
+  "name": "Qdrant",
+  "why": [
+   "Hybrid inside the engine: dense + BM25 in one call, fused by RRF (k = 60, as our rag.rrf)",
+   "Filters run inside the HNSW search, on payload indexes: Emma's must_not confidential holds before ranking",
+   "The same code on a laptop (Docker, open source) and in the cloud; a free cluster that holds all 28,953 chunks",
+   "A dashboard to look at the stored points and a console to run searches",
+   "Aliases: a new embedding model is a new collection and one atomic switch"
+  ],
+  "caveats": [
+   "Measured on our cluster: the default HNSW width lost recall (0.434 against 0.566 exact); set hnsw_ef and measure",
+   "Its BM25 splits ERR-PO-0412 into err, po, 0412; our rag.BM25 keeps the code whole and scores a little higher",
+   "Free clusters pause after a week unused and are deleted after four; ours is in Frankfurt (EU), not London"
+  ],
+  "caveats_source": "first two: logs/v5_store_ef.json and logs/v5_store_cloud.json (measured 4 Nov 2026); third: qdrant.tech/documentation/cloud/create-cluster/",
+  "else": "Already on Postgres? pgvector keeps one database. A Microsoft shop with strict UK residency: Azure AI Search, UK South."
+ }
+}

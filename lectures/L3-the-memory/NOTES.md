@@ -1,6 +1,6 @@
 # Lecture 3 · The Memory: retrieving from Northbridge's documents · speaker notes (v4, Northbridge)
 
-Sat 7 Nov 2026, 7:00–9:00 AM IST. 101 slides. Plate titles are given below so you can find a slide in the deck.
+Sat 7 Nov 2026, 7:00–9:00 AM IST. 199 slides. Plate titles are given below so you can find a slide in the deck.
 `[click]` = one step. Dr. Rajat Dandekar presents.
 
 **The one idea.** A model knows nothing about Northbridge. Its memory is what we let it find, in under a second, with
@@ -64,7 +64,144 @@ Re-run `python3 gen_figdata.py` after any experiment or NB3 run.
   Unstructured, Tesseract; we wrote ours to show each decision.
 - **Ask the class.** Why pay 40% more tokens? (A row without its headers cannot be found or read.)
 
-## 3 · The questions (about 7 minutes)
+## 3 · Parsing, file by file
+Replaces old slides 18–19 ("Parse by Document Type" and its class question). The audit slides before it stay.
+Every image is a real render of a real file from the dump (Modal: `experiments/v5_parse_modal.py`); every text panel is
+a parser's real output from the course code (`ledgerline/course/l3/corpus.py`, `parse_file(..., parser="plain" | "structured")`).
+Data: `v5/parse_data.js`, written by `experiments/v5_parse_build.py` from `experiments/logs/v5_parse*.json`.
+
+### Part slide · "What does a program actually see when it opens a file?"
+We have counted the dump: 693 files. Every one of those counts was made on the structured parser's text. Now we open
+files one by one and look at what a program really gets out of each. The rule for this section: one file, one
+question, three views (the file as people see it, a naive extraction, our structured parser).
+
+### A Table in a PDF
+Q-605 asks for a purchase executive's approval limit. That is Emma's role.
+On the left, page 1 of the Approval Matrix v3.0 as it prints (PyMuPDF render, zoomed on § 3).
+[click] Naive: `pypdf` `extract_text`, which is what parser="plain" does. Look at the table: every cell on its own
+line. The headers (green) appear once; "£250,000" (orange) sits between "Purchase executive" and "PUR-SR". A reader,
+human or model, has to guess which line it belongs to. The words survived. The row did not.
+[click] Structured: `pdfplumber` finds the table and writes each row as "a | b | c". The header row and the PUR-EXEC row
+are boxed on the page and highlighted in the text. The unit also knows its place: page 1, § 3. The limits.
+[click] The answer: £250,000 gross. Note that the needle test in the audit counts this fact as "visible" in both
+parsers: the words are there. What plain loses is the association. Keep that in mind: a metric that checks words can
+miss a problem in structure.
+
+### Headings Become Units
+Document D, the Purchase Policy v4.1, page 2. Emma's question.
+[click] Naive, the end of page 2 and the start of page 3 as plain hands them on. In orange: the running header and
+footer, "Northbridge Cycles Ltd / POL-PUR-001 | v4.1 / Internal. Uncontrolled when printed. / Page 2 of 4". They sit
+between the last line of page 2 and the first of page 3, so a chunk cut across the page join carries them in the middle
+of the text. Boxed on the page in orange.
+[click] Structured: the headings (blue boxes) start units. Page 2 becomes six units, each with page and section and its
+token count. The whole policy is 26 units, 2,178 tokens (the running example's numbers).
+[click] § 6 (green): the unit that holds § 6.2 and § 6.4, zoomed so you can read it. Right: what a chunk of § 6 begins
+with in our chosen configuration (structured, structure-aware, 200 tokens, 15% overlap): the context header with the
+document, version and effective date, then the heading path. Its cite: POL-PUR-001 v4.1, p.2, § 6. Supplier
+qualification. This is where every later chunk starts from.
+[click] The answer from D alone: § 6.2 and § 6.4, both in that unit.
+
+### A Scan Is a Picture
+The paper approval of PO/2026/00452, one page scanned at 200 dpi. Left: the whole page; middle: the top, zoomed.
+Q-015: which approval did the paper copy record?
+[click] Naive: nothing. 0 characters. The PDF is one 1654 × 2339 image with no text layer. To plain, this file is
+empty, and so is every scan: the audit counted 0 scan tokens with plain against 534 with OCR.
+[click] Structured: `corpus.py` runs Tesseract 5.3 on the page image (0.43 s here). The text is nearly perfect.
+[click] Found: "PO/2026/00452" and "Daniel Okafor" (blue, boxed on the scan). And one error, in orange: the signature
+became the words "of Ne". OCR reads every mark as letters. It also never says "this is a signature".
+
+### A Poor Scan: Tesseract or a Vision Model
+Be honest with the class: the six scans in the dump are clean. Real scans are often not. So we made a poor copy of
+the same page ourselves: rotated 1.5°, half resolution, blurred, speckled, low-quality JPEG. Same question.
+[click] Tesseract on the poor copy (0.40 s): "PO/2026/00852", "Danlel Okafor", "Arenoyal", "Trem", "114,00", and the
+last line became "Sn ema saan". The two words the question needs are both wrong, boxed on the image. Search for 00452
+and this page is never found.
+[click] gemini-3.8-flash, given the same image (Google's API, temperature 0, our prompt "transcribe exactly, mark
+signatures and stamps in brackets"): every line right, and "[signature]" where Tesseract wrote letters. 6.99 s.
+[click] The cost. This page: Tesseract 0.40 s, CPU, no fee. The vision model 6.99 s and $0.0042 (1,167 tokens in, of
+which 1,092 are the image; 100 out plus 688 thinking tokens, billed as output; OpenRouter's list price for the same
+model, fetched with the run). All six scans, clean and poor, 12 runs: the golden fact was found by Tesseract in 6 of 6
+clean copies and 4 of 6 poor ones; by the vision model in 6 of 6 and 6 of 6. On average 0.4 s against 7.7 s and
+$0.0040 a page. And it is not a pure copier: on the poor VAT memo it added Markdown `**` we did not ask for. A vision
+model can also write what is not there, so check it on pages you know.
+
+### A Row Without Its Headers
+The item master, sheet Items, rendered by LibreOffice (the real cells; column letters and row numbers as in Excel).
+Q-401: what is the reorder level of BAT-500?
+[click] Plain: row 5 as values only, its own unit. Which of "1 1 3000 600 42" is the reorder level? Row 4, the headers,
+is a different unit, so this row never meets them. Across the dump: 22,003 spreadsheet rows indexed without headers.
+[click] Structured: one unit per row, "column: value", with the sheet's title lines as context. Headers boxed.
+[click] reorder_lvl: 3000 (red boxes on the sheet: the header cell and the value). The answer: 3,000. This is also why
+the structured text costs about 40% more tokens: the headers are repeated on every row, and that is what makes a row
+findable.
+
+### An E-mail on Disk
+Brightcell's quotation to Emma, the very quote in her question. Left: the file exactly as it is on disk, which is also
+what plain indexes.
+[click] It is quoted-printable. Every "=" at a line end is a soft break ("per p=" / "ack"); "=C2=A3" is the two UTF-8
+bytes of "£". The mail gateway encoded it that way to send it. In the whole dump plain keeps 790 such soft breaks.
+[click] Structured: Python's e-mail parser decodes it. We keep Subject, From, To and Date (green) and the date becomes
+the unit's effective date (2026-10-22); we drop Message-ID, X-Mailer, Content-Type and MIME-Version (struck through).
+We keep the signature: it says who made the offer.
+[click] The quote: £104.00 per pack, delivered (DAP) to Manchester; and the UN 38.3 report "expected in December
+2026". In the raw file the string "£104.00" does not occur at all, so the audit's check finds this fact only with the
+structured parser.
+
+### A Word Table Goes Missing
+The superseded Approval Matrix v2.0 (2024), a Word file, rendered by LibreOffice. Q-605 again, now for the history.
+[click] Plain reads paragraphs only (`python-docx` `document.paragraphs`). Look: "3.1 Each role's approval limit,
+gross including VAT:" and then straight "4. Who may not approve". Both tables are gone: the limits, and the box that
+says SUPERSEDED (orange on the page). In the dump plain drops 35 Word tables; the onboarding checklist NBC-F-113 keeps
+30 of its 239 tokens.
+[click] Structured walks the body in order, tables included, and splits at headings: the document box and § 3.
+[click] The old limit, £200,000, and "Status | SUPERSEDED". The answer to Q-605's history needs exactly this: now
+£250,000 (v3.0); in 2024 £200,000.
+
+### An Old Intranet Page
+The 2016 intranet export, in a browser as it was exported (its stylesheet was not exported, so it looks bare).
+[click] Plain indexes the markup: banner and menu (orange), 852 tokens. The banner and the 8 menu links repeat on all
+23 pages of the export, so every page carries "How to raise an order" and "Approval limits", whatever it is about.
+[click] Structured drops the banner and the navigation, writes the table as rows and splits by heading: 416 tokens.
+[click] 2016: £150,000 on the net value before VAT. Three answers to one question, in three formats.
+
+### Metadata the Parser Keeps
+The three answers to Q-605, side by side, as `corpus.file_meta` returned them.
+v3.0 PDF: CURRENT, effective 2026-04-01, says £250,000 gross.
+[click] v2.0 Word: SUPERSEDED, superseded = true. Every chunk header of this file says "SUPERSEDED / old copy".
+[click] The 2016 page: empty. Nothing in the file says it is old; only "(2016)" in its title. A parser keeps only what
+a file states. Here a human rule is needed (for example: everything in `intranet_export_2016/` is history).
+[click] Two more from the dump. T&E policy v3.0: future = true, "NOT YET IN FORCE (from 2027-01-01)". HR-CONF-007
+salary bands: confidential = true, and `may_read` for Emma's role is false: it is removed before ranking, not after.
+These fields become labels and filters in Section 6.
+
+### Parsing, Format by Format
+The table puts the seven files side by side: what went wrong, what our parser does, and tools that do the same job.
+[click] Five tools, described only as their own documentation describes them (checked 4 Nov 2026): Docling (open
+source, from IBM Research; PDF, Office, HTML, images; layout, reading order, tables, OCR; Markdown or JSON);
+Unstructured (open source; one partition function per format; `hi_res` uses a layout model, `ocr_only` runs
+Tesseract); LlamaParse (LlamaIndex's hosted parser, 130+ file types to Markdown, text or JSON, using generative
+models); Azure Document Intelligence (layout model: tables, section headings, page headers and footers, Markdown
+output); and a vision LLM, as measured here. We wrote our own in `corpus.py` so every decision is visible. In a client
+project, try a tool first, and keep the metadata rules: no tool knows Henrik's folders.
+
+### Class question · "Where would you spend a vision model?"
+Six scans among 693 files. Let them answer 1–4 with a reason. A good answer: 3. Tesseract is free and fast and read
+all six clean scans; spend the model on scans and on any page where Tesseract is unsure (its word confidences are
+low: on the poor copy, "Danlel" had confidence 14 and "PO/2026/00852" 33). Every page of every file (1) costs time and
+money for files that already have a text layer.
+
+### Check: Which Unit Answers?
+Q-436: reorder level of BAT-625-INT, and is it a lithium-cell part? Read both units aloud.
+[click] Only the structured one: reorder level 200, cell_safety 1, so yes. In plain, "1 1 200 20 42" could be any five
+columns.
+
+### Check: Keep, Decode or Drop?
+Three real snippets. Ask the class for each before clicking.
+[click] "Internal. Uncontrolled when printed. / Page 2 of 4": drop it, a running footer.
+[click] "=C2=A3119.00 from=": decode it, quoted-printable: "£119.00 from 1 October 2026".
+[click] "Status | SUPERSEDED": keep it, as metadata: superseded = true, in every chunk header, and a filter can use it.
+
+## 4 · The questions (about 7 minutes)
 
 - **Three Kinds of Question.** `[click]` genesis, analytical, documentation. Genesis and analytical need services and
   tools: Lecture 4 onward. Today: documentation.
@@ -73,7 +210,7 @@ Re-run `python3 gen_figdata.py` after any experiment or NB3 run.
 - **Today's Two Questions.** Emma's multi-hop question and the exact code.
 - **Ask the class.** Voltway spend May–September: analytical. A document search cannot sum transactions.
 
-## 4 · The metrics (about 8 minutes)
+## 5 · The metrics (about 8 minutes)
 
 - **Metrics First.** Read the left column, `[click]` through the targets. We set them before we build.
 - **Why Latency Weighs Heavily.** p95, a budget per part, agents multiply it. `[click]` ×2.
@@ -81,62 +218,800 @@ Re-run `python3 gen_figdata.py` after any experiment or NB3 run.
   Judge and fact check agree on 94.6% (κ 0.77): the judge is the same model as the answer model; we report both.
 - **Ask the class.** 93% in 13 s or 89% in 6 s. (These are close to the hybrid and RAG; we meet them in Section 8.)
 
-## 5 · Paste everything? (about 5 minutes)
+## 6 · Paste everything? (about 5 minutes)
 
 - **The Whole Dump Against the Windows.** `[click]` the windows, `[click]` without transactions. Nothing fits.
 - **A Measured Sample.** 12 of 12 right, 44 s, 740k tokens, $0.61 a question. A big window is not a memory.
 - **Check.** $0.61 × 224 ≈ $138 a day.
 
-## 6 · RAG from scratch (about 25 minutes)
+## 7 · RAG, by eye
+Every number is in `v5/dense_data.js`, built by `experiments/v5_dense_build.py` from `experiments/logs/v5_dense.json`,
+`v5_dense_scan.json`, `v5_dense_probes.json` (made by `experiments/v5_dense_modal.py` on Modal, L4 GPU) and `rag_grid.json`.
+D = `01_policies/POL-PUR-001_Purchase_Policy_v4.1.pdf`; Q = Emma's question (Q-EMMA). Model: bge-small-en-v1.5, as `rag.Embedder` loads it.
 
-- **Retrieval-Augmented Generation.** Six steps; three once, three per question. `[click]` ×5.
-- **The RAG Pipeline (Fig. 1).** The same six steps as one picture; point at the two rows.
-- **Chunking, Three Ways.** The real Purchase Policy. `[click]` recursive, `[click]` structure-aware. Show the fixed
-  chunk that starts with "3 A direct purchase order": clause 3.3 was cut in half.
-- **Two Knobs.** Parser and chunk size, best recall@5 each reached. `[click]` ×2.
-- **Embeddings.** Five models; nomic best dense at 0.659; BM25 alone 0.810. `[click]` ×2, then the code.
-- **BM25, From Scratch.** Walk the code: docstring, idf, saturation and length, the query as a column sum. `[click]` ×4.
-- **Keep Codes Whole.** The regex keeps ERR-PO-0412 as one token and adds its parts. `[click]` ×2, then NB3's output.
-- **Exact Codes.** Dense 0.19, BM25 0.63, hybrid + reranker 0.93 at 5. `[click]` the Q-0412 top 3: dense returns
-  service YAMLs, BM25 puts QRC-03 first.
-- **Hybrid Search and RRF.** Honest: hybrid alone was below BM25 alone here.
-- **The Reranker.** +0.11 median recall@5 for +88 ms at p95, better in 1,045 of 1,056 pairs.
-- **Query Rewriting.** Worse in 1,048 of 1,056 pairs, +10.5 s at p95. It paraphrases away the matching words.
-- **Chroma and HNSW.** Defaults returned about 73% of the true neighbours; ef_search 4000 returns 99.9% in 7 ms.
-- **Ask the class.** Which knob moved recall most? Then:
-- **The Grid: 2,112 Configurations.** `[click]` dense (low, fast), BM25 (high, fastest), hybrid, + reranker (up and
-  right), + rewriting (far right: over budget), then the chosen point. Answer: the parser and BM25-vs-dense mattered
-  most; the reranker added the last ten points.
-- **From Retrieval to Answers.** Nine configurations answered. `[click]` ×2. Naive plain + fixed + dense: 56.7%.
-- **The Configuration We Chose.** `[click]` through the rows; be honest about every missed target.
-- **Where RAG Still Fails.** Multi-hop, versions, tables, Emma's question. `[click]` ×3.
-- **What RAG Read for Emma.** E-mails share her words; §6.2 never says "Brightcell".
+### Part slide · “How does a computer find the one clause that answers Emma?”
+Pasting everything did not fit. Today we find the clause by hand first, then watch the machine do it, step by step, on one document.
+
+### One Document, One Question
+D has 4 pages; the structured parser turns it into 26 units, 2,178 tokens. Small enough to check everything by eye.
+[click] Emma's question.
+[click] The plan: we read D and write the ideal answer ourselves, then check every machine step against it.
+
+### Reading D · The Front Page
+The real page 1 (rendered on Modal at 200 dpi; boxes drawn around its real text lines).
+[click] The four fields that decide if a document applies today: id, version, effective date, status.
+[click] The version history: 1.0 in 1998 to 4.1 in 2026. Old copies are still in the dump (we meet one at the end).
+[click] The 4.1 row: §6.2 extended to chargers, §6.4 added.
+
+### Reading D · Sections and Clauses
+[click] Sections 1 to 4 on page 1 (5 to 9 on page 2). [click] Clauses, one rule each. [click] §3.3, £50,000: an amount we meet again in the failure cases.
+
+### Reading D · §6 and the Appendices
+[click] The four clauses of §6. [click] §6.2 and §6.4 are the two about Emma (battery packs are lithium-cell parts). [click] Appendix A defines a lithium-cell part; Appendix B restates the rules as staff questions.
+
+### The Ideal Answer, From D Alone
+[click] §6.2, quoted from the parsed text. [click] §6.4. [click] What D cannot answer: D never names Brightcell, Voltway, BAT-500 or £104 (checked in the parsed text). The rest needs other documents.
+
+### D in 15 Chunks
+The default chunker (structure-aware, 200 tokens, 15% overlap, header prefix) gives 15 chunks; mean 189 tokens.
+[click] The header prefix. [click] Overlap, honestly: in structure-aware chunking it only acts when a section must be cut; in D at 200 tokens only the header table (253 tokens) is cut, between table rows longer than the 30-token overlap budget, so nothing repeats (s200 with 0% and 15% give identical chunks). At 50 tokens #11 repeats “centre that will carry the spend.” from #10. [click] We follow #5: §6.1–§6.4, 194 tokens.
+
+### The Chunk We Follow
+Chunk id `01_policies/POL-PUR-001_Purchase_Policy_v4.1.pdf#c5`, cite “POL-PUR-001 v4.1, p.2, § 6. Supplier qualification”.
+[click] Highlight §6.2 and §6.4 inside it; it holds both facts (F-PUR-6.2, F-PUR-6.4).
+
+### From Chunk to 384 Numbers
+Six boxes, one per click. Facts read from the model on Modal: modules Transformer → Pooling → Normalize; pooling mode “cls”;
+BertModel, 12 layers, 12 heads, 384 wide, vocabulary 30,522, max 512 pieces. Chunk #5 = 194 o200k tokens = 194 WordPiece pieces.
+Check we ran: the final vector against the normalised [CLS] row: cosine 0.9999 (against the mean of rows: 0.92), so bge really uses CLS.
+[click] tokenizer [click] encoder [click] one vector per piece (194 × 384) [click] pool + normalise ([CLS] length 9.16) [click] 384 numbers.
+
+### The Pieces the Model Reads
+All 194 pieces. [click] `##` continuation pieces. [click] Codes in fragments. ERR-PO-0412 → er ##r - po - 04 ##12 (logged in `v5_dense_probes.json` → wordpieces).
+
+### Cosine Similarity, in Two Dimensions
+Q along the x-axis; each chunk drawn at its true angle to Q, θ = arccos(cosine in 384-d). This keeps the angle to Q exact, not the angles between chunks.
+#1 version history 0.673 (47.7°), #5 §6 0.644 (49.9°), #14 App. B 0.460 (62.6°).
+[click] [click] reveal the chunks one by one.
+
+### 384 Numbers, One Cosine
+[click] the question's vector (with bge's query instruction, as `rag.Embedder.query` adds it). [click] the dot product = 0.6444.
+
+### Every Chunk of D, in 3D
+PCA fitted on the 15 default chunk vectors; PC1 19%, PC2 17%, PC3 11% = 47% of the variance. Drag to rotate; hover reads the chunk; click pins it. Never steals keys.
+[click] rings: #5 (solid), #12 App. B battery Q&A (dashed: it restates §6.2 and §6.4 in plain words).
+
+### Emma's Question Lands
+The star drops in, projected with the same PCA. [click] lines to the top 5 (cosine in 384-d): #1 0.673, #12 0.667, #5 0.644, #7 0.595, #2 0.589. All three nearest are about the battery rule.
+(Without the query instruction the order of the top 3 is the same; §6 stays 3rd: `prefix_check`.)
+
+### Ask the class · chunk size
+Let them pick. §6.2 is 73 tokens long; §6.4 is 35.
+
+### The Chunk-Size Playground
+Clicks walk 200 → 50 → 800 → whole document → 200; students can click any button. Axes fixed (PCA of the 200-token chunks).
+- 50: 64 chunks; §6.2 cut into 3; the chunk with the rule ranks 29th; top 5 = 179 tokens, 22 of them answer.
+- 800: 4 chunks; rule 1st; 3 chunks over 512 pieces.
+- whole: 1 chunk, 2,183 body tokens; its vector reads only the first 20% of the text: it stops before §6.
+
+### Too Small, Too Large
+The table, then the reasoning: 200 tokens (§6 rank 3, 765 tokens in the top 5) or one chunk per section (rank 2, 686 tokens).
+[click] smaller sizes [click] larger sizes. Note 400 ranks the rule 1st but carries 1,751 tokens for five chunks.
+
+### Ask the class · the whole dump
+Guess before the grid.
+
+### The Whole Dump, One Knob at a Time
+From `rag_grid.json` (Chroma HNSW, ef 4,000), dense only, bge-small, structured parser, structure-aware chunks, 15% overlap:
+recall@5 200 → 0.561, 400 → 0.556, 800 → 0.551, 1,200 → 0.493. [click] overlap at 200: 0.551 (0%) vs 0.561. [click] parser: plain 0.488, structured 0.561.
+Our exact (numpy) search on the same vectors gives 0.566 at 200: the small gap is HNSW versus exact search and fp16 batch encoding.
+
+### Other Knobs: k, the Header, the Model
+Clicks: k = 1, k = 10, header prefix off, e5-small. Header off: same ranks on D (every chunk of D carries the same header; its job is
+across documents, see Old Copies); #5's cosine 0.635 vs 0.644. Other models on D, rank of §6: bge-small 3, bge-base 2, e5-small 5,
+gte-small 3, nomic 3. e5-small cosines run 0.76–0.84 against bge-small's 0.46–0.67: compare ranks, not scores.
+
+### Where Dense Fails · Exact Codes
+MAN-ERR-72, 88 chunks. Nearest: ERR-MAT-0412 (0.713), then other error entries; the chunk holding ERR-PO-0412 (it starts at ERR-PO-0105) is 6th (0.682).
+Whole dump: that entry ranks 106th; the first answer chunk of any gold document (MAN-PUR-72 §17) ranks 87th. [click] lines [click] why.
+Probes: “ERR-PO-0412” vs “ERR-PO-0413” 0.944, vs “ERR-MAT-0412” 0.884, vs its meaning 0.532.
+
+### Where Dense Fails · Codes a Digit Apart
+Q-401: the current BAT-500 row ranks 102nd; above it, rows of an old 2025 export (BAT-500, BAT-RNG-250, BAT-375, BAT-625-48, BAT-625, BAT-250) and e-mails.
+Current rows BAT-500 vs BAT-375 0.9994, vs BAT-625 0.9982, vs BAT-250 0.9991. [click] list [click] why + probe.
+
+### Where Dense Fails · Amounts and Dates
+Q-510: the best answer chunk (Amendment 3 §3) ranks 1,004th; the top 8 are sales-order rows. Probe: §3.3 with £25,000 0.959, £30,000 0.990,
+£5,000,000 0.997; the question is 0.600–0.602 to every variant.
+
+### Where Dense Fails · Before or After
+Q-612: D's §6 chunk ranks 8,729th in the whole dump (7th of 15 inside D); an old SOP v2.0 chunk with the fact is 3,848th.
+Probe: “before” → “after” 0.981; “need not” 0.903; unrelated 0.543. The question is closer to the “after” sentence (0.625) than to the real one (0.595).
+
+### Where Dense Fails · Old Copies
+Q-202: #1 is POL-PUR-001 v3.0 (2019, £30,000, header says SUPERSEDED); #5 and #7 also old copies; #4 the amendment, not yet in force.
+Current §3.3 chunk: 18th; with superseded and future chunks filtered out before ranking: 12th. v4.0 vs v4.1 copy of the same chunk: 0.998; v3.0: 0.836.
+
+### Where Dense Fails · Table Rows
+Q-407 (PRD-05 open?): plain parser rank 84, structured 15. Not always: Q-401 plain 83, structured 102. Over 34 table questions
+(grid, dense, 200 tokens): recall@5 plain 0.21, structured 0.26.
+
+### Where Dense Fails · A Crowded Topic
+Q-003: 887 chunks mention lithium or batteries; 2,173 chunks are closer to the question than the carrier notes, 232 of them battery chunks. Carrier notes rank 2,174th.
+
+### Where Dense Wins · Different Words
+Q-101 “How do I onboard a new supplier?”: dense puts onboarding text in all ten top places; the procedure's answer chunk is 7th. A keyword match (BM25, next section) ranks it 619th. Hand over to the lexical section here.
+
+### Where Dense Retrieval Fails, Summed Up
+[click] ×4 reveal the second row, then the caption. Ranks: 106, 102, 1,004, 8,729; 0.998; 84 → 15; 2,174; 7 (keyword 619).
+
+### Ask the class · four questions
+Real golden questions: Q-117, Q-704, Q-108, Q-021 (from the pass-1 scan).
+
+### Check · dense retrieval
+[click] 1 and 3 (rank 1 and 1); ERR-SUP-0031 487th; e-mail retention 49th. [click] WordPiece, 12 layers, CLS, normalise. [click] 2,183 tokens; reads 20%.
+
+#### Honest caveats for the lecturer
+- Whole-dump ranks use exact search over the stored grid vectors (float16, renormalised), not Chroma's HNSW; the grid's own numbers use HNSW.
+- Deep ranks differ by a few places between pass 1 (questions encoded in one fp16 batch) and pass 2 (one at a time): Q-510 1,002 vs 1,004, Q-612 3,823 vs 3,848, Q-003 2,173 vs 2,174. The slides use pass 2 for the failure cases.
+- “Gold” = the course's loc_match (file + page/row); “answer chunk” = a chunk containing a gold fact's needles.
+
+## 8 · Keywords, fusion, reranking
+One document (D, POL-PUR-001 Purchase Policy v4.1, 15 default chunks) and one question (Emma's, Q-EMMA) all the way
+through. Every number is from `experiments/logs/v5_lexical*.json` (made by `experiments/v5_lexical_modal.py` on Modal with
+the course code: `rag.tokenize`, `rag.BM25`, `rag.rrf`, `rag.Reranker`), the dense ranks from the dense section's
+`logs/v5_dense_failures.json`. Chunks are numbered as their ids (`…pdf#c0` to `#c14`).
+
+### Part slide · "Can plain word counting find what the vectors missed?"
+Bridge from the dense section: it ranked the ERR-PO-0412 entry 87th and the BAT-500 row 102nd. Today: a method that only
+counts words, built from zero on D, then how to combine both, then a model that reads.
+
+### Keyword Search From Zero
+Keyword search compares words, so first decide what a word is. This is the only place tokenization matters for BM25.
+- [click] Lower-case, split on anything that is not a letter, digit or £: 12 words.
+- [click] Drop stop words: 56 common words in `rag.STOP`. can, i, the, from go.
+- [click] Light stemming: a plural s is dropped from words longer than four letters. packs → pack. Nothing else changes.
+- [click] Eight tokens. Point out the wart: "they" is not on the stop list, so it stays (it will add noise on the BM25 slide).
+  £104 stays one token. The same function cuts every chunk, header line included.
+
+### Keep Codes Whole, and Split Them
+The same BM25 over MAN-ERR-72's 88 chunks; only the tokenizer changes. Rank of the chunk holding the ERR-PO-0412 entry.
+- Split only (err, po, 0412): rank 2. ERR-MAT-0412 NO GRN FOR PO LINE wins, 7.36 against 6.44: it says 0412 twice.
+- [click] Whole only (err-po-0412): rank 2. ERR-PR-0007 wins on the word "mean" (5.62 against 3.96).
+- [click] Whole and split, `rag.tokenize`: rank 1, 10.46 against 7.38. The whole token separates the two codes.
+- [click] Typed differently, "PO error 0412, what is it?": with both, rank 2 in the manual and 2 in the dump; whole only:
+  72 and 324. The parts rescue the person who does not type the hyphens.
+- [click] Why: err-po-0412 is in 26 of 28,953 chunks; 0412 in 37, po in 5,403.
+
+### Which Chunks Hold Which Words
+The term × chunk table for D. Columns are the 15 chunks.
+- battery and pack: chunks 1, 5, 12. they: chunks 4 and 12.
+- [click] Five of the eight tokens (buy, brightcell, energy, quote, £104) occur in no chunk of D. Brightcell is nowhere in D.
+- [click] What D writes instead: bought (chunk 5), buys (chunk 2), quotation (chunks 5 and 12).
+- [click] purchase and policy are in all 15 chunks: the header line "[Purchase Policy · POL-PUR-001 …]" is prefixed to
+  every chunk.
+
+### Rare Words Matter
+Intuition before formula: a word in every chunk cannot tell chunks apart; a word in three chunks narrows to three.
+- Left: D counts (of 15). purchase 15, battery 3.
+- [click] The whole dump (log scale): order 6,269 chunks, battery 873, brightcell 6, buy 1. Staff write purchase and
+  order, not buy.
+
+### From Counts to a Weight: idf
+idf(t) = ln(1 + (N − df + 0.5) / (df + 0.5)), the line in `rag.BM25`.
+- The bars start on D: with N = 15 the rarest possible word gets 2.37; purchase gets 0.03.
+- [click] brightcell in the dump: ln(1 + 28,947.5 / 6.5) = 8.40. order: 1.53.
+- [click] The point: idf belongs to the collection, not to English. The bars switch to the dump: buy 9.87, £104 9.36,
+  brightcell 8.40, energy 7.30, quote 5.91, they 5.54, pack 4.13, battery 3.50, purchase 2.07, order 1.53.
+  Students can toggle the buttons.
+
+### The Tenth "Battery" Adds Little
+Saturation, k1 = 1.2. The curve is the formula at average chunk length (length factor 1).
+- Dashed grey: a plain count. [click] The BM25 curve, ceiling k1 + 1 = 2.2.
+- [click] One mention 1.00, two 1.38, ten 1.96; the tenth adds 0.023. Real case: §6 (chunk 5) says "supplier" 10 times.
+- Drag k1: small k1 saturates at once (presence is all), large k1 trusts counts.
+
+### Long Chunks Are Damped
+Chunk 1 (version-history line, 57 words after tokenize) and chunk 5 (§6, 104 words) each say battery once and packs once.
+avgdl in D = 100.9 words.
+- [click] |d| / avgdl: 0.565 and 1.030.
+- [click] Length factor 1 − b + b·|d|/avgdl with b = 0.75: 0.674 and 1.023.
+- [click] Weight of battery: 1.849 against 1.501 (exactly what rag.BM25 stored). Drag b to 0: both become equal.
+  This is why the version line will outrank the rule.
+
+### BM25 for Emma's Question, on D
+Each cell = idf × saturation × length for one token in one chunk; the score is the row sum.
+- Chunk 12 (FAQ on battery packs): battery 1.94 + pack 1.94 + they 1.67 = 5.54, rank 1.
+- [click] Chunk 1 (version history): 1.85 + 1.85 = 3.70, rank 2.
+- [click] Chunk 5 (§6, holds §6.2 and §6.4): 1.50 + 1.50 = 3.00, rank 3.
+- [click] Chunk 4 (§5 Approval limits): "they" alone, 2.02 ("an order they raised"). The other 11 chunks score 0 and tie.
+- [click] Read it: the FAQ restates §6.2 and §6.4, good. The version line is short, so it beats the rule. "they" is noise.
+  On D, dense ranked the same three on top (chunks 1, 12, 5): on Emma's question the two methods roughly agree; BM25's
+  advantage shows on codes (two slides on).
+
+### The Same Idea in Code
+Only now the code: `rag.BM25.__init__` (rag.py lines 138–160) and `scores` (162–168).
+- [click] 1 · tf and |d|: tokenize each chunk, count tokens.
+- [click] 2 · df (np.bincount over the columns) and idf.
+- [click] 3 · avgdl and the denominator tf + k1·(1 − b + b·|d|/avgdl).
+- [click] 4 · the weight w for every (chunk, token), stored once in the sparse matrix W.
+- [click] 5 · a question: tokenize, pick its columns of W, add them up. 0.3 ms over 28,953 chunks.
+
+### Where BM25 Wins
+The dense section's failure cases, over the whole dump; rank of the first chunk that holds the answer.
+Dense ranks from `v5_dense_failures.json`; BM25 ranks from our run (identical to the dense section's own BM25 ranks).
+- ERR-PO-0412: dense 87, [click] BM25 1. BAT-500 reorder level: 102 → 67. BAT-375 rate: 622 → 30. £40,000 direct order:
+  1,004 → 5. UN 38.3 after the first order: 3,848 → 22. Lithium carrier: 2,174 → 2. Superseded copy: dense 4, BM25 9.
+- [click] The tokens that carried BM25 (their weight in the answer chunk): fix 11.4 and err-po-0412 10.7; 500 and bat-500;
+  375 and bat; 000 and direct (note: £40,000 is cut into £40 and 000, and £40 is not in the answer chunk); 38.3 and un;
+  carrier.
+- [click] Over the golden set (dense section's numbers): exact-code recall@5 dense 0.18, BM25 0.63; table lookups 0.27
+  against 0.65. The superseded copy is an exception for both: only metadata tells versions apart.
+
+### Where BM25 Loses
+- On D: buy vs bought/buys, quote vs quotation. Exact tokens only.
+- [click] The dense section's own win: "How do I onboard a new supplier?" onboard is in no chunk; the SOP says
+  Onboarding. BM25 619, dense 7.
+- [click] Emma on the whole dump: brightcell (idf 8.40) and £104 (9.36) fill BM25's top 6 with the Brightcell e-mails and
+  a meeting note. D's §6 falls to rank 255 (the FAQ chunk 12 to 16). Emma never wrote the rule's words.
+- [click] So: run both and merge. Hybrid.
+
+### Two Lists, Two Scales
+D, Emma's question. BM25 on the left (0 to 5.54, 11 chunks at exactly 0), dense on the right (0.460 to 0.673).
+- [click] The dense list. [click] Lines join the same chunk: the top three agree (12, 1, 5 against 1, 12, 5).
+- [click] Why not add the scores: different units. BM25 would decide alone; on the whole dump its top score is 53.1 for
+  Emma, while the best cosine is 0.835. The ranges move with every question.
+
+### Reciprocal Rank Fusion
+RRF(d) = Σ over lists 1 / (k + rank), k = 60. Only positions.
+- Ranks in each list. [click] Each list's share: 1/(60+1) = 0.016393, 1/(60+2) = 0.016129, …
+- [click] Sum and fused rank: chunk 12 0.032522, chunk 1 0.032522, chunk 5 0.031746, chunk 2 0.030536, chunk 7 0.030118,
+  chunk 0 0.030090.
+- [click] The tie: (1, 2) and (2, 1) give the same sum. Say it plainly: RRF has no LLM, no model, nothing trained. Six
+  lines of `rag.rrf`.
+
+### The k in RRF
+Interactive: the same formula as `rag.rrf`, on the logged lists (k = 60 reproduces the logged fused ranks).
+- Emma on D: the order is the same for every k (the lists agree).
+- [click] ERR-PO-0412 on the dump (top 20 of each list, as `rag.Retriever` fuses them): at k = 60 the answer chunk
+  (QRC-03, BM25 1st, not in dense's top 20) is fused 5th, behind po_save rows that are mid-table in both lists.
+- [click] k = 1: it is fused 2nd, tied at 0.5 with dense's 1st (ties keep the dense list's order). k = 5: 3rd; k ≥ 30: 5th.
+  Small k rewards the top of either list; large k rewards agreement.
+- Weighted score fusion is the alternative: rescale scores, α·dense + (1 − α)·BM25, α tuned on the golden set.
+
+### RRF Is Arithmetic. The Reranker Is a Model.
+Students (and we) often mix these up. RRF: positions in, list out, no text read. [click] The reranker: BAAI/bge-reranker-base,
+a cross-encoder (XLM-RoBERTa, 278 million weights), reads the question and one chunk together and outputs one relevance
+number. Not a generative LLM: it writes no text.
+- [click] The same two chunks of D: RRF 0.032522 for both; the reranker 0.00051 (FAQ) and 0.00029 (version line).
+
+### Bi-Encoder and Cross-Encoder
+- Left: the question and chunk 5 go through bge-small-en-v1.5 (33.4 M weights) separately; 384 numbers each; cosine
+  0.644. Chunk vectors are computed once for all 28,953 chunks.
+- [click] Right: one input, question and chunk together: 228 tokens for Emma + chunk 5 (the real tokenizer output is shown:
+  <s> question </s></s> chunk …). Every layer sees both texts. One number: 0.0031 (sigmoid of the model's single output).
+- [click] The cost: nothing can be precomputed, so every question needs a pass per chunk. 41 ms for 20 on an L4 GPU.
+
+### The Reranker on D
+BM25's order of D (left) against the reranker's (right).
+- [click] §6 rises from 3rd to 1st; the FAQ is 2nd; the version line drops from 2nd to 4th.
+- [click] Highlight those three. Scores are tiny (top 0.0031) because no chunk of D says whether Brightcell may supply:
+  the reranker is honest that none answers the whole question. We only use the order.
+
+### The Real Top 20, Reordered
+The default pipeline (`rag_best.json`): BM25 top 20 over the whole dump → reranker → keep 10.
+- [click] After the reranker. [click] Highlights: the quotation e-mail (holds 2 golden-set facts: the £104 price and the
+  certificate status) 2nd → 1st; D's FAQ 16th → 10th, inside k = 10. D's §6 is BM25's 255th, so it is not among the 20.
+  The reranker can only reorder what search hands it.
+
+### What Reranking Costs
+Medians on Modal: BM25 0.31 ms (4 CPU cores); embedding the question 11.4 ms (L4); [click] reranker on 20 pairs 41.1 ms on
+an L4 GPU (p95 43.0); [click] 2.4 s on 4 CPU cores (p95 2.5 s); [click] gemini-3.8-flash asked to order the same 20:
+21.8 to 29.3 s per call (three runs), 4,670 tokens in.
+- [click] The costlier variant: hosted rerank APIs, or prompting an LLM. Our LLM run put D's FAQ 3rd or 4th (the
+  cross-encoder: 10th), but each run gave a different order and each took over 20 s; the cross-encoder gave the same order
+  in 10 of 10 runs.
+
+### Ask the class (q hero)
+"Over the whole dump, BM25 ranks D's §6 255th for Emma, and the reranker sees only the top 20. What would you change?"
+Discussion facts (measured): 1 · reranking 300 would include it, at about 41 ms per 20 pairs on the GPU (about 0.6 s per
+question by that rate); 2 · dense ranks §6 about 120th (dense section), so hybrid's top 20 does not reach it either;
+3 · k changes nothing when neither list has it; 4 · a second search with the rule's words is what the agent does later in
+the lecture (it calls search_docs twice).
+
+### Check · BM25, RRF and the reranker
+1. [click] D writes bought, buys and purchase, never buy; exact tokens; the stemmer only drops a plural s.
+2. [click] (1, 2) and (2, 1) both give 0.032522; the reranker breaks the tie: §6, FAQ, …, version line 4th.
+3. [click] 41.1 ms per 20 pairs on the L4 → about 59.5 s for all 28,953 at that rate; 2.4 s for 20 on 4 CPU cores.
+
+## 9 · Choosing by measurement
+Every number on these slides is read from `v5/engineer_data.js`, written by `experiments/v5_engineer_slices.py`
+(log: `experiments/logs/v5_engineer_slices.json`). Sources underneath: `rag_grid.json` (2,112 retrieval rows),
+`rag_best.json`, `rag_answers/*.json` (per-question records of the 9 answered configs), `rag_failures.json`,
+`race.json`, `audit.json`, `v5_dense.json` (the one-document playground) and the Volume `northbridge-raglab`
+(`/vol/grid/*.json`, container wall times).
+
+### Part slide · "Which settings win on all 224 questions, and how would we know?"
+On one document we could see every knob work. Now we have to choose settings for Henrik's whole dump, and the only
+honest way is to measure on everything.
+
+### From One Document to the Whole Dump
+One policy: 26 units, 15 chunks, one question. We could read every chunk.
+[click] The dump: 693 files, 28,953 chunks with the chosen cut, 224 golden questions of ten types.
+[click] The grid is 2,112 settings × 224 questions = 473,088 searches. Nobody reads that. We decide with averages,
+measured the same way for every setting.
+
+### (q hero) Write your four guesses
+Ask them to write down chunk size, search mode, reranker yes/no and k. Keep the chat open: we read the guesses on
+"Your Guesses Against the Data".
+
+### Recall@5 and MRR, on Emma's Question
+Emma's question searched in the whole dump with the default pipeline (BM25 → bge-reranker-base over the top 20,
+structure-aware 200-token chunks). The top 10 as the chosen configuration returned them.
+[click] Gold marks: passages from files her golden-set record lists (same file, same page where the gold names one).
+Rank 1 and rank 5 are the Brightcell quotation e-mail.
+[click] Recall@5 for this question is 1: a gold passage is in the top 5. If none were, 0.
+[click] Reciprocal rank: 1 / rank of the first gold passage = 1/1. At rank 2 it would be 0.5.
+[click] But only 2 of 11 gold passages were found (coverage@5 = 0.18). The §6.2 clause itself (page 2) is not in the
+top 10. Rank 10 is the policy's own FAQ on page 3, which restates §6.2 and §6.4, but the golden set lists page 2, so
+the metric does not count it. Recall@5 is generous: one hit is enough. That is why we also score the answer.
+
+### From One Question to 205
+Four real questions from the same run: Emma (rank 1 → 1, 1.00), ERR-PO-0412 (rank 2 → 1, 0.50),
+[click] the IT service desk extension (rank 3 → 1, 0.33), the ISO 9001 date (not in the top 10 → 0, 0).
+19 of the 224 have no passage to find (not in the documents, refusals): they are scored on the answer only.
+[click] The rank of the first gold passage for all 205 scored questions: 109 at rank 1, 36, 18, 11, 9 at ranks 2–5,
+4 at ranks 6–10, 18 with no gold passage in the top 10.
+[click] Recall@5 = 183 of 205 = 0.893. MRR = the mean of 1/rank = 0.673. Both recomputed from the records and equal
+to the grid row.
+
+### Latency: p50 and p95
+Histogram of the 224 search times of the chosen configuration (0.5 ms bins), timed one question at a time on one
+Modal L4 (4 vCPU, 16 GiB).
+[click] p50, the median: 44.5 ms. Half the questions were at or under it.
+[click] p95: 48.5 ms. 95% at or under; 12 of 224 took longer (slowest 54.8 ms). Emma remembers the slow one.
+[click] Target p95 ≤ 200 ms: met.
+[click] Time to answer adds the answer model (gemini-3.8-flash, with thinking): p50 5.8 s, p95 13.2 s against a 4 s
+target. Missed. Search is 0.4% of it.
+Note: the grid timed the same configuration separately at p95 47.6 ms (the panels); this slide uses the answer run's
+own timings (48.5 ms). Two timing runs, same machine type.
+
+### Cost per Question
+Emma's answer: 2,368 tokens in × $0.825/M = $0.00195.
+[click] 251 tokens out × $4.125/M = $0.00104; total $0.0030.
+[click] Mean of all 224: 2,307 in, 103 out → $0.0023 a question.
+[click] 224 questions a day ≈ $0.52. The judge's calls are the cost of testing: $0.92 for 2,016 judgements.
+Search costs nothing per call: BM25 and the reranker run in our container.
+
+### Judging One Answer
+The real answer RAG gave Emma at the 150-word cap (before the race).
+[click] Exact facts: 4 of the 7 must-contain strings; £104.00, £119.00 and PUR.CERT_CHK missing → not correct.
+[click] The judge (gemini-3.8-flash against the reference answer): not correct, and its reason.
+[click] Citations: each cited passage holds what it is cited for → correct. 5 passages cited.
+[click] Over all 224: judge 87.1%, exact facts 86.2%, citations 92.7%; judge and exact-fact check agree on 94.6%
+(κ 0.77 in rag_best.json).
+The race (later) reruns at 250 words, where the cap stops cutting facts.
+
+### The Grid of Knobs
+Parser 2 × chunker 3 × size 4 × overlap 2 = 48 indexes (each embedded with all 5 models and given a BM25 index).
+[click] Search: BM25, dense × 5 models, hybrid × 5 models = 11; × reranker × rewriting = 44 settings per index;
+48 × 44 = 2,112 configurations.
+[click] k is free: each setting searches once for the top 10, recall@3 and @5 are read off the same list.
+2,112 × 224 = 473,088 searches.
+
+### One Knob at a Time
+The chosen setting (blue row) and three one-knob changes: size 400 → 0.878, reranker off → 0.771, hybrid → 0.859.
+[click] (rows appear)
+[click] BM25 alone (no reranker): best at 1,200 tokens (0.805 against 0.771 at 200).
+[click] BM25 + reranker: best at 200 tokens (0.893 against 0.756 at 1,200).
+[click] Knobs interact. Tuning size with the reranker off would have picked 1,200. That is why we ran the full grid
+and then read it one knob at a time from the chosen setting.
+
+### The Code That Runs It
+`experiments/l3_modal.py`, `_eval_chunking`, lines 494–512: the list of 11 search modes (line 498).
+[click] For every search mode × reranker × rewriting: a Config and a Retriever (lines 499–504).
+[click] Every golden question searched once, top 10, scored with `E.gold_hits` (lines 507–511).
+[click] The three commands: `grid_build` (48 containers), `collect` (→ rag_grid.json), `answers --configs`.
+[click] Machine and time: Modal L4, 4 vCPU, 16 GiB; 48 containers, up to 16 at once, 10 to 18 minutes each;
+12.0 L4-hours in all (last full run, from /vol/grid); 2.69 million vectors embedded.
+[click] Then 9 settings answered and judged: 2,016 answers, $4.23 for answers + $0.92 for the judge.
+
+### Results: How We Cut
+One panel per knob, all else at the chosen setting.
+[click] Parser: plain 0.751, structured 0.893.
+[click] Chunker: fixed 0.859, recursive 0.863, structure-aware 0.893.
+[click] Chunk size: 200 → 0.893 (48 ms), 400 → 0.878 (80 ms), 800 → 0.771, 1,200 → 0.756 (128 ms). The reranker
+reads every candidate chunk, so longer chunks are slower.
+Overlap: 0% 0.868, 15% 0.893.
+
+### Results: How We Search
+Search mode with the reranker: dense (bge-small) 0.663, BM25 0.893, hybrid 0.859. Reranker off 0.771 (0.6 ms),
+on 0.893 (48 ms).
+[click] Query rewriting: 0.839, and 10.6 s p95 (the recorded LLM call): over budget and worse. Embedding model
+(hybrid + reranker, where a model is used): 0.839–0.868, under 3 points apart.
+[click] k: recall@3 0.795, @5 0.893, @10 0.912. Answers: top 5 → 79.5%, top 10 → 87.1% judge-correct, same search.
+
+### Your Guesses Against the Data
+Read the class's guesses for each row, then click.
+[click] Size: 200. [click] Search: BM25 (with the reranker). [click] Reranker: yes, +12.2 points for 47 ms.
+[click] k: 10 for the answer.
+[click] Where one document misled: on the Purchase Policy alone (v5_dense.json, bge-small), §6.2 ranked 1st with
+400-token chunks (7 chunks to beat) and 3rd with 200. On the whole dump 200 wins, with dense search too
+(0.561 against 0.556 without the reranker).
+
+### The Selection Rule
+2,112 configurations measured.
+[click] 1,055 with search p95 inside 200 ms (grid timings).
+[click] 9 answered on all 224 (the best by recall from the grid, plus contrasts such as dense alone and the naive
+first RAG); bars: judge-correct and search p95 from each answer run, in plain words.
+[click] 1 chosen: the best judge score among those inside the budget, BM25 + reranker, 200 tokens, top 10: 87.1%.
+Rewriting is out (10.6 s).
+
+### The Chosen Configuration, Scored
+Structured parser, structure-aware 200-token chunks, 15% overlap, BM25, bge-reranker-base over the top 20, top 10.
+Recall@5 0.893 against ≥ 0.90: missed by 0.7 points (recall@10 0.912). MRR 0.673. Search 44.5 / 48.5 ms: met.
+[click] Answer correct 87.1% (≥ 90%: missed); exact facts 86.2%; citations 92.7% (≥ 95%: missed).
+[click] Time to answer 5.8 / 13.2 s (p95 ≤ 4 s: missed: the answer model's own time). Cost $0.0023.
+All at the 150-word cap; the race reruns at 250 words.
+
+### Where It Still Fails
+One real question per failure type, from the chosen configuration's own records.
+Multi-hop (Emma): 2 of 11 gold passages; the CAB minutes and patch notes behind PUR.CERT_CHK never came back, and the
+150-word answer dropped the two prices it had. All gold in the top 10 for 24% of the 21 multi-hop questions.
+[click] Tables (Q-401, reorder level of BAT-500): the current item master row never reached the top 10; a superseded
+2025 export did; the answer said "not in the documents" (it is 3,000). Table lookups: right passage in the top 10
+for 71%.
+[click] Old versions (Q-602, cycle-count tolerance): MAN-INV-72 v7.2.2 ranked 1st above the current v7.2.3; the
+answer still gave 1.5%. A stale copy in the top 5 for 14 of 20 version questions, above the gold for 4.
+[click] Procedures (Q-101): the onboarding policy outranked the procedure SOP-PUR-001; NBC-F-112 and NBC-F-113
+missing. 13 of 20 procedure answers right.
+[click] Permissions (Q-902): the confidential salary file is filtered out, so the answer said "not in the documents"
+instead of refusing; 5 of 10 right. The race's withheld notice fixes this. What to do next, per type.
+
+### (q hero) A new embedding model claims +5 points
+Expected answer: add it as one more value of the model knob, run it on our golden set (224 questions) with
+everything else at the chosen setting and in the hybrid settings where a model is used; compare recall@5 and search
+p95 against the 200 ms budget; if it enters the top candidates, answer and judge all 224 before switching.
+
+### Check · RAG engineering
+[click] 1: Recall@5 needs one gold passage in the top 5; the quotation was 1st. Only 2 of 11 were found.
+[click] 2: 7 chunks to beat on one document; on all 224, 200 tokens 0.893 vs 0.878, 47.6 vs 80.1 ms p95 in the grid.
+[click] 3: 95% of searches take 48.5 ms or less; one in twenty longer (slowest 54.8 ms).
+
+### The Race, Three Measures (proposed replacement for old slides 77–78)
+Three plain panels from race.json: answer correct (target ≥ 90%; blue meets it), time to answer p95 (all miss 4 s),
+cost per question.
+[click] [click] Read it: RAG 89.3%, 11.6 s, $0.0046; wiki hybrid 92.9%, 22.1 s, $0.0242. No method meets 4 s.
+Old slide 77's RAG row rendered as a vertical column (its `tr.win` class picks up the legacy-window `.win` style from
+plates.css) and its "Paste-all" box covered the table; old slide 78's labels overlapped and bubble size stood for
+cost. This slide shows the same numbers without either problem. The cascade (old slide 78, click 2) is left out.
+
+## 10 · Where the vectors live
+Where the vectors live: Chroma for real (document D, then the whole dump), HNSW, the production choice, and a walkthrough
+on our real Qdrant Cloud cluster. Every number on the slides comes from `window.L3V5.store` (`v5/store_data.js`, written by
+`experiments/v5_store_data.py`) and the logs named below. Dates: all runs and the survey on 4 Nov 2026.
+
+### Part · Where do 28,953 vectors actually live?
+Bridge from the dense section: every chunk is 384 numbers; the question too. Now: where are they kept, and what do teams
+run in production? “Whatever we do here, you will do in your project.”
+
+### What a Vector Store Keeps
+The real record for §6 of D (id "5" in D’s Chroma collection), read back with `col.get(include=[documents, metadatas, embeddings])`.
+- Read the id and the document: the context header, then 6.1 to 6.4. The highlighted clauses are §6.2 and §6.4, the ideal answer.
+- [click] Metadata: what `rag.add_vectors` stores (file, folder, fmt, doc_id, i, confidential, superseded, future). Point at the two flags.
+- [click] The embedding: first 8 of 384 numbers (−0.0353, 0.0477, …), length 1.00 (normalised, so cosine = dot product).
+- [click] A hit brings back id, text and metadata together: this is how the answer cites “POL-PUR-001 v4.1, p.2, § 6”.
+Source: `logs/v5_store_local.json → D.record` (`experiments/v5_store_local.py`).
+
+### Document D in Chroma
+The course code on Modal: `rag.Index.build(d, ["bge-small"], "store_D", vectors=…)` with the grid’s bge-small vectors (same
+numbers as NB3 and the RAG Lab). Then `find store_D -type f`, real sizes.
+- [click] `chroma.sqlite3` (380,928 bytes): the 15 records; its write log (`embeddings_queue`) holds the 15 vectors.
+- [click] The UUID folder is the HNSW segment: `data_level0.bin` (vectors + bottom-layer links), `link_lists.bin` (upper layers), `header.bin`, `length.bin`.
+- [click] The surprise: 18,040,000 bytes for 15 vectors, and the header says 0 vectors inside with room for 10,000 (1,804 bytes each).
+  Chroma keeps new vectors in SQLite’s log and moves them into HNSW once `sync_threshold` = 1,000 are waiting. Small
+  collections are searched from the log.
+Source: `logs/v5_store_local.json → D.files, D.hnsw_headers, D.sqlite_tables, D.collection_config` (header.bin parsed: Chroma 1.0’s
+4-byte prefix + hnswlib’s 96-byte header).
+
+### The Whole Dump in Chroma
+`rag.add_vectors` with all 28,953 chunks: 26.5 s on a 4-vCPU Modal container. Two collections: 28,941 staff-readable, 12 HR-confidential.
+- 195,546,412 bytes on disk (196 MB). SQLite is 125.8 MB.
+- [click] Why SQLite is big: each chunk’s text is stored as the record and again in a full-text index (`embedding_fulltext_search`), plus 260,577 metadata rows = 28,953 × 9 fields.
+- [click] The main HNSW segment holds 28,000 vectors (header), 1,804 bytes each = 384 × 4 bytes + 64 links (+ count and label). The last 941 still wait in the log.
+- [click] Raw vectors alone: 44.5 MB (28,953 × 384 × 4). The rest is text, metadata, the keyword index and the graph.
+
+### Searching Chroma
+`col.query(query_embeddings=[q], n_results=5)` with Emma’s question embedded by `rag.Embedder("bge-small")`.
+- Inside D only: §6 comes 3rd (0.644), after the revision table (0.673) and the FAQ answer on battery packs (0.667). One query: 4.1 ms.
+- [click] Against all 28,941 staff chunks: the top 6 are e-mails and the weekly meeting note about Brightcell (0.835 … 0.746). One query: 5.8 ms.
+- [click] The store just returns the nearest vectors. Retrieval quality was the previous sections’ job; the store makes it fast and durable.
+HNSW against brute force for Emma’s question on the dump: the same top 10 (overlap 1.0).
+
+### A Filter in the Query
+Q-604 “How old can a UN 38.3 report be?”, whole dump, top 5.
+- No filter: rank 5 is POL-SUP-003 **v2.2**, a superseded copy in `01_policies/old/`.
+- [click] `where={"superseded": False}`: rank 5 becomes v2.3, the current version.
+- [click] Cost in Chroma 1.0.15: p50 7.0 ms → 204.5 ms, p95 8.3 → 211.8 ms (224 golden questions, k = 10). The filter is evaluated outside the graph.
+- [click] So the course keeps HR’s 12 chunks in their own collection: Emma’s search never opens it, and pays nothing for it.
+(rag.py’s own note measured ~250 ms for `where` in Chroma 0.6.3; 1.0.15 is about the same.)
+
+### A Vector Database Is an Approximate Search
+Improved old slide 46. A toy graph of 42 points in 3 layers, searched by the real greedy rule (JS, no data). Chroma’s real
+graph for the dump: 4 layers, up to 32 links per vector (64 on the bottom layer), from the parsed header.
+- [click] The walk: start in the top layer, step to the neighbour closest to the question, drop a layer when none is closer.
+- [click] It stops early, so it can miss. `logs/hnsw_check.json` (bge-small, 13,606 chunks, structured-400, chromadb 1.0.15): Chroma defaults returned 73.3% of the exact top 10.
+- [click] ef_search 200: 90.6%; 1,000: 97.7%; 4,000: 99.9% at 7.3 ms (defaults 3.3 ms). That is `rag.HNSW`.
+
+### Ask the class · Chroma in a folder works on one laptop. What must change when 200 staff search it all day?
+Expect: a server, backups, permissions, many users at once, monitoring, updates when documents change, region. Then the next slide.
+
+### What Production Asks of a Store
+Ten questions; the four blue ones decided it for Northbridge: hybrid in one engine, filters during the search (HR must never
+reach Emma), data residency (UK, else EU), re-indexing when the model changes. [click] [click] reveal the rest.
+Source: `logs/v5_store_research.json → considerations`.
+
+### Dedicated Vector Databases
+Checked 4 Nov 2026 on vendors’ own pages (URLs per row in `logs/v5_store_research.json`). Talking points:
+- Qdrant: hybrid in the engine via Query API prefetch + RRF; BM25 on a full-text index since 1.20 (Oct 2026); filters during HNSW; free 1 GB RAM / 4 GB disk, paused after a week idle.
+- Pinecone: free Starter is us-east-1 only; EU from the $20 Builder plan; no London; full-text is a separate search you fuse yourself.
+- Weaviate: hybrid built in; free sandbox capped at 100,000 objects (fits now, not at ten times).
+- Zilliz (Milvus): built-in BM25 and server-side RRF; London free region verified.
+- Chroma Cloud: US East and Belgium only; $5 a month of credits.
+- Turbopuffer: London, BM25 + vector with server RRF, no free tier ($16 minimum); vendor-stated users Notion, Linear, Atlassian.
+
+### Databases You May Already Run
+- Postgres + pgvector: London on Neon and Supabase; but HNSW filters after the scan (iterative scans fix recall), and no real BM25 on Neon/Supabase in 2026 (Neon retired pg_search: new projects from 19 Mar, existing on 21 Sep).
+- Elasticsearch/OpenSearch: BM25 native + kNN + RRF; self-managed Elastic RRF needs the Enterprise licence.
+- Azure AI Search: hybrid + semantic ranker, UK South; the free tier is 50 MB and our ~75 MB does not fit.
+- Vertex AI Vector Search: hybrid if you bring the sparse vectors; London.
+- AWS: S3 Vectors is vectors only (no keyword search); Bedrock KB hybrid only on RDS, OpenSearch Serverless, MongoDB.
+
+### Our Default: Qdrant
+Why (blue): hybrid in one call; filters inside HNSW; same code on a laptop (Docker) and in the cloud; dashboard + console; aliases.
+- [click] [click] Limits (orange), two of them measured by us on our cluster: the default HNSW width lost recall (0.434 vs 0.566 exact), and its BM25 tokenizer splits ERR-PO-0412. Free clusters pause after a week, deleted after four; ours is Frankfurt.
+- [click] When to choose something else: Postgres shop → pgvector; Microsoft shop with strict UK residency → Azure AI Search UK South.
+
+### Walkthrough · 1 · A Free Cluster
+Screenshot of Rajat’s cluster (RAGProject, v1.20.0, GCP europe-west3, HEALTHY, FREE TIER). The AWS free tier only offered São Paulo,
+so we took GCP Frankfurt. [click] highlight: id, version, provider. [click] highlight: 1 node, 4 GiB disk, 1 GiB RAM, 0.5 vCPU.
+Note: the endpoint is visible in the screenshot; it is not a secret (the key is), but blur it if you prefer.
+
+### Walkthrough · 2 · The Key Lives in One File
+`vectordb.env` (values shown as dots), gitignored by `*.env`; the script reads only `QDRANT_URL` and `QDRANT_API_KEY` from it,
+passes them to Modal as a secret, and asserts that neither value appears in any log it writes. [click] [click]
+
+### Walkthrough · 3 · Create the Collection
+Code from `experiments/v5_store_cloud.py::do_ingest`. One named vector `dense`, 384, cosine. [click] Payload indexes before the
+data (bool: confidential, superseded, future; keyword: folder, doc_id, file, status). [click] A full-text index with BM25 scoring on
+`text` (word tokenizer) and a second on `text_code` (code tokenizer) to compare. Created in 1.82 s. Screenshot: the Info tab
+(green, 384 · Cosine, m 16, ef_construct 100).
+
+### Walkthrough · 4 · Upsert D, Then the Dump
+D first: 15 points in 0.31 s (point ids 101–115; §6 is 106). [click] Then 28,938 in 131.2 s, batches of 256, Modal (US) → Frankfurt.
+[click] Screenshot of the collections list: northbridge_docs, alias northbridge, GREEN, 28 953 points, 2 segments.
+[click] 28,953 points · 12 HR-confidential · 736 superseded · 25,103 in the HNSW graph. [click] Qdrant leaves small segments unindexed and
+scans them exactly; search still covers all points.
+
+### Walkthrough · 5 · The Points in the Dashboard
+Screenshot: Points tab, filter `id:106`. [click] payload: cite, text, file, section. [click] version, status, the flags. [click] vector
+`dense`, length 384, Find Similar. [click] “Open a few points and read them”: the cheapest ingestion test there is.
+
+### Walkthrough · 6 · Search in the Console
+Screenshot of the console running (read-only):
+`POST collections/northbridge/points/query {"query": {"text": "ERR-PO-0412"}, "using": "text", "filter": {"must_not": [{"key": "confidential", "match": {"value": true}}]}, "limit": 5}`
+[click] the request; [click] the filter is part of it; [click] first: QRC-03 quick-fix card for ERR-PO-0412 (16.67);
+[click] third: MAN-ERR-72 p.13 **ERR-MAT-0412**, a different error: Qdrant’s tokenizers split the code into err / po / 0412 (our `rag.tokenize` keeps the whole code as well as its parts).
+
+### Walkthrough · 7 · Emma’s Filter, From Python
+Q-901 “What is the salary band for a senior buyer?” asked as PUR-EXEC, hybrid (hnsw_ef 2,000).
+- [click] No filter: ranks 1 and 2 are HR-CONF-007 (salary bands), confidential.
+- [click] Emma’s filter: none; the top is approval_limits.html.
+- [click] Cost of the filter on the cluster: dense p50 277.5 ms (none) vs 277.4 ms (Emma) vs 277.7 ms (+ not superseded); round trip 273.5 ms. Payload index + filterable HNSW: no extra cost, unlike Chroma’s `where`.
+Scan of five HR questions (`permission_scan`): unfiltered top 5 held confidential chunks for 4 of 5 questions.
+
+### Walkthrough · 8 · Measure Recall on the Cluster
+`logs/v5_store_ef.json`: dense recall@5 on the cluster: default 0.434, hnsw_ef 128 0.439, 512 0.468, 2,000 0.551, exact 0.566
+(the course grid, Chroma with ef_search 4,000, measured 0.561 for bge-small on the same chunking: `rag_grid.json`).
+p50 103 / 106 / 110 ms (default / 2,000 / exact, network included, ~99 ms round trip in that run).
+[click] [click] [click] “Default lost almost a quarter of what exact finds”; we set hnsw_ef = 2,000 everywhere after this.
+
+### Walkthrough · 9 · Hybrid Inside the Engine
+Prefetch dense (20) + BM25 (20), fused by `RrfQuery(Rrf(k=60))`. [click] The reranker (bge-reranker-base) stays in our service.
+[click] ERR-PO-0412, dense top 3: svc:po_release, the printed PO register, MAN-ERR-72 ERR-MAT-0412 (no gold).
+[click] BM25: QRC-03 quick fix first. [click] Hybrid: RN-7.2.3-P1, MAN-ERR-72 ERR-MAT-0412, error_messages.html.
+[click] Recall@5 (224 golden, evaluate.py, each asker’s filter): dense 0.551, BM25 word 0.737, BM25 code 0.737, hybrid 0.702.
+Hybrid below BM25 alone, as in our own grid (rag.BM25 0.771, hybrid 0.742): why the chosen pipeline is BM25 + reranker. Code tokenizer:
+exact-code recall@5 0.667 vs word 0.630.
+
+### Walkthrough · 10 · How Fast, and What It Costs
+From Modal (US) to Frankfurt: round trip p50 273.5 ms; dense 279 ms, BM25 274 ms, hybrid 279 ms p50, 285 ms p95.
+An earlier run from another Modal container: round trip 99.2 ms, hybrid p50 103 ms. [click] Same code against Qdrant 1.20 inside our
+own container: hybrid p95 15.5 ms (that collection’s 8 small segments were never HNSW-indexed: exact scans).
+[click] $0 a month (free tier); 121 MiB of 4 GiB disk, 251 MiB of 1 GiB RAM (console, read after the upload); 28,953 points.
+Lesson: the 200 ms budget is broken by geography, not by the store. Run the app in the store’s region.
+
+### Walkthrough · 11 · When the Model Changes
+Vectors from two models cannot be compared. [click] The app queries the alias `northbridge`. [click] New collection, re-embed, run the
+golden set, switch the alias atomically; roll back the same way. [click] Ours: northbridge → northbridge_docs.
+
+### Ask the class · Who should add Emma’s filter?
+Answer: 3, the search service, from the signed-in user’s role. Never the model (a prompt can be talked out of it), and not a
+parameter the agent chooses.
+
+### Check · Where the vectors live
+1. [click] The search service. 2. [click] Chroma 7.0 → 204.5 ms p50; Qdrant 277.5 → 277.4 ms (network included). 3. [click] New 768-d
+collection, re-embed all, rerun golden set, one alias switch.
+
+### Then, closing the RAG sections
 - **The RAG Lab.** Students open it on their phones; leaderboard = best recall@5 under 200 ms. Give it 3 minutes.
-- **Industry Practice.** Vector databases, frameworks, filters, evals in CI. `[click]` ×3.
 - **Question → Film 1 (`rag`) → Check.**
 
-## 7 · The LLM Wiki (about 22 minutes)
+## 11 · The LLM Wiki
+One document (D = `POL-PUR-001_Purchase_Policy_v4.1.pdf`) and one question (Emma's, `Q-EMMA`) all the way through, as in
+RAG. Every intermediate on the slides is real: `experiments/v5_wiki_modal.py` ran the course's own builder
+(`wiki_build.build(files=[D])`, then `wiki_build.update([AMD-SUP-2026-02])`) on Modal with gemini-3.8-flash and logged every
+prompt and reply (`experiments/logs/v5_wiki_ingest.json`, `v5_wiki_update.json`); the query replays the race's recorded calls
+on the full wiki (`v5_wiki_query.json`); tokens per part are Gemini's own count (`v5_wiki_counts.json`). The slides read
+`v5/wiki_data.js`, written by `experiments/v5_wiki_data.py` (failure evidence in `logs/v5_wiki_failures.json`).
+Film 2 is placed by the lead.
 
-- **Karpathy's LLM Wiki.** The gist (April 2026): three layers, three operations. `[click]` ×6. One short quote, with
-  attribution; mention the Memex.
-- **Three Layers, Three Operations (Fig. 2).** The gist's structure, drawn for Northbridge.
-- **A Wikipedia Page, Read as a Design.** Nine clicks, one part lit at a time, each mapped to the wiki on the right:
-  title → page and slug; lead → summary; infobox → fact table; contents → sections; blue links → wikilinks; [1] →
-  references; the "needs citations" banner → lint; View history → log.md; Search → index.md. Credit: CC BY-SA.
-- **The Schema: AGENTS.md.** `[click]` the layers, `[click]` page types and slugs.
-- **Ingest.** 693 sources, 1,067 parts, 683 pages, 4,035 links, 9,585 references, $22.61, about 11 minutes.
-- **A Real Page.** Brightcell Energy, as written. `[click]` ×5: front matter, fact table and lead, links, sections,
-  references.
-- **index.md and log.md.** The catalogue and the history.
-- **Query by Navigation.** Emma's chain: read index.md; open three pages; done. Two model calls before the answer step.
-- **Search Over the Wiki.** No model: about 26 ms. Hybrid = search, then navigate.
-- **When a Document Changes.** Patch note P6: 7 pages, 40 s, $0.15 for the wiki; no model for RAG. File-back of Emma's
-  answer as its own page.
-- **Lint.** 31 of 40 planted problems found; 1,073 findings in about a minute. It missed legacy abbreviations.
-- **The Wiki Explorer.** Browse, then replay a chain.
-- **Question → Film 2 (`wiki`) → Check.**
+### Section 7 (part slide) · What if the model wrote Northbridge's wiki first?
+RAG searches the raw text every time a question arrives. Turn it around: let the model read each document once, now, and write
+down what it learned as pages. Then questions read the pages.
 
-## 8 · The race (about 15 minutes)
+### The Idea in One Picture
+Karpathy's gist, April 2026. Read it after class.
+[click] Ingest: the model reads each source once and writes pages. 693 files became 683 pages.
+[click] People write one file, AGENTS.md: the rules every ingest follows.
+[click] Query: read index.md, open pages, answer; each sentence cites a raw source.
+[click] RAG, for contrast: nothing is written in advance; it searches the chunks on every question.
+The difference to keep: the wiki spends its model calls before the question, RAG at the question.
+
+### A Wikipedia Page, Read as a Design
+Kept from v4. Nine clicks, one part each: title, lead, infobox, contents, blue links, references, "needs citations", view
+history, search. Each one has a counterpart in our wiki.
+
+### One Document, Read by Hand
+Before any model: what would a careful person write from D?
+[click] The policy itself: code, version 4.1, in force since 1 April 2026, its history. That is a page.
+[click] A rule with a number: §3.3, direct orders up to £50,000 gross. A fact on that page, with its clause.
+[click] §5 names another document, POL-APR-002. D only says what it is for.
+[click] Emma's two clauses: §6.2 (UN 38.3) and §6.4 (a cheaper quote is no reason). UN 38.3 is a topic many documents share.
+[click] Things it mentions: screen FIN-CC-01, tax codes, Henrik Weber. Each could be a page that links back.
+[click] What the model wrote: 6 pages, 29 facts (22 on pol-pur-001). Its proposed `topic-tax-codes` was mapped to
+`data-tax-codes` by the build's MERGE call. Ask: did it miss anything we found? D names POL-SUP-003 but says nothing about it.
+
+### Ingest, Step 1: The Prompt
+One call reads all of D: 8,460 tokens in, 3,687 out, 20.7 s (this READ call is the very one from the full build, replayed
+from its recording; the request was byte-identical).
+[click] Part 1, about 2,900 tokens: the instructions and the whole of AGENTS.md.
+[click] Part 2, about 2,100 tokens: the registry, the 100 slugs that exist, so every source names things the same way.
+[click] Part 3: the source header (file, version, effective date, status today, audience).
+[click] Part 4: D itself, pages 1 to 4, 2,211 tokens. Note §6.2.
+[click] Part 5: the rules and the JSON reply format. "quote is 5 to 25 words copied exactly … it is checked by code".
+Point: more than half of the prompt is the same for every source.
+
+### Ingest, Step 2: The Reply
+[click] The source note: what D is, its date and status.
+[click] The pages D touches, with how many facts each.
+[click] One fact, for §6.2: the fact in the model's words, the quote in D's words, page 2, section 6.
+[click] Conflicts it noticed: v4.0 superseded; AMD-PUR-2026-03 future-dated (1 December).
+
+### Ingest, Step 3: The Quote Check
+No model: a string search in code.
+[click] Both sides normalised: lower case, no spaces, plain quotes.
+[click] Found on page 2. Verified.
+[click] A real miss on D: the quote for pol-apr-002 joins §5.1 and §5.2, but D prints "5.2" between them. Not found.
+[click] 27 of 29 verified on D; 12,018 of 12,095 in the full build. The check marks a fact; it does not delete it.
+pol-apr-002 was still written from its two unverified facts; lint lists such references later.
+
+### Ingest, Step 4: The Written Page
+One more call per page (6 here). The writer sees the numbered facts, never D.
+[click] The lead's last sentence: keys r2, r16, r20 lead to the version history, §6.2 and §7.2.
+[click] §3.3 sentence → r6 → "£50,000 or less".
+[click] §6.2 sentence → r16 → the quote we just checked.
+[click] §6.4 sentence → r18 → "does not by itself justify a change of supplier". Emma's rule, traced by eye.
+Students may click any sentence.
+
+### Links, index.md and log.md
+[click] index.md: one line per page, rebuilt after every ingest, read first by every query. Screens and people appear as one
+slug-rule line each.
+[click] log.md: one line per ingest, created and updated counts, and the slugs.
+
+### A Second Source Arrives
+AMD-SUP-2026-02: from 1 September 2026 a UN 38.3 certificate must be under 12 months old and valid 60 days past the order.
+[click] The update reads it (1 call) and touches 4 pages: 1 updated, 3 created.
+[click] The diff, infobox and lead: the new rule enters the lead (12 months, 60 days).
+[click] New paragraphs and "Versions and conflicts": the 24-month rule is now the older rule.
+[click] Links and references to the amendment.
+[click] The log line. Note "Today's rule (superseded)" in the page: a label slip by the model, visible in the diff.
+
+### The Same Change in RAG
+[click] RAG: parse 51 ms, 3 chunks (142, 247, 165 tokens), no model call; BM25 over all 28,953 chunks rebuilds in 4.86 s.
+[click] But RAG reconciles nothing: the POL-SUP-003 chunk with "24 months" stays next to the new one. The answer step must work
+out which rule wins, on every question. The wiki did that work once.
+
+### The Rules It Followed: AGENTS.md
+Five lines of the schema, each next to what it produced. [click] per rule: slugs from codes (both sources landed on one page);
+page layout (lead, infobox, one `###` per clause); citations on every sentence; newer replaces older, recorded under
+Versions and conflicts; the log line format. [click] All together.
+
+### Query, Call by Call
+The full wiki, the race's recorded run (replayed). Click any bar segment to see the text.
+Call 1: system 449, index.md 7,987, question 16 tokens (9,716 billed). Reply: open three pages.
+[click] Call 2: the short index, its own reply, three whole pages (13,720). Reply: done.
+[click] The answer call: the three pages as sources [1] to [3] (5,002).
+[click] Missing from the answer: six must-contain facts. Keep this for two slides.
+
+### Chunks or Pages
+[click] RAG: 10 chunks, 2,368 tokens, one call. Six chunks come from the four files behind the Brightcell page.
+[click] The wiki: 28,438 tokens in three calls, drawn to the same scale.
+The multi-hop advantage: one page already joins a meeting and three e-mails (the coloured squares). The join was done once.
+
+### Where It Fails: Never Compiled
+Q-104, "the screen hangs after Save". The manual's §19.4 on page 13 has the answer.
+[click] The ingest took 89 facts from that manual, none from page 13. No page says "do not press Save again"; the wiki answered
+NOT IN THE DOCUMENTS. [click] RAG found the paragraph in the raw manual.
+
+### Where It Fails: Wrong at Compile Time
+Left, our one-source wiki: the UN 38.3 page says "System enforcement: Ledgerline order blocking". Ledgerline does not block
+(PUR.CERT_CHK default N; the change board kept it N). The quotes behind the lead passed the check; the infobox has no key.
+The full build, which read RN-7.2.3-P4 and the CAB minutes, wrote it correctly.
+[click] Right, the full wiki: the IT Security Policy page was filed HR-only because the HR folder's README also names
+POL-ITS-008 and the registry met it there first. A build-code error, not the model's. Staff never see "12 characters,
+60 days"; Q-609 failed; lint reported nothing on that page.
+
+### Where It Fails: Stale Until Re-ingested
+Before the update, the page had no 12-month window. [click] After, only touched pages changed: pol-pur-001 was not touched
+and still has no link to the amendment. [click] Staleness is a schedule: RAG re-chunks for free, the wiki pays per update.
+
+### Where It Fails: Cost and Time of Ingest
+D alone: 8 calls, 32,052 tokens in, 32.7 s, $0.055. The amendment: 5 calls, 25.0 s, $0.038. The full build: 1,752 calls,
+12.7 million tokens in, about 11 minutes on 40 workers, $22.61. [click] RAG: no model, 14.63 s chunking + 4.86 s BM25 for
+everything. [click] Cost grows with the documents, not with the questions.
+
+### Where It Fails: Stopped Early, Dropped Facts
+Index, three pages, done after 2 calls; its reason names AMD-SUP-2026-02, which it never opened.
+[click] The six missing facts, one by one: NBC-F-112, £119.00 and PUR.CERT_CHK were only on pages never opened.
+12 months, 60 days and £104.00 were in the answer call's context (pol-sup-003, sup-brightcell-energy) and the answer left
+them out. Two failures in one run.
+[click] Multi-hop, answer correct: RAG 71%, wiki navigation 67%, hybrid 71%, sections only 33%.
+
+### Where It Fails: Exact Codes
+Q-726, ERR-CRD-0207. The source says "CREDIT LIMIT EXCEEDED (<cust_cd>)"; the page rewrote it as "Customer Credit Limit
+Exceeded" and "credit ceiling". The answer missed the exact message. Also index.md lists the 98 error pages as one line.
+[click] Exact-code questions: recall@5 RAG 1.00, wiki 0.52; answer correct 93% vs 85%.
+
+### Lint: The Wiki Checks Itself
+1,073 findings in 59 s; 31 of the 40 planted problems found. On Emma's pages: the citation_not_found on the UN 38.3 page
+(r35 is a 62-word quote), the orphan Brightcell page, the superseded rule recorded.
+[click] Lint can fix citations, orphans, stale and contradictory claims. [click] It cannot see a fact that never reached a page,
+a page filed under the wrong audience, or a reader that stops early. For those we need the golden set.
+
+### The Wiki, Measured
+Per question on the race's 224: 2.54 navigation calls before the answer, retrieval 6.4 s p50 / 23.4 s p95, $0.0322 a question
+(RAG: 44 ms, $0.0046). [click] Quality on the same metrics: recall@5 0.86 vs 0.89, answer correct 89.3% for both, citation
+correct 85.9% vs 92.2%. [click] The same test as RAG, step by step; Emma's question through it is what we watched.
+
+### Where the Wiki Lives
+[click per card] Files: a git repository of markdown; for production, every ingest is a commit someone reviews. Search: 2,520
+sections with the same BM25 and bge-small, 1.2 ms p50, so "hybrid" can start from a search. Permissions: one audience per
+page; the page is the unit of permission, so one wrongly filed page hides all of it.
+
+### Ask the class · An amendment lands at 9:00; Emma asks at 9:05
+Expected answer: 4, it depends on when each memory was refreshed. RAG knows if the file was re-chunked (free, seconds); the
+wiki knows if the update ran (model calls, a review). Neither knows by itself.
+
+### Check · Section 7
+[click] 1: Yes. The check tests quotes, not sentences; infobox lines have no key. "Ledgerline order blocking".
+[click] 2: Yes, the model saw them (pol-sup-003, source [2]) and the answer left them out; three other facts were never opened.
+[click] 3: The wiki rewrites pages (5 calls, 25 s, $0.038); RAG re-cuts the file (3 chunks, about 50 ms) and reconciles at
+question time.
+
+- **Film 2 (`wiki`)** sits between the class question and the check.
+
+## 12 · The race (about 15 minutes)
 
 - **The Rules of the Race.** Only retrieval differs. `[click]` ×5. Spend $6.53.
 - **Ask the class: place your bet.** Then:
@@ -153,7 +1028,7 @@ Re-run `python3 gen_figdata.py` after any experiment or NB3 run.
 - **The Decision.** `[click]` through `race.json → decision`. The cascade is the measured next step, not shipped.
 - **Film 3 (`race`) → Check.** Back to the opening bet and the Section 4 question.
 
-## 9 · Ask Northbridge remembers (about 7 minutes)
+## 13 · Ask Northbridge remembers (about 7 minutes)
 
 - **The Winner as a Tool.** `search_docs/tool.json`: description, input, output with `withheld`. Lecture 4 opens tools
   properly.
@@ -162,13 +1037,13 @@ Re-run `python3 gen_figdata.py` after any experiment or NB3 run.
 - **Try It Live.** Open the link; ask one question from the class. Expect 10–30 s on the first question.
 - **Check.**
 
-## 10 · Any domain (about 6 minutes)
+## 14 · Any domain (about 6 minutes)
 
 - **Twelve Rules.** `[click]` ×10. Each is a step from today.
 - **Four Domains.** Pharma, healthcare, banking, legal: what you must never get wrong in each. `[click]` ×3.
 - **Ask the class.** Their domain's most common question type.
 
-## 11 · NB3 and A3 (about 5 minutes)
+## 15 · NB3 and A3 (about 5 minutes)
 
 - **NB3.** Ten sections; runs on Colab with no key; clones `northbridge-docs`.
 - **NB3 · Section 6** and **NB3 · Section 8.** The exact cells, then their output from our run (CPU machine, fresh
