@@ -1,6 +1,20 @@
 # Lecture 4 · The Hands: tools, MCP, two harnesses, production grade · speaker notes (v5, Northbridge)
 
-Sun 8 Nov 2026, 7:00–9:00 AM IST. 113 slides. Slide numbers are the deck's counter (bottom right). `[click]` = one step.
+Sun 8 Nov 2026, 7:00–9:00 AM IST. 119 slides. Slide numbers are the deck's counter (bottom right). `[click]` = one step.
+
+**Before class: the forge (do this, it is not on any slide).** The forge runs in one Modal container that shuts down
+after about 30 idle minutes, and every student's sandbox (their copy of Ledgerline, their chat) is lost when it does.
+It happened on 5 Nov in the Claude test: the new request took the old number and Claude explained it wrongly (slide 75).
+1. **At least 30 minutes before class, warm it:** `/Users/raj/.venv/bin/modal run deploy/hephaestus_modal.py::admin --cmd warm`
+   (keeps one container on until `cool` or the 04:00 UTC cron). Then `--cmd status`: one container up, spend 0, not paused.
+2. **Clean the wall:** `--cmd purge-tests` removes the build's probe and film forges. Your demo forge "Rajat demo" stays
+   (it is the one connected to your Claude account); use `--cmd purge-all` only if you want a completely empty wall.
+3. **Open the forge and the wall on the projector** (`/wall`) and join once yourself to check it answers question 1.
+4. **Do not redeploy during class**: a redeploy restarts the container and resets every sandbox, and sets
+   min_containers back to 0, so warm again if you ever must.
+5. **After class:** `--cmd cool`. If a student's forge seems to have forgotten their request mid-class, run `--cmd status`:
+   a restart is the likely cause; ask them to press Fresh sandbox and repeat the step.
+All commands: `ledgerline/ledgerline/hephaestus/README.md`, "Running it in class".
 Dr. Rajat Dandekar presents. v5 follows Dr. Dandekar's review of 5 Nov 2026 (`HEPHAESTUS_SPEC.md`); the 4 Nov deck and
 its notes are kept in `archive_v4/`.
 
