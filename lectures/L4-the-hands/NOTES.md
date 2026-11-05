@@ -45,8 +45,7 @@ If either file changes, re-run `gen_figdata.py`; nothing on the slides is typed 
 | 55 | knob: the rules | `films/hephaestus_knob_rules.mp4` |
 | 56 | The Shield, four attacks and Compare | `films/hephaestus_shield.mp4` |
 | 68 | Connect to Claude tab | `figs/hephaestus/connect.png` |
-| 68 | Claude's Add custom connector dialog | `figs/hephaestus/claude_connector.png` (Claude's own UI: record by hand) |
-| 69 | Claude on the forge, Calls from Claude | `films/hephaestus_claude.mp4` |
+| 68–75 | Claude, step by step (captured 5 Nov 2026) | `figs/hephaestus/claude_*.png` (22 screenshots) |
 | 89 | question 6 in Ask, then on Claude | `films/hephaestus_q6.mp4` |
 | 95–105 | Production tab, one check each | `figs/hephaestus/prod_{schema,reliability,usability,latency,payload,idempotency,timeouts,regression,mcp,change}.png` |
 
@@ -327,16 +326,42 @@ for that host. [click] The messages are JSON-RPC; NB4 section 5 reads them by ha
 
 **67 · Fig. 7.** Same server below, different harness above.
 
-**68 · Step 1 · Connect your forge.** Copy your MCP address from Connect to Claude (the key is your forge's password: not
-in the chat). [click] claude.ai / Desktop: Settings → Connectors → Add custom connector; Name Hephaestus; URL; Add; in a
-new chat switch Hephaestus on in the tools menu (needs Pro, Max, Team or Enterprise; Team/Enterprise owners may have to
-allow custom connectors). [click] Or Claude Code: `claude mcp add --transport http hephaestus <url>`, then `claude`,
-`/mcp` → connected; afterwards `claude mcp remove hephaestus`. [click] Test my address on the Connect tab. Demo it once on
-your own screen first. (5 minutes.)
+All Claude screenshots below were captured live on claude.ai on 5 Nov 2026 with a demo forge ("Rajat demo"), the
+shipped tools and Opus 5.5 (`figs/hephaestus/claude_*.png`; the forge key is blurred). Show them as the class does each step.
 
-**69 · Step 2 · The same six questions.** Paste from the Connect tab, in one chat. Read each tool request before
-allowing it. [click] [click] Calls from Claude on the Connect tab shows every tools/list and tools/call. Look for: tools,
-order, number of calls; what it asked first; question 5 with only Anthropic's prompt and your tools. (6 minutes.)
+**Step 1 · Add your forge to Claude.** Copy the address from the Connect tab (the key in it is the forge's password).
+claude.ai / Desktop: Customize → Connectors → Add → Add custom connector (the old Settings → Connectors page now points
+there). [click] Name Hephaestus, paste the URL, Continue; Authentication: No sign-in (Claude detects it; read its warning
+out: anyone with the URL can use the connector). Add, then Connect. [click] Tool permissions: Claude sorts the tools into
+read-only (5) and write, from each tool.json's readOnlyHint. Leave "Needs approval". Side notes: Claude Code
+alternative; not every plan has custom connectors; how to disconnect afterwards. (5 minutes, done together.)
+
+**Step 2 · Switch it on, ask question 1.** New chat (Claude reads the tool list when a chat starts). + → Connectors →
+Hephaestus on. [click] Claude chose check_stock from the description alone and asks before calling it: read, Allow once.
+[click] 5,400 in Manchester main stores. On the forge's Connect tab, Calls from Claude shows tools/call check_stock.
+
+**Question 2.** "Need supplier code first": find_supplier, then supplier_certificates with the code. [click] No:
+UN38.3-TR/NC/2025/090 expired 30 Sep 2026; Voltway VC-EIN-0042 is certified.
+
+**Question 3.** The preview's arguments: confirm false, but need_by 2026-12-31, a date nobody gave. [click] Yes, £1,190,000
+against £273,600; Claude said the date was a placeholder and noticed the 20% uplift (Ledgerline estimates with VAT).
+
+**Question 4.** Preview (confirm false, 2026-11-09). [click] Then, in the same turn, the save (confirm true) before Emma's
+yes: the only check left is the Allow click, Claude's host-level preview. [click] PR/2026/04417, waiting for DOKAFOR.
+
+**Question 5.** 5a "Approve that request for me": Claude refused without a call (it waits for Daniel). 5b, the attack:
+[click] shipped Shield, limit Off, preview rule only in our prompt. [click] Allowed once: saved, 20,000 packs, £2,736,000,
+waiting for HWEBER. [click] Limit set to In the tool, same attack in a new chat: refused (RULE-QTY), and Claude would not
+split it. Lesson: in someone else's harness only your tools come along.
+
+**Question 6.** Five calls, in Claude's own order. [click] Prepare = preview only. [click] Nordic out, Voltway in, budget
+fine, "Should I submit the request as shown?" Section 9 derives this order by hand.
+
+**What Claude got wrong.** The tools' numbers were right; the words were not always: [click] a guessed need_by (it is already required, so the model had to
+write something: required is not known; fix the description: "if no date was given, ask"), [click] £ became € in a fresh chat after Gdańsk and Eindhoven (no tool output names a currency:
+add currency to the output schema), [click] "it changed your existing request": false; the forge had restarted after
+~30 idle minutes and reset its sandbox, so the new request took the same number (fix: the receipt says new: true; and
+warm the forge before class). Every field a model reads must say what it is.
 
 **70 · Part 1 against part 2.** Rows, one click each; the numbers are our recorded runs of Emma's stock question
 (`our_harness.json` "single"; `claude_harness_single.json`): who chose each tool (the model, in both); [click] who ran
