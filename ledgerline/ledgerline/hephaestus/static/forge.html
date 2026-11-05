@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hephaestus · the tool forge · Northbridge Cycles</title>
+<meta name="description" content="Lecture 4, Agentic Systems Engineering: build your own tools on a real (sandboxed) ERP, ask the same questions in our harness and in Claude, and measure what every change does. All names are fictional.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&display=swap">
+<link rel="stylesheet" href="/sky/sky.css">
+<link rel="stylesheet" href="/static/forge.css">
+</head>
+<body>
+<nav class="nav hide" id="nav">
+  <span class="mark">Hephaestus</span>
+  <a href="#anvil" data-tab="anvil"><span class="n">1</span>The Anvil</a>
+  <a href="#ask" data-tab="ask"><span class="n">2</span>Ask</a>
+  <a href="#exp" data-tab="exp"><span class="n">3</span>Experiments</a>
+  <a href="#shield" data-tab="shield"><span class="n">4</span>The Shield</a>
+  <a href="#connect" data-tab="connect"><span class="n">5</span>Connect to Claude</a>
+  <a href="#prod" data-tab="prod"><span class="n">6</span>Production</a>
+  <a href="/wall" target="_blank" rel="noopener">Wall</a>
+  <span class="who" id="navname"></span>
+</nav>
+
+<header class="hero" id="top">
+  <div class="glassword">Forge</div>
+  <div class="in">
+    <span class="kicker">Northbridge Cycles · Lecture 4 · The Hands</span>
+    <h1>Hephaestus.</h1>
+    <p class="lede">The god of the forge made the tools of the gods. Today you make Emma's: seven real Ledgerline tools, yours to change. Ask the same six questions in our harness and in Claude, and measure what every change does.</p>
+    <form class="join" id="joinform" autocomplete="off">
+      <input class="big" id="name" placeholder="Your name" maxlength="40" aria-label="Your name" required>
+      <button class="btn sky" type="submit" id="joinbtn">Light my forge</button>
+    </form>
+    <p class="muted small" id="keyline">Have a forge key from another device? <a href="#" id="usekey">Use it</a></p>
+    <div class="welcome hide" id="welcome">
+      <a class="btn sky" href="#anvil" id="enter">Enter your forge</a>
+      <span class="muted small">Not <span id="wname"></span>? <a href="#" id="notme">Start as someone else</a></span>
+    </div>
+  </div>
+</header>
+
+<main id="app" class="hide">
+
+<!-- 1 · THE ANVIL ------------------------------------------------------------------------------------------------- -->
+<section class="tab" id="tab-anvil" data-tab="anvil">
+  <div class="wrap">
+    <div class="sec-title"><span class="kicker">1 · The Anvil</span>
+      <h2>Your tools, on the anvil.</h2>
+      <p class="learn"><b>What you will learn:</b> a tool has two parts. What the model reads (name, description, input and output schema) is yours to shape; what runs (the Ledgerline services) stays the same.</p></div>
+    <div class="toolbar card white">
+      <div class="tb-l"><span class="lbl">Tools switched on</span><span class="pills" id="countpills"></span><span class="muted small" id="countline"></span></div>
+      <div class="tb-r"><button class="btn ghost sm" id="resetall">Back to shipped</button></div>
+    </div>
+    <div class="changed" id="changed"></div>
+    <div class="cards" id="cards"></div>
+    <h3 class="more-h">More tools from the toolbox <span class="muted small">switch one on and it joins your forge</span></h3>
+    <div class="more" id="more"></div>
+    <div class="card gr takeaway" id="tk-anvil"></div>
+  </div>
+</section>
+
+<!-- 2 · ASK ------------------------------------------------------------------------------------------------------- -->
+<section class="tab hide" id="tab-ask" data-tab="ask">
+  <div class="wrap">
+    <div class="sec-title"><span class="kicker">2 · Ask</span>
+      <h2>Ask Northbridge, with your tools.</h2>
+      <p class="learn"><b>What you will learn:</b> the model only ever sees two things, your tool definitions and your tool results. Every step is below: which tool, the arguments, the result as the model reads it, the tokens and the time.</p></div>
+    <div class="qchips" id="qchips"></div>
+    <div class="chat card white">
+      <div class="msgs" id="msgs"><p class="muted center empty">Click a question above, or type your own. Our harness is Ask Northbridge with gemini-3.8-flash; it finds your tools over MCP from your own forge, and acts in your own Ledgerline sandbox as Emma Clarke.</p></div>
+      <form class="composer" id="askform" autocomplete="off">
+        <input class="big" id="asktext" placeholder="Ask about stock, suppliers, budgets, requests…" maxlength="800">
+        <button class="btn sky" id="askbtn" type="submit">Ask</button>
+      </form>
+      <div class="row small"><button class="btn ghost sm" id="newconv">New conversation</button><button class="btn ghost sm" id="resetsb">Fresh sandbox</button><span class="muted" id="chatmeta"></span></div>
+    </div>
+    <div class="card gr takeaway" id="tk-ask"></div>
+  </div>
+</section>
+
+<!-- 3 · EXPERIMENTS ----------------------------------------------------------------------------------------------- -->
+<section class="tab hide" id="tab-exp" data-tab="exp">
+  <div class="wrap">
+    <div class="sec-title"><span class="kicker">3 · Experiments</span>
+      <h2>The parameter space.</h2>
+      <p class="learn"><b>What you will learn:</b> every knob on a tool has a downstream effect on the chatbot: right answers, wrong tools, tokens on every call, time. Change one knob, run the six questions, compare.</p></div>
+    <div class="grid g2 expgrid">
+      <div class="card white">
+        <h3>Your settings now</h3>
+        <div id="nowsettings"></div>
+        <div class="row"><button class="btn sky" id="runsix">Run the six questions</button><button class="btn ghost" id="runerr">Run the three error questions</button><button class="btn ghost sm" id="backshipped">Back to shipped</button></div>
+        <p class="small muted">The error questions walk into a mistake on purpose (a code written BAT500, a closed cost centre, a date in the past): the error-reply and input-schema knobs only show when something goes wrong.</p>
+        <div class="progress6" id="prog6"></div>
+      </div>
+      <div class="card">
+        <h3>Change one thing</h3>
+        <p class="ink2 small">Each applies one change to your forge (you can see it in The Anvil). Then run the six questions.</p>
+        <div class="sugs" id="sugs"></div>
+      </div>
+    </div>
+    <div id="scorecard"></div>
+    <h3 class="runs-h">Your runs <span class="muted small">settings beside results; click a row to see it</span></h3>
+    <div class="tablewrap"><table class="runs" id="runs"></table></div>
+    <div class="card gr takeaway" id="tk-exp"></div>
+  </div>
+</section>
+
+<!-- 4 · THE SHIELD ------------------------------------------------------------------------------------------------ -->
+<section class="tab hide" id="tab-shield" data-tab="shield">
+  <div class="wrap">
+    <div class="sec-title"><span class="kicker ember">4 · The Shield</span>
+      <h2>A rule in the prompt, or a rule in the tool?</h2>
+      <p class="learn"><b>What you will learn:</b> a rule in the prompt is a request to the model; a rule in the tool is code that refuses. Run the same attacks with the rule in each place and see which one holds, and which one travels with your tools to Claude.</p></div>
+    <div class="card white">
+      <h3>Your rules</h3>
+      <div class="rules" id="rules"></div>
+      <div class="row"><button class="btn ember" id="runattacks">Run the four attacks</button><button class="btn ghost sm" id="compare">Compare: off, prompt, tool, and a host without our prompt</button></div>
+    </div>
+    <div class="grid g2 attacks" id="attacks"></div>
+    <div id="matrix"></div>
+    <div class="grid g3 also">
+      <div class="card"><h3>Validation at the door</h3><p class="ink2 small">Wrong types, blank fields, a code that does not look like a code: refused before Ledgerline is called. Set it per tool in The Anvil (Input schema); measure it in Production (Schema, Reliability).</p></div>
+      <div class="card"><h3>Output capped, no secrets</h3><p class="ink2 small" id="secrets">The results carry only business fields: no passwords, no e-mail addresses, no tokens. Check with <b>Production · Payload</b>.</p><button class="btn ghost sm" id="scansecrets">Scan my tools' results</button></div>
+      <div class="card"><h3>Who the tool is</h3><p class="ink2 small">Your tools act as Emma, with her limit (£250,000) and her permissions. Switch to the service account above and run the attacks again: Ledgerline's own checks no longer protect you.</p></div>
+    </div>
+    <div class="card gr takeaway" id="tk-shield"></div>
+  </div>
+</section>
+
+<!-- 5 · CONNECT TO CLAUDE ----------------------------------------------------------------------------------------- -->
+<section class="tab hide" id="tab-connect" data-tab="connect">
+  <div class="wrap">
+    <div class="sec-title"><span class="kicker">5 · Connect to Claude</span>
+      <h2>The same tools, another harness.</h2>
+      <p class="learn"><b>What you will learn:</b> MCP is the plug. Your forge is an MCP server at your own address; Claude connects to it, lists your tools and calls them, in your sandbox, as Emma.</p></div>
+    <div class="card white addr">
+      <span class="lbl">Your MCP address</span>
+      <div class="urlrow"><code id="mcpurl"></code><button class="btn sky sm" id="copyurl">Copy</button></div>
+      <p class="small muted">The key in the address is your forge's password: anyone with it can use your tools in your sandbox. Do not post it in the class chat. No sign-in is needed (no OAuth).</p>
+    </div>
+    <div class="grid g3 steps">
+      <div class="card"><span class="tag af">claude.ai or Claude Desktop</span>
+        <ol class="small"><li>Settings → <b>Connectors</b> → <b>Add custom connector</b>.</li><li>Name: <code>Hephaestus</code>. URL: your address above. Add.</li><li>In a new chat, open the tools menu and switch <b>Hephaestus</b> on.</li><li>Paste a question below. Allow the tool when Claude asks.</li></ol>
+        <p class="small muted">Custom connectors are not on every plan; on a Team or Enterprise plan an owner may have to allow them first. If you cannot add one, use Claude Code.</p></div>
+      <div class="card"><span class="tag af">Claude Code</span>
+        <div class="cmd"><code id="cccmd"></code><button class="btn ghost sm" id="copycc">Copy</button></div>
+        <ol class="small"><li>Run the command in a terminal.</li><li>Start <code>claude</code>, type <code>/mcp</code>: <b>hephaestus</b> should say connected.</li><li>Paste a question below.</li></ol>
+        <p class="small muted">Remove it afterwards with <code>claude mcp remove hephaestus</code>.</p></div>
+      <div class="card"><span class="tag gr">Check it works</span>
+        <p class="small ink2">This calls your address over the internet, as Claude will: initialize, tools/list, one tools/call.</p>
+        <button class="btn ghost sm" id="testaddr">Test my address</button>
+        <div id="testout" class="small"></div></div>
+    </div>
+    <div class="card white">
+      <h3>The same six questions</h3>
+      <div id="sixcopy"></div>
+      <p class="small muted">In Claude your system prompt is not there: Claude has its own. Only what is in your tools (names, descriptions, schemas, the rules in the code) comes along. Compare its answers with your runs in tab 3.</p>
+    </div>
+    <div class="card white">
+      <div class="logh"><h3>Calls from Claude, live</h3><span class="muted small" id="livestate">waiting…</span></div>
+      <div class="log" id="livelog"><p class="muted small">Nothing yet. When Claude connects, every tools/list and tools/call it sends to your forge appears here.</p></div>
+    </div>
+    <div class="card gr takeaway" id="tk-connect"></div>
+  </div>
+</section>
+
+<!-- 6 · PRODUCTION ------------------------------------------------------------------------------------------------ -->
+<section class="tab hide" id="tab-prod" data-tab="prod">
+  <div class="wrap">
+    <div class="sec-title"><span class="kicker">6 · Production</span>
+      <h2>Works once, or works every time?</h2>
+      <p class="learn"><b>What you will learn:</b> a demo passes the happy path; production passes criteria agreed with the client, measured. Here is each criterion from the lecture, run on your own tools, with what to do in your own project.</p></div>
+    <div class="row"><button class="btn sky" id="runall">Run every check on my tools</button><span class="muted small" id="prodline"></span></div>
+    <div class="crit" id="crit"></div>
+    <div class="card gr takeaway" id="tk-prod"></div>
+  </div>
+</section>
+
+</main>
+<footer class="foot">Hephaestus · Lecture 4 of Agentic Systems Engineering · Northbridge Cycles and Ledgerline ERP are fictional; the sandbox is yours alone.</footer>
+<script src="/static/hx.js"></script>
+<script src="/static/forge.js"></script>
+</body>
+</html>

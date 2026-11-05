@@ -19,53 +19,45 @@ Lecture 3 gave Ask Northbridge a memory: it now cites §6.2 and tells Emma that 
 - The single tool is `check_stock`: Emma's 5,400 from Lecture 2, finally fetched live.
 - The orchestration is Emma's full order. It calls find_item → check_stock → find_supplier → check_budget → search_policy → create_purchase_request. Daniel then approves.
 
-## Sections
-1. **What is a tool?** A function our code runs when the model asks for it. The model only writes text: a structured request. Our code checks it, runs it in Emma's own Ledgerline session and returns a result.
-2. **Schemas from scratch.** JSON Schema covers types, required fields, enums, formats, descriptions and examples. The **input schema** is what the model must send; the **output schema** is what it gets back.
-3. **Open a tool.** Walk through `toolbox/check_stock/tool.json` and `tool.py` line by line.
-   - The **services inside it** are the legacy Ledgerline services the tool calls (`itm_search`, `stk_query` and others), in the legacy envelope `{rc, err_cd, msg, data}`.
-   - The tool turns them into one clean, typed result with a structured error.
-   - Where did we find the services? In `northbridge-docs/04_service_definitions`, which ties back to Lecture 3.
-4. **Build a tool from scratch.** A new tool, for example `supplier_certificates`, built step by step:
-   1. the job;
-   2. find the services in the docs;
-   3. the schema;
-   4. the code;
-   5. the error contract;
-   6. tests.
-5. **The MCP standard.**
-   - Why a standard: N apps × M systems.
-   - JSON-RPC: `initialize`, `tools/list`, `tools/call`; transports (stdio and streamable HTTP).
-   - The tool definition: name, title, description, inputSchema, outputSchema, annotations (readOnlyHint, destructiveHint, idempotentHint).
-   - The result: content, structuredContent, isError.
-   - Align our `tool.json` with it, field by field.
-6. **One tool on an MCP server.** Start the Northbridge MCP server with one tool and inspect it (MCP Inspector, the raw JSON-RPC messages).
-7. **Two harnesses, one tool.**
-   - **Claude's harness:** Claude Desktop or Claude Code (`claude mcp add` / config) connected to our MCP server.
-   - **Our harness:** Ask Northbridge's loop (`ledgerline/agent`, `experience/harness.py`).
-   - The difference slides, on what is in our control: model choice, system prompt, which tools each user or stage sees, approval gates, guardrails, loop limits, identity and session, logging and cost. Against that: Claude orchestrates, Anthropic's system prompt, per-call approval in the UI, and less control over how the steps are taken.
-8. **What the LLM sees.** The context window fills, turn by turn: the system prompt → the tool definitions (and their token cost) → Emma's message → the model's tool call (JSON) → the tool result (only what the tool returns) → the reply.
-   - The LLM never sees `tool.py`, the services, the database, the session or the password.
-   - Shown as a film, an interactive replay of a real recorded context and a GIF.
-9. **Orchestration.** Expose all 15 tools. Emma's full order runs on both harnesses (real recorded runs); compare the traces: order, arguments, errors recovered, calls and tokens. What goes wrong without control, and what our harness adds.
-10. **Production grade.** The relevant criteria, measured on our toolbox (real numbers), with one failing criterion found and fixed live:
+## Sections (v5, after Dr. Rajat Dandekar's review of 5 Nov 2026: `HEPHAESTUS_SPEC.md`)
+The order below is the deck's since 5 Nov 2026. The 4 Nov order (MCP in two sections, then two harnesses) is in
+`archive_v4/`. Two live practicals in **Hephaestus**, the tool forge (`ledgerline/ledgerline/hephaestus/`), are done by
+every student; the six forge questions (`hephaestus/questions.json`) are the same in both.
 
-    | Area | Criterion | Threshold |
-    |---|---|---|
-    | Schema | Input and output validation | 100% of tools; 0 schema violations in regression |
-    | Reliability | Unhandled or non-business errors | ≤ 0.1% of calls; 100% in the structured error contract |
-    | LLM usability | Right tool, right arguments on a golden set, per host | ≥ 95% pass@1, reported per host |
-    | Latency | Tool overhead, excluding ERP service time | p50 ≤ 50 ms · p95 ≤ 100 ms · p99 ≤ 200 ms |
-    | Payload | Response size | Every list tool paginates; nothing above the agreed size limit |
-    | Idempotency | Duplicate or retried writes | 0 duplicate postings |
-    | Timeouts | Timeout and retry policy | Defined and tested on 100% of tools |
-    | Regression | Happy path, validation errors, permission denied, pagination, retries | ≥ 98% of tools; 100% of write tools |
-    | MCP compliance | Conformance on Claude, OpenAI, Gemini and our harness | 100% of tools on all 4 |
-    | Change management | Versioning, release notes, rollback | Documented and signed off by the client |
-
+1. **What is a tool?** A function our code runs when the model asks for it. The model only writes text: a structured
+   request. Our code checks it, runs it in Emma's own Ledgerline session and returns a result. The end-to-end slide is a
+   click-by-click build-up in three bands (the model, our code, Ledgerline): no line joins the model to Ledgerline.
+2. **Schemas from scratch.** JSON Schema: types, required fields, enums, formats, descriptions and examples. The
+   **input schema** is what the model must send; the **output schema** is a promise of what comes back, field by field,
+   shown on check_stock's real result; three readers rely on it (the host checks it, the model reads names and meanings,
+   the next tool uses a field without guessing), and without it a broken result passes silently.
+3. **Open a tool.** `toolbox/check_stock/tool.json` and `tool.py`, line by line; the services inside (`itm_get`,
+   `whs_list`, `stk_query`, from `northbridge-docs/04_service_definitions`); the legacy envelope; the error contract.
+4. **Build a tool from scratch.** `supplier_certificates` in six steps: the job, the services, the schema, the code, the
+   error contract, the tests.
+5. **Hephaestus, part 1 (live).** Each student joins and gets a forge: their own sandbox as Emma and seven real tools.
+   The Anvil (what the model reads vs what runs), Ask (the six questions on our harness, every step traced), Experiments
+   (one knob at a time: name and description, input schema, output fields and rows, error replies, how many tools, the
+   rules; `hephaestus/knobs.json`), The Shield (four attacks with the rule off, in the prompt, in the tool, and on a host
+   without our prompt; identity Emma vs a service account), then "is security done by the tool or by guardrails?" from
+   first principles: both, each for its own job.
+6. **MCP, trimmed.** Why one standard (N × M), host / client / server in one picture, and "your tools at one address":
+   tools/list, tools/call, a URL. The JSON-RPC wire, the two transports and the field alignment are in `NOTES.md`.
+7. **Hephaestus, part 2 (live): two harnesses.** Everyone connects their forge to Claude (claude.ai / Desktop custom
+   connector, or `claude mcp add --transport http`), asks the same six questions and compares with part 1: who decided,
+   how many calls, what it cost, what each harness let us control.
+8. **What the LLM sees.** The context window fills, turn by turn (unchanged).
+9. **Orchestration, one build-up.** Question 6 ("…Nordic Cell Co. is the cheapest: can we use them? If not, choose a
+   certified supplier, check PRD-07 can afford it, and prepare the request."): the question drawn out; the tools it
+   logically needs and why, run by hand in order (`logs/q6_plan_calls.json`); who runs the loop (the model orchestrates
+   in both harnesses; what differs is who writes the loop and where the rules live); the recorded runs of Emma's order on
+   both harnesses; then question 6 live.
+10. **Production grade.** The criteria table, then one slide per criterion: what it is, how we measured it
+    (`experiments/production_grade.py`), how to run it in the forge's Production tab, and what to do in your own project.
+    Idempotency is the one found and fixed live.
 11. **NB4, the A4 walkthrough with highlighted cells, and Lecture 5** (The Loop).
 
-**Rhythm:** part slide → teach → the section's question → film (where there is one) → 1–3 technical checks. About 90–100 slides.
+**Rhythm:** part slide → teach → the section's question → film (where there is one) → 1–3 technical checks. 113 slides (v5), with two live forge practicals.
 
 ## Experiments (Modal or light local; logs in `lectures/L4-the-hands/experiments/logs/`)
 - The anatomy data for `check_stock`: real `tool.json`, `tool.py`, its services' definitions and a real call (request, legacy reply, tool result).

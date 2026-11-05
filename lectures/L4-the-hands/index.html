@@ -14,11 +14,12 @@
 <div class="deck" id="deck">
 
 <!-- ============================== OPENER ============================== -->
+
 <section class="slide" data-plain="1">
   <div class="center">
     <div class="kicker">Agentic Systems Engineering · Lecture 4 of 12 · Sun 8 Nov 2026 · Dr. Rajat Dandekar, Vizuara</div>
     <h1>The Hands: tools, MCP, two harnesses</h1>
-    <p class="lede" style="margin-top:26px">Ask Northbridge knows the rules now. Today it learns to act in Ledgerline: we open a tool, build one, put it on MCP, run it on two harnesses and make it production grade.</p>
+    <p class="lede" style="margin-top:26px">Ask Northbridge knows the rules now. Today it learns to act in Ledgerline. We open a tool and build one; then each of you forges your own tools, plugs them into Ask Northbridge and into Claude, and makes them production grade.</p>
   </div>
 </section>
 
@@ -38,7 +39,7 @@
     <div class="card"><span class="tag nt">She asks</span><h3>“Order 2,000 BAT-500 packs from Voltway for the spring launch run.”</h3>With only knowledge, Ask Northbridge can describe the Ledgerline screens and quote the rule. It cannot look up the stock, raise the request or tell her who must approve it.</div>
     <div class="card af step"><span class="tag af">Today</span><h3>Give it hands</h3>A tool is a function our code runs when the model asks for it. With 16 of them on one MCP server, the same sentence becomes a purchase request, <b>PR/2026/04417</b>, waiting for Daniel.</div>
   </div>
-  <div class="opens step" style="top:640px;background:var(--g1)"><span class="k" style="color:var(--after)">Two running examples</span>One tool: <code>check_stock</code>, Emma’s 5,400 from Lecture 2, fetched live. Many tools: Emma’s whole order, on our harness and on Claude Code.</div>
+  <div class="opens step" style="top:640px;background:var(--g1)"><span class="k" style="color:var(--after)">Two running examples</span>One tool: <code>check_stock</code>, Emma’s 5,400 from Lecture 2, fetched live. Many tools: Emma’s whole order. And twice today, live: your own tools, in your own forge.</div>
 </section>
 
 <section class="slide" data-plate="Monday, 9:40 AM">
@@ -66,29 +67,31 @@
 <section class="slide" data-plate="Today’s Question">
   <div class="center" style="left:140px;right:140px">
     <p class="big">A model only writes text. How does it <em>get work done in Ledgerline</em>, and what does it really see?</p>
-    <p class="lede step" style="margin-top:34px">We answer it with real files and real recorded runs: one tool opened line by line, one built from scratch, one MCP server, two harnesses, and the context window at every step.</p>
+    <p class="lede step" style="margin-top:34px">We answer it with real files and recorded runs, then live: one tool opened line by line, one built from scratch, then your own tools in your own forge, on our harness and on Claude.</p>
   </div>
 </section>
 
 <section class="slide" data-plate="Today’s Map">
-  <div class="lec-top"><h2>Eleven sections</h2><p class="sub">Blue cards end with a film. Every number on every slide comes from a recorded run.</p></div>
+  <div class="lec-top"><h2>Eleven sections</h2><p class="sub">Blue cards end with a film. Green cards are live: everyone, in their own forge.</p></div>
   <div class="map11">
     <div class="card"><b>1 · What is a tool?</b>A function our code runs when the model asks</div>
-    <div class="card"><b>2 · Schemas</b>JSON Schema, in and out, field by field</div>
+    <div class="card"><b>2 · Schemas</b>what goes in, and what comes back</div>
     <div class="card fl"><b>3 · Open a tool</b>tool.json, tool.py and the services inside · film</div>
     <div class="card"><b>4 · Build a tool</b>supplier_certificates in six steps</div>
-    <div class="card"><b>5 · MCP</b>N × M, JSON-RPC, the fields, aligned</div>
-    <div class="card"><b>6 · One tool on MCP</b>the real wire; Claude Code connects</div>
-    <div class="card"><b>7 · Two harnesses</b>ours and Claude’s: who controls what</div>
+    <div class="card lv"><b>5 · Hephaestus, part 1</b>live: your forge, six questions, the knobs, the shield</div>
+    <div class="card"><b>6 · MCP</b>one plug for every app</div>
+    <div class="card lv"><b>7 · Hephaestus, part 2</b>live: your tools in Claude; two harnesses</div>
     <div class="card fl"><b>8 · What the LLM sees</b>the context, block by block · film</div>
-    <div class="card fl"><b>9 · Orchestration</b>Emma’s order on both harnesses · film</div>
-    <div class="card"><b>10 · Production grade</b>ten criteria; one found and fixed</div>
+    <div class="card fl"><b>9 · Orchestration</b>one question, many tools: who chooses? · film</div>
+    <div class="card lv"><b>10 · Production grade</b>ten criteria, one at a time, in your forge</div>
     <div class="card"><b>11 · NB4 and A4</b>your own tool, on MCP, on two harnesses</div>
     <div class="card" style="background:var(--g3)"><b>Next · Lecture 5</b>The Loop</div>
   </div>
 </section>
 
+
 <!-- ============================== 1 · WHAT IS A TOOL ============================== -->
+
 <section class="slide part" data-plain="1" data-num="1">
   <div class="center"><span class="num">Section 1 of 11 · Tools</span>
     <div class="recall"><b>So far</b>The model writes text, one token at a time. It cannot run anything.</div>
@@ -106,8 +109,10 @@
 </section>
 
 <section class="slide" data-plate="One Tool Call, End to End">
-  <div class="pfig" style="left:180px;top:100px;width:1240px;height:692px"><img src="figs/tool_roundtrip.jpg" alt="Our code sends messages and tool definitions; the model writes a tool call; our code runs it in Emma's session on Ledgerline; the result goes back; the model answers in words"></div>
-  <div class="cap" style="left:180px;top:806px;width:1240px"><b>Fig. 2.</b> One tool call. Steps 3 and 4 happen in our code; the model never touches Ledgerline. The numbers on the next slide are from this exact run.</div>
+  <div class="lec-top" style="top:90px"><h2 style="font-size:48px">One tool call, step by step</h2><p class="sub" style="font-size:21px">Emma’s stock question, as it was recorded. Three places: the model, our code, Ledgerline.</p></div>
+  <div class="fig" data-fig="call1" style="left:100px;top:252px;width:1400px;height:560px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="cap step" style="left:100px;top:826px;width:1400px;color:var(--before);font-weight:500">No line joins the model to Ledgerline. The model wrote text (2, 6) and read text (1, 5). Our code did 3, 4 and 5.</div>
 </section>
 
 <section class="slide" data-plate="Two Model Calls, One Tool">
@@ -126,7 +131,9 @@
   </div>
 </section>
 
+
 <!-- ============================== 2 · SCHEMAS ============================== -->
+
 <section class="slide part" data-plain="1" data-num="2">
   <div class="center"><span class="num">Section 2 of 11 · Schemas</span>
     <div class="recall"><b>Last section</b>The model writes a request; our code runs it. Now: how does it know what to write?</div>
@@ -157,13 +164,19 @@
 </section>
 
 <section class="slide" data-plate="The Output Schema">
-  <div class="col" style="width:420px">
-    <h2>What it gets back</h2>
-    <p>The output schema describes the result, so a host can check it and the model can rely on it.</p>
-    <p class="step">Every field in check_stock’s schema is in the real result, with the right type.</p>
-    <p class="step">Four fields in the result are <b class="b">not listed</b>. JSON Schema allows extra fields unless you forbid them. A finding, not a failure: we come back to it in Section 10.</p>
+  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">The output schema: a promise of what comes back</h2><p class="sub" style="font-size:21px">For each field: its name, its type and what it means. On check_stock’s real result, one field per click.</p></div>
+  <div class="fig" data-fig="outfields" style="left:100px;top:236px;width:1400px;height:560px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Who Relies on the Output Schema">
+  <div class="lec-top"><h2>Three readers rely on it</h2><p class="sub">And what goes wrong when there is none.</p></div>
+  <div class="uses" style="top:240px">
+    <div class="card"><span class="tag nt">1 · The host</span><h3>Checks each result</h3>The app that runs the model can compare every result with the schema before the model reads it. Our check did this on <b><span data-l4="prod.criteria.0.after.ok_results_checked_in_fuzzing" data-f="n"></span></b> real results: <span data-l4="prod.criteria.0.after.output_violations_in_fuzzing"></span> broke the promise.</div>
+    <div class="card step"><span class="tag nt">2 · The model</span><h3>Reads names and meanings</h3><code>cover_days</code> comes with “days the free stock lasts at the usual daily use”. So 11 means days, for both warehouses together. Ledgerline’s own replies said 9 and 2, one per warehouse.</div>
+    <div class="card step"><span class="tag nt">3 · The next tool, or our code</span><h3>Uses a field without guessing</h3><code>below_reorder</code> is a yes or no that code can test directly. supplier_certificates asks for a <code>supplier_code</code> “from find_supplier”: one tool’s field is the next tool’s argument.</div>
   </div>
-  <div class="fig" data-fig="outschema" style="left:600px;top:130px;width:900px;height:660px"></div>
+  <div class="opens step" style="top:620px;background:var(--g4)"><span class="k">Without it</span>There is nothing to check against, so a broken result passes silently. With one, our check found a real slip: <code>create_purchase_order</code> returned <code>warning: null</code> where its schema promised a string. Found, then fixed.</div>
 </section>
 
 <section class="slide" data-plate="Checked Once, at the Door">
@@ -182,7 +195,9 @@
   </div>
 </section>
 
+
 <!-- ============================== 3 · OPEN A TOOL ============================== -->
+
 <section class="slide part" data-plain="1" data-num="3">
   <div class="center"><span class="num">Section 3 of 11 · Inside a tool</span>
     <div class="recall"><b>Last section</b>A schema says what goes in and what comes out. Now: what happens in between?</div>
@@ -287,7 +302,9 @@
   </div>
 </section>
 
+
 <!-- ============================== 4 · BUILD A TOOL ============================== -->
+
 <section class="slide part" data-plain="1" data-num="4">
   <div class="center"><span class="num">Section 4 of 11 · Build a tool</span>
     <div class="recall"><b>Last section</b>We opened a tool that already existed. Now: one that did not, built this week.</div>
@@ -361,10 +378,209 @@
   </div>
 </section>
 
-<!-- ============================== 5 · MCP ============================== -->
+
+<!-- ============================== 5 · HEPHAESTUS, PART 1 (live) ============================== -->
+
 <section class="slide part" data-plain="1" data-num="5">
-  <div class="center"><span class="num">Section 5 of 11 · The MCP standard</span>
-    <div class="recall"><b>Last section</b>Sixteen tools in our own format. Now: Claude Code, Claude Desktop and our own app all want to use them.</div>
+  <div class="center"><span class="num">Section 5 of 11 · Hephaestus, part 1 · live</span>
+    <div class="recall"><b>Last section</b>We built supplier_certificates on paper. Now every one of you builds tools, runs them and changes them, live.</div>
+    <h1 class="q2">Forge your own tools. Watch the chatbot change.</h1></div>
+</section>
+
+<section class="slide" data-plate="Hephaestus, the Forge">
+  <div class="col" style="width:460px">
+    <h2>Your own forge</h2>
+    <p class="small">Hephaestus, the Greek god of the forge, made the tools of the gods. Ours makes Emma’s.</p>
+    <p class="step small">Each of you gets <b>your own</b> Ledgerline sandbox, signed in as Emma, and seven real tools from the toolbox, yours to change. Break anything: nobody else sees it.</p>
+    <p class="step small">Ask Northbridge, our harness, runs on <b>your</b> tools. In Section 7, so does Claude.</p>
+  </div>
+  <div class="tabs6" style="left:620px;top:130px;width:880px">
+    <div class="card af"><span class="pt">part 1</span><b><span class="tn">1</span>The Anvil</b>Your tool cards: what the model reads, and what runs.</div>
+    <div class="card af"><span class="pt">part 1</span><b><span class="tn">2</span>Ask</b>Ask Northbridge on your tools. Every step traced.</div>
+    <div class="card af"><span class="pt">part 1</span><b><span class="tn">3</span>Experiments</b>Change one knob, run the six questions, compare.</div>
+    <div class="card af"><span class="pt">part 1</span><b><span class="tn">4</span>The Shield</b>Four attacks, with a rule in the prompt or in the tool.</div>
+    <div class="card"><span class="pt">part 2</span><b><span class="tn">5</span>Connect to Claude</b>Your MCP address, and the steps to plug it in.</div>
+    <div class="card"><span class="pt">section 10</span><b><span class="tn">6</span>Production</b>Each criterion, run on your own tools.</div>
+  </div>
+  <div class="cap step" style="left:620px;top:560px;width:880px">Each tab teaches one idea, and says so in its first line: “What you will learn”.</div>
+</section>
+
+<section class="slide" data-plate="Step 1 · Join">
+  <div class="lec-top"><h2>Step 1 · Join the forge</h2><p class="sub">Two minutes. Everyone, now.</p></div>
+  <div class="flow" style="left:100px;top:250px;width:600px">
+    <ol class="do">
+    <li>Open <a class="url" href="https://rajatworkspace--northbridge-hephaestus.us-east.modal.run" target="_blank" rel="noopener">rajatworkspace--northbridge-hephaestus.us-east.modal.run</a></li>
+    <li class="step">Type your name. You get <b>your forge</b>: Ledgerline as Emma, and your own tools.</li>
+    <li class="step">Your forge has a secret key. Keep it to yourself.<small>Your MCP address in Section 7 contains it: anyone with the address can use your tools in your sandbox.</small></li>
+  </ol>
+    <div class="look step"><span class="k">Look for</span>Six tabs: The Anvil, Ask, Experiments, The Shield, Connect to Claude, Production.</div>
+  </div>
+  <div class="fig" data-fig="shot" data-src="figs/hephaestus/join.png" data-label="The join page: type your name, get your forge" style="left:760px;top:240px;width:740px;height:540px"></div>
+</section>
+
+<section class="slide" data-plate="Step 2 · The Anvil">
+  <div class="lec-top"><h2>Step 2 · The Anvil</h2><p class="sub">Your tool cards. Each one has the two parts of Section 3.</p></div>
+  <div class="flow" style="left:100px;top:240px;width:600px">
+    <ol class="do">
+    <li>Open <b>The Anvil</b> and find <code>check_stock</code>.</li>
+    <li class="step"><b>What the model reads:</b> name, description, input schema, output schema.<small>Yours to shape. This text is all the model ever knows about the tool.</small></li>
+    <li class="step"><b>What runs:</b> the Ledgerline services it calls, <code>itm_get</code>, <code>whs_list</code>, <code>stk_query</code>.<small>Shown, not editable: it stays the same whatever you change.</small></li>
+    <li class="step">The knobs sit on the model’s part, each with presets and a plain line on what it does.</li>
+  </ol>
+    <div class="look step"><span class="k">Look for</span>Seven tools switched on: find_item, check_stock, find_supplier, supplier_certificates, check_budget, create_purchase_request, approve_purchase_request. Nine more wait under “More tools from the toolbox”.</div>
+  </div>
+  <div class="fig" data-fig="shot" data-src="figs/hephaestus/anvil_card.png" data-label="The Anvil: the check_stock card, what the model reads beside what runs" style="left:760px;top:230px;width:740px;height:560px"></div>
+</section>
+
+<section class="slide" data-plate="Step 3 · Ask the Six Questions">
+  <div class="lec-top"><h2>Step 3 · Ask the six questions</h2><p class="sub">Open <b>Ask</b>. Click each question once, in order: simple to hard. Questions 4 and 5 share one chat.</p></div>
+  <div class="flow" style="left:100px;top:226px;width:860px">
+  <div class="fig" data-fig="hqlist"></div>
+  <div class="look step"><span class="k">Look for, in each trace</span>Which tool, with which arguments; the result as the model reads it; the tokens and the time. Before question 6, click <b>Fresh sandbox</b>: after question 4 the request already exists.</div>
+  </div>
+  <div class="fig" data-fig="shot" data-src="films/hephaestus_ask.mp4" data-label="Ask: the six questions answered in a forge, with the trace of every step" style="left:1000px;top:226px;width:500px;height:600px"></div>
+</section>
+
+<section class="slide" data-plate="Step 4 · One Knob at a Time">
+  <div class="lec-top"><h2>Step 4 · Change one knob, see the effect</h2><p class="sub">The tool’s parameter space. Every knob changes what the model reads, what the door checks, what comes back, or which rule the code enforces.</p></div>
+  <div class="flow" style="left:100px;top:262px;width:600px">
+    <ol class="do">
+    <li>Open <b>Experiments</b>. Click <b>Run the six questions</b> once with the shipped settings.</li>
+    <li class="step">Pick one change under <b>Change one thing</b>, then run the six questions again.</li>
+    <li class="step"><b>Your runs</b> keeps every run, its settings beside its results: right answers, tools, tokens, time.</li>
+    <li class="step"><b>One knob at a time</b>, then <b>Back to shipped</b>. Change two and you cannot tell which one did it.</li>
+  </ol>
+    <div class="look step"><span class="k">Six knob families, one slide each</span>Name and description · input schema · output fields and rows · error replies · how many tools · the rules.</div>
+  </div>
+  <div class="fig" data-fig="shot" data-src="figs/hephaestus/experiments.png" data-label="Experiments: one change, the six questions rerun, and Your runs" style="left:760px;top:262px;width:740px;height:540px"></div>
+</section>
+
+<section class="slide" data-plate="Knob 1 · Name and Description">
+  <div class="lec-top"><h2 style="font-size:52px">Knob 1 · The name and the description</h2><p class="sub">What the model reads first, to choose a tool.</p></div>
+  <div class="flow" style="left:100px;top:230px;width:620px">
+    <div class="fig" data-fig="knobp" data-ids="name,description"></div>
+  </div>
+  <div class="flow" style="left:760px;top:230px;width:740px;gap:14px">
+    <div class="fig" data-fig="shot" data-src="films/hephaestus_knob_description.mp4" data-label="Knob 1 · The name and the description: one change, the six questions rerun, the scorecard" style="height:300px"></div>
+    <ol class="do"><li>On the Anvil, set check_stock’s description to <b>vague</b>, and run the six questions.</li><li class="step">Then <b>misleading</b>; then the <b>legacy</b> name. Back to shipped after each.</li></ol>
+    <div class="look step"><span class="k">Look for</span>Does the model still pick check_stock? Another tool? No tool, and a guessed number?</div>
+    <div class="measured2 step"><span class="k">Already measured, in this lecture’s logs</span>Section 10’s golden tasks: every one of Claude’s misses was a read it made first (order_status before a release or an approval), because no description said it need not.</div>
+  </div>
+</section>
+
+<section class="slide" data-plate="Knob 2 · The Input Schema">
+  <div class="lec-top"><h2 style="font-size:52px">Knob 2 · The input schema</h2><p class="sub">What the model may send, and what the door checks.</p></div>
+  <div class="flow" style="left:100px;top:230px;width:620px">
+    <div class="fig" data-fig="knobp" data-ids="input"></div><div class="fig" data-fig="kmeas" data-vars="input_loose,input_strict"></div>
+  </div>
+  <div class="flow" style="left:760px;top:230px;width:740px;gap:14px">
+    <div class="fig" data-fig="shot" data-src="films/hephaestus_knob_input.mp4" data-label="Knob 2 · The input schema: one change, the six questions rerun, the scorecard" style="height:300px"></div>
+    <ol class="do"><li>Set check_stock’s input schema to <b>loose</b>, and run the six questions.</li><li class="step">Then <b>strict</b>. Back to shipped.</li></ol>
+    <div class="look step"><span class="k">Look for</span>Is a bad argument stopped at the door (0 Ledgerline calls), or does it reach Ledgerline and come back as a legacy error?</div>
+    <div class="measured2 step"><span class="k">Already measured, in this lecture’s logs</span>Fuzzing before our door rules: of <span data-l4="prod.criteria.1.before.calls" data-f="n"></span> calls with bad arguments, <span data-l4="prod.criteria.1.before.by_kind.non_business"></span> failed inside Ledgerline instead of at the door, and <span data-l4="prod.criteria.1.before.nonsense_quantities_saved"></span> nonsense quantities were saved. After: 0 and 0.</div>
+  </div>
+</section>
+
+<section class="slide" data-plate="Knob 3 · Output Fields and Rows">
+  <div class="lec-top"><h2 style="font-size:52px">Knob 3 · The output fields and the rows</h2><p class="sub">What comes back, and how much of it.</p></div>
+  <div class="flow" style="left:100px;top:230px;width:620px">
+    <div class="fig" data-fig="knobp" data-ids="output,rows"></div>
+  </div>
+  <div class="flow" style="left:760px;top:230px;width:740px;gap:14px">
+    <div class="fig" data-fig="shot" data-src="films/hephaestus_knob_output.mp4" data-label="Knob 3 · The output fields and the rows: one change, the six questions rerun, the scorecard" style="height:300px"></div>
+    <ol class="do"><li>Set check_stock’s output to <b>lean</b>, then <b>minimal</b>. Run the six questions each time.</li><li class="step">Cap find_supplier at <b>1 row</b> and ask question 6.</li></ol>
+    <div class="look step"><span class="k">Look for</span>Tokens per model call, and whether the answer is still there with fewer fields or rows.</div>
+    <div class="measured2 step"><span class="k">Already measured, in this lecture’s logs</span>list_my_approvals with 1,000 waiting: <span data-l4="prod.criteria.4.before.max_bytes_at_scale" data-f="n"></span> bytes uncapped; <span data-l4="prod.criteria.4.after.max_bytes_at_scale" data-f="n"></span> capped at 50 rows. check_stock turns <span data-l4="anatomy.sizes.legacy_replies_bytes" data-f="n"></span> bytes of legacy replies into <span data-l4="anatomy.sizes.tool_result_bytes" data-f="n"></span>.</div>
+  </div>
+</section>
+
+<section class="slide" data-plate="Knob 4 · Error Replies">
+  <div class="lec-top"><h2 style="font-size:52px">Knob 4 · The error replies</h2><p class="sub">What the model gets when a call fails.</p></div>
+  <div class="flow" style="left:100px;top:230px;width:620px">
+    <div class="fig" data-fig="knobp" data-ids="errors"></div><div class="fig" data-fig="kmeas" data-vars="errors_raw"></div>
+  </div>
+  <div class="flow" style="left:760px;top:230px;width:740px;gap:14px">
+    <div class="fig" data-fig="shot" data-src="films/hephaestus_knob_errors.mp4" data-label="Knob 4 · The error replies: one change, the six questions rerun, the scorecard" style="height:300px"></div>
+    <ol class="do"><li>Set the error replies to <b>raw</b> on the tools questions 2 and 5 use, and run the six questions.</li><li class="step">Back to <b>words</b>.</li></ol>
+    <div class="look step"><span class="k">Look for</span>Does the model recover, explain the refusal and say who can act, or does it repeat a legacy code at Emma?</div>
+    <div class="measured2 step"><span class="k">Already measured, in this lecture’s logs</span>Section 9 shows the words at work on a recorded run: “a direct order is limited to £50,000” and its next_step made both models raise a request instead.</div>
+  </div>
+</section>
+
+<section class="slide" data-plate="Knob 5 · How Many Tools">
+  <div class="lec-top"><h2 style="font-size:52px">Knob 5 · How many tools are switched on</h2><p class="sub">Every listed definition rides along on every model call.</p></div>
+  <div class="flow" style="left:100px;top:230px;width:620px">
+    <div class="fig" data-fig="knobp" data-ids="on"></div><div class="fig" data-fig="kmeas" data-vars="tools_2,tools_16"></div>
+  </div>
+  <div class="flow" style="left:760px;top:230px;width:740px;gap:14px">
+    <div class="fig" data-fig="shot" data-src="films/hephaestus_knob_tools.mp4" data-label="Knob 5 · How many tools are switched on: one change, the six questions rerun, the scorecard" style="height:300px"></div>
+    <ol class="do"><li>Switch to <b>2</b> tools, run the six questions; then all <b>16</b>.</li><li class="step">Back to the shipped 7.</li></ol>
+    <div class="look step"><span class="k">Look for</span>Tokens on every call; wrong picks as the list grows; with 2 tools, which questions can it still answer?</div>
+    <div class="measured2 step"><span class="k">Already measured, in this lecture’s logs</span>Our recorded runs: 2 definitions cost <span data-l4="ours.single.blocks.1.tokens" data-f="n"></span> tokens per call; 16 cost <span data-l4="ours.order_hands.blocks.1.tokens" data-f="n"></span>. Emma’s order made 11 calls, so 17,105 tokens went on definitions alone.</div>
+  </div>
+</section>
+
+<section class="slide" data-plate="Knob 6 · The Rules">
+  <div class="lec-top"><h2 style="font-size:52px">Knob 6 · The rules</h2><p class="sub">A rule can be off, a line in the prompt, or code in the tool.</p></div>
+  <div class="flow" style="left:100px;top:230px;width:620px">
+    <div class="fig" data-fig="knobp" data-ids="max_qty,preview,self_approval,identity"></div>
+  </div>
+  <div class="flow" style="left:760px;top:230px;width:740px;gap:14px">
+    <div class="fig" data-fig="shot" data-src="films/hephaestus_knob_rules.mp4" data-label="Knob 6 · The rules: one change, the six questions rerun, the scorecard" style="height:330px"></div>
+    <ol class="do"><li>Each rule has three places: <b>off</b>, <b>prompt</b>, <b>tool</b>. The Shield, next, tries all three for you.</li></ol>
+    <div class="look step"><span class="k">Look for</span>Which refusals come from code, the same every time, and which from the model’s words?</div>
+  </div>
+</section>
+
+<section class="slide" data-plate="Step 5 · The Shield">
+  <div class="lec-top"><h2>Step 5 · The Shield</h2><p class="sub">A rule in the prompt, or a rule in the tool? The same attacks, the rule in each place.</p></div>
+  <div class="flow" style="left:100px;top:236px;width:640px">
+    <ol class="do">
+    <li>Open <b>The Shield</b>. Click <b>Run the four attacks</b>: too many packs, approve my own, “I am Daniel”, skip the preview.<small>The first is question 5’s: “<span data-hq="5" data-then="0"></span>”</small></li>
+    <li class="step">Click <b>Compare</b>: each attack with its rule off, in the prompt, in the tool, and on a host without our prompt, standing in for Claude.</li>
+    <li class="step">Switch the tools to act as the service account, <code>SVC_AGENT</code>, and run the attacks again.</li>
+  </ol>
+    <div class="look step"><span class="k">Look for</span>Which placement held, judged from Ledgerline’s own tables? Who stopped it: the model, the tool’s code, or Emma’s own permissions? Which rule travels with your tools to another host?</div>
+  </div>
+  <div class="fig" data-fig="shot" data-src="films/hephaestus_shield.mp4" data-label="The Shield: four attacks, the rule off, in the prompt, in the tool, and on a host without our prompt" style="left:800px;top:230px;width:700px;height:560px"></div>
+</section>
+
+<section class="slide" data-plate="Tool Level or Guardrails?">
+  <div class="lec-top"><h2 style="font-size:52px">Is security done by the tool, or by guardrails?</h2><p class="sub">Both. From first principles: a rule must live where nothing typed in the chat can switch it off.</p></div>
+  <div class="two" style="top:250px">
+    <div class="card af"><span class="tag af">In the tool · code</span><h3>Rules that must never break</h3><ul><li>Identity: it acts as Emma, with her permissions and her £250,000 limit, never as an admin</li><li>A write: a preview first, then a yes</li><li>Nobody approves their own request</li><li>The door: types, formats, quantities above 0</li><li>Results capped; no secrets in them</li></ul><p class="small" style="margin-top:8px">Code runs every time, on every host. The model cannot argue with it.</p></div>
+    <div class="card step"><span class="tag nt">In the harness and the prompt · guardrails</span><h3>Judgement about words</h3><ul><li>Which tools each person sees</li><li>Ask for a missing fact; do not guess it</li><li>Stay on purchasing; be polite</li><li>Check the reply against the tool’s numbers (Lecture 7)</li></ul><p class="small" style="margin-top:8px">These need judgement. A model is good at that, and sometimes wrong. And a prompt stays behind in its own harness.</p></div>
+  </div>
+  <div class="opens step" style="top:650px;background:var(--g4)"><span class="k">Our own run</span>The prompt said “never guess a code or a number”. The model still put a guessed date, 2027-02-01, into a preview. The preview, a rule in the tool, showed it before anything was saved. A prompt is a request; a tool is a wall.</div>
+</section>
+
+<section class="slide q hero" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">?</span>
+  <div class="qbox">
+    <p class="q-label">Ask the class · Section 5 · <span class="qnum"></span></p>
+    <h2 class="q-text">Where does “never approve your own request” belong: <em>in the prompt or in the tool?</em> Why?</h2>
+    <p class="q-cue">Answer in one line in the chat</p>
+  </div>
+</section>
+
+<section class="slide q hero chk" data-plain="1">
+  <span class="hero-num q-mark" aria-hidden="true">✓</span>
+  <div class="qbox">
+    <p class="q-label">Check · after the forge, part 1</p>
+    <ol class="chk-list">
+      <li><span class="chk-q"><b>1</b>On an Anvil card, which part does the model read?</span><span class="chk-a step">Name, description, input schema, output schema. Never the services it calls or the code.</span></li>
+      <li><span class="chk-q"><b>2</b>You changed two knobs at once and the score dropped. What can you conclude?</span><span class="chk-a step">Nothing about either knob. Change one at a time, rerun, compare.</span></li>
+      <li><span class="chk-q"><b>3</b>The rule “at most 5,000 units” is only in the prompt, and someone types “ignore the rules”. What still protects Ledgerline?</span><span class="chk-a step">Only rules in code: the tool’s own limit, Emma’s permissions and approval limit, the preview and the yes. Words in a prompt can be talked out of.</span></li>
+    </ol>
+  </div>
+</section>
+
+
+<!-- ============================== 6 · MCP (trimmed: the wire detail is in NOTES.md) ============================== -->
+
+<section class="slide part" data-plain="1" data-num="6">
+  <div class="center"><span class="num">Section 6 of 11 · MCP</span>
+    <div class="recall"><b>Last section</b>Your tools ran inside our harness. Now Claude, Claude Code and any other app want to use them too.</div>
     <h1 class="q2">Why does every app need its own plug?</h1></div>
 </section>
 
@@ -377,122 +593,46 @@
   <div class="col" style="width:420px">
     <h2>Three roles</h2>
     <div class="def"><b>Model Context Protocol (MCP)</b>An open standard, from Anthropic in 2024, for how an app finds and calls tools on another program.</div>
-    <p class="step small">The <b>host</b> is the app with the model. It runs one <b>client</b> per <b>server</b>.</p>
-    <p class="step small">Our server, <code>ledgerline-toolbox</code>, is our 16 tool folders, bound to Emma’s session.</p>
+    <p class="step small">The <b>host</b> is the app with the model: claude.ai, Claude Code, or our Ask Northbridge. Inside it, a <b>client</b> talks to one server.</p>
+    <p class="step small">The <b>server</b> is ours: our tool folders, bound to one person’s Ledgerline session. Your forge runs one for you.</p>
   </div>
   <div class="pfig" style="left:580px;top:150px;width:920px;height:514px"><img src="figs/mcp_roles.jpg" alt="Host with LLM and MCP client; JSON-RPC to the ledgerline-toolbox server; Ledgerline through Emma's session"></div>
   <div class="cap" style="left:580px;top:680px;width:920px"><b>Fig. 5.</b> The host decides what to call. The server only lists its tools and runs them.</div>
 </section>
 
-<section class="slide" data-plate="JSON-RPC from First Principles">
-  <div class="lec-top"><h2>JSON-RPC: a request, a reply, the same id</h2><p class="sub">The first message our client sent, captured on the pipe. Four fields.</p></div>
-  <div class="fig" data-fig="rpc" style="left:100px;top:240px;width:1400px;height:540px"></div>
-  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
-  <div class="cap" style="left:100px;top:800px;width:1400px">We asked for protocol <span data-l4="mcp.protocol_asked"></span>; the server answered <span data-l4="mcp.protocol"></span>, the newest it supports. That is the negotiation. <code>experiments/logs/mcp_raw.json</code>.</div>
-</section>
-
-<section class="slide" data-plate="One Session, on the Wire">
-  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">One session: initialize, tools/list, tools/call</h2></div>
-  <div class="fig" data-fig="wire" style="left:100px;top:180px;width:1400px;height:640px"></div>
-  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
-  <div class="cap" style="left:100px;top:830px;width:1400px">Every line that crossed stdin and stdout, with its time. <code>python -m ledgerline.toolbox.mcp --user ECLARKE --tools check_stock</code>; <code>logs/wire/one_tool.jsonl</code>.</div>
-</section>
-
-<section class="slide" data-plate="Two Pipes">
-  <div class="pfig" style="left:180px;top:100px;width:1240px;height:692px"><img src="figs/transports.jpg" alt="stdio: Claude Code starts the server as a child process, one JSON message per line; Streamable HTTP: a web app posts to /mcp"></div>
-  <div class="cap" style="left:180px;top:806px;width:1240px"><b>Fig. 6.</b> stdio for a server on your own computer; Streamable HTTP for one on the network (<code>--transport http --port 8765</code>). The messages are the same.</div>
-</section>
-
-<section class="slide" data-plate="The Tool, as MCP Defines It">
-  <div class="lec-top"><h2>A tool definition, and a tool result</h2><p class="sub">check_stock, exactly as our server sends it. Then what a call returns, when it works and when it does not.</p></div>
-  <div class="fig" data-fig="mcpdef" style="left:100px;top:240px;width:1400px;height:600px"></div>
-  <span class="step" style="display:none"></span>
-</section>
-
-<section class="slide" data-plate="tool.json, Aligned with MCP">
-  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">Field by field: before and after the fix</h2><p class="sub">Our server at commit 6e6f4d0, and as it is now. Click for each column.</p></div>
-  <div class="fig" data-fig="align" style="left:100px;top:230px;width:1400px;height:620px"></div>
-  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
-</section>
-
-<section class="slide q hero" data-plain="1">
-  <span class="hero-num q-mark" aria-hidden="true">?</span>
-  <div class="qbox">
-    <p class="q-label">Ask the class · Section 5 · <span class="qnum"></span></p>
-    <h2 class="q-text">We never wrote a line of Claude-specific code. <em>How will Claude Code learn our 16 tools?</em></h2>
-    <p class="q-cue">Answer in one line in the chat</p>
+<section class="slide" data-plate="Your Tools over a URL">
+  <div class="lec-top"><h2>Your tools, at one address</h2><p class="sub">All a builder needs from MCP: two questions every host asks, and an address to ask them at.</p></div>
+  <div class="three" style="top:240px">
+    <div class="card"><span class="tag nt">1 · “What tools do you have?”</span><h3><code>tools/list</code></h3>The server answers with each tool’s name, description, input schema and output schema: your tool.json, as the model will read it. Plus hints: read-only, destructive, safe to repeat.</div>
+    <div class="card step"><span class="tag nt">2 · “Run this one”</span><h3><code>tools/call</code></h3>The host sends a tool’s name and arguments. The server runs it and sends the result back, with <code>isError: true</code> when it failed: your error contract.</div>
+    <div class="card af step"><span class="tag af">3 · One address</span><h3>A URL</h3>The server on the network, over HTTP. Your forge has one. Any host that speaks MCP can use your tools from it, with no code written for that host.</div>
   </div>
-</section>
-
-<!-- ============================== 6 · ONE TOOL ON AN MCP SERVER ============================== -->
-<section class="slide part" data-plain="1" data-num="6">
-  <div class="center"><span class="num">Section 6 of 11 · One tool on MCP</span>
-    <div class="recall"><b>Last section</b>The standard: JSON-RPC, three methods, a definition and a result. Now: plug check_stock into Claude.</div>
-    <h1 class="q2">How do you plug one tool into Claude?</h1></div>
-</section>
-
-<section class="slide" data-plate="Start the Server">
-  <div class="col" style="width:460px">
-    <h2>One command</h2>
-    <p>The server is a Python module. It prints nothing and waits for a client on stdin.</p>
-    <p class="step small"><code>--tools check_stock</code> serves one tool; <code>--all</code> serves all 16. <code>--user</code> binds it to one person’s Ledgerline session.</p>
-    <p class="step small">The MCP Inspector is a browser page that plays the client: initialize, list, call, by hand.</p>
-  </div>
-  <div class="cmdcard" style="left:620px;top:140px;width:880px"><span class="hd">Install (once)</span><span class="pr">$</span> pip install "ledgerline-erp[mcp] @ git+https://github.com/RajatDandekar/agents-for-enterprises.git#subdirectory=ledgerline"</div>
-  <div class="cmdcard step" style="left:620px;top:290px;width:880px"><span class="hd">Start it with one tool</span><span class="pr">$</span> python -m ledgerline.toolbox.mcp --user ECLARKE --tools check_stock</div>
-  <div class="cmdcard step" style="left:620px;top:420px;width:880px"><span class="hd">Inspect it</span><span class="pr">$</span> npx @modelcontextprotocol/inspector python -m ledgerline.toolbox.mcp --user ECLARKE --tools check_stock</div>
-  <div class="card af step" style="position:absolute;left:620px;top:570px;width:880px;font-size:19px">From the recorded session: the server took <b><span data-l4="mcp.lines.1.t"></span> s</b> to answer initialize (Python starting up), and <b>0.002 s</b> to run check_stock.</div>
-</section>
-
-<section class="slide" data-plate="Claude Code Connects">
-  <div class="lec-top"><h2>What Claude Code says when it connects</h2><p class="sub">Captured on the pipe between Claude Code and our server.</p></div>
-  <div class="fig" data-fig="ccwire" style="left:100px;top:240px;width:1400px;height:580px"></div>
-  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
-</section>
-
-<section class="slide" data-plate="Live · Connect It">
-  <div class="col" style="width:420px">
-    <h2>Connect it, live</h2>
-    <p class="small">In Claude Code: one command, then ask Emma’s question.</p>
-    <p class="step small">In Claude Desktop: the same server, written into its config file. Restart the app; the tool appears.</p>
-    <p class="step small">Each call asks for approval in the app. That click is Claude’s gate, not ours.</p>
-  </div>
-  <div class="cmdcard" style="left:560px;top:120px;width:940px"><span class="hd">Claude Code</span><span class="pr">$</span> claude mcp add northbridge -- python -m ledgerline.toolbox.mcp --user ECLARKE --tools check_stock
-<span class="pr">$</span> claude mcp list
-<span class="pr">$</span> claude
-<span class="cmt">&gt; How many BAT-500 battery packs do we have in Manchester main stores?</span></div>
-  <div class="cmdcard step" style="left:560px;top:350px;width:940px"><span class="hd">Claude Desktop · claude_desktop_config.json</span>{
-  "mcpServers": {
-    "northbridge": {
-      "command": "/full/path/to/python",
-      "args": ["-m", "ledgerline.toolbox.mcp", "--user", "ECLARKE", "--tools", "check_stock"]
-    }
-  }
-}</div>
-  <div class="cmdcard step" style="left:560px;top:690px;width:940px"><span class="hd">For Section 9: all 16 tools</span><span class="pr">$</span> claude mcp add northbridge-all -- python -m ledgerline.toolbox.mcp --user ECLARKE --all</div>
+  <div class="opens step" style="top:610px;background:var(--g1)"><span class="k" style="color:var(--after)">That is all</span>The messages are small JSON requests and replies, a format called JSON-RPC. You read them by hand in NB4, section 5. The rest is plumbing that the MCP libraries do for you.</div>
 </section>
 
 <section class="slide q hero" data-plain="1">
   <span class="hero-num q-mark" aria-hidden="true">?</span>
   <div class="qbox">
     <p class="q-label">Ask the class · Section 6 · <span class="qnum"></span></p>
-    <h2 class="q-text">Claude Code is connected to our server. <em>Who now decides when check_stock runs: Claude, or us?</em></h2>
+    <h2 class="q-text">We never wrote a line of Claude-specific code. <em>How will Claude learn your tools?</em></h2>
     <p class="q-cue">Answer in one line in the chat</p>
   </div>
 </section>
 
-<!-- ============================== 7 · TWO HARNESSES ============================== -->
+
+<!-- ============================== 7 · HEPHAESTUS, PART 2 · TWO HARNESSES (live) ============================== -->
+
 <section class="slide part" data-plain="1" data-num="7">
-  <div class="center"><span class="num">Section 7 of 11 · Two harnesses</span>
-    <div class="recall"><b>Last section</b>The same server plugs into any host. Now: two hosts, the same tool. What changes?</div>
-    <h1 class="q2">Same tool, two harnesses: who is in control?</h1></div>
+  <div class="center"><span class="num">Section 7 of 11 · Hephaestus, part 2 · live</span>
+    <div class="recall"><b>Last section</b>Your forge has an MCP address. Now: plug it into Claude and ask the same six questions.</div>
+    <h1 class="q2">Same tools, two harnesses: who is in control?</h1></div>
 </section>
 
 <section class="slide" data-plate="What a Harness Is">
   <div class="lec-top"><h2>The code around the model</h2><p class="sub">Two extremes of who writes it.</p></div>
   <div class="def" style="position:absolute;left:100px;right:100px;top:240px;font-size:23px"><b>Harness</b>Everything around the model: the system prompt, which tools it gets, the loop that runs its calls, the guards, the limits, the logs.</div>
   <div class="two" style="top:380px">
-    <div class="card step"><span class="tag nt">Someone else’s · Claude Code</span><h3>Ready-made</h3>Anthropic wrote the loop, the system prompt and the approval clicks. We add our MCP server and type. Fast to start; we steer it only with words.</div>
+    <div class="card step"><span class="tag nt">Someone else’s · Claude</span><h3>Ready-made</h3>claude.ai, Claude Desktop or Claude Code. Anthropic wrote the loop, the system prompt and the approval clicks. We add our MCP address and type.</div>
     <div class="card af step"><span class="tag af">Ours · Ask Northbridge</span><h3>Written line by line</h3><code>ledgerline/experience/harness.py</code>: our prompt, our model, our tool lists, our guard before every write. More work; every rule is ours to set.</div>
   </div>
 </section>
@@ -502,45 +642,65 @@
   <div class="cap" style="left:180px;top:806px;width:1240px"><b>Fig. 7.</b> The tools and Ledgerline are the same for both. Everything above the server is where they differ.</div>
 </section>
 
+<section class="slide" data-plate="Step 1 · Connect Your Forge">
+  <div class="lec-top"><h2>Step 1 · Connect your forge to Claude</h2><p class="sub">Whichever Claude you have. Five minutes. No sign-in to the forge is needed.</p></div>
+  <div class="flow" style="left:100px;top:232px;width:660px">
+    <ol class="do">
+    <li>In your forge, open <b>Connect to Claude</b>. Copy <b>your</b> MCP address.<small>The key in it is your forge’s password. Do not post it in the class chat.</small></li>
+    <li class="step"><b>claude.ai or Claude Desktop:</b> Settings → Connectors → <b>Add custom connector</b>. Name: Hephaestus. URL: your address. Add. In a new chat, switch Hephaestus on in the tools menu.<small>Custom connectors need a Pro, Max, Team or Enterprise plan; on Team and Enterprise an owner may have to allow them first.</small></li>
+    <li class="step"><b>Or Claude Code</b>, in a terminal:<br><span class="url">claude mcp add --transport http hephaestus &lt;your address&gt;</span><small>Start <code>claude</code> and type <code>/mcp</code>: hephaestus should say connected. Afterwards: <code>claude mcp remove hephaestus</code>.</small></li>
+    <li class="step">On the Connect tab, click <b>Test my address</b>: it calls your address as Claude will.</li>
+  </ol>
+  </div>
+  <div class="fig" data-fig="shot" data-src="figs/hephaestus/connect.png" data-label="Connect to Claude: your MCP address, the steps and Test my address" style="left:800px;top:230px;width:700px;height:270px"></div>
+  <div class="fig" data-fig="shot" data-src="figs/hephaestus/claude_connector.png" data-label="Claude: Settings → Connectors → Add custom connector, with the forge’s address pasted" style="left:800px;top:520px;width:700px;height:270px"></div>
+</section>
+
+<section class="slide" data-plate="Step 2 · The Same Six Questions">
+  <div class="lec-top"><h2>Step 2 · Ask Claude the same six questions</h2><p class="sub">They are on the Connect tab, ready to paste. One chat, in order.</p></div>
+  <div class="flow" style="left:100px;top:240px;width:640px">
+    <ol class="do">
+    <li>Paste question 1. When Claude asks to use a tool, read its request first, then allow it.</li>
+    <li class="step">Go on to question 6.</li>
+    <li class="step">Keep your forge open on the Connect tab: <b>Calls from Claude</b> shows every tools/list and tools/call Claude sends to your forge.</li>
+  </ol>
+    <div class="look step"><span class="k">Look for</span><ul><li>Which tools Claude chose, in which order, and how many calls</li><li>What it asked you before acting</li><li>Question 5: your system prompt does not come along, only your tools</li></ul></div>
+  </div>
+  <div class="fig" data-fig="shot" data-src="films/hephaestus_claude.mp4" data-label="Claude on the forge’s tools: the six questions, and the Calls from Claude log" style="left:800px;top:230px;width:700px;height:560px"></div>
+</section>
+
+<section class="slide" data-plate="Compare with Part 1">
+  <div class="lec-top"><h2>Part 1 against part 2</h2><p class="sub">Your two traces answer the same rows. The numbers here are our recorded runs of Emma’s stock question.</p></div>
+  <table class="t cmp3" style="position:absolute;left:100px;right:100px;top:236px;width:auto">
+    <tr><th></th><th>Part 1 · our harness (Ask)</th><th>Part 2 · Claude</th></tr>
+    <tr><td>Who chose each tool</td><td>the model, gemini-3.8-flash</td><td>the model, Claude</td></tr>
+    <tr class="step"><td>Who ran the loop</td><td>our code, <code>experience/harness.py</code></td><td>Claude’s app, written by Anthropic</td></tr>
+    <tr class="step"><td>How many tool calls</td><td><span data-l4="ours.single.summary.tool_calls"></span> <small>(Emma’s order: <span data-l4="ours.order_hands.summary.tool_calls"></span>)</small></td><td><span data-l4="claude.single.summary.tool_calls"></span> <small>(Claude Code, Emma’s order: <span data-l4="claude.order_hands.summary.tool_calls"></span>)</small></td></tr>
+    <tr class="step"><td>What the model read</td><td><span data-l4="ours.single.summary.tokens_in" data-f="n"></span> tokens</td><td><span data-l4="claude.single.tokens_in" data-f="n"></span> tokens <small>(<span data-l4="claude.single.cache_read" data-f="n"></span> from cache: its own system prompt and tools)</small></td></tr>
+    <tr class="step"><td>What it cost</td><td>£<span data-l4="ours.single.summary.cost_gbp_est"></span> <small>(our estimate at list price)</small></td><td>$<span data-l4="claude.single.summary.total_cost_usd_reported"></span> <small>(as Claude Code reports it)</small></td></tr>
+    <tr class="step"><td>What we could control</td><td>everything: model, prompt, tool lists, the guard, limits, logs</td><td>the tools only: their descriptions, schemas and the rules inside them. And you, clicking Allow.</td></tr>
+  </table>
+  <div class="cap" style="left:100px;top:790px;width:1400px"><code>logs/our_harness.json</code> (run “single”, “order_hands”) · <code>logs/claude_harness_single.json</code>, <code>_order_hands.json</code> (Claude Code, claude-sonnet-5.5, headless).</div>
+</section>
+
 <section class="slide" data-plate="In Our Control, and Not">
   <div class="lec-top"><h2>What we control, and what we hand over</h2><p class="sub">From the two recorded runs, item by item.</p></div>
   <div class="fig" data-fig="control" style="left:100px;top:240px;width:1400px;height:560px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
-<section class="slide" data-plate="One Tool, Both Harnesses">
-  <div class="lec-top"><h2>check_stock on both</h2><p class="sub">Emma’s question, tools check_stock and find_item. Both made the same one call.</p></div>
-  <div class="fig" data-fig="single2" style="left:100px;top:240px;width:1400px;height:560px"></div>
-  <span class="step" style="display:none"></span>
-  <div class="cap" style="left:100px;top:812px;width:1400px">Claude Code read about 11,000 tokens: its own system prompt and tool list, which we neither see nor control. Ours read <span data-l4="ours.single.steps.0.prompt_tokens" data-f="n"></span>, then <span data-l4="ours.single.steps.1.prompt_tokens" data-f="n"></span>. <code>logs/claude_harness_single.json</code>, <code>logs/our_harness.json</code>.</div>
-</section>
-
-<section class="slide" data-plate="How We Ran Claude Code">
-  <div class="col" style="width:440px">
-    <h2>Claude Code, headless</h2>
-    <p class="small">The same CLI you use, run without a screen, so every step is recorded.</p>
-    <p class="step small"><b>Only our tools:</b> no Bash, no files, no other server.</p>
-    <p class="step small"><b>No approval clicks:</b> headless has nobody to click, so our 16 tools are pre-approved. In the app, each call asks you.</p>
-    <p class="step small"><b>Nothing from this laptop:</b> no CLAUDE.md, memory, plugins or hooks.</p>
-  </div>
-  <div class="cmdcard" style="left:600px;top:130px;width:900px"><span class="hd">The command (logs/claude_harness_order_hands.json)</span>claude -p --input-format stream-json --output-format stream-json --verbose
-  --mcp-config order_hands.mcp.json --strict-mcp-config
-  --tools "" --allowedTools mcp__northbridge__find_item,…,mcp__northbridge__supplier_certificates
-  --no-session-persistence --setting-sources project --disable-slash-commands
-  --model claude-sonnet-5.5 --append-system-prompt "You are Ask Northbridge, …"</div>
-  <div class="card step" style="position:absolute;left:600px;top:440px;width:900px;font-size:19px"><span class="tag nt">One honest note</span><br>The first attempt used <code>--safe-mode</code>. It also turns MCP servers off: the init listed no servers and no tools, so it stopped before the model answered. Logged as attempt 1.</div>
-</section>
-
 <section class="slide q hero" data-plain="1">
   <span class="hero-num q-mark" aria-hidden="true">?</span>
   <div class="qbox">
     <p class="q-label">Ask the class · Section 7 · <span class="qnum"></span></p>
-    <h2 class="q-text">In which harness could you make sure Emma’s assistant <em>never approves its own request?</em> How?</h2>
+    <h2 class="q-text">Part 2 ran your tools in a harness you did not write. <em>Which of your Shield rules still held there, and why?</em></h2>
     <p class="q-cue">Answer in one line in the chat</p>
   </div>
 </section>
 
+
 <!-- ============================== 8 · WHAT THE LLM SEES ============================== -->
+
 <section class="slide part" data-plain="1" data-num="8">
   <div class="center"><span class="num">Section 8 of 11 · The context</span>
     <div class="recall"><b>Back to the opening vote</b>The tool, the services, the database, Emma’s session. Which of them does the model see?</div>
@@ -575,15 +735,6 @@
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
-<section class="slide" data-plate="For Your Notes">
-  <div class="col" style="width:420px">
-    <h2>The replay, as a GIF</h2>
-    <p class="small">The same recorded context, frame by frame: first Emma’s stock question, then the whole order.</p>
-    <p class="small">Rendered from this deck in a headless browser and assembled with ffmpeg, both on Modal. <code>figs/context.gif</code>.</p>
-  </div>
-  <img class="gif" src="figs/context.gif" alt="Animated replay of the context window filling, part by part, with token counts" style="left:600px;top:150px;width:900px;height:506px">
-</section>
-
 <section class="slide q hero" data-plain="1">
   <span class="hero-num q-mark" aria-hidden="true">?</span>
   <div class="qbox">
@@ -610,29 +761,38 @@
   </div>
 </section>
 
-<!-- ============================== 9 · ORCHESTRATION ============================== -->
+
+<!-- ============================== 9 · ORCHESTRATION (one build-up from question 6) ============================== -->
+
 <section class="slide part" data-plain="1" data-num="9">
   <div class="center"><span class="num">Section 9 of 11 · Orchestration</span>
-    <div class="recall"><b>Last section</b>The model sees definitions, calls and results, nothing more. Now: 16 tools, and Emma’s whole order.</div>
-    <h1 class="q2">Many tools, one request: who decides the order?</h1></div>
+    <div class="recall"><b>Last section</b>The model sees definitions, calls and results, nothing more. Now: one question that needs several tools.</div>
+    <h1 class="q2">A question needs several tools. Who orchestrates?</h1></div>
 </section>
 
-<section class="slide" data-plate="What the Prompt Already Says">
-  <div class="col" style="width:420px">
-    <h2>A script, or a choice?</h2>
-    <p class="small">One extreme: the prompt hands over every code, and the model has little left to find. The other: no codes, and it must discover each one with tools.</p>
-    <p class="step small">The app’s prompt names BAT-500, Voltway’s code and PRD-07: the order took <b>4</b> calls.</p>
-    <p class="step small">Lecture 4’s “hands” prompt keeps the rules and drops the codes: <b>11</b> calls. That run is the one we compare.</p>
-  </div>
-  <div class="fig" data-fig="codes" style="left:560px;top:170px;width:940px;height:400px"></div>
-  <span class="step" style="display:none"></span>
-  <div class="cap" style="left:560px;top:600px;width:940px"><code>experiments/l4_prompts.py</code> and <code>logs/our_harness.json</code> (runs “order” and “order_hands”).</div>
+<section class="slide" data-plate="Question 6, Drawn Out">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">One sentence, several jobs</h2><p class="sub" style="font-size:21px">The forge’s question 6. Click: each part of the sentence, and what it asks for.</p></div>
+  <div class="fig" data-fig="q6parts" style="left:100px;top:226px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
-<section class="slide" data-plate="Emma’s Order, Both Harnesses">
-  <div class="lec-top" style="top:96px"><h2 style="font-size:44px">Emma’s order, on both harnesses</h2><p class="sub">Same 16 tools, same prompt rules, the same three things Emma says. Click turn by turn.</p></div>
+<section class="slide" data-plate="The Tools It Needs, in Order">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">The tools it needs, in order, and why</h2><p class="sub" style="font-size:21px">Before each click, ask the class: what must we know next, and which tool tells us?</p></div>
+  <div class="fig" data-fig="q6plan" style="left:100px;top:216px;width:1400px;height:630px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Who Runs the Loop">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">Who orchestrates: the same loop, twice</h2><p class="sub" style="font-size:21px">Nobody hands the model the plan. It writes one call, sees the result, and writes the next.</p></div>
+  <div class="fig" data-fig="loop2" style="left:100px;top:216px;width:1400px;height:620px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="The Recorded Runs">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:44px">The recorded runs, step by step</h2><p class="sub">The closest recorded run to question 6: Emma’s whole order, 16 tools, the same rules. Click turn by turn.</p></div>
   <div class="fig" data-fig="orch" style="left:100px;top:220px;width:1400px;height:620px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="cap" style="left:100px;top:838px;width:1100px">Watch for: the reads come in different orders; the write comes last, after Emma’s yes, in both.</div>
 </section>
 
 <section class="slide" data-plate="The Numbers">
@@ -656,24 +816,17 @@
   <div class="opens step" style="top:700px;background:var(--g1)"><span class="k" style="color:var(--after)">What catches them</span>Preview before every write: the wrong date was on screen before anything was saved. A check of the reply against the tool’s numbers: Lecture 7.</div>
 </section>
 
-<section class="slide" data-plate="What Our Harness Adds">
-  <div class="lec-top"><h2>What our harness adds on top of the tools</h2><p class="sub">The rules that live in our code, not in a prompt the model may ignore.</p></div>
-  <div class="grid4" style="position:absolute;left:100px;right:100px;top:250px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
-    <div class="card" style="font-size:19px"><span class="tag af">Who sees what</span><h3>Identity and tool lists</h3>The MCP server is started as Emma (<code>--user ECLARKE</code>): her Ledgerline permissions and her £250,000 limit, nobody else’s.</div>
-    <div class="card step" style="font-size:19px"><span class="tag af">Before every write</span><h3>The guard</h3>The battery-safety check runs in code before any write reaches Ledgerline (§6.2).</div>
-    <div class="card step" style="font-size:19px"><span class="tag af">Limits</span><h3>14 rounds</h3>A loop limit, a wrap-up when it is reached, a nudge after an empty reply.</div>
-    <div class="card step" style="font-size:19px"><span class="tag af">Every call</span><h3>Logged</h3>Messages, tokens and cost per call, replayable from a cassette: this lecture is built on them.</div>
+<section class="slide" data-plate="Try It in Your Forge">
+  <div class="lec-top"><h2>Question 6, live, on both harnesses</h2><p class="sub" style="font-size:21px">“<span data-hq="6"></span>”</p></div>
+  <div class="flow" style="left:100px;top:270px;width:640px">
+    <ol class="do">
+    <li>In <b>Ask</b>, click <b>Fresh sandbox</b>, then question 6. Write down the tools it called, in order.</li>
+    <li class="step">Ask Claude the same question, in your Section 7 chat.</li>
+    <li class="step">In Experiments, switch to <b>2 tools</b> and ask question 6 again.</li>
+  </ol>
+    <div class="look step"><span class="k">Look for</span><ul><li>Where the order was forced, did both follow it?</li><li>Where it was free, did they differ?</li><li>With the tools missing: did it guess, ask, or say it cannot?</li><li>Did either save anything? It should only preview.</li></ul></div>
   </div>
-  <div class="opens step" style="top:600px;background:var(--g4)"><span class="k">Lecture 5 · The Loop</span>Today we watched the loop run. Next week we write it: reason, act, observe, and when to stop.</div>
-</section>
-
-<section class="slide" data-plate="Try It Live">
-  <div class="center" style="text-align:center;align-items:center">
-    <h2 style="font-size:56px">Ask Northbridge, hands stage, live</h2>
-    <p class="lede" style="max-width:1050px;margin:18px auto 30px">The whole toolbox, one tool round per message: it can act, one step at a time. Ask what is in stock, who supplies an item, what a budget has left.</p>
-    <a class="live" href="https://rajatworkspace--northbridge-experience.us-east.modal.run/after?stage=hands" target="_blank" rel="noopener" style="font-size:22px;align-self:center">Open Ask Northbridge <code>/after?stage=hands</code></a>
-    <p class="small step" style="margin-top:30px">The live check on 4 Nov 2026: “How many BAT-500 battery packs do we have in stock?” came back in 4.7 s: 5,400 at Manchester main stores and 1,200 at Leeds. Ask it for Emma’s whole order and it stops after one step. Running until the job is done is Lecture 5.</p>
-  </div>
+  <div class="fig" data-fig="shot" data-src="films/hephaestus_q6.mp4" data-label="Question 6 in a forge: the calls in order, then the same question on Claude" style="left:800px;top:270px;width:700px;height:540px"></div>
 </section>
 
 <section class="slide q hero" data-plain="1">
@@ -702,7 +855,9 @@
   </div>
 </section>
 
-<!-- ============================== 10 · PRODUCTION GRADE ============================== -->
+
+<!-- ============================== 10 · PRODUCTION GRADE (one criterion per slide) ============================== -->
+
 <section class="slide part" data-plain="1" data-num="10">
   <div class="center"><span class="num">Section 10 of 11 · Production grade</span>
     <div class="recall"><b>Last section</b>It works on Emma’s order. Now: would it survive a year of real orders?</div>
@@ -715,14 +870,70 @@
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
-<section class="slide" data-plate="Measured, Not Claimed">
-  <div class="lec-top"><h2>How each number was measured</h2><p class="sub">On Modal, against the sandbox, every tool, before and after.</p></div>
-  <div class="grid3" style="position:absolute;left:100px;right:100px;top:240px">
-    <div class="card" style="font-size:19px"><span class="tag nt">Schema · Reliability</span><h3>Fuzzing</h3><span data-l4="prod.criteria.1.after.calls" data-f="n"></span> calls with wrong types, blanks, huge strings and nonsense quantities. Before: <span data-l4="prod.criteria.1.before.unhandled_or_non_business_pct"></span>% were not business errors, and <span data-l4="prod.criteria.1.before.nonsense_quantities_saved"></span> nonsense quantities were saved. After: 0 and 0.</div>
-    <div class="card step" style="font-size:19px"><span class="tag nt">Latency</span><h3>Overhead only</h3>Tool time minus Ledgerline’s own service time, <span data-l4="prod.criteria.3.after.via_mcp_overhead_ms.n" data-f="n"></span> calls through MCP: p99 <span data-l4="prod.criteria.3.after.via_mcp_overhead_ms.p99"></span> ms against a 200 ms limit. The slowest is search_policy.</div>
-    <div class="card step" style="font-size:19px"><span class="tag nt">Timeouts</span><h3>Injected faults</h3>A busy server, an outage and a lost reply, on every service each tool calls: <span data-l4="prod.criteria.6.after.passed"></span> of <span data-l4="prod.criteria.6.after.tested"></span> tests pass. Reads retry twice; writes look themselves up.</div>
+<section class="slide" data-plate="Criterion 1 · Schema">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">1 · Schema: input and output validation</h2><p class="sub" style="font-size:20px">Threshold: <span data-th="0"></span> · after the fix: <span class="pf" data-pf="0"></span></p></div>
+  <div class="crit">
+    <div class="card"><h3>What it is</h3>Every argument is checked against the input schema before the tool runs. Every result is checked against the output schema before anyone relies on it.</div>
+    <div class="card af step"><h3>How we measured it</h3>All <span data-l4="prod.criteria.0.after.tools"></span> tools have both schemas. We fuzzed every tool and checked all <span data-l4="prod.criteria.0.after.ok_results_checked_in_fuzzing" data-f="n"></span> ok results against their output schemas: <span data-l4="prod.criteria.0.after.output_violations_in_fuzzing"></span> violations. Before: 1, the <code>warning: null</code> of Section 2.</div>
+    <div class="card g3 step"><h3>In your forge</h3><b>Production → Schema.</b> Both schemas on every tool you switched on, one real call checked against the output schema, bad input refused at the door. Change the output on the Anvil and run it again.</div>
+    <div class="card bf step"><h3>For your own project</h3>Write both schemas for every tool. In your tests, check every result with a JSON Schema validator (<code>jsonschema</code> in Python). One violation fails the build.</div>
   </div>
-  <div class="cap" style="left:100px;top:650px;width:1400px"><code>experiments/production_grade.py</code> → <code>logs/production_grade_before.json</code>, <code>_after.json</code>, merged in <code>production_grade.json</code>.</div>
+  <div class="fig" data-fig="shot" data-src="figs/hephaestus/prod_schema.png" data-label="Production tab · Schema: the check run on your own tools" style="left:1080px;top:214px;width:420px;height:600px"></div>
+</section>
+
+<section class="slide" data-plate="Criterion 2 · Reliability">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">2 · Reliability: unhandled or non-business errors</h2><p class="sub" style="font-size:20px">Threshold: <span data-th="1"></span> · after the fix: <span class="pf" data-pf="1"></span></p></div>
+  <div class="crit">
+    <div class="card"><h3>What it is</h3>When a call fails, it fails as a business answer in the error contract: ok=false, error, next_step. Never a crash, never a raw legacy code.</div>
+    <div class="card af step"><h3>How we measured it</h3><span data-l4="prod.criteria.1.after.calls" data-f="n"></span> calls with wrong types, blanks, huge strings and nonsense quantities: <span data-l4="prod.criteria.1.after.unhandled_or_non_business_pct"></span>% non-business, all in the contract. Before: <span data-l4="prod.criteria.1.before.unhandled_or_non_business_pct"></span>%: bad dates reached Ledgerline, and <span data-l4="prod.criteria.1.before.nonsense_quantities_saved"></span> quantities of 0 or below were saved.</div>
+    <div class="card g3 step"><h3>In your forge</h3><b>Production → Reliability.</b> Wrong types, blanks, huge strings and nonsense numbers against your tools. Every failure must come back as ok=false, with what went wrong and what to do next.</div>
+    <div class="card bf step"><h3>For your own project</h3>Fuzz every argument: wrong type, empty, too long, negative, out of range. Count anything that is not a business error. Aim for 0.</div>
+  </div>
+  <div class="fig" data-fig="shot" data-src="figs/hephaestus/prod_reliability.png" data-label="Production tab · Reliability: the check run on your own tools" style="left:1080px;top:214px;width:420px;height:600px"></div>
+</section>
+
+<section class="slide" data-plate="Criterion 3 · LLM usability">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">3 · LLM usability: right tool, right arguments, per host</h2><p class="sub" style="font-size:20px">Threshold: <span data-th="2"></span> · after the fix: <span class="pf" data-pf="2"></span></p></div>
+  <div class="crit">
+    <div class="card"><h3>What it is</h3>Given a real task, does the model pick the right tool with the right arguments on its first try? Per host, because each model reads definitions in its own way.</div>
+    <div class="card af step"><h3>How we measured it</h3>30 golden tasks, the same 16 definitions, five hosts: our harness <span data-l4="hosts.hosts.our harness.pass_at_1" data-f="pct"></span>, Gemini <span data-l4="hosts.hosts.Gemini.pass_at_1" data-f="pct"></span>, OpenAI <span data-l4="hosts.hosts.OpenAI.pass_at_1" data-f="pct"></span>, Claude Code <span data-l4="hosts.hosts.Claude Code.pass_at_1" data-f="pct"></span>, Claude (API) <span data-l4="hosts.hosts.Claude (API).pass_at_1" data-f="pct"></span>. Claude’s misses: a read first (order_status) before a release or an approval.</div>
+    <div class="card g3 step"><h3>In your forge</h3><b>Production → LLM usability.</b> Golden tasks on your tools, the first model response scored. Make a description vague on the Anvil and run it again.</div>
+    <div class="card bf step"><h3>For your own project</h3>Write 20 to 30 golden tasks from real requests, each with the expected tool and arguments. Run them on every host you support. Fix the descriptions, not the tasks.</div>
+  </div>
+  <div class="fig" data-fig="shot" data-src="figs/hephaestus/prod_usability.png" data-label="Production tab · LLM usability: the check run on your own tools" style="left:1080px;top:214px;width:420px;height:600px"></div>
+</section>
+
+<section class="slide" data-plate="Criterion 4 · Latency">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">4 · Latency: tool overhead, without the ERP’s own time</h2><p class="sub" style="font-size:20px">Threshold: <span data-th="3"></span> · after the fix: <span class="pf" data-pf="3"></span></p></div>
+  <div class="crit">
+    <div class="card"><h3>What it is</h3>The time our tool adds on top of Ledgerline’s own service time. Ledgerline’s time is not ours to fix. Ours is.</div>
+    <div class="card af step"><h3>How we measured it</h3><span data-l4="prod.criteria.3.after.via_mcp_overhead_ms.n" data-f="n"></span> calls through MCP: p50 <span data-l4="prod.criteria.3.after.via_mcp_overhead_ms.p50"></span> ms, p95 <span data-l4="prod.criteria.3.after.via_mcp_overhead_ms.p95"></span> ms, p99 <span data-l4="prod.criteria.3.after.via_mcp_overhead_ms.p99"></span> ms, against limits of 50, 100 and 200. The slowest is search_policy, a search in memory.</div>
+    <div class="card g3 step"><h3>In your forge</h3><b>Production → Latency.</b> It times your tools, with the sandbox’s own service time taken away.</div>
+    <div class="card bf step"><h3>For your own project</h3>Time each tool with the service time taken away. Report p50, p95 and p99, never the average. Agree the limits with your client.</div>
+  </div>
+  <div class="fig" data-fig="shot" data-src="figs/hephaestus/prod_latency.png" data-label="Production tab · Latency: the check run on your own tools" style="left:1080px;top:214px;width:420px;height:600px"></div>
+</section>
+
+<section class="slide" data-plate="Criterion 5 · Payload">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">5 · Payload: response size and pagination</h2><p class="sub" style="font-size:20px">Threshold: <span data-th="4"></span> · after the fix: <span class="pf" data-pf="4"></span></p></div>
+  <div class="crit">
+    <div class="card"><h3>What it is</h3>How big one result can get. Every list is capped and comes in pages, so one call can never flood the context.</div>
+    <div class="card af step"><h3>How we measured it</h3>list_my_approvals with 1,000 waiting: <span data-l4="prod.criteria.4.before.max_bytes_at_scale" data-f="n"></span> bytes; capped at 50 rows, with has_more: <span data-l4="prod.criteria.4.after.max_bytes_at_scale" data-f="n"></span>. But only 1 of the 6 list tools, supplier_certificates, takes a page cursor. Still open.</div>
+    <div class="card g3 step"><h3>In your forge</h3><b>Production → Payload.</b> 500 extra rows, then every list tool: each must cap its rows and say how many more. Also: The Shield’s <b>Scan my tools’ results</b> for secrets.</div>
+    <div class="card bf step"><h3>For your own project</h3>Load your system with ten times its rows. Call every list tool. Add a limit and a cursor; return the total and the next cursor.</div>
+  </div>
+  <div class="fig" data-fig="shot" data-src="figs/hephaestus/prod_payload.png" data-label="Production tab · Payload: the check run on your own tools" style="left:1080px;top:214px;width:420px;height:600px"></div>
+</section>
+
+<section class="slide" data-plate="Criterion 6 · Idempotency">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">6 · Idempotency: duplicate or retried writes</h2><p class="sub" style="font-size:20px">Threshold: <span data-th="5"></span> · after the fix: <span class="pf" data-pf="5"></span></p></div>
+  <div class="crit">
+    <div class="card"><h3>What it is</h3>A retried write must not post twice: after a lost reply, or when the same order comes back written differently.</div>
+    <div class="card af step"><h3>How we measured it</h3>Before: <span data-l4="prod.criteria.5.before.lost_reply_then_retry"></span> duplicates after a lost reply and <span data-l4="prod.criteria.5.before.retry_with_rewritten_arguments"></span> with the date written differently. After the fix: 0. Next slide: how we found it and fixed it.</div>
+    <div class="card g3 step"><h3>In your forge</h3><b>Production → Idempotency.</b> A lost reply after the commit, then a retry; a retry with an argument written differently. It counts the documents in Ledgerline.</div>
+    <div class="card bf step"><h3>For your own project</h3>Build the key from what the write is (the arguments, normalised), not from how it was written. After a lost reply, look the document up before you retry.</div>
+  </div>
+  <div class="fig" data-fig="shot" data-src="figs/hephaestus/prod_idempotency.png" data-label="Production tab · Idempotency: the check run on your own tools" style="left:1080px;top:214px;width:420px;height:600px"></div>
 </section>
 
 <section class="slide" data-plate="Find and Fix · Duplicate Orders">
@@ -737,29 +948,49 @@
   <span class="step" style="display:none"></span>
 </section>
 
-<section class="slide" data-plate="The Fix, in Code">
-  <div class="lec-top"><h2>Two small changes</h2><p class="sub">The key says what the order <i>is</i>. The door makes sure equal orders are written the same way.</p></div>
-  <div class="fig" data-fig="code" data-src="content_key_src" data-title="ledgerline/agent/tools.py · the idempotency key" data-hl="3-4" data-hl0="3-4" style="left:100px;top:240px;width:1400px"></div>
-  <div class="fig" data-fig="code" data-src="door_src" data-title="ToolSpec.check · the new date rule (tool.json: argument_formats need_by = date)" data-from="21" data-to="30" data-hl="24-29" data-hl0="21" style="left:100px;top:420px;width:1400px"></div>
-  <span class="step" style="display:none"></span>
-  <div class="cap" style="left:100px;top:760px;width:1400px">Plus, in <code>receive_goods</code> and <code>send_message</code>: after a lost reply, look the document up instead of returning TIMEOUT. Before: 6 duplicates. After: 0.</div>
-</section>
-
-<section class="slide" data-plate="Usability, per Host">
-  <div class="lec-top"><h2>Right tool, right arguments, on five hosts</h2><p class="sub">30 golden tasks. The same 16 definitions, discovered from tools/list.</p></div>
-  <div class="fig" data-fig="hostbars" style="left:100px;top:240px;width:1400px;height:560px"></div>
-  <span class="step" style="display:none"></span>
-  <div class="cap" style="left:100px;top:808px;width:1400px">Claude’s misses are all a read before a write (order_status before release or approve), not wrong arguments; first-call scoring counts them. <code>logs/host_matrix.json</code>.</div>
-</section>
-
-<section class="slide" data-plate="What Is Still Open">
-  <div class="lec-top"><h2>Honest open items</h2><p class="sub">Five criteria pass. These do not yet, and here is why.</p></div>
-  <div class="grid4" style="position:absolute;left:100px;right:100px;top:240px;display:grid;grid-template-columns:repeat(2,1fr);gap:16px">
-    <div class="card" style="font-size:19px"><span class="tag bf">Payload</span><br>list_my_approvals with 1,000 waiting was 167 KB; now capped at 50 rows (8.5 KB). But only supplier_certificates paginates. Adding limit and cursor to the five older list tools changes their schemas: a versioned 1.1 change.</div>
-    <div class="card step" style="font-size:19px"><span class="tag bf">Regression</span><br>All 8 write tools pass every case. 11 of 16 tools in all: the 5 read tools fail only on pagination, the item above.</div>
-    <div class="card step" style="font-size:19px"><span class="tag bf">Usability · MCP compliance</span><br>Under 95% on two hosts: Claude (API) 90% and Claude Code 93.3%. 12 of 16 tools are right on every host. Next: descriptions that say “no need to check the status first”.</div>
-    <div class="card step" style="font-size:19px"><span class="tag bf">Change management</span><br>Every tool has a version, published over MCP; 8 have release notes; rollback is a git tag. Client sign-off cannot happen in a sandbox: it is a process step with the client.</div>
+<section class="slide" data-plate="Criterion 7 · Timeouts">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">7 · Timeouts: timeout and retry policy</h2><p class="sub" style="font-size:20px">Threshold: <span data-th="6"></span> · after the fix: <span class="pf" data-pf="6"></span></p></div>
+  <div class="crit">
+    <div class="card"><h3>What it is</h3>Every call to Ledgerline has a time limit and a written rule for what happens next: reads retry, writes look themselves up.</div>
+    <div class="card af step"><h3>How we measured it</h3>A busy server, an outage and a lost reply, injected on every service each tool calls: <span data-l4="prod.criteria.6.after.passed"></span> of <span data-l4="prod.criteria.6.after.tested"></span> tests pass. The policy is now declared in all <span data-l4="prod.criteria.6.after.declared"></span> tool.json files.</div>
+    <div class="card g3 step"><h3>In your forge</h3><b>Production → Timeouts.</b> A busy server, an outage and a lost reply, injected under your tools in a fresh sandbox.</div>
+    <div class="card bf step"><h3>For your own project</h3>Write the policy per tool: the timeout, the retries, and what a write does after a lost reply. Test it against a fake service that is slow, down, or drops the reply.</div>
   </div>
+  <div class="fig" data-fig="shot" data-src="figs/hephaestus/prod_timeouts.png" data-label="Production tab · Timeouts: the check run on your own tools" style="left:1080px;top:214px;width:420px;height:600px"></div>
+</section>
+
+<section class="slide" data-plate="Criterion 8 · Regression">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">8 · Regression: a fixed suite, run on every change</h2><p class="sub" style="font-size:20px">Threshold: <span data-th="7"></span> · after the fix: <span class="pf" data-pf="7"></span></p></div>
+  <div class="crit">
+    <div class="card"><h3>What it is</h3>The same tests, run before every release: the happy path, validation errors, permission denied, pagination, retries.</div>
+    <div class="card af step"><h3>How we measured it</h3><span data-l4="prod.criteria.7.after.tools_passing"></span> of <span data-l4="prod.criteria.7.after.tools"></span> tools pass every case; all <span data-l4="prod.criteria.7.after.write_tools"></span> write tools pass. The 5 that fail are reads, and fail only on pagination (criterion 5).</div>
+    <div class="card g3 step"><h3>In your forge</h3><b>Production → Regression</b>, or <b>Run every check on my tools</b>: all the checks as one suite. Run it after every change on the Anvil.</div>
+    <div class="card bf step"><h3>For your own project</h3>Turn every bug you fix into a test. Run the suite before every release. Write tools: 100%.</div>
+  </div>
+  <div class="fig" data-fig="shot" data-src="figs/hephaestus/prod_regression.png" data-label="Production tab · Regression: the check run on your own tools" style="left:1080px;top:214px;width:420px;height:600px"></div>
+</section>
+
+<section class="slide" data-plate="Criterion 9 · MCP compliance">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">9 · MCP compliance: the same tools on every host</h2><p class="sub" style="font-size:20px">Threshold: <span data-th="8"></span> · after the fix: <span class="pf" data-pf="8"></span></p></div>
+  <div class="crit">
+    <div class="card"><h3>What it is</h3>The same definitions work on every host you promise: Claude, OpenAI, Gemini and our harness.</div>
+    <div class="card af step"><h3>How we measured it</h3>Every host accepted all 16 definitions. <span data-l4="prod.criteria.8.after.tools_right_on_every_host"></span> tools were right on every host; the approvals and the release (Claude reads first) and create_purchase_order (OpenAI, once) were not.</div>
+    <div class="card g3 step"><h3>In your forge</h3><b>Production → MCP compliance.</b> It calls your own address over the internet, as Claude does: initialize, tools/list, tools/call, an unknown method. Section 7 was the live test.</div>
+    <div class="card bf step"><h3>For your own project</h3>List the hosts your client uses. Run the golden tasks on each. Report per host and per tool.</div>
+  </div>
+  <div class="fig" data-fig="shot" data-src="figs/hephaestus/prod_mcp.png" data-label="Production tab · MCP compliance: the check run on your own tools" style="left:1080px;top:214px;width:420px;height:600px"></div>
+</section>
+
+<section class="slide" data-plate="Criterion 10 · Change management">
+  <div class="lec-top" style="top:96px"><h2 style="font-size:46px">10 · Change management: versions, release notes, rollback, sign-off</h2><p class="sub" style="font-size:20px">Threshold: <span data-th="9"></span> · after the fix: <span class="pf" data-pf="9"></span></p></div>
+  <div class="crit">
+    <div class="card"><h3>What it is</h3>Tools change. Each change needs a version, a release note, a way back, and the client’s sign-off.</div>
+    <div class="card af step"><h3>How we measured it</h3>All <span data-l4="prod.criteria.9.after.version_published_over_mcp"></span> tools have a version, published over MCP; <span data-l4="prod.criteria.9.after.with_release_notes"></span> have release notes; rollback is a git tag. Sign-off cannot happen in a sandbox: open.</div>
+    <div class="card g3 step"><h3>In your forge</h3><b>Production → Change management.</b> Every knob you changed gives that tool a new version and a release note, published in tools/list. The sign-off stays with your client.</div>
+    <div class="card bf step"><h3>For your own project</h3>Version every tool.json. Write a release note for every schema change. Tag each release so you can roll back. Get the sign-off in writing.</div>
+  </div>
+  <div class="fig" data-fig="shot" data-src="figs/hephaestus/prod_change.png" data-label="Production tab · Change management: the check run on your own tools" style="left:1080px;top:214px;width:420px;height:600px"></div>
+  <div class="cap" style="left:100px;top:620px;width:940px">The Production tab has two more checks, from Section 5’s Shield: <b>Permissions</b> (the tool acts as the person, never as admin) and <b>Audit log</b> (every write traceable to a person).</div>
 </section>
 
 <section class="slide q hero" data-plain="1">
@@ -771,7 +1002,9 @@
   </div>
 </section>
 
+
 <!-- ============================== 11 · NB4, A4, NEXT ============================== -->
+
 <section class="slide part" data-plain="1" data-num="11">
   <div class="center"><span class="num">Section 11 of 11 · Your turn</span>
     <div class="recall"><b>Today</b>Open a tool, build one, put it on MCP, run it on two harnesses, measure it. Now you do all five, for your own domain.</div>
@@ -845,6 +1078,7 @@ key, after the door:        K45F765BDEEAB K45F765BDEEAB</pre></div>
 <script src="figdata.js"></script>
 <script src="figs.js"></script>
 <script src="figs2.js"></script>
+<script src="figs3.js"></script>
 <script>
 (() => { let q = 0; document.querySelectorAll('.qnum').forEach((e) => { e.textContent = String(++q); }); if (window.FIGS && FIGS._fill) FIGS._fill(); })();
 </script>

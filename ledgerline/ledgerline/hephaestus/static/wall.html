@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hephaestus · the class wall</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&display=swap">
+<link rel="stylesheet" href="/sky/sky.css">
+<link rel="stylesheet" href="/static/forge.css">
+<style>
+.wallhero{background:var(--hero);padding:70px 24px 40px;text-align:center}
+.agg{display:flex;justify-content:center;gap:36px;flex-wrap:wrap;margin-top:24px}
+.wallgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;padding:30px 0 60px}
+.fc{background:#fff;border:1px solid var(--rule);border-radius:22px;padding:16px 18px;box-shadow:var(--shadow)}
+.fc .nm{font:500 22px/1.15 var(--font);letter-spacing:-.01em;margin-bottom:10px}
+.fc dl{display:grid;grid-template-columns:1fr auto;gap:6px 10px;margin:0;font-size:14.5px}
+.fc dt{color:var(--ink-3)}.fc dd{margin:0;font-weight:600;text-align:right}
+.fc .ch{margin-top:10px;display:flex;flex-wrap:wrap;gap:5px}
+.fc .ch .chip{font-weight:500;font-size:11.5px}
+</style>
+</head>
+<body>
+<header class="wallhero"><span class="kicker">Hephaestus · Lecture 4 · the class wall</span>
+  <h2 style="margin-top:14px">Every forge in the room.</h2>
+  <div class="agg" id="agg"></div></header>
+<main class="wrap"><div class="wallgrid" id="grid"><p class="muted">Loading…</p></div></main>
+<script src="/static/hx.js"></script>
+<script>
+async function draw() {
+  try {
+    const w = await HX.api('/api/wall');
+    const a = w.agg;
+    document.getElementById('agg').innerHTML = [['forges lit', a.forges], ['ran the six questions', a.ran_six], ['best score, average', a.right_avg + ' / 6'], ['ran the attacks', a.shielded], ['connected to Claude', a.connected]]
+      .map(([l, v]) => `<div class="stat"><span class="v">${HX.esc(v)}</span><span class="l">${l}</span></div>`).join('');
+    document.getElementById('grid').innerHTML = w.rows.map((r) => `<div class="fc"><div class="nm">${HX.esc(r.name)}</div><dl>
+      <dt>Tools switched on</dt><dd>${r.tools_on}</dd>
+      <dt>Knobs changed</dt><dd>${r.knobs_changed}</dd>
+      <dt>Questions right</dt><dd>${r.right_best == null ? '–' : `${r.right_best} / ${r.of}`}${r.runs > 1 ? ` <span class="muted small">(${r.runs} runs)</span>` : ''}</dd>
+      <dt>Attacks stopped</dt><dd>${r.attacks_stopped == null ? '–' : `${r.attacks_stopped} / ${r.attacks_of}`}</dd>
+      <dt>Production checks passing</dt><dd>${r.prod_run ? `${r.prod_pass} / ${r.prod_run}` : '–'}</dd>
+      <dt>Connected to Claude</dt><dd>${r.connected ? `<span class="chip right">yes</span>` : '<span class="chip mute">not yet</span>'}</dd></dl>
+      ${r.connected ? `<div class="small muted" style="margin-top:6px">${HX.esc(r.client)} · ${r.claude_calls} tool calls</div>` : ''}
+      ${r.changed.length ? `<div class="ch">${r.changed.map((c) => `<span class="chip info">${HX.esc(c)}</span>`).join('')}</div>` : ''}</div>`).join('') || '<p class="muted">No forges yet. Open the link and type your name.</p>';
+  } catch (e) { /* keep the last wall */ }
+}
+draw(); setInterval(draw, 5000);
+</script>
+</body>
+</html>
