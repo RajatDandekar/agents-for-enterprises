@@ -14,9 +14,10 @@
 <body>
 <div class="deck" id="deck">
 <!-- ============================== WHERE THE VECTORS LIVE (v5 section `store`) ==============================
-     Chroma for real on document D and the whole dump, HNSW, the production choice, then the Qdrant Cloud walkthrough.
-     Numbers: window.L3V5.store (v5/store_data.js, from experiments/logs/v5_store*.json, hnsw_check.json).
-     Figures: v5/store.js. CSS: v5/store.css. Screenshots: v5/img/store/. -->
+     What a store keeps (Chroma, document D), metadata and filters (Q-605 on our cluster), HNSW word by word, the
+     production choice, then the engineer's checklist for a new store on our real Qdrant Cloud cluster, latency included.
+     Numbers: window.L3V5.store (v5/store_data.js, from experiments/logs/v5_store*.json, hnsw_check.json,
+     v5_lexical_rerank_latency.json). Figures: v5/store.js. CSS: v5/store.css. Screenshots: v5/img/store/. -->
 
 <section class="slide part" data-plain="1" data-num="9">
   <div class="center"><span class="num">Where the vectors live</span>
@@ -25,36 +26,9 @@
 </section>
 
 <section class="slide" data-plate="What a Vector Store Keeps">
-  <div class="store-col" style="left:100px;top:118px;width:420px">
-    <h2>One record per chunk</h2>
-    <p>A vector store is a table. Each row is one chunk. Here is the row for §6 of document D, read back from Chroma.</p>
-    <p class="step">The <b>metadata</b> travels with it: the file, and the flags we filter on.</p>
-    <p class="step">The <b>embedding</b>: 384 numbers, length 1. Only these are searched.</p>
-    <p class="step">A hit returns the id, the text and the metadata. That is how the answer cites “POL-PUR-001 v4.1, p.2, § 6”.</p>
-  </div>
-  <div class="fig" data-fig="store_record" style="left:570px;top:118px;width:930px;height:700px"></div>
-</section>
-
-<section class="slide" data-plate="Document D in Chroma">
-  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">Fifteen chunks, written to a folder</h2><p class="sub">The course code, on Modal: <code>rag.Index.build</code> on D’s chunks. Then we list what it wrote.</p></div>
-  <div class="fig" data-fig="store_code" data-code="chroma_build" data-hl=";8;9;10" style="left:100px;top:250px;width:620px;height:300px"></div>
-  <div class="fig store-term" data-fig="store_files" data-set="D" data-hl="sqlite|header,length,level0,link_lists|level0" style="left:750px;top:250px;width:750px;height:300px"></div>
-  <ol class="store-notes" style="position:absolute;left:100px;top:590px;width:1400px">
-    <li class="step"><span><b>chroma.sqlite3</b> holds the 15 records: ids, text, metadata, and the vectors in a write log (<span data-st="local.D.sqlite_tables.embeddings_queue" data-f="n"></span> rows).</span></li>
-    <li class="step"><span>The folder with a long id is the <b>HNSW index</b>: <code>data_level0.bin</code> keeps vectors and links, <code>link_lists.bin</code> the upper layers.</span></li>
-    <li class="step"><span><span data-st="local.D.files.0.bytes" data-f="mb"></span> for 15 vectors? It holds <span data-st="local.D.hnsw_headers_first.cur_element_count" data-f="n"></span> of them, with room for <span data-st="local.D.hnsw_headers_first.max_elements" data-f="n"></span> set aside. Chroma moves vectors from the log into HNSW once <span data-st="local.D.collection_config.hnsw.sync_threshold" data-f="n"></span> are waiting.</span></li>
-  </ol>
-</section>
-
-<section class="slide" data-plate="The Whole Dump in Chroma">
-  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">28,953 chunks: 196 MB on disk</h2><p class="sub"><code>rag.add_vectors</code> with the grid’s bge-small vectors, timed on Modal: <span data-st="local.dump.add_s"></span> s for all of them.</p></div>
-  <div class="fig store-term" data-fig="store_files" data-set="dump" data-hl="sqlite|data_level0,link_lists,index_metadata|a" style="left:100px;top:240px;width:900px;height:420px"></div>
-  <div class="store-col" style="left:1040px;top:240px;width:460px">
-    <p>Two collections, as the course builds them: <b><span data-st="local.dump.counts.bge-small" data-f="n"></span></b> chunks staff may read, and <b><span data-st="local.dump.counts.bge-small__hr" data-f="n"></span></b> HR-confidential chunks on their own.</p>
-    <p class="step">SQLite is the big file: every chunk’s text twice (records and a keyword index) and <span data-st="local.dump.sqlite_tables.embedding_metadata" data-f="n"></span> metadata rows, 9 per chunk.</p>
-    <p class="step">The HNSW files hold <span data-st="local.dump.hnsw_main.cur_element_count" data-f="n"></span> vectors, <span data-st="local.dump.hnsw_main.size_data_per_element" data-f="n"></span> bytes each: 384 × 4 bytes plus <span data-st="local.dump.hnsw_main.maxM0"></span> links. The last few hundred still wait in SQLite’s log.</p>
-    <p class="step">The raw vectors alone are <span data-st="local.dump.raw_vector_bytes" data-f="mb"></span>. The rest is text, metadata and the graph.</p>
-  </div>
+  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">Per chunk: an id, the text, the metadata, the vector</h2><p class="sub">The record for §6 of document D (chunk 5 of its 15), read back from Chroma on Modal.</p></div>
+  <div class="fig" data-fig="store_keeps" style="left:100px;top:214px;width:1400px;height:620px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
 <section class="slide" data-plate="Searching Chroma">
@@ -64,26 +38,53 @@
   <p class="cap step" style="left:100px;top:700px;width:660px;font-size:21px">E-mails about Brightcell share Emma’s words. The store returns the nearest vectors; it does not know which one holds the rule.</p>
 </section>
 
-<section class="slide" data-plate="A Filter in the Query">
-  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">Metadata filters: drop old copies</h2><p class="sub">“<span data-st="local.dump.version_demo.question"></span>” (<span data-st="local.dump.version_demo.id"></span>). The whole dump, top 5.</p></div>
-  <div class="fig" data-fig="store_res" data-path="local.dump.version_demo.plain" data-title="No filter" style="left:100px;top:240px;width:680px;height:330px"></div>
-  <div class="fig step" data-fig="store_res" data-path="local.dump.version_demo.where_not_superseded" data-title='where={"superseded": False}' data-k0="0" style="left:820px;top:240px;width:680px;height:330px"></div>
-  <div class="fig step" data-fig="store_bars" data-rows="Chroma, no filter · p50|local.dump.latency_ms.plain.p50|220|ms;Chroma, no filter · p95|local.dump.latency_ms.plain.p95|220|ms;b:with the where filter · p50|local.dump.latency_ms.where_not_superseded.p50|220|ms;b:with the where filter · p95|local.dump.latency_ms.where_not_superseded.p95|220|ms" data-cap="Search time for the 224 golden questions, k = 10, Chroma 1.0.15 in a Modal container. The filter is applied outside the HNSW graph." style="left:100px;top:610px;width:1000px;height:200px"></div>
-  <div class="store-pin step" style="left:1140px;top:610px;width:360px">That is why the course keeps HR’s chunks in <b>their own collection</b>: Emma’s search never opens it, and costs nothing extra.</div>
+<section class="slide" data-plate="Metadata: What Each Chunk Says About Itself">
+  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">Metadata: fields stored with each chunk</h2><p class="sub">The parser read them from the file itself: its header, its name, its folder. The store keeps them beside the vector.</p></div>
+  <div class="fig" data-fig="store_payload" style="left:100px;top:205px;width:640px;height:380px"></div>
+  <div class="step" style="position:absolute;left:0;top:0;width:1600px;height:900px;pointer-events:none">
+  <div class="store-pin" style="left:100px;top:600px;width:640px"><b>Superseded</b> means replaced by a newer version of the same document. The Approval Matrix v2.0 (2024) was replaced by v3.0 (2026), but the old file is still in the dump.</div>
+  <div class="fig" data-fig="store_shot" data-img="filter_superseded.jpg" data-what="Qdrant dashboard: Points tab filtered by superseded:true" data-hl="38,30,60,7;20,75,22,6" style="left:780px;top:205px;width:720px;height:450px"></div>
+  <p class="cap" style="left:780px;top:664px;width:720px;font-size:17px">Our dashboard, Points tab, filter <code>superseded:true</code>. First hit: point <span data-st="latency.eu.facts.point_192.id"></span>, <span data-st="latency.eu.facts.point_192.doc_id"></span> v<span data-st="latency.eu.facts.point_192.version"></span>, status <span data-st="latency.eu.facts.point_192.status"></span>.</p></div>
+  <div class="fig step" data-fig="store_status" style="left:100px;top:728px;width:1400px;height:110px"></div>
 </section>
 
-<section class="slide" data-plate="A Vector Database Is an Approximate Search">
-  <div class="store-col" style="left:100px;top:118px;width:470px">
-    <h2>HNSW: a graph it walks</h2>
-    <p>Comparing the question with all 28,941 vectors is exact, but grows with the dump. HNSW links each vector to its near neighbours, in layers.</p>
-    <p class="step">The search starts at the top, sparse layer, steps to whichever neighbour is closer to the question, and drops a layer when none is.</p>
-    <p class="step">It stops early, so it can miss. We measured it: share of the exact top 10 that came back, 224 questions.</p>
-    <p class="step">One setting, <code>ef_search</code> (how many candidates it keeps), fixed it. Now in <code>rag.HNSW</code>.</p>
+<section class="slide" data-plate="A Filter Inside the Search">
+  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">A filter: a condition the store checks during the search</h2><p class="sub" style="font-size:22px">Q-605 from a purchase executive: “What is a purchase executive’s approval limit?” The dump gives <span data-st="q605_amounts.0"></span>, <span data-st="q605_amounts.1"></span> and <span data-st="q605_amounts.2"></span>. One is in force.</p></div>
+  <div class="store-col" style="left:100px;top:222px;width:560px">
+    <p>Every store takes a filter with the query: Chroma’s <code>where=</code>, Qdrant’s <code>query_filter=</code>, pgvector’s SQL <code>WHERE</code>.</p>
   </div>
-  <div class="fig" data-fig="store_hnsw" data-w="880" style="left:620px;top:100px;width:880px;height:430px"></div>
-  <div class="fig step" data-fig="store_bars" data-rows="Chroma defaults|hnsw.default.overlap@10|1|pct;ef_search 200|hnsw.ef_search200.overlap@10|1|pct|1;ef_search 1,000|hnsw.ef_search1000.overlap@10|1|pct|1;hi:ef_search 4,000|hnsw.ef_search4000.overlap@10|1|pct|1" data-cap="hnsw_check.json: bge-small, 13,606 chunks (structured, 400 tokens), chromadb 1.0.15. Time per query: 3.3 ms at the defaults, 7.3 ms at 4,000." style="left:620px;top:600px;width:880px;height:220px"></div>
-  <span class="step" style="display:none"></span>
-  <p class="cap" style="left:620px;top:520px;width:880px">A toy graph of 42 points, searched by the real greedy rule. Chroma’s graph for the dump has <span data-st="local.dump.hnsw_main.layers"></span> layers and links each vector to up to <span data-st="local.dump.hnsw_main.M"></span> others (<span data-st="local.dump.hnsw_main.maxM0"></span> on the bottom layer).</p>
+  <div class="fig" data-fig="store_code" data-code="filter" data-hl=";;2,7;" style="left:100px;top:322px;width:560px;height:215px"></div>
+  <div class="fig step" data-fig="store_res" data-path="latency.eu.facts.q605.emma.hybrid" data-w="52" data-d="4" data-flag="approval_limits.html|3" data-title="Before · hybrid, top 5 · HR filter only" style="left:720px;top:222px;width:780px;height:290px"></div>
+  <div class="step" style="position:absolute;left:0;top:0;width:1600px;height:900px;pointer-events:none">
+  <p class="store-col" style="left:100px;top:560px;width:560px;font-size:23px;line-height:1.42">The store checks it inside the search. A chunk that fails never competes, so all five places go to chunks that pass.</p>
+  <div class="fig" data-fig="store_res" data-path="latency.eu.facts.q605.emma_current.hybrid" data-w="52" data-d="4" data-flag="approval_limits.html|3" data-title="After · + superseded = false" style="left:720px;top:540px;width:780px;height:290px"></div></div>
+  <p class="store-pin step" style="left:100px;top:700px;width:560px;margin:0">The 2016 page stays first: nothing in it says it is old, so its metadata is empty. A filter is only as good as the metadata.</p>
+</section>
+
+<section class="slide" data-plate="HNSW, Word by Word">
+  <div class="store-col" style="left:100px;top:110px;width:480px">
+    <h2 style="font-size:40px">HNSW: Hierarchical Navigable Small World</h2>
+    <p>Exact search compares the question with all 28,941 vectors. Fine today; slow at ten times the size. HNSW follows links instead.</p>
+    <p class="step"><b>Small world.</b> Each point links to a few near neighbours, plus a few long links. Any point is then a few hops from any other.</p>
+    <p class="step"><b>Navigable.</b> A greedy walk: step to whichever neighbour is closer to the question. Stop when none is.</p>
+    <p class="step"><b>Hierarchical.</b> Sparse upper layers for long jumps, a dense bottom layer for the fine search: motorways, then local roads.</p>
+  </div>
+  <div class="fig" data-fig="store_hnsw" data-w="900" style="left:600px;top:110px;width:900px;height:560px"></div>
+  <p class="cap" style="left:600px;top:690px;width:900px;font-size:17px">A toy graph of 42 points, searched by the real greedy rule. Chroma’s graph for the dump has <span data-st="local.dump.hnsw_main.layers"></span> layers; our Qdrant collection links each point to <span data-st="ingest.info.hnsw.m"></span> others.</p>
+</section>
+
+<section class="slide" data-plate="Two Settings, and Why It Can Miss">
+  <div class="store-col" style="left:100px;top:110px;width:500px">
+    <h2 style="font-size:42px">Two settings you will meet</h2>
+    <p><b>m</b>: links per point. More links, a better graph, more memory. Qdrant’s default, on our collection: <span data-st="ingest.info.hnsw.m"></span>.</p>
+    <p><b>ef</b>: how many candidates the walk keeps as it searches. Larger: closer to exact, and slower.</p>
+  </div>
+  <div class="step" style="position:absolute;left:0;top:0;width:1600px;height:900px;pointer-events:none">
+  <p class="store-col" style="left:100px;top:430px;width:500px;font-size:23px;line-height:1.42">It can miss: the walk stops where no neighbour is closer, even if a closer vector sits elsewhere.</p>
+  <div class="fig store-narrow" data-fig="store_bars" data-rows="b:Chroma · defaults|hnsw.default.overlap@10|1|pct;Chroma · ef 4,000|hnsw.ef_search4000.overlap@10|1|pct;b:Qdrant · defaults|latency.eu.facts.overlap_at_10_vs_exact.default.mean|1|pct;hi:Qdrant · ef 2,000|latency.eu.facts.overlap_at_10_vs_exact.hnsw_ef_2000.mean|1|pct" data-cap="Our own check: share of the exact top 10 that came back (ef: ef_search in Chroma, hnsw_ef in Qdrant). Chroma: hnsw_check.json, 13,606 chunks (3.3 ms → 7.3 ms per query). Qdrant: our cluster, 224 golden questions." style="left:100px;top:560px;width:520px;height:260px"></div></div>
+  <div class="step" style="position:absolute;left:0;top:0;width:1600px;height:900px;pointer-events:none">
+  <div class="fig" data-fig="store_shot" data-img="ann_recall.jpg" data-what="Qdrant dashboard: ANN Recall check on northbridge_docs" style="left:660px;top:110px;width:840px;height:525px"></div>
+  <p class="cap" style="left:660px;top:645px;width:840px;font-size:17px;margin:0">Qdrant’s own check agrees. ANN Recall tab on our collection: <span data-st="dashboard.ann_recall.sampled_points"></span> stored points as questions, HNSW at the defaults against exact search. Mean recall@10 <span data-st="dashboard.ann_recall.mean_recall_at_10"></span> ± <span data-st="dashboard.ann_recall.std" data-f="r2"></span>; exact ≈ <span data-st="dashboard.ann_recall.exact_ms_typical"></span> ms, HNSW ≈ <span data-st="dashboard.ann_recall.hnsw_ms_typical"></span> ms per search.</p></div>
 </section>
 
 <section class="slide q hero" data-plain="1">
@@ -124,135 +125,123 @@
   <div class="fig" data-fig="store_pick" style="left:600px;top:118px;width:900px;height:700px"></div>
 </section>
 
-<!-- ------------------------------ the walkthrough, on our real Qdrant Cloud cluster ------------------------------ -->
-<section class="slide" data-plate="Walkthrough · 1 · A Free Cluster">
-  <div class="store-col" style="left:100px;top:118px;width:400px">
-    <h2>A free cluster</h2>
-    <p>At cloud.qdrant.io: sign up, <b>Create cluster</b>, choose the free tier.</p>
-    <p class="step">One node: <span data-st="dashboard.cluster.vcpu"></span> vCPU, <span data-st="dashboard.cluster.ram"></span> RAM, <span data-st="dashboard.cluster.disk"></span> disk. Ours runs on GCP <b><span data-st="dashboard.cluster.cloud_provider"></span></b> (Frankfurt): the data stays in the EU.</p>
-    <p class="step">Version <span data-st="dashboard.cluster.version"></span>, so BM25 runs inside the engine. Keep the endpoint: the code needs it.</p>
+<!-- ------------------------------ the engineer's checklist, on our real Qdrant Cloud cluster ------------------------------ -->
+<section class="slide" data-plate="The Engineer’s Checklist for a New Store">
+  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">Ten decisions in your control</h2><p class="sub">For any new RAG project, in this order: what we chose, and (in blue) what it bought us.</p></div>
+  <div class="fig store-ck" data-fig="store_ck" style="left:100px;top:230px;width:1400px;height:560px">
+    <div class="c" data-k="0"><i>1</i><b>Region and tier</b>Next to the app, where the data may live. Ours: Frankfurt, free.<em>Round trip <span data-st="latency.default_region.rtt.p50" data-f="ms"></span> → <span data-st="latency.eu.rtt.p50" data-f="ms"></span></em></div>
+    <div class="c" data-k="0"><i>2</i><b>The key</b>In one secret file, never in code, logs or prompts.<em>The script refuses to write a log that holds it</em></div>
+    <div class="c" data-k="0"><i>3</i><b>Schema = the model</b>384 numbers, cosine: what bge-small makes.<em>A new model: a new collection</em></div>
+    <div class="c" data-k="0"><i>4</i><b>Indexes on filter fields</b>And a BM25 text index, before the upload.<em>Filter cost: nothing measurable</em></div>
+    <div class="c" data-k="0"><i>5</i><b>Upload, then look</b>Batches of 256; open the dashboard and read.<em><span data-st="ingest.count" data-f="n"></span> points in <span data-st="ingest.rest.upsert_s"></span> s</em></div>
+    <div class="c" data-k="1"><i>6</i><b>Recall, then ef</b>Golden set on the store; we set hnsw_ef 2,000.<em>Recall@5 <span data-st="ef.runs.default.recall@5" data-f="r3"></span> → <span data-st="ef.runs.hnsw_ef_2000.recall@5" data-f="r3"></span></em></div>
+    <div class="c" data-k="1"><i>7</i><b>Filter by who asks</b>Every request carries the asker’s filter.<em>HR chunks in top 5: 2 → 0</em></div>
+    <div class="c" data-k="1"><i>8</i><b>One hybrid request</b>Dense + BM25 + RRF in one call, not two.<em><span data-st="latency.suite_default_region.rest.two_calls_client_rrf.p50" data-f="ms"></span> → <span data-st="latency.suite_default_region.rest.hybrid_payload_cite.p50" data-f="ms"></span></em></div>
+    <div class="c" data-k="1"><i>9</i><b>Count round trips</b>Where the time goes, and how to cut it.<em>Ten searches: <span data-st="latency.suite_default_region.rest.ten_sequential.p50" data-f="ms"></span> → <span data-st="latency.suite_default_region.rest.ten_one_batch.p50" data-f="ms"></span></em></div>
+    <div class="c" data-k="1"><i>10</i><b>An alias</b>So the next model is a switch, not a rewrite.<em>One atomic switch, and back</em></div>
   </div>
-  <div class="fig" data-fig="store_shot" data-img="cluster_overview.jpg" data-what="Qdrant Cloud: the free cluster’s overview" data-hl="2,45,62,10;2,70,62,11" style="left:540px;top:118px;width:960px;height:600px"></div>
-  <p class="cap" style="left:540px;top:730px;width:960px">Screenshot of our cluster, 4 Nov 2026, after the upload.</p>
+  <span class="step" style="display:none"></span>
 </section>
 
-<section class="slide" data-plate="Walkthrough · 2 · The Key Lives in One File">
-  <div class="store-col" style="left:100px;top:118px;width:440px">
-    <h2>The key lives in one file</h2>
-    <p>The cluster’s <b>API Keys</b> tab makes a database key. Anyone holding it can read all of Northbridge’s documents.</p>
-    <p class="step">It goes in <code>vectordb.env</code>, which git ignores (<code>*.env</code>), and nowhere else.</p>
-    <p class="step">Not in code, not in a notebook cell, not in a log, not in the model’s prompt, not on a slide.</p>
+<section class="slide" data-plate="Checklist · 1–2 · Region, Tier and Key">
+  <div class="store-col" style="left:100px;top:110px;width:440px">
+    <h2 style="font-size:40px">1 · Where it runs</h2>
+    <p>Choose the region first: next to your app, and where the data may live. Ours: GCP <b><span data-st="dashboard.cluster.cloud_provider"></span></b>, Frankfurt. The data stays in the EU.</p>
+    <p class="step">A round trip from Modal in the US: <b><span data-st="latency.default_region.rtt.p50" data-f="ms"></span></b>. From Modal’s EU region: <b><span data-st="latency.eu.rtt.p50" data-f="ms"></span></b>.</p>
+    <p class="step">Free tier: <span data-st="dashboard.cluster.vcpu"></span> vCPU, <span data-st="dashboard.cluster.ram"></span> RAM, <span data-st="dashboard.cluster.disk"></span> disk, $0. We use <span data-st="dashboard.usage_after_ingest.disk_used_mib" data-f="mib"></span> of disk, <span data-st="dashboard.usage_after_ingest.ram_used_mib" data-f="mib"></span> of RAM.</p>
+    <div class="step"><h2 style="font-size:40px;margin-top:22px">2 · The key, in one secret</h2>
+    <p><code>vectordb.env</code>, ignored by git; a Modal secret on the server. Never in code, a notebook, a log, a prompt or a slide.</p></div>
   </div>
-  <div class="fig" data-fig="store_code" data-code="env" data-title="vectordb.env and how the script reads it" data-hl=";1-3;5-10" style="left:600px;top:150px;width:900px;height:330px"></div>
-  <div class="store-pin step" style="left:600px;top:520px;width:900px">On Modal it arrives as a <b>secret</b>. The script checks every log it writes and refuses to save one that contains the key or the endpoint.</div>
+  <div class="fig" data-fig="store_shot" data-img="cluster_overview.jpg" data-what="Qdrant Cloud: the free cluster’s overview" data-hl="4,41,59,10;4,66,59,10;14,25,9,7" style="left:580px;top:118px;width:920px;height:575px"></div>
+  <p class="cap" style="left:580px;top:705px;width:920px;font-size:17px">Our cluster’s overview, 4 Nov 2026, after the upload. The cluster ID and endpoint are blurred: the endpoint is not the secret, the key is.</p>
 </section>
 
-<section class="slide" data-plate="Walkthrough · 3 · Create the Collection">
+<section class="slide" data-plate="Checklist · 3–4 · Schema and Indexes">
   <div class="fig" data-fig="store_code" data-code="create" data-hl="3-4;6-10;12-15" style="left:100px;top:110px;width:850px;height:450px"></div>
-  <ol class="store-notes" style="position:absolute;left:100px;top:590px;width:850px">
-    <li><span>One vector per point, named <code>dense</code>: <b>384</b> numbers, <b>cosine</b>. It must match the model.</span></li>
-    <li class="step"><span>Payload indexes on the flags, before the data: filters then run inside the HNSW search.</span></li>
-    <li class="step"><span>A full-text index with <b>BM25</b> scoring on the chunk text: the keyword half of hybrid.</span></li>
+  <ol class="store-notes" style="position:absolute;left:100px;top:586px;width:850px">
+    <li><span><b>3</b> · The vector’s size and distance must match the model: <b>384</b>, <b>cosine</b>, for bge-small. Another model means another collection.</span></li>
+    <li class="step"><span><b>4</b> · A payload index on every field you filter on, made before the upload. And a full-text index with <b>BM25</b> scoring on the text.</span></li>
+    <li class="step"><span>What the index buys, p50: Chroma’s <code>where</code> (no index) <span data-st="local.dump.latency_ms.plain.p50" data-f="ms"></span> → <span data-st="local.dump.latency_ms.where_not_superseded.p50" data-f="ms"></span>. Qdrant with it: <span data-st="cloud.filter_latency_ms.none.p50" data-f="ms"></span> → <span data-st="cloud.filter_latency_ms.emma.p50" data-f="ms"></span>.</span></li>
   </ol>
   <div class="fig" data-fig="store_shot" data-img="collection_info_json.jpg" data-what="Qdrant dashboard: the collection’s Info tab" style="left:980px;top:110px;width:520px;height:532px"></div>
-  <p class="cap" style="left:980px;top:655px;width:520px">The dashboard’s Info tab on our cluster: 384 · Cosine, HNSW m = 16, ef_construct = 100 (Qdrant’s defaults).</p>
+  <p class="cap" style="left:980px;top:655px;width:520px;font-size:17px">The Info tab on our cluster: 384 · Cosine, m = <span data-st="ingest.info.hnsw.m"></span>, ef_construct = <span data-st="ingest.info.hnsw.ef_construct"></span>. Qdrant times include the trip to Frankfurt: the filter itself cost nothing measurable.</p>
 </section>
 
-<section class="slide" data-plate="Walkthrough · 4 · Upsert D, Then the Dump">
-  <div class="fig" data-fig="store_code" data-code="upsert" data-hl=";6-9;10" style="left:100px;top:110px;width:860px;height:300px"></div>
-  <ol class="store-notes" style="position:absolute;left:1000px;top:118px;width:500px">
-    <li><span>Each point: an id, the vector, and a payload with the text, the citation and the flags.</span></li>
-    <li class="step"><span>D first: <b><span data-st="ingest.D.n"></span></b> points in <span data-st="ingest.D.upsert_s"></span> s, so we can find them in the dashboard.</span></li>
-    <li class="step"><span>Then the other <b><span data-st="ingest.rest.n" data-f="n"></span></b> in <span data-st="ingest.rest.upsert_s"></span> s, in batches of 256, from Modal in the US to Frankfurt.</span></li>
-  </ol>
-  <div class="fig step" data-fig="store_shot" data-img="collections.jpg" data-what="Qdrant dashboard: the collections list" style="left:100px;top:440px;width:600px;height:375px"></div>
-  <div class="fig step" data-fig="store_kpi" data-items="points|ingest.count|n;HR confidential|ingest.count_confidential|n;superseded|ingest.count_superseded|n;in the HNSW graph|ingest.info.indexed_vectors_count|n" style="left:740px;top:440px;width:760px;height:120px"></div>
-  <p class="store-pin step" style="left:740px;top:600px;width:760px;margin:0">Not every point is in the graph: Qdrant leaves small segments unindexed and scans them exactly. Search still sees all <span data-st="ingest.count" data-f="n"></span>.</p>
+<section class="slide" data-plate="Checklist · 5 · Upload, Then Look">
+  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">5 · Upload in batches, then look at what landed</h2><p class="sub" style="font-size:22px">D first: <span data-st="ingest.D.n"></span> points in <span data-st="ingest.D.upsert_s"></span> s. Then the other <span data-st="ingest.rest.n" data-f="n"></span>, in batches of 256: <span data-st="ingest.rest.upsert_s"></span> s from Modal in the US.</p></div>
+  <div class="fig" data-fig="store_shot" data-img="visualize_all.jpg" data-what="Qdrant dashboard: Visualize, 3,000 dense vectors coloured by folder" style="left:100px;top:212px;width:720px;height:450px"></div>
+  <p class="cap" style="left:100px;top:672px;width:720px;font-size:17px">Visualize tab: Qdrant’s own map of <span data-st="dashboard.visualize.sample" data-f="n"></span> of our vectors, coloured by folder. Chunks of one kind sit together; <span data-st="dashboard.visualize.legend.06_transactions" data-f="n"></span> of them are transactions.</p>
+  <div class="step" style="position:absolute;left:0;top:0;width:1600px;height:900px;pointer-events:none">
+  <div class="fig" data-fig="store_shot" data-img="point_106.jpg" data-what="Qdrant dashboard: point 106 (§6 of D) with its payload" data-view="330px 96px 46px 232px" style="left:850px;top:212px;width:392px;height:450px"></div>
+  <p class="cap" style="left:850px;top:672px;width:392px;font-size:17px">Points tab, <code>id:106</code>: §6 of D, its payload and its 384-number vector. Open a few and read them.</p></div>
+  <div class="step" style="position:absolute;left:0;top:0;width:1600px;height:900px;pointer-events:none">
+  <div class="fig" data-fig="store_kpi" data-items="points|ingest.count|n;HR confidential|ingest.count_confidential|n;superseded|ingest.count_superseded|n;in the HNSW graph|ingest.info.indexed_vectors_count|n" style="left:1272px;top:212px;width:228px;height:450px;grid-template-columns:1fr"></div>
+  <p class="cap" style="left:1272px;top:672px;width:228px;font-size:15px">Counts, read back. Small segments stay out of the graph and are scanned exactly.</p></div>
 </section>
 
-<section class="slide" data-plate="Walkthrough · 5 · The Points in the Dashboard">
-  <div class="fig" data-fig="store_shot" data-img="point_106.jpg" data-what="Qdrant dashboard: point 106 (§6 of D) with its payload" data-hl="2,43,96,16;2,63,96,13;2,80,96,8" style="left:100px;top:96px;width:640px;height:734px"></div>
-  <div class="store-col" style="left:800px;top:118px;width:700px">
-    <h2 style="font-size:42px">§6 of D, on the cluster</h2>
-    <p>Collections → <b>northbridge_docs</b> → Points, filter <code>id:106</code>. The same chunk Chroma held.</p>
-    <p class="step">The payload: the citation, the text, the file, the section.</p>
-    <p class="step">Version, status and the three flags: what the filters read.</p>
-    <p class="step">The vector: <code>dense</code>, length 384. <b>Find Similar</b> runs a nearest-neighbour search from it.</p>
-    <p class="step">Check your own ingestion here: open a few points and read them.</p>
-  </div>
-</section>
-
-<section class="slide" data-plate="Walkthrough · 6 · Search in the Console">
-  <div class="fig" data-fig="store_shot" data-img="console_bm25.jpg" data-what="Qdrant dashboard console: a BM25 text query for ERR-PO-0412 with Emma’s filter" data-hl="26,11,35,46;26,24,34,30;61,14,39,23;61,76,39,6" style="left:100px;top:100px;width:960px;height:720px"></div>
-  <div class="store-col" style="left:1100px;top:118px;width:400px">
-    <p>The console sends REST calls to the cluster. No code needed to try a query.</p>
-    <p class="step">A BM25 text query on the <code>text</code> field, for <b>ERR-PO-0412</b>.</p>
-    <p class="step">Emma’s filter is part of the request: no HR-confidential chunk can come back.</p>
-    <p class="step">First: the quick-fix card for ERR-PO-0412.</p>
-    <p class="step">Third: <b>ERR-MAT-0412</b>, a different error. The tokenizer split the code into err, po, 0412.</p>
-  </div>
-</section>
-
-<section class="slide" data-plate="Walkthrough · 7 · Emma’s Filter, From Python">
-  <div class="fig" data-fig="store_code" data-code="search" data-hl=";1-2" style="left:100px;top:110px;width:700px;height:200px"></div>
-  <div class="store-col" style="left:840px;top:118px;width:660px">
-    <p>A purchase executive asks: “<span data-st="cloud.permission.question"></span>”</p>
-    <p class="step">Without the filter, HR’s confidential chunks rank near the top. With it, they never enter the search.</p>
-  </div>
-  <div class="fig step" data-fig="store_res" data-path="cloud.permission.no_filter" data-title="Q-901 · hybrid · no filter" data-w="50" data-d="4" style="left:100px;top:350px;width:680px;height:300px"></div>
-  <div class="fig step" data-fig="store_res" data-path="cloud.permission.filter_must_not_confidential" data-title="Q-901 · hybrid · Emma’s filter" data-w="50" data-d="4" style="left:820px;top:350px;width:680px;height:300px"></div>
-  <div class="fig step" data-fig="store_kpi" data-items="dense, no filter · p50|cloud.filter_latency_ms.none.p50|ms;Emma’s filter · p50|cloud.filter_latency_ms.emma.p50|ms;+ not superseded · p50|cloud.filter_latency_ms.emma_current.p50|ms;network round trip · p50|cloud.rtt_ms.p50|ms" style="left:100px;top:690px;width:1400px;height:120px"></div>
-</section>
-
-<section class="slide" data-plate="Walkthrough · 8 · Measure Recall on the Cluster">
+<section class="slide" data-plate="Checklist · 6 · Measure Recall, Set ef">
   <div class="store-col" style="left:100px;top:118px;width:460px">
-    <h2>The same trap, again</h2>
-    <p>Dense recall@5 on the cluster, 224 golden questions, against the width of the HNSW search, <code>hnsw_ef</code>.</p>
+    <h2 style="font-size:40px">6 · Measure recall on your golden set, then set ef</h2>
+    <p>Dense recall@5 on our cluster, 224 golden questions, against the search width <code>hnsw_ef</code>.</p>
     <p class="step">Qdrant’s default lost a quarter of what exact search finds, as Chroma’s did.</p>
-    <p class="step">At our size even exact search is cheap. We use <code>hnsw_ef=2000</code>: nearly exact, a few ms.</p>
-    <p class="step">The lesson holds for any store: run your golden set against it before you trust it.</p>
+    <p class="step">At our size even exact search is cheap. We set <code>hnsw_ef=2000</code>: nearly exact, a few ms.</p>
+    <p class="step">For any store: run your golden set against it before you trust it.</p>
   </div>
-  <div class="fig" data-fig="store_bars" data-rows="b:Qdrant default|ef.runs.default.recall@5|0.6|pct;hnsw_ef 128|ef.runs.hnsw_ef_128.recall@5|0.6|pct|1;hnsw_ef 512|ef.runs.hnsw_ef_512.recall@5|0.6|pct|1;hi:hnsw_ef 2,000|ef.runs.hnsw_ef_2000.recall@5|0.6|pct|2;exact (brute force)|ef.runs.exact.recall@5|0.6|pct|2" data-cap="Dense bge-small, Emma’s filter for staff, k = 10, from Modal. The course grid (Chroma, ef_search 4,000) measured 0.561 on the same chunks." style="left:620px;top:150px;width:880px;height:300px"></div>
+  <div class="fig" data-fig="store_bars" data-rows="b:Qdrant default|ef.runs.default.recall@5|0.6|pct;hnsw_ef 128|ef.runs.hnsw_ef_128.recall@5|0.6|pct|1;hnsw_ef 512|ef.runs.hnsw_ef_512.recall@5|0.6|pct|1;hi:hnsw_ef 2,000|ef.runs.hnsw_ef_2000.recall@5|0.6|pct|2;exact (brute force)|ef.runs.exact.recall@5|0.6|pct|2" data-cap="Dense bge-small, the asker’s filter, top-k = 10, from Modal. The course grid (Chroma, ef_search 4,000) measured 0.561 on the same chunks." style="left:620px;top:150px;width:880px;height:300px"></div>
   <div class="fig step" data-fig="store_bars" data-rows="default · p50|ef.runs.default.latency_s.p50|0.13|s;hnsw_ef 2,000 · p50|ef.runs.hnsw_ef_2000.latency_s.p50|0.13|s;exact · p50|ef.runs.exact.latency_s.p50|0.13|s" data-cap="Time per query, network included: about 100 ms of it was the trip to Frankfurt in this run." style="left:620px;top:520px;width:880px;height:200px"></div>
 </section>
 
-<section class="slide" data-plate="Walkthrough · 9 · Hybrid Inside the Engine">
+<section class="slide" data-plate="Checklist · 7 · Filter by Who Is Asking">
+  <div class="fig" data-fig="store_code" data-code="search" data-hl=";1-2" style="left:100px;top:110px;width:700px;height:200px"></div>
+  <div class="store-col" style="left:840px;top:110px;width:660px">
+    <h2 style="font-size:40px">7 · Filter by who is asking</h2>
+    <p>A purchase executive asks: “<span data-st="cloud.permission.question"></span>” Every request carries the asker’s filter.</p>
+    <p class="step">Without it, HR’s confidential salary bands rank first and second. With it, they never enter the search.</p>
+  </div>
+  <div class="fig step" data-fig="store_res" data-path="cloud.permission.no_filter" data-title="Q-901 · hybrid · no filter" data-w="50" data-d="4" style="left:100px;top:350px;width:680px;height:300px"></div>
+  <div class="fig step" data-fig="store_res" data-path="cloud.permission.filter_must_not_confidential" data-title="Q-901 · hybrid · the HR filter" data-w="50" data-d="4" style="left:820px;top:350px;width:680px;height:300px"></div>
+  <div class="fig step" data-fig="store_kpi" data-items="dense, no filter · p50|cloud.filter_latency_ms.none.p50|ms;HR filter · p50|cloud.filter_latency_ms.emma.p50|ms;+ not superseded · p50|cloud.filter_latency_ms.emma_current.p50|ms;network round trip · p50|cloud.rtt_ms.p50|ms" style="left:100px;top:690px;width:1400px;height:120px"></div>
+</section>
+
+<section class="slide" data-plate="Checklist · 8 · One Hybrid Request">
   <div class="fig" data-fig="store_code" data-code="hybrid" data-hl=";1-2;4-6;7" style="left:100px;top:110px;width:860px;height:240px"></div>
-  <div class="store-col" style="left:1000px;top:118px;width:500px">
-    <p>Two lists inside one request: the dense neighbours and the BM25 matches, 20 each.</p>
-    <p class="step">Fused by RRF on the server: arithmetic on ranks, as our <code>rag.rrf</code>. The reranker still runs in our service, on the top 20.</p>
+  <div class="store-col" style="left:1000px;top:110px;width:500px">
+    <h2 style="font-size:40px">8 · One hybrid request</h2>
+    <p>Dense and BM25 lists, 20 each, in one request, fused by RRF on the server: the RRF constant, 60, as in <code>rag.rrf</code>.</p>
+    <p class="step">The reranker still runs in our service, on the top 20.</p>
   </div>
-  <div class="fig step" data-fig="store_res" data-path="cloud.code.dense:text.results" data-n="3" data-w="40" data-title="ERR-PO-0412 · dense" data-d="3" style="left:100px;top:390px;width:440px;height:240px"></div>
-  <div class="fig step" data-fig="store_res" data-path="cloud.code.bm25:text.results" data-n="3" data-w="40" data-title="BM25 (word tokenizer)" data-d="1" style="left:580px;top:390px;width:440px;height:240px"></div>
-  <div class="fig step" data-fig="store_res" data-path="cloud.code.hybrid:text.results" data-n="3" data-w="40" data-title="Hybrid · RRF k = 60" data-d="4" style="left:1060px;top:390px;width:440px;height:240px"></div>
-  <div class="fig step" data-fig="store_bars" data-rows="dense · hnsw_ef 2,000|cloud.golden.dense_ef2000.overall.recall@5|1|pct;BM25 · word tokenizer|cloud.golden.bm25_word.overall.recall@5|1|pct;BM25 · code tokenizer|cloud.golden.bm25_code.overall.recall@5|1|pct;hi:hybrid · RRF|cloud.golden.hybrid_rrf_ef2000.overall.recall@5|1|pct" data-cap="Recall@5, 224 golden questions, scored by evaluate.py, on our cluster with each asker’s filter. Hybrid is below BM25 alone, as in our own grid (rag.BM25: 0.771): why we chose BM25 + the reranker." style="left:100px;top:650px;width:1400px;height:180px"></div>
+  <div class="fig step" data-fig="store_bars" data-rows="dense · hnsw_ef 2,000|cloud.golden.dense_ef2000.overall.recall@5|1|pct;BM25 · word tokenizer|cloud.golden.bm25_word.overall.recall@5|1|pct;hi:hybrid · RRF on the server|cloud.golden.hybrid_rrf_ef2000.overall.recall@5|1|pct" data-cap="Recall@5, 224 golden questions, evaluate.py, on our cluster with each asker’s filter. Hybrid sits below BM25 alone, as in our own grid: why we chose BM25 + the reranker." style="left:100px;top:400px;width:860px;height:200px"></div>
+  <div class="step" style="position:absolute;left:0;top:0;width:1600px;height:900px;pointer-events:none">
+  <div class="fig" data-fig="store_bars" data-rows="b:two requests|latency.suite_default_region.rest.two_calls_client_rrf.p50|220|ms;hi:one hybrid request|latency.suite_default_region.rest.hybrid_payload_cite.p50|220|ms" data-cap="Two requests: dense, then BM25, RRF in our code. Time per question from Modal in the US, p50, 30 golden questions (v5_store_latency.py)." style="left:100px;top:630px;width:860px;height:150px"></div>
+  <p class="store-pin" style="left:1000px;top:630px;width:500px;margin:0">One request saves one round trip per question. In an agent that searches five times, that is five trips.</p></div>
 </section>
 
-<section class="slide" data-plate="Walkthrough · 10 · How Fast, and What It Costs">
-  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">Measured from Modal, on our cluster</h2><p class="sub">224 golden questions, one at a time, k = 10. Modal runs in the US; the cluster is in Frankfurt.</p></div>
-  <div class="fig" data-fig="store_bars" data-rows="network round trip · p50|cloud.rtt_ms.p50|300|ms;dense · p50|cloud.golden.dense_ef2000.latency_s.p50|0.3|s;BM25 · p50|cloud.golden.bm25_word.latency_s.p50|0.3|s;hybrid · p50|cloud.golden.hybrid_rrf_ef2000.latency_s.p50|0.3|s;hi:hybrid · p95|cloud.golden.hybrid_rrf_ef2000.latency_s.p95|0.3|s;b:Qdrant in our own container · hybrid p95|selfhost.query.golden.hybrid_rrf.latency_s.p95|0.3|s|1" style="left:100px;top:240px;width:1000px;height:330px"></div>
-  <div class="store-col" style="left:1140px;top:240px;width:360px">
-    <p>Nearly all of it is the trip across the Atlantic. Put the app in the same region as the store.</p>
-    <p class="small">An earlier run, another Modal container: round trip <span data-st="cloud_run1.rtt_ms.p50" data-f="ms"></span>, hybrid p50 <span data-st="cloud_run1.hybrid_latency_s.p50" data-f="s2ms"></span>.</p>
-    <p class="step">The same code against Qdrant in our own container: a few milliseconds (small segments, scanned exactly).</p>
+<section class="slide" data-plate="Checklist · 9 · Where One Question’s Time Goes">
+  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">9 · Where one question’s time goes</h2><p class="sub" style="font-size:22px">Emma’s pipeline, each part measured on Modal in the US, median. The store is in Frankfurt.</p></div>
+  <div class="fig store-wide" data-fig="store_bars" data-rows="embed the question (CPU)|latency.default_region.embed.p50|4000|ms;round trip to the store|latency.default_region.rtt.p50|4000|ms;search inside the store|latency.default_region.server_hybrid.p50|4000|ms;b:rerank the top 20 · CPU|rerank.cpu.rerank_20.p50_ms|4000|ms|1;hi:rerank the top 20 · GPU|rerank.gpu.rerank_20.p50_ms|4000|ms|1;b:write the answer|latency.default_region.answer_model.p50|4000|ms|2" data-cap="Embed: bge-small on the container’s CPU. Search inside the store: the time Qdrant itself reports for the hybrid request. Answer: gemini-3.8-flash from the top 5, 5 calls. Rerank: bge-reranker-base over 20 candidates, 4-vCPU container or an L4 GPU (logs/v5_lexical_rerank_latency.json). The rest: logs/v5_store_latency.json, 30 golden questions." style="left:100px;top:230px;width:1000px;height:360px"></div>
+  <div class="store-col" style="left:1140px;top:230px;width:360px">
+    <p>The store’s own search: <b><span data-st="latency.default_region.server_hybrid.p50" data-f="ms"></span></b>. The trip to it: <b><span data-st="latency.default_region.rtt.p50" data-f="ms"></span></b>.</p>
+    <p class="step">The reranker on a CPU costs seconds. On a GPU: <span data-st="rerank.gpu.rerank_20.p50_ms" data-f="ms"></span>.</p>
+    <p class="step">The answer model is the largest part, and it is not the store’s.</p>
   </div>
-  <div class="store-kpi step" style="left:100px;top:690px;width:1400px">
-    <div class="m"><div class="v">$0</div><div class="k">a month, on the free tier</div></div>
-    <div class="m"><div class="v" data-st="dashboard.usage_after_ingest.disk_used_mib" data-f="mib"></div><div class="k">disk used, of 4 GiB</div></div>
-    <div class="m"><div class="v" data-st="dashboard.usage_after_ingest.ram_used_mib" data-f="mib"></div><div class="k">RAM used, of 1 GiB</div></div>
-    <div class="m"><div class="v" data-st="ingest.count" data-f="n"></div><div class="k">points, with text and payload</div></div>
-  </div>
+  <div class="store-pin step" style="left:100px;top:660px;width:1400px">But an agent searches several times per question, and each search pays the trip again. Of all the parts, the round trips are the ones you can cut without changing a model.</div>
 </section>
 
-<section class="slide" data-plate="Walkthrough · 11 · When the Model Changes">
+<section class="slide" data-plate="Checklist · 9 · Cutting Round Trips">
+  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">Five ways to cut round trips</h2><p class="sub" style="font-size:22px">Measured on our cluster from Modal, p50, 30 golden questions: before, after.</p></div>
+  <div class="fig" data-fig="store_levers" style="left:100px;top:210px;width:1400px;height:640px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Checklist · 10 · An Alias for the Next Model">
   <div class="store-col" style="left:100px;top:118px;width:460px">
-    <h2>A new model means a new index</h2>
+    <h2 style="font-size:40px">10 · A new model means a new index</h2>
     <p>Vectors from two models do not mix. Change the model and every chunk must be embedded again.</p>
-    <p class="step">So the app never names a collection. It queries an <b>alias</b>, <code>northbridge</code>.</p>
+    <p class="step">So from day one the app never names a collection. It queries an <b>alias</b>, <code>northbridge</code>.</p>
     <p class="step">Build the new collection beside the old, run the golden set on it, then switch the alias in one atomic call. Roll back the same way.</p>
   </div>
   <div class="fig" data-fig="store_code" data-code="alias" data-hl=";1;2-3;4-7" style="left:600px;top:150px;width:900px;height:260px"></div>
-  <div class="store-pin step" style="left:600px;top:450px;width:900px">Ours: alias <b>northbridge</b> → <b><span data-st="ingest.alias.northbridge"></span></b>. Every query in this walkthrough went through it.</div>
+  <div class="store-pin step" style="left:600px;top:450px;width:900px">Ours: alias <b>northbridge</b> → <b><span data-st="ingest.alias.northbridge"></span></b>. Every query in this section went through it.</div>
 </section>
 
 <section class="slide q hero" data-plain="1">
@@ -271,8 +260,8 @@
     <p class="q-label">Check · Where the vectors live</p>
     <ol class="chk-list">
       <li><span class="chk-q"><b>1</b>Who adds Emma’s filter?</span><span class="chk-a step">The search service, from the signed-in user’s role. The model never sees an option to skip it, so no prompt can talk it out of it.</span></li>
-      <li><span class="chk-q"><b>2</b>Chroma’s filter on the dump cost how much, and why did Qdrant’s not?</span><span class="chk-a step">p50 <span data-st="local.dump.latency_ms.plain.p50" data-f="ms"></span> → <span data-st="local.dump.latency_ms.where_not_superseded.p50" data-f="ms"></span> in Chroma. Qdrant filters inside the graph on a payload index: <span data-st="cloud.filter_latency_ms.none.p50" data-f="ms"></span> → <span data-st="cloud.filter_latency_ms.emma.p50" data-f="ms"></span>, network included.</span></li>
-      <li><span class="chk-q"><b>3</b>You switch from bge-small to a 768-d model. What happens to the collection?</span><span class="chk-a step">A new collection with size 768, every chunk embedded again, the golden set rerun on it, then one alias switch. The old one stays until you are sure.</span></li>
+      <li><span class="chk-q"><b>2</b>After the superseded filter, the 2016 intranet page still came first for Q-605. Why, and what fixes it?</span><span class="chk-a step">Nothing in the page says it is old, so its metadata is empty and the filter cannot see it. A rule at parse time (everything in the 2016 intranet export is history) sets <code>superseded</code>.</span></li>
+      <li><span class="chk-q"><b>3</b>Your app is in the US, the store in Frankfurt, and the agent sends ten searches per question. What cuts the most?</span><span class="chk-a step">Run the app next to the store (round trip <span data-st="latency.default_region.rtt.p50" data-f="ms"></span> → <span data-st="latency.eu.rtt.p50" data-f="ms"></span>), and send the ten as one batch (<span data-st="latency.suite_default_region.rest.ten_sequential.p50" data-f="ms"></span> → <span data-st="latency.suite_default_region.rest.ten_one_batch.p50" data-f="ms"></span> from the US).</span></li>
     </ol>
   </div>
 </section>

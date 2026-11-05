@@ -12,7 +12,7 @@ const fx = (n, d = 2) => (n == null ? '–' : Number(n).toFixed(d));
 const stop = (e) => e.stopPropagation();
 const need = (el, what) => { el.innerHTML = `<div class="todo-card"><span class="todo-k">TODO(lexical data)</span><div>${esc(what)}</div></div>`; return { step() {} }; };
 const show = (el, k) => el.querySelectorAll('[data-s]').forEach((x) => x.classList.toggle('lexical-hide', +x.dataset.s > k));
-const C = { bm: '#138a60', de: '#0b57d0', rf: '#7a5af5', rr: '#121317', gold: '#b7791f', zero: '#c9ccd3', ink3: '#6b6e76' };
+const C = { ps: '#c2500f', pl: '#9b2f7a', bm: '#138a60', de: '#0b57d0', rf: '#7a5af5', rr: '#121317', gold: '#b7791f', zero: '#c9ccd3', ink3: '#6b6e76' };
 const chunkName = (k) => { const c = X().chunks[k]; return `chunk ${k} · ${c.name}`; };
 const goldD = (k) => X().chunks[k].facts.length > 0;
 const goldTag = (t = 'answer') => `<span class="lexical-gold">${esc(t)}</span>`;
@@ -29,20 +29,6 @@ const bind = () => {
 };
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
 
-/* syntax colours for Python lines (comments, strings, numbers, keywords) */
-const KW = /^(def|return|for|in|if|else|import|from|not|and|or|None|True|False|is|lambda|with|as|class|self)$/;
-const hl = (line) => {
-  const re = /(#.*$)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(\b\d[\d_.]*\b)|([A-Za-z_]\w*)/g;
-  let out = '', last = 0, m;
-  while ((m = re.exec(line))) {
-    out += esc(line.slice(last, m.index));
-    if (m[1]) out += `<span class="cmt">${esc(m[1])}</span>`; else if (m[2]) out += `<span class="st">${esc(m[2])}</span>`;
-    else if (m[3]) out += `<span class="nu">${esc(m[3])}</span>`; else out += KW.test(m[4]) ? `<span class="kw">${m[4]}</span>` : esc(m[4]);
-    last = re.lastIndex;
-  }
-  return out + esc(line.slice(last));
-};
-
 /* ================================================================ 1 · tokenize, one rule per click */
 FIGS.lexical_tok = (el) => {
   const d = X(); if (!d) return need(el, 'tokenize trace');
@@ -51,15 +37,15 @@ FIGS.lexical_tok = (el) => {
   const kept = rows.filter((r) => !r.stop);
   el.innerHTML = `<div class="lexical-tok">
     <div class="row"><div class="lab"><b>Emma types</b>One sentence, ${T.text.length} characters</div><div class="lexical-sent">${esc(T.text)}</div></div>
-    <div class="row lexical-tr" data-s="1"><div class="lab"><b>1 · Lower-case and split</b>A word is a run of letters, digits or £</div>
+    <div class="row lexical-tr" data-s="1"><div class="lab"><b>1 · Lower-case and split</b>Split on anything that is not a letter, digit or £</div>
       <div class="lexical-chips">${rows.map((r) => chip(esc(r.word))).join('')}</div></div>
     <div class="row lexical-tr" data-s="2"><div class="lab"><b>2 · Drop stop words</b>${d.stop_n} common words in <code>rag.STOP</code></div>
       <div class="lexical-chips">${rows.map((r) => chip(esc(r.word), r.stop ? 'stop' : '')).join('')}</div></div>
     <div class="row lexical-tr" data-s="3"><div class="lab"><b>3 · Light stemming</b>Drop a plural s (ies → y) from words longer than four letters</div>
       <div class="lexical-chips">${kept.map((r) => (r.token !== r.word ? chip(`${esc(r.word)} <span class="ar">→</span> ${esc(r.token)}`, 'stem') : chip(esc(r.word)))).join('')}</div></div>
-    <div class="row lexical-tr" data-s="4"><div class="lab"><b>What BM25 searches for</b>${T.tokens.length} tokens</div>
+    <div class="row lexical-tr" data-s="4"><div class="lab"><b>What BM25 searches for</b>${T.tokens.length} words</div>
       <div><div class="lexical-chips">${T.tokens.map((t) => chip(esc(t), t === 'they' ? 'warn' : 'tok')).join('')}</div>
-      <p class="lexical-note" style="margin:12px 0 0">“£104” stays one token. “they” is not on the stop list, so it stays: a real wart we will see again.</p></div></div>
+      <p class="lexical-note" style="margin:12px 0 0">“£104” stays one word. “they” is not on the stop list, so it stays: a real wart we will see again.</p></div></div>
   </div>`;
   return { step(k) { show(el, k); } };
 };
@@ -70,8 +56,8 @@ FIGS.lexical_codes = (el) => {
   const V = d.variants, gold = d.err_gold[0];
   const top = (t) => (t.cite === gold ? '<b>the ERR-PO-0412 entry</b>' : esc(t.cite.replace(/^MAN-ERR-72 v7\.2\.3, pp?\.[\d-]+, /, '')));
   const rows = [['parts_only', 'Split only', 'err · po · 0412 as three words'], ['whole_only', 'Whole only', 'err-po-0412 as one word'],
-    ['course', 'Whole and split', 'rag.tokenize: both']];
-  el.innerHTML = `<table class="lexical-t"><thead><tr><th style="width:230px">Tokenizer</th><th>The question becomes</th>
+    ['course', 'Whole and split', 'our word splitter: both']];
+  el.innerHTML = `<table class="lexical-t"><thead><tr><th style="width:230px">How the code is split</th><th>The question becomes</th>
       <th class="n" style="width:150px">ERR-PO-0412 entry<span class="sub" style="text-transform:none;letter-spacing:0">rank in MAN-ERR-72</span></th>
       <th style="width:330px">Ranked first</th>
       <th class="n lexical-tr" data-s="3" style="width:200px">Typed “${esc(d.variant_queries.typed)}”<span class="sub" style="text-transform:none;letter-spacing:0">MAN-ERR-72 · whole dump</span></th></tr></thead>
@@ -84,16 +70,22 @@ FIGS.lexical_codes = (el) => {
   return { step(k) { show(el, k); } };
 };
 
-/* ================================================================ 3 · which chunks hold which words */
+/* ================================================================ 3 · which chunks hold which words
+   Two labelled groups of rows: Emma's words (after our word splitter), then the words D itself uses for the same ideas,
+   which BM25 never matches to hers because it matches exact words. */
 FIGS.lexical_tf = (el) => {
   const d = X(); if (!d) return need(el, 'term counts');
-  const q = [...new Set(d.tok.Q.tokens)], extra = [['bought', 1, 'alt'], ['buys', 1, 'alt'], ['quotation', 1, 'alt'], ['purchase', 2, 'hd'], ['policy', 2, 'hd']];
-  const n = d.chunks.length;
-  const row = (t, s, cls = '') => { const v = d.tf[t], nz = v.filter((x) => x > 0).length;
-    return `<tr class="lexical-tr ${nz ? '' : 'z0'}" data-s="${s}" data-t="${esc(t)}"><td class="lexical-term">${esc(t)}</td>${v.map((x) => `<td class="lexical-cnt ${x ? 'on ' + cls : ''}">${x || '·'}</td>`).join('')}<td class="lexical-sum">${nz ? `${nz} of ${n}` : 'none'}${cls === 'alt' ? ' · D’s word' : cls === 'hd' ? ' · header line' : ''}</td></tr>`; };
-  el.innerHTML = `<table class="lexical-t lexical-tf"><thead><tr><th style="width:150px">Token</th>${d.chunks.map((c) => `<th class="cn" title="${esc(c.name)}">${c.k}</th>`).join('')}<th style="padding-left:14px">Chunks</th></tr></thead>
-    <tbody>${q.map((t) => row(t, 0)).join('')}${extra.map(([t, s, c]) => row(t, s + 1, c)).join('')}</tbody></table>
-    <div class="lexical-note" style="margin-top:14px">Columns are D’s chunks 0 to 14. Chunk 1 is a version-history line, 4 is §5 Approval limits, 5 is §6 Supplier qualification (the rule), 12 is the FAQ on battery packs.</div>`;
+  const q = [...new Set(d.tok.Q.tokens)];
+  const alt = [['bought', 'buy'], ['buys', 'buy'], ['purchase', 'buy'], ['quotation', 'quote']];
+  const n = d.chunks.length, cols = n + 2;
+  const row = (t, s, cls, forw) => { const v = d.tf[t], nz = v.filter((x) => x > 0).length;
+    return `<tr class="lexical-tr ${nz ? '' : 'z0'}" data-s="${s}"><td class="lexical-term">${esc(t)}${forw ? `<span class="for">for “${esc(forw)}”</span>` : ''}</td>${v.map((x) => `<td class="lexical-cnt ${x ? 'on ' + cls : ''}">${x || '·'}</td>`).join('')}<td class="lexical-sum">${nz ? `${nz} of ${n}` : 'none'}</td></tr>`; };
+  el.innerHTML = `<table class="lexical-t lexical-tf"><thead><tr><th style="width:230px">Word</th>${d.chunks.map((c) => `<th class="cn" title="${esc(c.name)}">${c.k}</th>`).join('')}<th style="padding-left:14px">Chunks</th></tr></thead>
+    <tbody><tr class="grp"><td colspan="${cols}">Emma’s words<span>her question after our word splitter: what BM25 looks for</span></td></tr>
+    ${q.map((t) => row(t, 0, '')).join('')}
+    <tr class="grp alt lexical-tr" data-s="2"><td colspan="${cols}">D’s own words for the same ideas<span>BM25 does not match these to Emma’s words: it matches exact words only</span></td></tr>
+    ${alt.map(([t, f]) => row(t, 2, 'alt', f)).join('')}</tbody></table>
+    <div class="lexical-note lexical-tr" data-s="3" style="margin-top:8px">“bought” is not “buy”, so these counts add nothing to Emma’s score. “purchase” is in all 15: every chunk’s header line says it.</div>`;
   return { step(k) { show(el, k); el.querySelectorAll('tr.z0').forEach((r) => r.classList.toggle('empty', k >= 1 && +r.dataset.s === 0)); } };
 };
 
@@ -102,7 +94,7 @@ FIGS.lexical_df = (el) => {
   const d = X(); if (!d) return need(el, 'df');
   const terms = [...new Set(d.tok.Q.tokens), 'purchase', 'order'].sort((a, b) => d.df[a].df_all - d.df[b].df_all);
   const lg = (v) => (v <= 0 ? 0 : Math.log10(v + 1) / Math.log10(d.n_all + 1));
-  el.innerHTML = `<table class="lexical-t"><thead><tr><th style="width:140px">Token</th><th style="width:330px">Chunks of D that contain it <span class="sub" style="text-transform:none;letter-spacing:0">of 15</span></th>
+  el.innerHTML = `<table class="lexical-t"><thead><tr><th style="width:140px">Word</th><th style="width:330px">Chunks of D that contain it <span class="sub" style="text-transform:none;letter-spacing:0">of 15</span></th>
      <th class="lexical-tr" data-s="1">Chunks of the whole dump <span class="sub" style="text-transform:none;letter-spacing:0">of ${nf(d.n_all)} (log scale)</span></th></tr></thead><tbody>
     ${terms.map((t) => { const r = d.df[t], ctr = t === 'purchase' || t === 'order';
       return `<tr><td class="lexical-mono" style="font-size:18px;${ctr ? 'color:var(--ink-3)' : ''}">${esc(t)}</td>
@@ -135,12 +127,12 @@ FIGS.lexical_idf = (el) => {
 /* ================================================================ 6 · term-frequency saturation (k1 slider) */
 FIGS.lexical_sat = (el) => {
   const d = X(); if (!d) return need(el, 'k1');
-  const W = 860, H = 470, L = 50, R = 30, T = 30, B = 60, xmax = 12, ymax = 4;
+  const W = 860, H = 410, L = 50, R = 30, T = 24, B = 58, xmax = 12, ymax = 4;
   let k1 = d.k1, shown = 0;
   const xs = (t) => L + ((W - L - R) * t) / xmax, ys = (v) => T + (H - T - B) * (1 - Math.min(v, ymax) / ymax);
   const f = (t) => (t * (k1 + 1)) / (t + k1);   // at average chunk length (the length factor is 1)
   el.innerHTML = `<svg width="${W}" height="${H}" class="lexical-enc"></svg>
-    <div class="lexical-ctl" style="margin-top:6px"><span>k1</span><input type="range" min="0.2" max="3" step="0.1" value="${k1}"><output></output><span class="lexical-note" style="margin-left:10px">rag.BM25 uses k1 = 1.2</span></div>`;
+    <div class="lexical-ctl" style="margin-top:6px"><span>k1</span><input type="range" min="0.2" max="3" step="0.1" value="${k1}"><output></output><span class="lexical-note" style="margin-left:10px">rag.BM25: k1 = 1.2 · at average length</span></div>`;
   const svg = el.querySelector('svg'), inp = el.querySelector('input'), out = el.querySelector('output');
   ['click', 'pointerdown', 'mousedown', 'touchstart'].forEach((ev) => inp.addEventListener(ev, stop));
   inp.addEventListener('input', () => { k1 = +inp.value; draw(); });
@@ -149,25 +141,25 @@ FIGS.lexical_sat = (el) => {
     let s = '';
     for (let v = 0; v <= ymax; v++) s += `<line x1="${L}" x2="${W - R}" y1="${ys(v)}" y2="${ys(v)}" stroke="#e1e5ea"/><text x="${L - 12}" y="${ys(v) + 6}" text-anchor="end" style="font:15px var(--mono);fill:#6b6e76">${v}</text>`;
     for (let t = 0; t <= xmax; t += 2) s += `<text x="${xs(t)}" y="${H - B + 26}" text-anchor="middle" style="font:15px var(--mono);fill:#6b6e76">${t}</text>`;
-    s += `<text x="${(L + W - R) / 2}" y="${H - 8}" text-anchor="middle" style="font:500 16px var(--font);fill:#45474d">times the word appears in the chunk (tf)</text>`;
-    s += `<text x="${L + 8}" y="${T + 6}" style="font:500 16px var(--font);fill:#45474d">weight, in units of idf</text>`;
+    s += `<text x="${(L + W - R) / 2}" y="${H - 8}" text-anchor="middle" style="font:500 16px var(--font);fill:#45474d">tf: times the word appears in this one chunk</text>`;
+    s += `<text x="${L + 8}" y="${T + 6}" style="font:500 16px var(--font);fill:${C.ps}">saturation part (multiplies idf)</text>`;
     // raw count
     s += `<line x1="${xs(0)}" y1="${ys(0)}" x2="${xs(ymax)}" y2="${ys(ymax)}" stroke="#9aa0aa" stroke-width="3" stroke-dasharray="7 6"/>`;
-    s += `<text x="${xs(ymax) + 8}" y="${ys(ymax) + 18}" style="font:500 16px var(--font);fill:#6b6e76">plain count: 10 mentions = 10</text>`;
+    s += `<text x="${xs(ymax) + 8}" y="${ys(ymax) + 18}" style="font:500 16px var(--font);fill:#6b6e76">plain count: 10 mentions count 10</text>`;
     if (shown >= 1) {
       let p = ''; for (let t = 0; t <= xmax + 1e-9; t += 0.1) p += `${p ? 'L' : 'M'}${xs(t).toFixed(1)},${ys(f(t)).toFixed(1)}`;
-      s += `<line x1="${L}" x2="${W - R}" y1="${ys(k1 + 1)}" y2="${ys(k1 + 1)}" stroke="${C.bm}" stroke-dasharray="3 5" opacity=".7"/>`;
-      s += `<text x="${W - R}" y="${ys(k1 + 1) - 8}" text-anchor="end" style="font:500 15px var(--font);fill:${C.bm}">ceiling k1 + 1 = ${(k1 + 1).toFixed(1)}</text>`;
-      s += `<path d="${p}" fill="none" stroke="${C.bm}" stroke-width="4"/>`;
+      s += `<line x1="${L}" x2="${W - R}" y1="${ys(k1 + 1)}" y2="${ys(k1 + 1)}" stroke="${C.ps}" stroke-dasharray="3 5" opacity=".7"/>`;
+      s += `<text x="${W - R}" y="${ys(k1 + 1) - 8}" text-anchor="end" style="font:500 15px var(--font);fill:${C.ps}">ceiling k1 + 1 = ${(k1 + 1).toFixed(1)}</text>`;
+      s += `<path d="${p}" fill="none" stroke="${C.ps}" stroke-width="4"/>`;
     }
     if (shown >= 2) [1, 2, 10].forEach((t) => {
-      s += `<circle cx="${xs(t)}" cy="${ys(f(t))}" r="7" fill="#fff" stroke="${C.bm}" stroke-width="3"/>`;
-      s += `<text x="${xs(t) + (t === 1 ? -12 : 0)}" y="${ys(f(t)) + (t === 1 ? -10 : 30)}" text-anchor="${t === 1 ? 'end' : 'middle'}" style="font:600 16px var(--mono);fill:${C.bm}">${f(t).toFixed(2)}</text>`;
+      s += `<circle cx="${xs(t)}" cy="${ys(f(t))}" r="7" fill="#fff" stroke="${C.ps}" stroke-width="3"/>`;
+      s += `<text x="${xs(t) + (t === 1 ? -12 : 0)}" y="${ys(f(t)) + (t === 1 ? -10 : 30)}" text-anchor="${t === 1 ? 'end' : 'middle'}" style="font:600 16px var(--mono);fill:${C.ps}">${f(t).toFixed(2)}</text>`;
     });
     svg.innerHTML = s;
     el.dispatchEvent(new CustomEvent('lexical-sat', { detail: { k1, f1: f(1), f2: f(2), f9: f(9), f10: f(10) } }));
     const pane = document.getElementById('lexical-sat-out');
-    if (pane) pane.innerHTML = `One mention: <b>${f(1).toFixed(2)}</b> · two: <b>${f(2).toFixed(2)}</b> · ten: <b>${f(10).toFixed(2)}</b>.<br>The tenth adds <b>${(f(10) - f(9)).toFixed(3)}</b>.`;
+    if (pane) pane.innerHTML = `With k1 = ${k1.toFixed(1)}: one mention <b>${f(1).toFixed(2)}</b> · two <b>${f(2).toFixed(2)}</b> · ten <b>${f(10).toFixed(2)}</b>. The tenth adds only <b>${(f(10) - f(9)).toFixed(3)}</b>.`;
   };
   draw();
   return { step(k) { shown = k; if (k === 0 && k1 !== d.k1) { k1 = d.k1; inp.value = k1; } draw(); } };
@@ -179,71 +171,52 @@ FIGS.lexical_len = (el) => {
   const A = d.chunks[1], Bc = d.chunks[5], idf = d.df.battery.idf_D, k1 = d.k1, avg = d.avgdl.D;
   let b = d.b;
   const flow = (s) => s.replace(/\n(?!\d+\.\d|\d+\. )/g, ' ');
-  const mark = (s) => esc(flow(s)).replace(/\b(battery|packs)\b/gi, '<mark>$1</mark>');
+  const mark = (s) => esc(s).replace(/\b(battery|packs)\b/gi, '<mark>$1</mark>');
+  // chunk 1 is short: shown whole. Chunk 5 (§6) is long: shown as its §6.2 clause, the part that holds "battery packs"
+  const s62 = (() => { const t = flow(Bc.body), i = t.indexOf('6.2 '), j = t.indexOf('6.3 '); return i >= 0 && j > i ? '… ' + t.slice(i, j).trim() + ' …' : t; })();
   const w = (c) => (idf * (k1 + 1)) / (1 + k1 * (1 - b + (b * c.dl) / avg));
   const logged = (c) => c.terms.find((t) => t.term === 'battery').w;
   el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-    ${[A, Bc].map((c) => `<div class="lexical-card ${c.k === 5 ? 'lexical-c-bm' : ''}"><span class="lexical-k">${esc(chunkName(c.k))}${c.k === 5 ? ' · holds §6.2 and §6.4' : ''}</span>
-      <div class="lexical-quote" style="font-size:${c.k === 5 ? 14.5 : 17}px;margin-top:0">${mark(c.body)}</div>
-      <div class="lexical-tr" data-s="1" style="margin-top:12px;font-size:20px"><b>${c.dl}</b> words after tokenize · |d| / avgdl = ${c.dl} / ${fx(avg, 1)} = <b>${fx(c.dl / avg, 3)}</b></div></div>`).join('')}
+    ${[[A, flow(A.body)], [Bc, s62]].map(([c, txt]) => `<div class="lexical-card ${c.k === 5 ? 'lexical-c-bm' : ''}" style="padding:14px 20px"><span class="lexical-k">${esc(chunkName(c.k))}${c.k === 5 ? ' · the rule, §6.2 shown' : ''}</span>
+      <div class="lexical-quote" style="font-size:16px;margin-top:0;white-space:normal">${mark(txt)}</div>
+      <div class="lexical-tr" data-s="1" style="margin-top:10px;font-size:20px">dl = <b class="lexical-pl">${c.dl}</b> words · dl / avgdl = ${c.dl} / ${fx(avg, 1)} = <b class="lexical-pl">${fx(c.dl / avg, 3)}</b></div></div>`).join('')}
   </div>
-  <div class="lexical-box lexical-tr" data-s="2" style="margin-top:18px;display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:14px;align-items:center;font-size:20px">
-    <div><span class="lexical-k">Length factor</span>1 − b + b · |d| / avgdl</div>
+  <div class="lexical-box lexical-tr" data-s="2" style="margin-top:14px;padding:12px 22px;display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:10px 14px;align-items:center;font-size:20px">
+    <div><span class="lexical-k">Length part</span><span class="lexical-pl">1 − b + b · dl / avgdl</span></div>
     <div class="lexical-mono" data-v="nA"></div><div class="lexical-mono" data-v="nB"></div>
-    <div class="lexical-tr" data-s="3"><span class="lexical-k">Weight of “battery” (tf = 1)</span>idf · 2.2 / (1 + 1.2 · factor)</div>
+    <div class="lexical-tr" data-s="3"><span class="lexical-k">Weight of “battery” (tf = 1)</span><span class="lexical-pi">${fx(idf, 2)}</span> · 2.2 / (1 + 1.2 · <span class="lexical-pl">length part</span>)</div>
     <div class="lexical-mono lexical-tr" data-s="3" data-v="wA" style="font-size:26px"></div><div class="lexical-mono lexical-tr" data-s="3" data-v="wB" style="font-size:26px;color:var(--lx-bm)"></div>
   </div>
-  <div class="lexical-ctl" style="margin-top:12px"><span>b</span><input type="range" min="0" max="1" step="0.05" value="${b}"><output></output><span class="lexical-note" data-v="note" style="margin-left:8px"></span></div>`;
+  <div class="lexical-ctl" style="margin-top:10px"><span>b</span><input type="range" min="0" max="1" step="0.05" value="${b}"><output></output><span class="lexical-note" data-v="note" style="margin-left:8px"></span></div>`;
   const inp = el.querySelector('input'), out = el.querySelector('output');
   ['click', 'pointerdown', 'mousedown', 'touchstart'].forEach((ev) => inp.addEventListener(ev, stop));
   const V = (k) => el.querySelector(`[data-v="${k}"]`);
   const draw = () => {
     out.textContent = b.toFixed(2);
     const fA = 1 - b + (b * A.dl) / avg, fB = 1 - b + (b * Bc.dl) / avg;
-    V('nA').innerHTML = `chunk 1: <b>${fx(fA, 3)}</b>`; V('nB').innerHTML = `chunk 5: <b>${fx(fB, 3)}</b>`;
+    V('nA').innerHTML = `chunk 1: <b class="lexical-pl">${fx(fA, 3)}</b>`; V('nB').innerHTML = `chunk 5: <b class="lexical-pl">${fx(fB, 3)}</b>`;
     V('wA').textContent = fx(w(A), 3); V('wB').textContent = fx(w(Bc), 3);
-    V('note').textContent = Math.abs(b - d.b) < 1e-9 ? `rag.BM25 (b = 0.75) logged ${fx(logged(A), 3)} and ${fx(logged(Bc), 3)}` : b === 0 ? 'b = 0: length is ignored' : '';
+    V('note').textContent = Math.abs(b - d.b) < 1e-9 ? `rag.BM25 (b = 0.75) stored ${fx(logged(A), 3)} and ${fx(logged(Bc), 3)}: the short chunk’s word weighs more` : b === 0 ? 'b = 0: length is ignored, both weigh the same' : '';
   };
   inp.addEventListener('input', () => { b = +inp.value; draw(); });
   draw();
   return { step(k) { show(el, k); } };
 };
 
-/* ================================================================ 8 · the BM25 sum for Emma on D */
+/* ================================================================ 8 · the BM25 sum for Emma on D (the five words D never uses share one column) */
 FIGS.lexical_score = (el) => {
   const d = X(); if (!d) return need(el, 'bm25 on D');
-  const terms = [...new Set(d.tok.Q.tokens)];
+  const all = [...new Set(d.tok.Q.tokens)];
+  const inD = all.filter((t) => d.df[t].df_D > 0), outD = all.filter((t) => !(d.df[t].df_D > 0));
   const rk = [...d.chunks].sort((a, b) => a.bm25_rank - b.bm25_rank);
   const top = rk.filter((c) => c.bm25 > 0), rest = rk.filter((c) => c.bm25 <= 0);
   const cell = (c, t) => { const x = c.terms.find((y) => y.term === t); return x && x.tf ? `<td class="n">${fx(x.w, 2)}<span class="sub">tf ${x.tf}</span></td>` : '<td class="n z">·</td>'; };
-  el.innerHTML = `<table class="lexical-t"><thead><tr><th style="width:330px">Chunk of D</th>${terms.map((t) => `<th class="n lexical-mono" style="text-transform:none;letter-spacing:0;font-size:15px">${esc(t)}</th>`).join('')}<th class="n">BM25</th><th class="n">Rank</th></tr></thead><tbody>
-    ${top.map((c, i) => `<tr class="lexical-tr" data-s="${i}" data-k="${c.k}"><td><b>${esc(chunkName(c.k))}</b>${goldD(c.k) ? ' ' + goldTag('holds §6.2, §6.4') : ''}<span class="sub">${c.dl} words</span></td>${terms.map((t) => cell(c, t)).join('')}<td class="n" style="font-size:21px;font-weight:600;color:var(--lx-bm)">${fx(c.bm25, 2)}</td><td class="n" style="font-size:21px">${c.bm25_rank}</td></tr>`).join('')}
-    <tr class="lexical-tr" data-s="${top.length - 1}"><td style="color:var(--ink-3)">The other ${rest.length} chunks</td>${terms.map(() => '<td class="n z">·</td>').join('')}<td class="n z">0</td><td class="n z">tie</td></tr>
+  el.innerHTML = `<table class="lexical-t"><thead><tr><th style="width:540px">Chunk of D</th>${inD.map((t) => `<th class="n lexical-mono" style="text-transform:none;letter-spacing:0;font-size:16px">${esc(t)}</th>`).join('')}
+      <th class="n lexical-mono" style="text-transform:none;letter-spacing:0;font-size:14px;width:310px">${outD.map(esc).join(' · ')}<span class="sub">in no chunk of D</span></th><th class="n">BM25 score</th><th class="n">Rank</th></tr></thead><tbody>
+    ${top.map((c, i) => `<tr class="lexical-tr" data-s="${i}" data-k="${c.k}"><td><b>${esc(chunkName(c.k))}</b>${goldD(c.k) ? ' ' + goldTag('holds §6.2, §6.4') : ''}<span class="sub">${c.dl} words</span></td>${inD.map((t) => cell(c, t)).join('')}<td class="n z">0</td><td class="n" style="font-size:21px;font-weight:600;color:var(--lx-bm)">${fx(c.bm25, 2)}</td><td class="n" style="font-size:21px">${c.bm25_rank}</td></tr>`).join('')}
+    <tr class="lexical-tr" data-s="${top.length - 1}"><td style="color:var(--ink-3)">The other ${rest.length} chunks: none of Emma’s words</td>${inD.map(() => '<td class="n z">·</td>').join('')}<td class="n z">0</td><td class="n z">0</td><td class="n z">tie</td></tr>
   </tbody></table>`;
   return { step(k) { show(el, k); el.querySelectorAll('tr[data-k]').forEach((r) => r.classList.toggle('hi2', k >= top.length && +r.dataset.k === 5)); } };
-};
-
-/* ================================================================ 9 · rag.BM25, each line tied to the formula */
-FIGS.lexical_code = (el) => {
-  const d = X(); if (!d) return need(el, 'code');
-  const build = d.code.bm25_build, query = d.code.bm25_query.filter((l) => !/import numpy|^\s*$/.test(l.t));
-  const groups = [
-    ['toks = tokenize(t)', 'dl.append', 'tf: dict', 'for w in toks', 'vocab.setdefault', 'tf[j] = tf.get'],
-    ['df = np.bincount', 'self.idf ='],
-    ['dl = np.array', 'avg = float', 'denom ='],
-    ['w = self.idf', 'self.W ='],
-    ['ids = sorted', 'if not ids', 'return np.zeros', 'self.W[:, ids].sum'],
-  ];
-  const which = (t) => groups.findIndex((g) => g.some((s) => t.includes(s)));
-  const line = (l, dd) => `<span class="ln" data-g="${which(l.t)}"><span class="no">${l.n}</span>${hl(l.t.slice(Math.min(dd, l.t.length - l.t.trimStart().length)))}</span>`;
-  el.innerHTML = `<div class="lexical-code" style="left:0;top:0;width:${el.clientWidth}px;height:542px"><span class="hd">rag.py · class BM25 · __init__: built once, for every chunk</span>${build.map((l) => line(l, 8)).join('')}</div>
-    <div class="lexical-code" style="left:0;top:560px;width:${el.clientWidth}px;height:${58 + 21 * query.length}px"><span class="hd">rag.py · BM25.scores: every question</span>${query.map((l) => line(l, 4)).join('')}</div>`;
-  const parts = document.querySelectorAll('.lexical-f .p');
-  return { step(k) {
-    el.querySelectorAll('.lexical-code').forEach((c) => c.classList.toggle('dim', k > 0));
-    el.querySelectorAll('.ln').forEach((l) => l.classList.toggle('on', k > 0 && +l.dataset.g === k - 1));
-    parts.forEach((p) => p.classList.toggle('on', k > 0 && (p.dataset.g || '').split(',').includes(String(k - 1))));
-  } };
 };
 
 /* ================================================================ 10 · where BM25 wins: the dense section's cases */
@@ -251,7 +224,7 @@ FIGS.lexical_wins = (el) => {
   const d = X(); if (!d || !d.cases || !d.cases.length) return need(el, 'dense failure cases (logs/v5_dense_failures.json)');
   const cs = d.cases.filter((c) => !/dense wins/.test(c.kind || ''));
   const carry = (c) => (c.gold_terms ? [...c.gold_terms.terms].filter((t) => t.w > 0).sort((a, b) => b.w - a.w).slice(0, 2) : []);
-  el.innerHTML = `<table class="lexical-t"><thead><tr><th style="width:250px">Case</th><th>Question</th><th class="n" style="width:120px">Dense<span class="sub" style="text-transform:none;letter-spacing:0">rank</span></th><th class="n lexical-tr" data-s="1" style="width:120px">BM25<span class="sub" style="text-transform:none;letter-spacing:0">rank</span></th><th class="lexical-tr" data-s="2" style="width:330px">Tokens that carried BM25<span class="sub" style="text-transform:none;letter-spacing:0">weight in the answer chunk</span></th></tr></thead><tbody>
+  el.innerHTML = `<table class="lexical-t"><thead><tr><th style="width:250px">Case</th><th>Question</th><th class="n" style="width:120px">Dense<span class="sub" style="text-transform:none;letter-spacing:0">rank</span></th><th class="n lexical-tr" data-s="1" style="width:120px">BM25<span class="sub" style="text-transform:none;letter-spacing:0">rank</span></th><th class="lexical-tr" data-s="2" style="width:330px">Words that carried BM25<span class="sub" style="text-transform:none;letter-spacing:0">weight in the answer chunk</span></th></tr></thead><tbody>
     ${cs.map((c) => { const win = c.bm25_rank < c.dense_rank;
       return `<tr><td style="font-size:17px"><b>${esc(c.kind)}</b></td><td style="font-size:17px">${esc(c.question)}</td>
         <td class="n" style="font-size:20px;color:var(--lx-de)">${nf(c.dense_rank)}</td>
@@ -299,7 +272,7 @@ FIGS.lexical_rrf = (el) => {
   const K = d.rrf_k;
   const rows = [...d.chunks].sort((a, b) => a.fused_rank - b.fused_rank).slice(0, 6);
   const frac = (r) => `1/(${K}+${r}) = ${(1 / (K + r)).toFixed(6)}`;
-  el.innerHTML = `<table class="lexical-t"><thead><tr><th style="width:360px">Chunk of D</th><th class="n">BM25 rank</th><th class="n lexical-tr" data-s="1">BM25 share</th><th class="n">Dense rank</th><th class="n lexical-tr" data-s="1">Dense share</th><th class="n lexical-tr" data-s="2">RRF score</th><th class="n lexical-tr" data-s="2">Fused rank</th></tr></thead><tbody>
+  el.innerHTML = `<table class="lexical-t"><thead><tr><th style="width:480px">Chunk of D</th><th class="n">BM25 rank</th><th class="n lexical-tr" data-s="1">BM25 share</th><th class="n">Dense rank</th><th class="n lexical-tr" data-s="1">Dense share</th><th class="n lexical-tr" data-s="2">RRF score</th><th class="n lexical-tr" data-s="2">Fused rank</th></tr></thead><tbody>
     ${rows.map((c) => `<tr data-k="${c.k}"><td><b>${esc(chunkName(c.k))}</b>${goldD(c.k) ? ' ' + goldTag('§6.2, §6.4') : ''}</td>
       <td class="n" style="color:var(--lx-bm);font-size:20px">${c.bm25_rank}</td><td class="n lexical-tr" data-s="1">${frac(c.bm25_rank)}</td>
       <td class="n" style="color:var(--lx-de);font-size:20px">${c.dense_rank}</td><td class="n lexical-tr" data-s="1">${frac(c.dense_rank)}</td>
@@ -309,7 +282,7 @@ FIGS.lexical_rrf = (el) => {
   return { step(k) { show(el, k); el.querySelectorAll('tr[data-k]').forEach((r) => r.classList.toggle('hi', k >= 3 && (r.dataset.k === '12' || r.dataset.k === '1'))); } };
 };
 
-/* ================================================================ 13 · the k in RRF (interactive) */
+/* ================================================================ 13 · the RRF constant (interactive; rag.RRF_K = 60) */
 FIGS.lexical_k = (el) => {
   const d = X(); if (!d) return need(el, 'rrf k');
   // the two lists exactly as fused in the run: on D [BM25, dense] (all 15 chunks); on the dump [dense, BM25] (top 20 each, rag.Retriever)
@@ -321,7 +294,7 @@ FIGS.lexical_k = (el) => {
     gold: (i) => { const r = info.get(i); return r.facts.length > 0 || r.gold_loc === 'page'; } };
   let cs = 'D', k = d.rrf_k;
   el.innerHTML = `<div class="lexical-ctl"><button data-c="D">Emma’s question · D, 15 chunks</button><button data-c="Q">ERR-PO-0412 · the dump, top 20 of each list</button>
-      <span style="margin-left:18px">k</span><input type="range" min="1" max="200" step="1" value="${k}"><output></output></div>
+      <span style="margin-left:18px">RRF constant</span><input type="range" min="1" max="200" step="1" value="${k}"><output></output></div>
     <div class="lexical-kout" style="margin-top:16px"></div>`;
   const inp = el.querySelector('input'), out = el.querySelector('output'), box = el.querySelector('.lexical-kout');
   ['click', 'pointerdown', 'mousedown', 'touchstart'].forEach((ev) => inp.addEventListener(ev, stop));
@@ -335,7 +308,7 @@ FIGS.lexical_k = (el) => {
       ${f.slice(0, 8).map(([id, s], i) => { const rb = S.bm.indexOf(id) + 1, rd = S.de.indexOf(id) + 1;
         return `<tr class="${S.gold(id) ? 'hi2' : ''}"><td class="n" style="font-size:20px">${i + 1}</td><td style="font-size:17px">${esc(S.name(id))}${S.gold(id) ? ' ' + goldTag(cs === 'D' ? '§6.2, §6.4' : 'answer') : ''}</td>
         <td class="n" style="color:var(--lx-bm)">${rb || '–'}</td><td class="n" style="color:var(--lx-de)">${rd || '–'}</td><td class="n" style="color:var(--lx-rf)">${s.toFixed(6)}</td></tr>`; }).join('')}
-      </tbody></table><div class="lexical-note" style="margin-top:10px">With k = ${k}, the first answer chunk is fused rank <b>${where || 'below 8'}</b>. ${cs === 'Q' ? 'BM25 alone ranks it 1st.' : 'BM25 ranks it 3rd, dense 3rd.'}</div>`;
+      </tbody></table><div class="lexical-note" style="margin-top:10px">With the RRF constant at ${k}, the first answer chunk is fused rank <b>${where || 'below 8'}</b>. ${cs === 'Q' ? 'BM25 alone ranks it 1st.' : 'BM25 ranks it 3rd, dense 3rd.'}</div>`;
   };
   el.querySelectorAll('button').forEach((b) => b.addEventListener('click', (e) => { stop(e); cs = b.dataset.c; draw(); }));
   inp.addEventListener('input', () => { k = +inp.value; draw(); });
@@ -408,6 +381,60 @@ FIGS.lexical_cost = (el) => {
   const lab = (ms) => (ms < 1 ? ms.toFixed(2) + ' ms' : ms < 1000 ? ms.toFixed(1) + ' ms' : (ms / 1000).toFixed(1) + ' s');
   el.innerHTML = `<div class="lexical-bars lexical-lat">${rows.map(([n, m, ms, col, s, mx]) => `<div class="lexical-bar lexical-tr" data-s="${s}"><div class="w">${n}<small>${m}</small></div><div class="trk"><i style="width:${pc(ms)}%;background:${col}"></i></div><div class="v">${mx ? lab(ms) + ' to ' + lab(mx) : lab(ms)}</div></div>`).join('')}
     <div class="lexical-bar" style="margin-top:2px"><div class="w"></div><div style="display:flex;justify-content:space-between;font:14.5px var(--mono);color:var(--ink-3)">${['0.1 ms', '1 ms', '10 ms', '100 ms', '1 s', '10 s', '100 s'].map((t) => `<span>${t}</span>`).join('')}</div><div></div></div></div>`;
+  return { step(k) { show(el, k); } };
+};
+
+/* ================================================================ 18 · the BM25 formula, three coloured parts
+   <div data-fig="lexical_formula" data-on="i|s|l|isl" data-sum="1">: idf (across all chunks), saturation (inside one
+   chunk) and length (inside one chunk, against the average). Parts not in data-on are dimmed. */
+FIGS.lexical_formula = (el) => {
+  const on = el.dataset.on || 'isl', sum = el.dataset.sum === '1';
+  const o = (p) => (on.includes(p) ? '' : ' off');
+  const lg = [
+    ['i', 'var(--lx-pi)', 'idf', 'across all chunks: how many contain the word'],
+    ['s', 'var(--lx-ps)', 'saturation', 'inside this chunk: how often the word appears (tf)'],
+    ['l', 'var(--lx-pl)', 'length', 'inside this chunk, against the average chunk'],
+  ];
+  el.innerHTML = `<div class="lexical-fx">
+    ${sum ? `<div class="sum">A chunk’s <b>score</b> = the sum of <b>weight(word, chunk)</b> over the question’s words that the chunk contains, where</div>` : ''}
+    <div class="eq"><span>weight(word, chunk) =</span><span class="lexical-pt pt-i${o('i')}">idf(word)</span><span>×</span>
+      <div class="lexical-pt pt-s${o('s')}"><div class="fx-num"><span class="tf">tf</span> · (k1 + 1)</div><div class="fx-den"><span class="tf">tf</span> + k1 · <span class="lexical-pt pt-l${o('l')}">(1 − b + b · dl / avgdl)</span></div></div></div>
+    <div class="lg">${lg.map(([p, c, n, t]) => `<span class="${on.includes(p) ? '' : 'off'}"><i style="background:${c}"></i><b style="color:${c}">${n}</b>${t}</span>`).join('')}</div>
+  </div>`;
+  return { step() {} };
+};
+
+/* ================================================================ 19 · when a question arrives: five steps, on chunk 12 and chunk 5
+   Every number is read from logs/v5_lexical_walk.json (rag.BM25 built on D's 15 chunks). */
+FIGS.lexical_walk = (el) => {
+  const d = X(); if (!d || !d.walk) return need(el, 'walk-through (logs/v5_lexical_walk.json)');
+  const W = d.walk, q = [...new Set(d.tok.Q.tokens)];
+  const P = [W.chunks[12], W.chunks[5]];
+  const chips = (c) => c.matched.map((m) => `<span class="wchip hit">${esc(m.word)} ×${m.tf}</span>`).join('')
+    + `</div><div class="nothere">not here: <span>${c.missing.map(esc).join(' · ')}</span>`;
+  const table = (c) => `<table class="lexical-t"><thead><tr><th>Word</th><th class="n" style="color:var(--lx-pi)">idf</th><th class="n" style="color:var(--lx-ps)">tf</th><th class="n" style="color:var(--lx-pl)">length</th><th class="n">weight</th></tr></thead><tbody>
+      ${c.matched.map((m) => `<tr><td class="lexical-mono">${esc(m.word)}</td><td class="n" style="color:var(--lx-pi)">${fx(m.idf, 2)}</td><td class="n" style="color:var(--lx-ps)">${m.tf}</td><td class="n" style="color:var(--lx-pl)">${fx(m.length_factor, 2)}</td><td class="n" style="font-weight:600">${fx(m.weight, 2)}</td></tr>`).join('')}</tbody></table>`;
+  const X0 = 270, PW = 555, GAP = 20, PT = 70;
+  const lab = (y, s, n, h, t) => `<div class="st lexical-tr" data-s="${s}" style="top:${y}px"><b>${n} · ${h}</b>${t}</div>`;
+  const ranks = W.order.map((k) => W.chunks[k]);
+  const top = ranks.filter((c) => c.score > 0), zero = ranks.filter((c) => c.score <= 0);
+  el.innerHTML = `<div class="lexical-walk">
+    ${lab(0, 0, 1, 'Split', 'the question into words')}
+    <div class="wchips" style="position:absolute;left:${X0}px;top:4px">${q.map((t) => `<span class="wchip hit">${esc(t)}</span>`).join('')}</div>
+    ${lab(PT + 66, 1, 2, 'Find', 'in each chunk, which of those words it holds, and how often')}
+    ${lab(PT + 158, 2, 3, 'Weigh', 'each word found: weight = <span class="lexical-pi">idf</span> × <span class="lexical-ps">tf</span> · 2.2 / (<span class="lexical-ps">tf</span> + 1.2 × <span class="lexical-pl">length</span>)')}
+    ${lab(PT + 276, 3, 4, 'Add', 'the weights: the chunk’s score')}
+    ${P.map((c, i) => `<div class="pan lexical-tr ${c.rank === 1 ? 'pan-top' : ''}" data-s="1" style="left:${X0 + i * (PW + GAP)}px;top:${PT}px;width:${PW}px;height:332px">
+      <h4>${esc(chunkName(c.k))}<small>${c.dl} words · ${c.matched.length} of Emma’s ${q.length} words found</small></h4>
+      <div class="wchips">${chips(c)}</div>
+      <div class="lexical-tr" data-s="2" style="margin-top:8px">${table(c)}</div>
+      <div class="tot lexical-tr" data-s="3"><span>${c.matched.map((m) => fx(m.weight, 2)).join(' + ')} =</span><b>${fx(c.score, 2)}</b></div></div>`).join('')}
+    ${lab(PT + 356, 4, 5, 'Sort', 'all 15 chunks by score')}
+    <div class="rk lexical-tr" data-s="4" style="position:absolute;left:${X0}px;top:${PT + 358}px;width:${2 * PW + GAP}px">
+      ${top.map((c) => `<span class="${c.k === 12 || c.k === 5 ? 'on' : ''}">${c.rank} · chunk ${c.k}<em>${fx(c.score, 2)}</em></span>`).join('')}
+      <span>${top.length + 1}–${ranks.length} · the other ${zero.length}<em>0, tied</em></span></div>
+    <div class="lexical-note lexical-tr" data-s="4" style="position:absolute;left:${X0}px;top:${PT + 418}px;width:${2 * PW + GAP}px">Only words a chunk contains add to its score: the five Emma words D never uses add nothing anywhere. §6, the rule, comes third.</div>
+  </div>`;
   return { step(k) { show(el, k); } };
 };
 })();

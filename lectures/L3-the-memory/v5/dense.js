@@ -2,7 +2,22 @@
    Figures are registered as FIGS.dense_<fig>; every number, chunk and vector comes from window.L3V5.dense
    (v5/dense_data.js, written by experiments/v5_dense_build.py from logs/v5_dense*.json). Nothing typed in by hand.
    The 3D space is a small hand-written canvas renderer: drag to rotate, hover or click a point to read its chunk.
-   It never listens to keys, and it stops its own clicks so the deck does not advance while you drag. */
+   It never listens to keys, and it stops its own clicks so the deck does not advance while you drag.
+
+   FIGS.dense_flow · RAG in one figure (reusable by any section). Indexing, once: parse → chunk → embed each chunk → store;
+   each question: question → embed it → find the k nearest (cosine) → build the prompt → answer with citations.
+   Options, as attributes on the figure element:
+     data-stage="chunk"   light one stage and dim the rest: parse | chunk | embed | store | query | nearest | prompt | answer
+                          (with data-hybrid also bm25 | rrf | rerank). A comma list lights several: data-stage="query,nearest".
+     data-hybrid="1"      add the later pieces: a BM25 keyword branch beside dense, RRF fusion (the RRF constant, 60), the
+                          reranker (bge-reranker-base over the top 20), then the top k go to the prompt.
+     data-mini="1"        the compact "you are here" strip: the same boxes, labels only. About 420 × 56 px; with data-hybrid
+                          give it about 600 × 88 px.
+     data-build="1"       reveal box by box on the slide's clicks (put that many .step spans on the slide): 8 clicks, or 11
+                          with data-hybrid. Without it everything shows at once.
+     data-values="emma"   fill every box with Emma's real run on D (the recap slide). Default: what each box does, with D's
+                          real sizes.
+   Size: the full figure is laid out for about 1400 × 560–600 px (box heights follow the element's height). */
 (() => {
 const FIGS = (window.FIGS = window.FIGS || {});
 const DD = () => (window.L3V5 && window.L3V5.dense) || null;
@@ -302,16 +317,132 @@ FIGS.dense_full = (el) => {
   return { step(k) { el.classList.toggle('on', k >= 1); } };
 };
 
-/* ============================================================ FIGS.dense_flow: chunk → 384 numbers ==========
-   Six boxes in two rows, one per click, with the selected chunk's real pieces and numbers inside. */
+/* ============================================================ FIGS.dense_flow: RAG in one figure ==========
+   Options are documented at the top of this file. Boxes are HTML on a grid; arrows are one SVG underneath. */
+let flowSeq = 0;
+const FLOW_STAGES = { parse: ['parse'], chunk: ['chunk'], embed: ['embed'], store: ['store'], query: ['ask', 'qembed'],
+  nearest: ['nearest'], prompt: ['prompt'], answer: ['answer'], bm25: ['bm25'], rrf: ['rrf'], rerank: ['rerank'] };
 FIGS.dense_flow = (el) => {
+  const d = DD(); if (!d) return need(el, 'v5/dense_data.js');
+  const hyb = el.dataset.hybrid === '1', mini = el.dataset.mini === '1', build = el.dataset.build === '1' && !mini;
+  const emma = el.dataset.values === 'emma' && !mini;
+  const P = d.play['s200-o15'], s = d.selected, mi = d.model_info, top = P.order.slice(0, 5).map((i) => P.chunks[i]);
+  const tk5 = P.topk[4];
+  const nDump = d.dump_check.n_chunks;
+  const col = (x) => (x >= 0 ? `rgba(11,87,208,${Math.min(1, Math.abs(x) * 9).toFixed(2)})` : `rgba(196,81,31,${Math.min(1, Math.abs(x) * 9).toFixed(2)})`);
+  const strip = `<div class="dense-pf-strip">${s.vector.map((x) => `<i style="background:${col(x)}"></i>`).join('')}</div>`;
+  const tag = (c) => { const t = c.short.replace(/^#\d+ /, ''); return /^§/.test(t) ? t.split(' ')[0] : /^App(endix|\.) ([A-C])/.test(t) ? 'App. ' + /^App(?:endix|\.) ([A-C])/.exec(t)[1] : t === 'Version history' ? 'change log' : t; };
+  const pasted = window.L3 && L3.paste && L3.paste.sample ? L3.paste.sample.tokens_in_per_q : null;   // the previous section's run
+  const top5 = `<ol class="dense-pf-top">${top.map((c, r) => `<li class="${c.has62 ? 'g' : ''}"><span>${r + 1}</span><em><b>#${c.i}</b> ${esc(tag(c))}</em><code>${c.cos.toFixed(3)}</code></li>`).join('')}</ol>`;
+  // columns: the question's embed sits under the chunks' embed (same model); the search sits under the store
+  const ON = hyb ? { ask: 2, qembed: 3, nearest: 4, rrf: 5, rerank: 6, prompt: 7, answer: 8 } : { ask: 2, qembed: 3, nearest: 4, prompt: 5, answer: 6 };
+  const nodes = [
+    { id: 'parse', lane: 0, c: 1, o: 0, key: 'Parse', mini: 'parse',
+      body: emma ? `POL-PUR-001 v4.1, ${d.pages.length} pages → <b>${d.n_units}</b> units, <b>${fmt(d.doc_tokens)}</b> tokens` : 'Each file becomes text that keeps its headings, tables and page numbers.',
+      foot: emma ? 'structured parser' : `D: ${d.n_units} units, ${fmt(d.doc_tokens)} tokens` },
+    { id: 'chunk', lane: 0, c: 2, o: 1, key: 'Chunk', mini: 'chunk',
+      body: emma ? `<b>${P.n}</b> chunks, ${Math.round(P.tokens_mean)} tokens on average. §6.1 to §6.4 all in <b>#${s.i}</b>.` : 'Cut into pieces of about 200 tokens, on section edges, each with a header line naming its document.',
+      foot: emma ? `#${s.i} = ${s.o200k_tokens} tokens` : `D: ${P.n} chunks` },
+    { id: 'embed', lane: 0, c: 3, o: 2, key: 'Embed each chunk', mini: 'embed',
+      body: (emma ? `${P.n} chunks × <b>${mi.dim}</b> numbers. Chunk #${s.i}:` : `bge-small turns each chunk into <b>${mi.dim}</b> numbers. Chunk #${s.i}:`) + strip,
+      foot: hyb ? '' : 'blue above 0, ember below' },
+    { id: 'store', lane: 0, c: 4, o: 3, key: 'Store', mini: 'store',
+      body: emma ? `D’s <b>${P.n}</b> vectors, each with its text and citation.` : 'Keep each vector with its text and where it came from.',
+      foot: `the whole dump: ${fmt(nDump)} chunks` },
+    { id: 'ask', lane: 1, c: ON.ask, o: 4, key: 'Question', mini: 'question',
+      body: `<span class="dense-pf-q">${esc(d.question)}</span>`, foot: 'Emma · Q-EMMA' },
+    { id: 'qembed', lane: 1, c: ON.qembed, o: 4, key: 'Embed it', mini: 'embed',
+      body: emma ? `Search instruction + question: <b>${s.query_pieces.length}</b> pieces → <b>${mi.dim}</b> numbers.` : `The same model, with bge’s search instruction in front: <b>${mi.dim}</b> numbers.`,
+      foot: hyb ? '' : 'same space as the chunks' },
+    { id: 'nearest', lane: 1, c: ON.nearest, o: 5, key: hyb ? 'Dense: nearest' : 'Find the k nearest', mini: hyb ? 'dense' : 'top k',
+      body: emma ? top5 : hyb ? 'Cosine to every stored chunk: a ranked list.' : 'Cosine between the question and every stored chunk. Keep the <b>k</b> highest.',
+      foot: emma ? `k = 5 · §6 (#${s.i}) is 3rd` : hyb ? '' : 'k = how many go to the model; here 5' },
+    ...(hyb ? [
+      { id: 'bm25', lane: 2, c: ON.nearest, o: 6, key: 'Keywords: BM25', mini: 'BM25', body: 'Score the same chunks by the question’s rare words.', foot: '' },
+      { id: 'rrf', lane: 1, c: ON.rrf, o: 7, key: 'Fuse: RRF', mini: 'RRF', body: 'Add 1 / (60 + rank) from each list. 60 is the RRF constant.', foot: '' },
+      { id: 'rerank', lane: 1, c: ON.rerank, o: 8, key: 'Rerank', mini: 'rerank', body: 'bge-reranker-base re-reads the top 20; keep the best k.', foot: '' },
+    ] : []),
+    { id: 'prompt', lane: 1, c: ON.prompt, o: hyb ? 9 : 6, key: 'Build the prompt', mini: 'prompt',
+      body: emma ? `Her question, then the 5 chunks: <b>${fmt(tk5.tokens)}</b> tokens, <b>${Math.round(tk5.answer_tokens)}</b> of them §6.2 and §6.4.`
+        : hyb ? 'Question + the k chunks, with citations.' : 'Instructions, the question, and the k chunks, each with its citation.',
+      foot: emma && pasted ? `pasting the 648-file part: ${fmt(pasted)} tokens` : '' },
+    { id: 'answer', lane: 1, c: ON.answer, o: hyb ? 10 : 7, key: 'Cited answer', mini: 'answer',
+      body: emma ? 'Has what it needs: §6.2, certificate on file first; §6.4, not on price alone.'
+        : hyb ? 'From those chunks only, citing them.' : 'The model answers from those chunks only and cites them, so a person can check.',
+      foot: hyb ? '' : `cites “${esc(s.cite)}”` },
+  ];
+  if (hyb && !emma) {   // eight narrow columns: short titles and one-line jobs
+    const H8 = { parse: ['Parse', 'Text with its headings, tables and pages.'], chunk: ['Chunk', 'About 200 tokens, on section edges.'],
+      embed: ['Embed', `bge-small: ${mi.dim} numbers per chunk.`], store: ['Store', 'Vector, text and citation per chunk.'],
+      ask: ['Question', `<span class="dense-pf-q">${esc(d.question)}</span>`], qembed: ['Embed it', `The same model, ${mi.dim} numbers.`],
+      nearest: ['Dense', 'Cosine to every stored chunk: a ranked list.'], bm25: ['BM25', 'Scores the same chunks by the question’s rare words.'],
+      rrf: ['RRF', 'Adds 1 / (60 + rank) from each list. 60 is the RRF constant.'], rerank: ['Rerank', 'bge-reranker-base re-reads the top 20, keeps the best k.'],
+      prompt: ['Prompt', 'The question and the top k chunks, with citations.'], answer: ['Answer', 'From those chunks only, citing them.'] };
+    for (const n of nodes) if (H8[n.id]) { [n.key, n.body] = H8[n.id]; n.foot = ''; }
+  }
+  const brackOrd = hyb ? 11 : 8;
+  const lit = new Set((el.dataset.stage || '').split(',').map((x) => x.trim()).filter(Boolean).flatMap((x) => FLOW_STAGES[x] || []));
+  const ncol = hyb ? 8 : 6, nrow = hyb ? 3 : 2;
+  const W = el.offsetWidth || (mini ? 420 : 1400), H = el.offsetHeight || (mini ? 56 : 600);
+  const gap = mini ? 7 : hyb ? 20 : 26;
+  const cw = (W - (ncol - 1) * gap) / ncol;
+  const headH = mini ? 0 : 30, rowGap = mini ? 8 : 64, bmGap = mini ? 8 : 34, brH = mini ? 0 : 46;
+  const bh = mini ? 24 : (H - headH - rowGap - (hyb ? bmGap : 0) - brH) / nrow;
+  const X = (c) => (c - 1) * (cw + gap);
+  const Y = (lane) => headH + (lane >= 1 ? bh + rowGap : 0) + (lane === 2 ? bh + bmGap : 0);
+  const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
+  const mid = 'dense-pf-ah' + (++flowSeq);   // one marker per figure: a marker inside a hidden slide does not draw elsewhere
+  const geo = (n) => ({ x: X(n.c), y: Y(n.lane), w: cw, h: bh });
+  // edges: h = left to right on one row; v = straight down; dn = from the bottom, down, then right; up = right, then up
+  const E = [['parse', 'chunk', 'h'], ['chunk', 'embed', 'h'], ['embed', 'store', 'h'], ['ask', 'qembed', 'h'], ['qembed', 'nearest', 'h'],
+    ['store', 'nearest', 'v', mini ? '' : 'search'], ['embed', 'qembed', 'same', mini ? '' : 'same model'],
+    ...(hyb ? [['nearest', 'rrf', 'h'], ['rrf', 'rerank', 'h'], ['rerank', 'prompt', 'h'], ['ask', 'bm25', 'dn'], ['bm25', 'rrf', 'up']] : [['nearest', 'prompt', 'h']]),
+    ['prompt', 'answer', 'h']];
+  const path = ([a, b, t]) => {
+    const A = geo(byId[a]), B = geo(byId[b]);
+    if (t === 'h') return `M ${A.x + A.w} ${A.y + A.h / 2} L ${B.x - (mini ? 1 : 3)} ${B.y + B.h / 2}`;
+    if (t === 'v' || t === 'same') return `M ${A.x + A.w / 2} ${A.y + A.h} L ${B.x + B.w / 2} ${B.y - (mini ? 1 : 3)}`;
+    if (t === 'dn') { const x = A.x + A.w / 2, y = B.y + B.h / 2; return `M ${x} ${A.y + A.h} L ${x} ${y} L ${B.x - 3} ${y}`; }
+    const y = A.y + A.h / 2, x = B.x + B.w / 2; return `M ${A.x + A.w} ${y} L ${x} ${y} L ${x} ${B.y + B.h + 3}`;
+  };
+  const ordE = ([a, b]) => Math.max(byId[a].o, byId[b].o);
+  const dimOf = (ids) => (lit.size && !ids.some((i) => lit.has(i)) ? ' dim' : '');
+  let svg = `<svg class="dense-pf-svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="overflow:visible">
+    <defs><marker id="${mid}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="${mini ? 5 : 7}" markerHeight="${mini ? 5 : 7}" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a8f99"/></marker></defs>`;
+  for (const e of E) {
+    const same = e[2] === 'same';
+    svg += `<g data-k="${ordE(e)}" class="dense-pf-e${dimOf([e[0], e[1]])}"><path d="${path(e)}" fill="none" stroke="${same ? '#9aa6b8' : '#8a8f99'}" stroke-width="${mini ? 1.2 : 2}"${same ? ' stroke-dasharray="5 5"' : ` marker-end="url(#${mid})"`}/>`;
+    if (e[3]) { const A = geo(byId[e[0]]); svg += `<text x="${A.x + A.w / 2 + 9}" y="${A.y + A.h + rowGap / 2 + 5}" class="dense-pf-el">${e[3]}</text>`; }
+    svg += '</g>';
+  }
+  if (!mini) {   // the three words of the name, under the question row
+    const last = hyb ? 2 : 1, y = Y(last) + bh + 14;
+    const br = [['R', 'Retrieve', ON.ask, ON[hyb ? 'rerank' : 'nearest']], ['A', 'Augment', ON.prompt, ON.prompt], ['G', 'Generate', ON.answer, ON.answer]];
+    svg += `<g data-k="${brackOrd}" class="dense-pf-br">${br.map(([l, w, c0, c1]) => { const x0 = X(c0) + 4, x1 = X(c1) + cw - 4;
+      return `<path d="M ${x0} ${y} L ${x0} ${y + 8} L ${x1} ${y + 8} L ${x1} ${y}" fill="none" stroke="#0b57d0" stroke-width="1.6"/><text x="${(x0 + x1) / 2}" y="${y + 30}" text-anchor="middle"><tspan class="l">${l}</tspan> · ${w}</text>`; }).join('')}</g>`;
+  }
+  svg += '</svg>';
+  const box = (n) => { const g = geo(n); const cls = `dense-pf-n${lit.has(n.id) ? ' cur' : ''}${dimOf([n.id])}${n.lane === 0 ? ' off' : ''}`;
+    if (mini) return `<div class="${cls}" style="left:${g.x}px;top:${g.y}px;width:${g.w}px;height:${g.h}px">${esc(n.mini)}</div>`;
+    return `<div class="${cls}" data-k="${n.o}" style="left:${g.x}px;top:${g.y}px;width:${g.w}px;height:${g.h}px"><span class="dense-pf-k"><i>${nodes.indexOf(n) + 1}</i>${esc(n.key)}</span><div class="dense-pf-b">${n.body}</div>${n.foot ? `<span class="dense-pf-f">${n.foot}</span>` : ''}</div>`; };
+  const heads = mini ? `<div class="dense-pf-here" style="left:${X(5)}px;top:0;width:${W - X(5)}px;height:${bh}px">you are here</div>`
+    : `<div class="dense-pf-h" data-k="0" style="left:0;top:0">Indexing · once, before any question</div>
+       <div class="dense-pf-h on" data-k="4" style="left:${X(ON.ask)}px;top:${Y(1) - 24}px">Each question</div>`;
+  el.classList.add('dense-pf'); if (mini) el.classList.add('mini'); if (hyb) el.classList.add('hyb');
+  el.innerHTML = svg + heads + nodes.map(box).join('');
+  return { step(k) { if (build) reveal(el, k); } };
+};
+
+/* ============================================================ FIGS.dense_embed: chunk → 384 numbers ==========
+   Six boxes in two rows, one per click, with the selected chunk's real pieces and numbers inside. */
+FIGS.dense_embed = (el) => {
   const d = DD(); if (!d) return need(el, 'v5/dense_data.js');
   const s = d.selected, mi = d.model_info;
   const vec = s.vector;
   const col = (x, k = 9) => (x >= 0 ? `rgba(11,87,208,${Math.min(1, Math.abs(x) * k).toFixed(2)})` : `rgba(196,81,31,${Math.min(1, Math.abs(x) * k).toFixed(2)})`);
   const box = (k, c, r, key, inner, foot, cls = '') => `<div class="dense-fb ${cls}" data-k="${k}" style="grid-column:${c};grid-row:${r}"><span class="dense-fk">${key}</span>${inner}${foot ? `<span class="dense-fm">${foot}</span>` : ''}</div>`;
   const arrow = (k, c, r, ch) => `<div class="dense-fa" data-k="${k}" style="grid-column:${c};grid-row:${r}">${ch}</div>`;
-  el.classList.add('dense-flow');
+  el.classList.add('dense-emb');
   el.innerHTML =
     box(0, 1, 1, '1 · The chunk’s text', `<div class="dense-fx">${esc(cut(one(s.text), 190))}</div>`, `${s.o200k_tokens} tokens as we count chunk size (o200k)`)
     + arrow(1, 2, 1, '→')

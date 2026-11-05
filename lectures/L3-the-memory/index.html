@@ -43,16 +43,28 @@
   <div class="col" style="width:440px">
     <h2>Where we end today</h2>
     <p>Emma Clarke, purchase executive, has a cheaper quote for the battery packs.</p>
-    <p class="step">Ask Northbridge, at the knowledge stage, has one tool, <code>search_docs</code>, and calls it twice.</p>
+    <p class="step">Ask Northbridge, at the knowledge stage, can do one thing: search Northbridge’s documents. It calls that search twice.</p>
+    <p class="step tiny">In code the search is a function named <code>search_docs</code>: a question in, cited passages out. Today we build what is inside it. It only reads. The tools in Lecture 4 act in Ledgerline.</p>
     <p class="step">It answers with the rule, the reason and the documents. This is the recorded run we deploy today.</p>
   </div>
   <div class="fig" data-fig="chatk" data-turns="0" style="left:600px;top:110px;width:900px;height:720px"></div>
 </section>
 
-<section class="slide" data-plate="One Question, Eleven Sources">
-  <div class="lec-top"><h2>One sentence from Emma needs eleven passages</h2><p class="sub">“Can I buy the battery packs from Brightcell Energy? They quote £104.” The golden set’s list of what a complete answer uses.</p></div>
-  <div class="fig" data-fig="goldmap" style="left:100px;top:230px;width:1400px;height:560px"></div>
-  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+<section class="slide" data-plate="One Question, Eight Documents">
+  <div class="lec-top"><h2>One question from Emma needs eight documents</h2><p class="sub">“Can I buy the battery packs from Brightcell Energy? They quote £104.” Each document adds one piece of the full answer.</p></div>
+  <table class="t" style="position:absolute;left:100px;width:1400px;top:210px;font-size:19px">
+    <tr><th>Folder</th><th>Document</th><th>What it adds to the answer</th></tr>
+    <tr class="step"><td><code>01_policies/</code></td><td><b>Purchase Policy v4.1, §6.2</b></td><td>Battery packs are lithium-cell parts: buy only from a supplier whose UN 38.3 certificate is on file.</td></tr>
+    <tr class="step"><td><code>01_policies/</code></td><td><b>Purchase Policy v4.1, §6.4</b></td><td>A cheaper quote alone is no reason to change supplier for such a part.</td></tr>
+    <tr class="step"><td><code>01_policies/</code></td><td><b>Amendment AMD-SUP-2026-02</b></td><td>Since 1 September 2026 the test report must be under 12 months old, and valid 60 days past the order.</td></tr>
+    <tr class="step"><td><code>05_master_data/</code></td><td><b>Supplier master (spreadsheet)</b></td><td>Brightcell is not in it: a fact you find by its absence.</td></tr>
+    <tr class="step"><td><code>02_procedures/</code></td><td><b>SOP-PUR-001, Supplier Onboarding</b></td><td>How to add a supplier: form NBC-F-112, upload the certificate, a senior buyer checks it.</td></tr>
+    <tr class="step"><td><code>08_release_notes/</code></td><td><b>Patch notes RN-7.2.3-P4</b></td><td>Ledgerline gained a certificate check, PUR.CERT_CHK: off by default, and only a warning when on.</td></tr>
+    <tr class="step"><td><code>10_meeting_notes/</code></td><td><b>Change-board minutes, 7 Oct 2026</b></td><td>The board kept PUR.CERT_CHK off until after the spring launch. So the check is Emma’s.</td></tr>
+    <tr class="step"><td><code>09_email_archive/</code></td><td><b>Brightcell’s quotation e-mail</b></td><td>£104.00 a pack, and their certificate is still being renewed.</td></tr>
+    <tr class="step"><td><code>05_master_data/</code></td><td><b>Rate contracts 2026–27, row 1450</b></td><td>Voltway Cells, the current supplier: £119.00 under contract.</td></tr>
+  </table>
+  <div class="cap step" style="left:100px;top:800px;width:1400px">From the golden set’s record for this question (<code>Q-EMMA</code>, <code>northbridge-docs/eval/questions.jsonl</code>): twelve facts from eight files in six folders. Short answer: not yet.</div>
 </section>
 
 <section class="slide q hero" data-plain="1">
@@ -195,8 +207,9 @@
   <div class="step"><div class="fig" data-fig="parse_txt" data-key="pur" data-tx="naive" style="left:590px;top:326px;width:440px;height:280px"></div></div>
   <div class="step"><div class="fig" data-fig="parse_txt" data-key="pur" data-tx="units" style="left:1050px;top:326px;width:450px;height:280px"></div></div>
   <div class="step"><div class="fig" data-fig="parse_img" data-key="pur" data-im="crop6" style="left:590px;top:626px;width:540px;height:215px"></div>
-  <div class="fig" data-fig="parse_txt" data-key="pur" data-tx="chunk" style="left:1150px;top:620px;width:350px;height:222px"></div></div>
-  <div class="parse-q" style="left:590px;top:206px;width:910px"><span class="k" data-pv="files.pur.q.id"></span><b data-pv="files.pur.q.question"></b>
+    <div class="parse-why" style="left:1150px;top:626px;width:350px;height:215px"><span class="k">Why this unit?</span>Brightcell would be a <b>new supplier</b> of a <b>lithium-cell part</b>. § 6 says who we may buy from.
+      <span class="cl"><b>6.2</b> only from a supplier with a valid UN 38.3 certificate on file</span><span class="cl"><b>6.4</b> a cheaper quote alone is no reason to switch</span></div></div>
+  <div class="parse-q" style="left:590px;top:206px;width:910px"><span class="k"><span data-pv="files.pur.q.id"></span> · the running question</span><b data-pv="files.pur.q.question"></b>
     <span class="ans step" style="margin-top:4px">Answer from D: <span data-pv="files.pur.q.answer"></span></span></div>
 </section>
 
@@ -238,10 +251,11 @@
 
 <section class="slide" data-plate="An E-mail on Disk">
   <div class="lec-top"><h2 style="font-size:46px">An e-mail: what is on disk is not what was written</h2><p class="sub" style="font-size:21px"><code>09_email_archive/2026/2026-10-22_Quotation Q-BE-26-0917 - Brightcell Energy.eml</code></p></div>
-  <div class="fig" data-fig="parse_txt" data-key="email" data-tx="raw" style="left:100px;top:200px;width:770px;height:650px"></div>
-  <div class="step"><span class="parse-note" style="left:900px;top:372px;width:600px">Every <b>=</b> at a line end is a soft break; <b>=C2=A3</b> is the two bytes of “£”. The mail gateway encoded the text this way to send it.</span></div>
-  <div class="step"><div class="fig" data-fig="parse_txt" data-key="email" data-tx="struct" style="left:900px;top:436px;width:600px;height:416px"></div></div>
-  <div class="parse-q" style="left:900px;top:200px;width:600px"><span class="k" data-pv="files.email.q.id"></span><b data-pv="files.email.q.question"></b>
+  <div class="fig" data-fig="parse_txt" data-key="email" data-tx="raw" style="left:100px;top:200px;width:690px;height:650px"></div>
+  <div class="fig" data-fig="parse_qp" data-until="6" style="left:830px;top:386px;width:670px;height:464px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="step"><div class="fig" data-fig="parse_txt" data-key="email" data-tx="struct" style="left:830px;top:386px;width:670px;height:464px"></div></div>
+  <div class="parse-q" style="left:830px;top:200px;width:670px"><span class="k" data-pv="files.email.q.id"></span><b data-pv="files.email.q.question"></b>
     <span class="ans step">The quote: <span data-pv="files.email.q.answer"></span> In the raw file, “£104.00” does not occur at all.</span></div>
 </section>
 
@@ -258,40 +272,59 @@
 <section class="slide" data-plate="An Old Intranet Page">
   <div class="lec-top"><h2 style="font-size:46px">A web page: the menu is on every page</h2><p class="sub" style="font-size:21px"><code>11_training/intranet_export_2016/approval_limits.html</code> · in a browser, as exported (no stylesheet)</p></div>
   <div class="fig" data-fig="parse_img" data-key="intra" data-im="page" data-fit="width" style="left:100px;top:206px;width:640px;height:498px"></div>
-  <div class="step"><div class="fig" data-fig="parse_txt" data-key="intra" data-tx="naive" style="left:780px;top:320px;width:720px;height:332px"></div>
-    <div class="parse-note" style="left:100px;top:722px;width:640px">The banner and <b data-pv="nums.intra.nav_links"></b> menu links repeat on all 23 pages of the export. Indexed as text, every page carries “How to raise an order” and “Approval limits”, whatever it is about.</div></div>
-  <div class="step"><div class="fig" data-fig="parse_txt" data-key="intra" data-tx="struct" style="left:780px;top:664px;width:720px;height:188px"></div></div>
+  <div class="step"><div class="fig" data-fig="parse_txt" data-key="intra" data-tx="naive" style="left:780px;top:320px;width:720px;height:300px"></div></div>
+  <div class="step"><div class="parse-note" style="left:100px;top:722px;width:640px">Tags gone, menu kept: on all <b data-pv="nums.intra.n_pages"></b> pages of the export, <code>get_text()</code> keeps the banner and the <b data-pv="nums.intra.nav_links"></b> menu links, and glues table cells together. Search for “Approval limits”: <b><span data-pv="nums.intra.matches.bs4_get_text.Approval limits"></span> of <span data-pv="nums.intra.n_pages"></span></b> pages match. Ours: <b data-pv="nums.intra.matches.structured.Approval limits"></b>, the right one.</div></div>
+  <div class="step"><div class="fig" data-fig="parse_txt" data-key="intra" data-tx="struct" style="left:780px;top:640px;width:720px;height:210px"></div></div>
   <div class="parse-q" style="left:780px;top:206px;width:720px"><span class="k"><span data-pv="files.intra.q.id"></span>, in 2016</span><b data-pv="files.intra.q.question"></b>
     <span class="ans step"><span data-pv="files.intra.q.answer"></span></span></div>
 </section>
 
-<section class="slide" data-plate="Metadata the Parser Keeps">
-  <div class="lec-top"><h2 style="font-size:46px">Three answers to one question. Which is in force?</h2><p class="sub" style="font-size:21px">Q-605 found £250,000, £200,000 and £150,000. The parser also keeps what each file says about itself: <code>corpus.file_meta</code>, as it ran.</p></div>
-  <div class="fig parse-meta" data-fig="parse_meta" data-files="0,1,2" data-k0="0" style="left:100px;top:214px;width:1400px;grid-template-columns:repeat(3,1fr)"></div>
-  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
-  <div class="step"><div class="fig parse-meta" data-fig="parse_meta" data-files="3,4" data-k0="0" style="left:100px;top:566px;width:920px;grid-template-columns:repeat(2,1fr)"></div>
-    <div class="opens" style="left:1050px;right:100px;top:566px;padding:14px 18px;font-size:19px;background:var(--g1)"><span class="k" style="color:var(--after)">They become filters</span>Not in force or superseded: the chunk header says so, and the answer must too. Confidential: <code>may_read</code> removes the file before ranking, for anyone not in HR. The 2016 page says nothing about itself, so its metadata is empty: a parser keeps only what the file states.</div></div>
+<section class="slide" data-plate="Docling, on Our Files">
+  <div class="lec-top"><h2 style="font-size:46px">Docling: a parser that reads the layout</h2><p class="sub" style="font-size:19px">Open source, from IBM Research. A layout model finds headings, lists, tables, page headers and footers; a table model rebuilds each table’s cells; OCR runs where the page is a picture. Out: Markdown or JSON.</p></div>
+  <pre class="parse-code" style="left:100px;top:236px;width:600px">from docling.document_converter import DocumentConverter
+result = DocumentConverter().convert(path)
+markdown = result.document.export_to_markdown()</pre>
+  <div class="fig" data-fig="parse_img" data-key="docling" data-im="crop" style="left:100px;top:360px;width:600px;height:182px"></div>
+  <div class="parse-note" style="left:100px;top:550px;width:600px;font-size:15.5px">The same page as on “A Table in a PDF”: Approval Matrix v3.0, page 1, § 3.</div>
+  <div class="step"><div class="fig" data-fig="parse_txt" data-key="docling" data-tx="apr" style="left:740px;top:236px;width:760px;height:340px"></div></div>
+  <div class="step"><div class="parse-rw" style="left:740px;top:596px;width:760px">
+    <div class="ok"><span class="k">Right</span><ul><li>Tables as Markdown tables, header row on top (<b data-pv="nums.docling.pur_tables"></b> in D)</li><li>Page headers and footers found (<b data-pv="nums.docling.pur_furniture"></b> in D) and left out</li><li>A heading over two lines kept whole; ours split it</li><li>The scan: PO number and name read; the signature left as an image</li></ul></div>
+    <div class="bad"><span class="k">Wrong</span><ul><li>The § 3 table moved below 3.4, away from 3.1 that introduces it (ours keeps it under 3.1)</li><li>On the scan, words glued: “BAT-500Quantity”</li></ul></div></div></div>
+  <div class="step"><div class="parse-cost" style="left:100px;top:600px;width:600px">
+      <div class="stat"><b><span data-pv="nums.docling.pur_warm"></span> s</b><span>D, <span data-pv="nums.docling.pur_pages"></span> pages</span></div>
+      <div class="stat"><b><span data-pv="nums.docling.scan_warm"></span> s</b><span>the scan, with OCR</span></div>
+      <div class="stat"><b><span data-pv="nums.docling.ours_pur_secs_s"></span> s</b><span>our parser on D</span></div></div>
+    <div class="parse-note" style="left:100px;top:716px;width:600px;font-size:15.5px">Docling <span data-pv="nums.docling.version"></span> on a Modal CPU container, 4 vCPU, no GPU; second run of each file. The first call also loads the models: <span data-pv="nums.docling.pur_cold"></span> s. Free and local; nothing leaves the machine.</div></div>
 </section>
 
-<section class="slide" data-plate="Parsing, Format by Format">
-  <div class="lec-top"><h2 style="font-size:46px">Parsing, format by format</h2><p class="sub" style="font-size:21px">What we saw on each real file, what <code>corpus.py</code> does about it, and tools that do the same job.</p></div>
-  <table class="parse-sum" style="left:100px;top:198px;width:1400px">
-    <tr><th style="width:150px">Format</th><th style="width:400px">What goes wrong</th><th>What our parser does</th><th style="width:300px">Tools that do this</th></tr>
-    <tr><td>PDF, text</td><td>Tables flatten to one cell per line; headers and footers land mid-text</td><td>Tables as “a | b | c” rows; one unit per heading, with page and section; repeated lines and “Page x of y” removed</td><td class="tl">docling, Unstructured, LlamaParse, Azure Document Intelligence</td></tr>
-    <tr><td>PDF, scan</td><td>No text layer: nothing to search</td><td>Tesseract OCR on the page image (a vision model for poor copies)</td><td class="tl">docling (OCR), Unstructured (ocr_only), Azure, a vision LLM</td></tr>
-    <tr><td>Spreadsheet</td><td>A row is numbers without their headers</td><td>One unit per row as “column: value”, with the sheet’s title lines</td><td class="tl">docling, Unstructured (partition_xlsx), Azure</td></tr>
-    <tr><td>E-mail</td><td>Quoted-printable: soft breaks, “=C2=A3” for £</td><td>Decode it; keep Subject, From, To, Date; the date becomes metadata</td><td class="tl">Unstructured (partition_email), docling (Email)</td></tr>
-    <tr><td>Word</td><td>A paragraph reader skips every table</td><td>Walk the body in order, tables included; one unit per heading</td><td class="tl">docling, Unstructured (partition_docx), Azure</td></tr>
-    <tr><td>Web page</td><td>Banner and menu on every page</td><td>Drop them; tables as rows; units by heading</td><td class="tl">docling, Unstructured (partition_html), Azure</td></tr>
-    <tr><td>Every file</td><td>Which version, in force or not, who may read it</td><td>doc_id, version, effective, status, superseded, future, confidential</td><td class="tl">your own rules: no tool knows Henrik’s folders</td></tr>
-  </table>
-  <div class="step"><div class="parse-tools" style="left:100px;top:682px;width:1400px">
-    <div class="card"><b>Docling</b>Open source, from IBM Research. PDF, Office, HTML, images: layout, reading order, tables, OCR. Markdown or JSON.</div>
-    <div class="card"><b>Unstructured</b>Open source. One <code>partition_*</code> per format. For PDFs, <code>hi_res</code> uses a layout model; <code>ocr_only</code> runs Tesseract.</div>
-    <div class="card"><b>LlamaParse</b>LlamaIndex’s hosted parser: 130+ file types to Markdown, text or JSON, using generative models.</div>
-    <div class="card"><b>Azure Document Intelligence</b>Microsoft’s layout model: tables, section headings, page headers and footers. Markdown out.</div>
-    <div class="card"><b>Vision-LLM OCR</b>Send the page image to a model. Here: <span data-pv="nums.ocr.all12.vision_mean_s"></span> s and <span data-pv="nums.ocr.all12.vision_mean_usd_s"></span> a page, 12 runs.</div>
-  </div></div>
+<section class="slide" data-plate="Parsing Tools, Format by Format">
+  <div class="lec-top"><h2 style="font-size:44px">Your first step: which parser for which file</h2><p class="sub" style="font-size:19px">A card to keep. Start with the first tool in each row; reach further only when your own files beat it. Times and costs are from our runs.</p></div>
+  <div class="parse-guide" style="left:100px;top:222px;width:1400px">
+    <div class="hd"><span>File</span><span>Reach for first</span><span>Also, or when it is not enough</span></div>
+    <div class="r"><div class="f"><span class="parse-ico" data-ico="pdf"></span><div><b>PDF with text</b><i>tables flatten, footers mid-text</i></div></div>
+      <div class="t"><b>Docling</b> layout, reading order, tables as Markdown <em class="free">free · local</em></div>
+      <div class="t2"><span class="ln"><b>PyMuPDF</b> fast text, words with positions, page images <em class="free">free · AGPL</em></span><span class="ln"><b>pdfplumber</b> words and table cells with positions <em class="free">free</em></span></div></div>
+    <div class="r"><div class="f"><span class="parse-ico" data-ico="scan"></span><div><b>Scanned PDF</b><i>no text layer at all</i></div></div>
+      <div class="t"><b>Tesseract</b> OCR: <span data-pv="nums.ocr.all12.tesseract_mean_s"></span> s a page; read <span data-pv="nums.ocr.text.tesseract_original"></span> clean scans <em class="free">free · local</em></div>
+      <div class="t2"><b>Docling</b> runs OCR itself, <span data-pv="nums.docling.scan_warm"></span> s on our scan <em class="free">free · local</em></div></div>
+    <div class="r"><div class="f"><span class="parse-ico" data-ico="poor"></span><div><b>Poor scan, stamps, handwriting</b><i>OCR misreads codes</i></div></div>
+      <div class="t"><b>A vision LLM</b> (Gemini Flash): read <span data-pv="nums.ocr.text.vision_degraded"></span> poor copies, marks [signature] <em class="paid">paid API · <span data-pv="nums.ocr.all12.vision_mean_usd_s"></span> a page</em></div>
+      <div class="t2">Only for pages Tesseract is unsure of; <span data-pv="nums.ocr.all12.vision_mean_s"></span> s a page. Check it on pages you know.</div></div>
+    <div class="r"><div class="f"><span class="parse-ico" data-ico="xlsx"></span><div><b>Spreadsheet</b><i>a row without its headers</i></div></div>
+      <div class="t"><b>openpyxl</b> or <b>pandas</b> read the cells; write each row as “column: value” <em class="free">free · local</em></div>
+      <div class="t2"><b>Docling</b> reads .xlsx too</div></div>
+    <div class="r"><div class="f"><span class="parse-ico" data-ico="eml"></span><div><b>E-mail (.eml)</b><i>=C2=A3, soft breaks, headers</i></div></div>
+      <div class="t"><b>Python’s <code>email</code> module</b> decodes the body; gives Subject, From, To, Date <em class="free">free · built in</em></div>
+      <div class="t2">An HTML body: clean it as a web page. An attachment: parse it as its own file.</div></div>
+    <div class="r"><div class="f"><span class="parse-ico" data-ico="docx"></span><div><b>Word (.docx)</b><i>a paragraph reader skips tables</i></div></div>
+      <div class="t"><b>python-docx</b> walking the body in order, tables included <em class="free">free · local</em></div>
+      <div class="t2"><b>Docling</b> reads .docx too</div></div>
+    <div class="r"><div class="f"><span class="parse-ico" data-ico="html"></span><div><b>Web page</b><i>the menu is on every page</i></div></div>
+      <div class="t"><b>trafilatura</b> main text only, tables as Markdown: <span data-pv="nums.intra.matches.trafilatura.Approval limits"></span> of <span data-pv="nums.intra.n_pages"></span> pages match “Approval limits” <em class="free">free · local</em></div>
+      <div class="t2"><b>BeautifulSoup</b> when you know the page and pick the content block yourself <em class="free">free</em></div></div>
+  </div>
+  <div class="step"><div class="parse-hosted" style="left:100px;top:770px;width:1400px"><span class="k">Hosted, if you would rather not run it</span><b>Unstructured</b> open source, also a paid API <span class="sep">·</span> <b>LlamaParse</b> paid API <span class="sep">·</span> <b>Azure Document Intelligence</b> paid API. Try your worst files first.
+    <span class="meta">Whatever the tool, the parser also keeps what each file says about itself: date, version, status, confidential. “Where the vectors live” uses these as filters.</span></div></div>
 </section>
 
 <section class="slide q hero" data-plain="1">
@@ -313,8 +346,9 @@
 </section>
 
 <section class="slide" data-plate="Check: Keep, Decode or Drop?">
-  <div class="lec-top"><h2 style="font-size:46px">Check: keep it, decode it, or drop it?</h2><p class="sub" style="font-size:21px">Three real snippets from the dump. What should a parser do with each? Click for the answers.</p></div>
-  <div class="fig" data-fig="parse_snips" style="left:100px;top:250px;width:1400px"></div>
+  <div class="lec-top"><h2 style="font-size:46px">Check: keep it, decode it, or drop it?</h2><p class="sub" style="font-size:21px">Three real snippets from the dump. Before a parser indexes text, it decides one of three things:</p></div>
+  <div class="fig" data-fig="parse_legend" style="left:100px;top:232px;width:1400px"></div>
+  <div class="fig" data-fig="parse_snips" style="left:100px;top:318px;width:1400px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
@@ -349,8 +383,8 @@
   <span class="hero-num q-mark" aria-hidden="true">?</span>
   <div class="qbox">
     <p class="q-label">Ask the class · Section 3 · <span class="qnum"></span></p>
-    <h2 class="q-text">“What was our total spend with Voltway Cells from May to September 2026?” <em>Which kind is it?</em></h2>
-    <div class="q-opts"><span class="q-opt"><b>1</b> Genesis</span><span class="q-opt"><b>2</b> Analytical</span><span class="q-opt"><b>3</b> Documentation</span></div>
+    <h2 class="q-text">“Which supplier certificates expire in the next 90 days?” <em>Which kind is it?</em></h2>
+    <div class="q-opts"><span class="q-opt"><b>1</b> Genesis: do something in Ledgerline</span><span class="q-opt"><b>2</b> Analytical: compute it from the data</span><span class="q-opt"><b>3</b> Documentation: it is written down</span></div>
     <p class="q-cue">Type 1, 2 or 3. And: could a document search answer it?</p>
   </div>
 </section>
@@ -440,6 +474,23 @@
     <h1 class="q2">How does a computer find the one clause that answers Emma?</h1></div>
 </section>
 
+<section class="slide" data-plate="What RAG Means">
+  <div class="lec-top"><h2>RAG: Retrieval-Augmented Generation</h2><p class="sub">Search first, then let the model read only what the search found. Three words, three steps.</p></div>
+  <div class="dense-rag" style="left:100px;top:262px;width:1400px">
+    <div class="card"><h3><span class="dense-rag-l">R</span>etrieval</h3><p>Search the documents for the few passages that answer the question.</p><p class="dense-rag-ex">Emma, on D: the 5 of D’s <span data-dn="play.s200-o15.n"></span> chunks closest to her question.</p></div>
+    <div class="card step"><h3><span class="dense-rag-l">A</span>ugmented</h3><p>Put those passages into the prompt, next to the question, each with where it came from.</p><p class="dense-rag-ex">Her question, then those 5 chunks: <span data-dn="play.s200-o15.topk.4.tokens" data-f="n"></span> tokens.</p></div>
+    <div class="card step"><h3><span class="dense-rag-l">G</span>eneration</h3><p>The model writes the answer from those passages and cites them, so a person can check.</p><p class="dense-rag-ex">An answer that quotes §6.2 and §6.4 and names POL-PUR-001 v4.1.</p></div>
+  </div>
+  <div class="opens step" style="top:640px;background:var(--g1)"><span class="k" style="color:var(--after)">Against the last section</span>Pasting the 648-file part read <span data-l3="paste.sample.tokens_in_per_q" data-f="n"></span> tokens and cost <span data-l3="paste.sample.cost_per_q_usd" data-f="usd2"></span> for each question. The whole dump, <span data-l3="paste.total" data-f="n"></span> tokens, fits no model at all.</div>
+  <p class="cap" style="left:100px;top:790px;width:1400px">The name: Lewis et al., 2020, “Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks”.</p>
+</section>
+
+<section class="slide" data-plate="RAG in One Figure">
+  <div class="lec-top" style="top:88px"><h2 style="font-size:50px">The whole pipeline, box by box</h2><p class="sub">The top row runs once, before any question. The bottom row runs for every question. Then we open each box on D.</p></div>
+  <div class="fig" data-fig="dense_flow" data-build="1" style="left:100px;top:238px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
 <section class="slide" data-plate="One Document, One Question">
   <div class="lec-top"><h2>One document, one question</h2><p class="sub">Before 28,953 chunks: one policy and Emma’s question, small enough to check every step by eye.</p></div>
   <div class="fig" data-fig="dense_thumbs" style="left:100px;top:250px;width:860px;height:320px"></div>
@@ -495,6 +546,7 @@
 </section>
 
 <section class="slide" data-plate="D in 15 Chunks">
+  <div class="fig" data-fig="dense_flow" data-mini="1" data-stage="chunk" style="left:1080px;top:30px;width:420px;height:56px"></div>
   <div class="lec-top" style="top:88px"><h2 style="font-size:50px">The chunker cuts D into <span data-dn="play.s200-o15.n"></span> pieces</h2><p class="sub">Structure-aware, about 200 tokens, 15% overlap, a header line on each. Every chunk of D, in reading order; colour = section.</p></div>
   <div class="fig" data-fig="dense_chunks" style="left:100px;top:226px;width:1400px;height:462px"></div>
   <div class="dense-callouts" style="left:100px;top:700px;width:1400px">
@@ -517,8 +569,9 @@
 </section>
 
 <section class="slide" data-plate="From Chunk to 384 Numbers">
+  <div class="fig" data-fig="dense_flow" data-mini="1" data-stage="embed" style="left:1080px;top:30px;width:420px;height:56px"></div>
   <div class="lec-top" style="top:88px"><h2 style="font-size:50px">From chunk #5 to 384 numbers</h2><p class="sub">bge-small-en-v1.5 (<code>rag.EMBED_MODELS["bge-small"]</code>), run on Modal. Every value below is this chunk’s.</p></div>
-  <div class="fig" data-fig="dense_flow" style="left:100px;top:226px;width:1400px;height:620px"></div>
+  <div class="fig" data-fig="dense_embed" style="left:100px;top:226px;width:1400px;height:620px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
@@ -548,6 +601,7 @@
 </section>
 
 <section class="slide" data-plate="Every Chunk of D, in 3D">
+  <div class="fig" data-fig="dense_flow" data-mini="1" data-stage="store" style="left:1080px;top:30px;width:420px;height:56px"></div>
   <div class="fig" data-fig="dense_space" data-mode="chunks" style="left:100px;top:90px;width:980px;height:760px"></div>
   <span class="step" style="display:none"></span>
   <ol class="dense-notes" style="left:1120px;top:120px;width:380px">
@@ -558,12 +612,16 @@
 </section>
 
 <section class="slide" data-plate="Emma’s Question Lands">
+  <div class="fig" data-fig="dense_flow" data-mini="1" data-stage="query,nearest" style="left:1080px;top:30px;width:420px;height:56px"></div>
   <div class="fig" data-fig="dense_space" data-mode="query" style="left:100px;top:90px;width:900px;height:760px"></div>
   <span class="step" style="display:none"></span>
-  <div style="position:absolute;left:1040px;top:110px;width:460px">
-    <p style="font-size:21px;margin-bottom:12px">The question goes through the same model, with bge’s search instruction in front: <i>“<span data-dn="model_info.query_prefix"></span>”</i>. Projected with the same PCA.</p>
-    <div class="step"><div class="dense-h4">Nearest 5, cosine in 384 dimensions</div><div class="fig" data-fig="dense_ranked" data-n="5" style="position:relative"></div></div>
-    <p class="step" style="font-size:20px;margin-top:14px">All three nearest are about the battery rule: the change log, the plain-words restatement, the rule itself. None of them says Brightcell.</p>
+  <div style="position:absolute;left:1040px;top:116px;width:460px">
+    <p style="font-size:20px;margin-bottom:12px">The question goes through the same model, with bge’s search instruction in front, and lands in the same space.</p>
+    <div class="step"><div class="dense-kdef"><b>top-k</b>k = how many of the nearest chunks we hand to the model. Here k = 5.</div>
+      <div class="fig" data-fig="dense_ranked" data-n="5" style="position:relative"></div>
+      <p style="font-size:17px;margin-top:8px;color:var(--ink-2)">Cosine in 384 dimensions. §6 (#5) comes 3rd. None of the five says Brightcell.</p></div>
+    <div class="step dense-kmore"><div><b>k = 1</b><span data-dn="play.s200-o15.topk.0.tokens" data-f="n"></span> tokens, no §6</div><div><b>k = 5</b><span data-dn="play.s200-o15.topk.4.tokens" data-f="n"></span> tokens, §6.2 and §6.4 in</div><div><b>k = 10</b><span data-dn="play.s200-o15.topk.9.tokens" data-f="n"></span> tokens, the same <span data-dn="play.s200-o15.topk.9.answer_tokens"></span> answer tokens</div>
+      <p>Bigger k: more context, more noise, more tokens to pay for. (The RRF constant, 60, in the next section is a different number.)</p></div>
   </div>
 </section>
 
@@ -612,7 +670,7 @@
 </section>
 
 <section class="slide" data-plate="Other Knobs: k, the Header, the Model">
-  <div class="lec-top" style="top:84px"><h2 style="font-size:44px">Three more knobs, on the same space</h2><p class="sub" style="font-size:21px">Click through: k = 1, k = 10, the header prefix off, a second model. Each model has its own space.</p></div>
+  <div class="lec-top" style="top:84px"><h2 style="font-size:44px">Three more knobs, on the same space</h2><p class="sub" style="font-size:21px">Click through k = 1 and k = 10 (top-k: how many chunks go to the model), the header off, a second model.</p></div>
   <div class="fig" data-fig="dense_play" data-preset="knobs" style="left:100px;top:200px;width:1400px;height:650px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
@@ -688,6 +746,12 @@
   <p class="cap step" style="left:100px;top:620px;width:1400px">Ranks over 28,953 chunks of the whole dump, bge-small, exact search, the first chunk holding a gold fact. <code>experiments/logs/v5_dense_failures.json</code>. Next: a search that counts words.</p>
 </section>
 
+<section class="slide" data-plate="Emma’s Question, End to End">
+  <div class="lec-top" style="top:88px"><h2 style="font-size:50px">Emma’s question, end to end</h2><p class="sub">The same figure, with the values of our run on D (bge-small, 200-token chunks, k = 5).</p></div>
+  <div class="fig" data-fig="dense_flow" data-values="emma" style="left:100px;top:222px;width:1400px;height:580px"></div>
+  <p class="cap step" style="left:100px;top:818px;width:1400px">On D, retrieval did its job: §6 came 3rd and k = 5 carried it to the model. The failure cases show where the whole dump is harder.</p>
+</section>
+
 <section class="slide q hero" data-plain="1">
   <span class="hero-num q-mark" aria-hidden="true">?</span>
   <div class="qbox">
@@ -717,22 +781,24 @@
 </section>
 
 <section class="slide" data-plate="Keyword Search From Zero">
-  <div class="lec-top"><h2>First, cut the question into words</h2><p class="sub">Emma’s question through <code>rag.tokenize</code>, one rule per click. The same function cuts every chunk.</p></div>
-  <div class="fig" data-fig="lexical_tok" style="left:100px;top:250px;width:1400px;height:600px"></div>
+  <div class="lec-top"><h2>First, split the question into words</h2><p class="sub">Keyword search counts words, so text is first split into words. Our word splitter does it, one rule per click.</p></div>
+  <div class="fig" data-fig="lexical_tok" style="left:100px;top:250px;width:1400px;height:570px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="lexical-src" style="left:100px;top:836px;width:1400px;font-size:17px;color:var(--ink-2)">It splits every chunk the same way. It is a small function in the course’s <code>rag.py</code>, hence its name in code, <span class="lexical-ref">rag.tokenize</span>. No model: not the WordPiece tokenizer of the last section.</div>
 </section>
 
 <section class="slide" data-plate="Keep Codes Whole, and Split Them">
-  <div class="lec-top"><h2>A code is kept whole, and split as well</h2><p class="sub">“What does ERR-PO-0412 mean and how do I fix it?” searched in MAN-ERR-72 (88 chunks) with three tokenizers. Same BM25, only the cutting changes.</p></div>
-  <div class="fig" data-fig="lexical_codes" style="left:100px;top:250px;width:1400px;height:360px"></div>
+  <div class="lec-top"><h2>A code is kept whole, and split as well</h2><p class="sub">“What does ERR-PO-0412 mean and how do I fix it?” searched in MAN-ERR-72 (88 chunks), with the code split three ways. Same BM25, only the splitting changes.</p></div>
+  <div class="fig" data-fig="lexical_codes" style="left:100px;top:250px;width:1400px;height:330px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
-  <div class="opens step" style="top:650px;background:var(--g3)"><span class="k" style="color:var(--gold)">Why both</span>The whole token <code>err-po-0412</code> is in only <span data-lx="df.err-po-0412.df_all" data-f="n"></span> of 28,953 chunks, so it separates ERR-PO-0412 from ERR-MAT-0412. The parts let “PO error 0412” match too: <code>0412</code> is in <span data-lx="df.0412.df_all" data-f="n"></span> chunks, <code>po</code> in <span data-lx="df.po.df_all" data-f="n"></span>.</div>
-  <div class="lexical-src" style="left:100px;top:842px">logs/v5_lexical_extra.json · variants (experiments/v5_lexical_modal.py::variants)</div>
+  <div class="opens step" style="top:592px;background:var(--g3);padding:12px 22px;font-size:21px"><span class="k" style="color:var(--gold)">Why both</span>The whole word <code>err-po-0412</code> is in only <span data-lx="df.err-po-0412.df_all" data-f="n"></span> of 28,953 chunks, so it separates ERR-PO-0412 from ERR-MAT-0412. The parts let “PO error 0412” match too: <code>0412</code> is in <span data-lx="df.0412.df_all" data-f="n"></span> chunks, <code>po</code> in <span data-lx="df.po.df_all" data-f="n"></span>.</div>
+  <div class="lexical-box" style="position:absolute;left:100px;right:100px;top:722px;padding:12px 22px;font-size:19px;line-height:1.4"><span class="lexical-k">What this step is · our word splitter <span class="lexical-ref" style="text-transform:none;letter-spacing:0">rag.tokenize</span></span>
+    Splitting text into words for counting: lower-case · split on anything that is not a letter or digit · drop 56 common words · keep a code like ERR-PO-0412 whole and add its parts · drop a plural s. Nothing else. It is our own function, not the model’s WordPiece tokenizer.</div>
 </section>
 
 <section class="slide" data-plate="Which Chunks Hold Which Words">
-  <div class="lec-top"><h2>Five of Emma’s eight words never appear in D</h2><p class="sub">How often each token occurs in each of D’s 15 chunks (after <code>rag.tokenize</code>, header line included).</p></div>
-  <div class="fig" data-fig="lexical_tf" style="left:100px;top:240px;width:1400px;height:600px"></div>
+  <div class="lec-top"><h2>Five of Emma’s eight words never appear in D</h2><p class="sub">How often each word occurs in each of D’s 15 chunks (columns 0 to 14), after our word splitter.</p></div>
+  <div class="fig" data-fig="lexical_tf" style="left:100px;top:236px;width:1400px;height:620px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
@@ -747,59 +813,50 @@
 </section>
 
 <section class="slide" data-plate="From Counts to a Weight: idf">
-  <div class="col" style="width:560px;top:118px">
-    <h2>idf turns “how rare” into a weight</h2>
-    <div class="lexical-box lexical-f" style="margin:6px 0 20px">idf(t) = ln<span style="font-size:1.4em">(</span>1 + <span class="lexical-frac"><span>N − df + 0.5</span><span>df + 0.5</span></span><span style="font-size:1.4em">)</span></div>
-    <p style="font-size:22px">N is the number of chunks, df the number that contain t.</p>
-    <p class="step" style="font-size:22px"><b>brightcell</b> in the dump: N = 28,953, df = 6. ln(1 + 28,947.5 / 6.5) = <b class="lexical-bm"><span data-lx="df.brightcell.idf_all" data-f="2"></span></b>.<br><b>order</b>: df = 6,269, idf = <span data-lx="df.order.idf_all" data-f="2"></span>.</p>
-    <p class="step" style="font-size:22px">The same word weighs differently in different collections: idf is about the chunks you search, not about English.</p>
+  <div class="lec-top"><h2>Part 1 of the weight: idf, across all chunks</h2><p class="sub">A chunk’s BM25 score is a sum: one <b>weight</b> for each of the question’s words that the chunk contains. Each weight has three parts. The first asks how rare the word is.</p></div>
+  <div class="fig" data-fig="lexical_formula" data-on="i" style="left:100px;top:282px;width:1400px;height:130px"></div>
+  <div style="position:absolute;left:100px;top:436px;width:580px">
+    <div class="lexical-box lexical-f" style="margin:0 0 14px;font-size:23px"><span class="lexical-pi">idf</span>(word) = ln<span style="font-size:1.4em">(</span>1 + <span class="lexical-frac"><span>N − df + 0.5</span><span>df + 0.5</span></span><span style="font-size:1.4em">)</span></div>
+    <p style="font-size:20px;margin:0 0 10px">N: how many chunks we search. df: how many of them contain the word. Counted <b>across all chunks</b>, once, before any question.</p>
+    <p style="font-size:20px;margin:0 0 10px"><b>battery</b> is in 3 of D’s 15 chunks: ln(1 + 12.5 / 3.5) = <b class="lexical-pi"><span data-lx="df.battery.idf_D" data-f="2"></span></b>. <b>purchase</b> is in all 15: <span data-lx="df.purchase.idf_D" data-f="2"></span>.</p>
+    <p class="step" style="font-size:20px;margin:0 0 10px">Over the whole dump, N = 28,953: <b>brightcell</b> (df = 6) gets <b class="lexical-pi"><span data-lx="df.brightcell.idf_all" data-f="2"></span></b>, <b>order</b> (df = 6,269) gets <span data-lx="df.order.idf_all" data-f="2"></span>.</p>
+    <p class="step" style="font-size:20px;margin:0">idf belongs to the chunks you search, not to English.</p>
   </div>
-  <div class="fig" data-fig="lexical_idf" style="left:740px;top:150px;width:760px;height:680px"></div>
-  <span class="step" style="display:none"></span>
+  <div class="fig" data-fig="lexical_idf" style="left:760px;top:436px;width:740px;height:420px"></div>
 </section>
 
-<section class="slide" data-plate="The Tenth “Battery” Adds Little">
-  <div class="lec-top"><h2>Ten mentions are not ten times better</h2><p class="sub">Term frequency saturates. The weight rises fast, then flattens towards a ceiling set by k1. Drag k1.</p></div>
-  <div class="fig" data-fig="lexical_sat" style="left:100px;top:250px;width:880px;height:560px"></div>
+<section class="slide" data-plate="Saturation: Repeats Inside One Chunk">
+  <div class="lec-top"><h2>Part 2: saturation, inside one chunk</h2><p class="sub">tf: how many times the word appears in this one chunk. The second mention adds less than the first.</p></div>
+  <div class="fig" data-fig="lexical_formula" data-on="s" style="left:100px;top:258px;width:1400px;height:130px"></div>
+  <div class="fig" data-fig="lexical_sat" style="left:100px;top:404px;width:860px;height:470px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
-  <div style="position:absolute;left:1030px;top:270px;width:470px">
-    <div class="lexical-box lexical-f" style="font-size:23px">weight = idf · <span class="lexical-frac"><span>tf · (k1 + 1)</span><span>tf + k1</span></span><div class="lexical-note" style="margin-top:6px">for a chunk of average length</div></div>
-    <p class="step lexical-note" id="lexical-sat-out" style="font-size:21px;margin-top:22px"></p>
-    <p class="step lexical-note" style="font-size:20px;margin-top:10px">In D, §6 (chunk 5) says “supplier” <span data-lx="tf.supplier.5"></span> times. BM25 counts that as about twice one mention, not ten times.</p>
+  <div style="position:absolute;left:1010px;top:418px;width:490px">
+    <p class="lexical-note" style="font-size:20px;margin:0 0 12px">A real word: <b>supplier</b> is in <span data-lx="walk.sat.df_D"></span> of D’s 15 chunks (idf <span class="lexical-pi"><span data-lx="walk.sat.idf" data-f="2"></span></span>, across chunks). Inside §6, chunk 5, it appears <b class="lexical-ps"><span data-lx="walk.sat.tf"></span> times</b> (tf, inside this chunk).</p>
+    <p class="lexical-note" style="font-size:19px;margin:0 0 12px">k1 = 1.2 sets the ceiling: this part never passes k1 + 1 = 2.2.</p>
+    <p class="step lexical-note" id="lexical-sat-out" style="font-size:20px;margin:0 0 12px"></p>
+    <p class="step lexical-note" style="font-size:20px;margin:0">So §6’s ten “supplier”s weigh <span data-lx="walk.sat.idf" data-f="2"></span> × 1.96 = <b class="lexical-bm"><span data-lx="walk.sat.weight" data-f="2"></span></b>, not <span data-lx="walk.sat.idf" data-f="2"></span> × 10 = <span data-lx="walk.sat.weight_if_counted_plainly" data-f="2"></span>.</p>
   </div>
 </section>
 
 <section class="slide" data-plate="Long Chunks Are Damped">
-  <div class="lec-top"><h2>The same word counts more in a short chunk</h2><p class="sub">Both chunks say “battery” once and “packs” once. BM25 divides by length relative to the average (b = 0.75). Drag b.</p></div>
-  <div class="fig" data-fig="lexical_len" style="left:100px;top:240px;width:1400px;height:600px"></div>
+  <div class="lec-top"><h2>Part 3: length, inside one chunk, against the average</h2><p class="sub">dl: the chunk’s length in words. avgdl: the average over D’s 15 chunks. It sits in the denominator, beside k1; b = 0.75 sets how much it counts.</p></div>
+  <div class="fig" data-fig="lexical_formula" data-on="l" style="left:100px;top:258px;width:1400px;height:130px"></div>
+  <div class="fig" data-fig="lexical_len" style="left:100px;top:408px;width:1400px;height:450px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
 <section class="slide" data-plate="BM25 for Emma’s Question, on D">
-  <div class="lec-top"><h2>Add the pieces: BM25 ranks D’s chunks</h2><p class="sub">Each cell is idf × saturation × length for one token in one chunk. A chunk’s score is the sum of its row.</p></div>
-  <div class="fig" data-fig="lexical_score" style="left:100px;top:240px;width:1400px;height:400px"></div>
+  <div class="lec-top"><h2>All three parts, added up over Emma’s words</h2></div>
+  <div class="fig" data-fig="lexical_formula" data-on="isl" data-sum="1" style="left:100px;top:196px;width:1400px;height:170px"></div>
+  <div class="fig lexical-score" data-fig="lexical_score" style="left:100px;top:384px;width:1400px;height:340px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
-  <div class="opens step" style="top:660px;background:var(--g3)"><span class="k" style="color:var(--gold)">Read it</span>First, the FAQ that restates §6.2 and §6.4: it says “battery packs” twice. Second, a version-history line: short, so its two words weigh more. The rule itself, §6, is third. “they” adds 2.02 to §5 for “an order they raised”: noise.</div>
+  <div class="opens step" style="top:744px;background:var(--g3);padding:12px 22px;font-size:20px"><span class="k" style="color:var(--gold)">Read it</span>First, the FAQ that restates §6.2 and §6.4: it says “battery packs” twice. Second, a short version-history line: length lifts its two words. The rule itself, §6, is third. “they” adds 2.02 to §5 for “an order they raised”: noise.</div>
 </section>
 
-<section class="slide" data-plate="The Same Idea in Code">
-  <div class="fig" data-fig="lexical_code" style="left:100px;top:110px;width:960px;height:740px"></div>
-  <div style="position:absolute;left:1100px;top:118px;width:400px">
-    <h2 style="font-size:44px">rag.BM25 is the formula, computed once</h2>
-    <div class="lexical-box lexical-f" style="font-size:19px;line-height:1.6;padding:16px 18px">
-      score(q, d) = <span class="p" data-g="4">sum over the question’s tokens t</span> of
-      <div style="margin-top:8px;white-space:nowrap"><span class="p" data-g="1">idf(t)</span> ·
-      <span class="lexical-frac"><span><span class="p" data-g="0">tf</span> · (k1 + 1)</span><span><span class="p" data-g="0">tf</span> + <span class="p" data-g="2">k1 · (1 − b + b · <span class="p" data-g="0">|d|</span> / avgdl)</span></span></span></div>
-      <div class="p" data-g="3" style="margin-top:6px;font-size:16px">one weight per (chunk, token), stored in W</div>
-    </div>
-    <ol class="lexical-note" style="font-size:18px;padding-left:22px;margin-top:16px">
-      <li class="step">Count each token in each chunk: tf, and the chunk length |d|.</li>
-      <li class="step">Count the chunks that hold each token: df, then idf.</li>
-      <li class="step">The length factor and the denominator.</li>
-      <li class="step">The weight for every (chunk, token), stored once.</li>
-      <li class="step">A question: add the columns of its tokens.</li>
-    </ol>
-  </div>
+<section class="slide" data-plate="When a Question Arrives">
+  <div class="lec-top"><h2>When a question arrives, BM25 does five things</h2><p class="sub">Emma’s question against D’s 15 chunks. Two of them in full: the FAQ that wins, and §6, the rule.</p></div>
+  <div class="fig" data-fig="lexical_walk" style="left:100px;top:262px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
 <section class="slide" data-plate="Where BM25 Wins">
@@ -812,11 +869,11 @@
 <section class="slide" data-plate="Where BM25 Loses">
   <div class="lec-top"><h2>BM25 matches letters, not meaning</h2><p class="sub">Three real losses, on D, on the dense section’s own win, and on Emma’s question over the whole dump.</p></div>
   <div class="lexical-cards" style="left:100px;right:100px;top:250px;grid-template-columns:1fr 1fr 1fr">
-    <div class="lexical-card lexical-c-bad"><span class="lexical-k">On D · different word forms</span><h3>buy ≠ bought, quote ≠ quotation</h3>Emma writes <b>buy</b> and <b>quote</b>. D writes “may be <b>bought</b>”, “<b>buys</b>” and “a cheaper <b>quotation</b>”. Our stemmer only drops a plural s, so these score 0.</div>
-    <div class="lexical-card lexical-c-bad step"><span class="lexical-k">The dense section’s win</span><h3>“How do I onboard a new supplier?”</h3>The token <b>onboard</b> is in no chunk at all: the procedure says “Onboarding”. BM25 ranks it <b><span data-lx="cby.Q-101.bm25_rank" data-f="n"></span></b>; dense ranks it <b class="lexical-de"><span data-lx="cby.Q-101.dense_rank"></span></b>.</div>
+    <div class="lexical-card lexical-c-bad"><span class="lexical-k">On D · different word forms</span><h3>buy ≠ bought, quote ≠ quotation</h3>Emma writes <b>buy</b> and <b>quote</b>. D writes “may be <b>bought</b>”, “<b>buys</b>”, “<b>purchase</b>” and “a cheaper <b>quotation</b>”. BM25 matches exact words, and our word splitter only drops a plural s, so these score 0.</div>
+    <div class="lexical-card lexical-c-bad step"><span class="lexical-k">The dense section’s win</span><h3>“How do I onboard a new supplier?”</h3>The word <b>onboard</b> is in no chunk at all: the procedure says “Onboarding”. BM25 ranks it <b><span data-lx="cby.Q-101.bm25_rank" data-f="n"></span></b>; dense ranks it <b class="lexical-de"><span data-lx="cby.Q-101.dense_rank"></span></b>.</div>
     <div class="lexical-card lexical-c-bad step"><span class="lexical-k">Emma’s question, whole dump</span><h3>Rare names pull in the e-mails</h3><b>brightcell</b> (idf <span data-lx="df.brightcell.idf_all" data-f="2"></span>) and <b>£104</b> (<span data-lx="df.£104.idf_all" data-f="2"></span>) fill BM25’s top 6 with the Brightcell e-mails and a meeting note. D’s §6 falls to rank <b><span data-lx="key.s6_bm25_dump" data-f="n"></span></b>. Emma never wrote the rule’s words: lithium-cell, UN 38.3, certificate.</div>
   </div>
-  <div class="opens step" style="top:600px;background:var(--g1)"><span class="k" style="color:var(--after)">So</span>Dense search misses codes; BM25 misses meaning. Real stemmers and synonym lists help BM25 a little. The usual fix is to run both and merge the two lists: hybrid search.</div>
+  <div class="opens step" style="top:600px;background:var(--g1)"><span class="k" style="color:var(--after)">So</span>Dense search misses codes; BM25 misses meaning. Smarter word splitters (bought → buy) and synonym lists help BM25 a little. The usual fix is to run both and merge the two lists: hybrid search.</div>
   <div class="lexical-src" style="left:100px;top:842px">logs/v5_lexical.json (D, dump) · logs/v5_lexical_cases.json (BM25) · logs/v5_dense_failures.json (dense ranks)</div>
 </section>
 
@@ -829,23 +886,27 @@
 
 <section class="slide" data-plate="Reciprocal Rank Fusion">
   <div class="lec-top"><h2>RRF adds 1 / (60 + rank) from each list</h2><p class="sub">Reciprocal rank fusion ignores the scores and uses only positions. Emma’s question on D, the six best fused chunks.</p></div>
-  <div class="fig" data-fig="lexical_rrf" style="left:100px;top:240px;width:1400px;height:390px"></div>
+  <div class="lexical-box" style="position:absolute;left:100px;right:100px;top:236px;padding:12px 22px;display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center">
+    <div class="lexical-f" style="font-size:25px;white-space:nowrap"><span class="lexical-rf">RRF score</span> = <span class="lexical-frac"><span>1</span><span><b>60</b> + rank in BM25</span></span> + <span class="lexical-frac"><span>1</span><span><b>60</b> + rank in dense</span></span></div>
+    <div style="font-size:18.5px;line-height:1.4;color:var(--ink-2)"><b style="color:var(--ink)">60 is the RRF constant</b> (<span class="lexical-ref">rag.RRF_K</span>), the same for every question. It is <b>not</b> the top-k from the last section, which is how many chunks we hand to the model (5 or 10).</div>
+  </div>
+  <div class="fig lexical-rrfw" data-fig="lexical_rrf" style="left:100px;top:372px;width:1400px;height:330px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
-  <div class="opens step" style="top:650px;background:var(--g2)"><span class="k" style="color:var(--lx-rf)">No model in RRF</span>Chunks 12 and 1 tie at 0.032522: ranks (1, 2) and (2, 1) give the same sum. RRF has no LLM and no weights to learn. It is the six lines of <code>rag.rrf</code>, and it cannot read a word of the chunks.</div>
+  <div class="opens step" style="top:728px;background:var(--g2);padding:12px 22px;font-size:21px"><span class="k" style="color:var(--lx-rf)">No model in RRF</span>Chunks 12 and 1 tie at 0.032522: ranks (1, 2) and (2, 1) give the same sum. RRF has no LLM and no weights to learn. It is the six lines of <code>rag.rrf</code>, and it cannot read a word of the chunks.</div>
 </section>
 
-<section class="slide" data-plate="The k in RRF">
-  <div class="lec-top"><h2>k decides what a top place in one list is worth</h2><p class="sub">Drag k, or switch question. Small k: the top of either list wins. Large k: agreement between the lists wins.</p></div>
+<section class="slide" data-plate="The RRF Constant">
+  <div class="lec-top"><h2>The RRF constant decides what a top place is worth</h2><p class="sub">Drag it, or switch question. Small: the top of either list wins. Large: agreement wins. It never changes top-k.</p></div>
   <div class="fig" data-fig="lexical_k" style="left:100px;top:240px;width:1400px;height:540px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
-  <div class="lexical-src" style="left:100px;top:800px;width:1400px;font-size:17px;color:var(--ink-2)">The alternative is <b>weighted score fusion</b>: rescale each list’s scores to 0–1 and add them as α · dense + (1 − α) · BM25, with α tuned on the golden set. The course uses RRF, k = 60 (<code>rag.RRF_K</code>).</div>
+  <div class="lexical-src" style="left:100px;top:800px;width:1400px;font-size:17px;color:var(--ink-2)">The alternative is <b>weighted score fusion</b>: rescale each list’s scores to 0–1 and add them as α · dense + (1 − α) · BM25, with α tuned on the golden set. The course uses RRF with the RRF constant 60 (<code>rag.RRF_K</code>).</div>
 </section>
 
 <section class="slide" data-plate="RRF Is Arithmetic. The Reranker Is a Model.">
   <div class="lec-top"><h2>Two different things, often confused</h2><p class="sub">Both reorder a list. Only one of them reads the text.</p></div>
   <div class="lexical-cards" style="left:100px;right:100px;top:250px;grid-template-columns:1fr 1fr">
     <div class="lexical-card lexical-c-rf"><span class="lexical-k" style="color:var(--lx-rf)">Reciprocal rank fusion</span><h3>Arithmetic on positions</h3>
-      <ul style="margin:6px 0 0;padding-left:22px"><li>In: two ranked lists. Out: one list.</li><li>Reads no text. No model, no LLM, nothing trained.</li><li>Adds 1 / (60 + rank) per list.</li><li>Cost: a few additions.</li></ul></div>
+      <ul style="margin:6px 0 0;padding-left:22px"><li>In: two ranked lists. Out: one list.</li><li>Reads no text. No model, no LLM, nothing trained.</li><li>Adds 1 / (60 + rank) per list; 60 is the RRF constant.</li><li>Cost: a few additions.</li></ul></div>
     <div class="lexical-card lexical-c-rr step"><span class="lexical-k">The reranker</span><h3>A cross-encoder: <span class="lexical-mono" style="font-size:22px">BAAI/bge-reranker-base</span></h3>
       <ul style="margin:6px 0 0;padding-left:22px"><li>In: the question and one chunk, together. Out: one relevance number.</li><li>A transformer with <span data-lx="key.rr_params_m"></span> million weights, trained to score pairs.</li><li><b>Not a generative LLM</b>: it never writes text, it only scores.</li><li>Run on the top 20 only.</li></ul></div>
   </div>
@@ -876,7 +937,7 @@
   <div class="lec-top" style="top:96px"><h2 style="font-size:50px">The pipeline: BM25’s top 20 over the dump, reranked</h2><p class="sub">The default configuration for Emma’s question. Amber: holds golden-set facts. Blue tag: D’s FAQ chunk.</p></div>
   <div class="fig" data-fig="lexical_rr20" style="left:100px;top:226px;width:1360px;height:600px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
-  <div class="lexical-src step" style="left:100px;top:806px;width:1400px;font-size:17px;color:var(--ink-2)">The quotation e-mail moves from 2nd to 1st; D’s FAQ from 16th to 10th, inside k = 10. D’s §6 is BM25’s <span data-lx="key.s6_bm25_dump" data-f="n"></span>th, so it is not among the 20: a reranker only reorders what search hands it.</div>
+  <div class="lexical-src step" style="left:100px;top:806px;width:1400px;font-size:17px;color:var(--ink-2)">The quotation e-mail moves from 2nd to 1st; D’s FAQ from 16th to 10th, inside the top 10 we hand to the model (top-k = 10). D’s §6 is BM25’s <span data-lx="key.s6_bm25_dump" data-f="n"></span>th, so it is not among the 20: a reranker only reorders what search hands it.</div>
 </section>
 
 <section class="slide" data-plate="What Reranking Costs">
@@ -886,12 +947,18 @@
   <div class="opens step" style="top:600px;background:#f4f5f7"><span class="k" style="color:var(--ink)">The costlier variant</span>Hosted rerank APIs run a reranking model for you, over the network. Or you prompt a generative LLM with the question and the 20 passages and ask for an order. We did that with gemini-3.8-flash: <span data-lx="llm.runs.0.tokens_in" data-f="n"></span> tokens in per call. It put D’s FAQ 3rd or 4th (the cross-encoder: 10th), but each of the three runs gave a different order, and each took over 20 seconds. The cross-encoder gave the same order in <span data-lx="key.rr_repeat_n"></span> of <span data-lx="key.rr_repeat_n"></span> runs.</div>
 </section>
 
+<section class="slide" data-plate="The Whole Pipeline, With Keywords">
+  <div class="lec-top" style="top:88px"><h2 style="font-size:50px">The whole pipeline, now with keywords and reranking</h2><p class="sub">Two searches side by side, RRF fuses their ranks, the reranker re-reads the top 20, the best k go to the model.</p></div>
+  <div class="fig" data-fig="dense_flow" data-hybrid="1" data-build="1" style="left:100px;top:214px;width:1400px;height:650px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
 <section class="slide q hero" data-plain="1">
   <span class="hero-num q-mark" aria-hidden="true">?</span>
   <div class="qbox">
     <p class="q-label">Ask the class · <span class="qnum"></span></p>
     <h2 class="q-text">Over the whole dump, BM25 ranks D’s §6 <em>255th</em> for Emma, and the reranker sees only the top 20. <em>What would you change?</em></h2>
-    <div class="q-opts"><span class="q-opt"><b>1</b> Rerank the top 300</span><span class="q-opt"><b>2</b> Add dense search (hybrid)</span><span class="q-opt"><b>3</b> Change k in RRF</span><span class="q-opt"><b>4</b> Search a second time, with the rule’s words</span></div>
+    <div class="q-opts"><span class="q-opt"><b>1</b> Rerank the top 300</span><span class="q-opt"><b>2</b> Add dense search (hybrid)</span><span class="q-opt"><b>3</b> Change the RRF constant</span><span class="q-opt"><b>4</b> Search a second time, with the rule’s words</span></div>
     <p class="q-cue">Type 1 to 4 in the chat, with one reason</p>
   </div>
 </section>
@@ -901,9 +968,10 @@
   <div class="qbox">
     <p class="q-label">Check · BM25, RRF and the reranker</p>
     <ol class="chk-list">
-      <li><span class="chk-q"><b>1</b>D is all about buying. Why does “buy” score nothing in it?</span><span class="chk-a step">D writes “bought”, “buys” and “purchase”, never “buy”. BM25 matches tokens exactly, and our stemmer only drops a plural s from words longer than four letters.</span></li>
-      <li><span class="chk-q"><b>2</b>RRF gave chunks 12 and 1 the same score. Why, and what breaks the tie?</span><span class="chk-a step">Ranks (1, 2) and (2, 1) both give 1/61 + 1/62 = 0.032522: RRF sees only positions. The reranker reads them: §6 first, the FAQ second, the version line fourth.</span></li>
-      <li><span class="chk-q"><b>3</b>Why not rerank all 28,953 chunks?</span><span class="chk-a step">20 pairs take <span data-lx="lat.gpu.rerank_20.p50_ms" data-f="ms"></span> on an L4 GPU, so all of them would take about <span data-lx="key.all_pairs_gpu_s"></span> s per question at that rate; on 4 CPU cores, 20 pairs already take <span data-lx="lat.cpu.rerank_20.p50_ms" data-f="ms"></span>.</span></li>
+      <li><span class="chk-q"><b>1</b>D is all about buying. Why does “buy” score nothing in it?</span><span class="chk-a step">D writes “bought”, “buys” and “purchase”, never “buy”, and BM25 matches exact words only.</span></li>
+      <li><span class="chk-q"><b>2</b>Which part of the weight is measured across all chunks?</span><span class="chk-a step">idf: how many chunks contain the word. Saturation and length are measured inside one chunk.</span></li>
+      <li><span class="chk-q"><b>3</b>RRF gave chunks 12 and 1 the same score. Why, and what breaks the tie?</span><span class="chk-a step">(1, 2) and (2, 1) both give 1/61 + 1/62 = 0.032522. The reranker reads them: FAQ 2nd, version line 4th.</span></li>
+      <li><span class="chk-q"><b>4</b>Why not rerank all 28,953 chunks?</span><span class="chk-a step">20 pairs take <span data-lx="lat.gpu.rerank_20.p50_ms" data-f="ms"></span> on an L4 GPU, so all of them would take about <span data-lx="key.all_pairs_gpu_s"></span> s per question at that rate; on 4 CPU cores, 20 pairs already take <span data-lx="lat.cpu.rerank_20.p50_ms" data-f="ms"></span>.</span></li>
     </ol>
   </div>
 </section>
@@ -931,14 +999,19 @@
   <span class="hero-num q-mark" aria-hidden="true">?</span>
   <div class="qbox">
     <p class="q-label">Ask the class · RAG engineering · <span class="qnum"></span></p>
-    <h2 class="q-text">For this data: which chunk size, which search, reranker or not, which k? <em>Write your four guesses.</em></h2>
-    <div class="q-opts"><span class="q-opt"><b>Size</b>200 · 400 · 800 · 1200</span><span class="q-opt"><b>Search</b>dense · BM25 · hybrid</span><span class="q-opt"><b>Reranker</b>yes · no</span><span class="q-opt"><b>k</b>3 · 5 · 10</span></div>
-    <p class="q-cue">Keep them. We check them against the data in a few slides</p>
+    <h2 class="q-text">Four settings for the whole dump. <em>What is your guess for each?</em></h2>
+    <div class="engineer-qk">
+      <div><b>Chunk size</b><span class="w">how many tokens go in one chunk</span><span class="o">200 · 400 · 800 · 1,200</span></div>
+      <div><b>Search</b><span class="w">by meaning (dense), by matching words (BM25), or both, fused with RRF (hybrid)</span><span class="o">dense · BM25 · hybrid</span></div>
+      <div><b>Reranker</b><span class="w">re-read the top 20 with the cross-encoder and reorder them, or not</span><span class="o">yes · no</span></div>
+      <div><b>top-k</b><span class="w">how many chunks go to the model with the question</span><span class="o">3 · 5 · 10</span></div>
+    </div>
+    <p class="q-cue">One line in the chat: size · search · reranker · top-k. We check it against the data in a few slides</p>
   </div>
 </section>
 
 <section class="slide" data-plate="Recall@5 and MRR, on Emma’s Question">
-  <div class="lec-top"><h2>Is a gold passage in the top 5?</h2><p class="sub">Emma’s question in the whole dump, default pipeline. Gold: a passage her golden-set record lists.</p></div>
+  <div class="lec-top"><h2>Is a gold passage in the top 5?</h2><p class="sub">Emma’s question in the whole dump, BM25 + reranker. Gold: a passage her golden-set record lists.</p></div>
   <div class="fig" data-fig="engineer_top" data-q="Q-EMMA" style="left:100px;top:250px;width:1400px;height:560px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
@@ -959,73 +1032,52 @@
     <p class="step small">Time to answer adds the answer model: p50 <span data-e="latency.total_p50_s" data-f="s1"></span>, p95 <span data-e="latency.total_p95_s" data-f="s1"></span>, against a 4 s target. <b class="b">Missed.</b> The search is under 1% of it.</p>
   </div>
   <div class="fig" data-fig="engineer_lat" style="left:640px;top:150px;width:860px;height:600px"></div>
-  <div class="cap" style="left:640px;top:770px;width:860px">The chosen configuration on all 224 questions, BM25 plus the reranker (<code>rag_answers/…k10.json</code>, field <code>retrieval_s</code>). Percentiles as <code>evaluate.pct</code> computes them.</div>
+  <div class="cap" style="left:640px;top:770px;width:860px">The configuration we end up choosing, on all 224 questions: BM25 plus the reranker (<code>rag_answers/…k10.json</code>, field <code>retrieval_s</code>). Percentiles as <code>evaluate.pct</code> computes them.</div>
 </section>
 
 <section class="slide" data-plate="Cost per Question">
   <div class="lec-top"><h2>Cost: tokens times the price</h2><p class="sub">The answer model is billed per token. Search adds nothing: BM25 and the reranker run on our own machine.</p></div>
   <div class="fig" data-fig="engineer_cost" style="left:100px;top:250px;width:1400px;height:400px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
-  <div class="opens step" style="top:680px;background:var(--g1)"><span class="k" style="color:var(--after)">Per day</span>224 questions a day costs about $<span data-e="context.day_usd_224" data-f="r2"></span>. Judging the answers is the cost of testing, not of answering: $<span data-e="answer_spend.judge_usd" data-f="r2"></span> for all <span data-e="answer_spend.n_answers" data-f="n"></span> judgements.</div>
+  <div class="opens step" style="top:680px;background:var(--g1)"><span class="k" style="color:var(--after)">Per day</span>224 questions a day costs about $<span data-e="context.day_usd_224" data-f="r2"></span>. Checking answers with a second model (next slide) is the cost of testing, not of answering: $<span data-e="answer_spend.judge_usd" data-f="r2"></span> for all <span data-e="answer_spend.n_answers" data-f="n"></span> checks.</div>
   <div class="cap" style="left:100px;top:820px;width:1400px">Price: the course’s list price for gemini-3.8-flash, $0.825 in and $4.125 out per million tokens (<code>evaluate.PRICE_USD</code>).</div>
 </section>
 
 <section class="slide" data-plate="Judging One Answer">
-  <div class="lec-top"><h2>Three checks on Emma’s answer</h2><p class="sub">Retrieval scored 1 for her question. Was the answer right?</p></div>
+  <div class="lec-top"><h2>Three checks on Emma’s answer</h2><p class="sub">Recall@5 was 1 for her question. Was the answer right?</p></div>
   <div class="fig" data-fig="engineer_judge" style="left:100px;top:230px;width:1400px;height:620px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
 <section class="slide" data-plate="The Grid of Knobs">
-  <div class="lec-top"><h2>Every combination of the knobs</h2><p class="sub">The knobs from this lecture, each with the settings we tried, in every combination.</p></div>
-  <div class="fig" data-fig="engineer_knobs" style="left:100px;top:232px;width:1400px;height:610px"></div>
-  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="lec-top"><h2>Two kinds of knob: build an index, or query it</h2><p class="sub">Some knobs change what is stored, so each choice needs its own index. The rest change only how one index is searched.</p></div>
+  <div class="fig" data-fig="engineer_knobs" style="left:100px;top:226px;width:1400px;height:640px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
 <section class="slide" data-plate="One Knob at a Time">
-  <div class="lec-top"><h2>Change one knob, hold the rest</h2><p class="sub">Read off the full grid: start from the chosen setting, change one knob, compare recall@5.</p></div>
+  <div class="lec-top"><h2>Change one knob, hold the rest</h2><p class="sub">Read off the full grid: start from the setting we end up choosing (blue), change one knob, compare recall@5.</p></div>
   <div class="fig" data-fig="engineer_okat" style="left:100px;top:232px;width:1400px;height:500px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
   <div class="opens step" style="top:745px;background:var(--g4)"><span class="k">Knobs interact</span>Tune chunk size with the reranker off and you pick 1,200 tokens. With it on, 200 wins. So we ran every combination, then read it one knob at a time.</div>
 </section>
 
-<section class="slide" data-plate="The Code That Runs It">
-  <div class="lec-top"><h2>The code that runs the grid</h2><p class="sub">One container per index. Inside, every search setting answers every golden question.</p></div>
-  <div class="fig" data-fig="engineer_code" data-hl0="498" data-hl="499-504;507-511" style="left:100px;top:232px;width:860px;height:500px"></div>
-  <div class="code step" style="position:absolute;left:1000px;top:232px;width:500px;height:200px;font-size:14px;white-space:pre"><span class="c"># build + search, 48 containers</span>
-modal run experiments/l3_modal.py::grid_build
-<span class="c"># one row per setting → logs/rag_grid.json</span>
-modal run experiments/l3_modal.py::collect
-<span class="c"># answer + judge the candidates</span>
-modal run experiments/l3_modal.py::answers \
-    --configs &lt;9 ids&gt;</div>
-  <div class="card step" style="position:absolute;left:1000px;top:452px;width:500px;font-size:19px;padding:16px 20px"><span class="tag nt">Machine and time</span><br>Modal L4 GPU, 4 vCPU, 16 GiB. <span data-e="scale.n_chunkings"></span> containers, up to 16 at once, <span data-e="scale.container_wall_s.min" data-f="min"></span> to <span data-e="scale.container_wall_s.max" data-f="min"></span> minutes each: <span data-e="context.gpu_hours"></span> L4-hours. <span data-e="scale.vectors_embedded" data-f="M"></span> vectors embedded.</div>
-  <div class="card step" style="position:absolute;left:1000px;top:632px;width:500px;font-size:19px;padding:16px 20px"><span class="tag nt">Then the answers</span><br><span data-e="answered.length"></span> settings answered and judged: <span data-e="answer_spend.n_answers" data-f="n"></span> answers, $<span data-e="answer_spend.answer_usd" data-f="r2"></span>, plus $<span data-e="answer_spend.judge_usd" data-f="r2"></span> for the judge.</div>
-  <div class="cap" style="left:100px;top:750px;width:860px">Each row stores recall@3/5/10, MRR, coverage and the p50/p95 search time. Container times from the Volume <code>northbridge-raglab</code>, <code>/vol/grid</code>.</div>
-</section>
-
 <section class="slide" data-plate="Results: How We Cut">
-  <div class="lec-top"><h2>How we cut: one knob per panel</h2><p class="sub">Recall@5 on 205 questions. In each panel only that knob changes; the rest stays at the chosen setting. Blue: chosen.</p></div>
+  <div class="lec-top"><h2>How we cut: one knob per panel</h2><p class="sub">Recall@5 on 205 questions. In each panel only that knob changes; the rest stays at the setting we choose (blue).</p></div>
   <div class="fig" data-fig="engineer_panels" data-set="cut" data-per="1" data-cols="2" style="left:100px;top:240px;width:1400px;height:580px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
 <section class="slide" data-plate="Results: How We Search">
-  <div class="lec-top"><h2>How we search: one knob per panel</h2><p class="sub">Recall@5 on 205 questions, on the chosen cut. Blue: chosen. Orange: over the 200 ms budget.</p></div>
+  <div class="lec-top"><h2>How we search: one knob per panel</h2><p class="sub">Recall@5 on 205 questions, on the cut we choose. Blue: the setting we choose. Orange: over the 200 ms budget.</p></div>
   <div class="fig" data-fig="engineer_panels" data-set="search" data-per="2" data-cols="3" style="left:100px;top:240px;width:1400px;height:590px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
 <section class="slide" data-plate="Your Guesses Against the Data">
-  <div class="lec-top"><h2>Your guesses against the data</h2><p class="sub">Read your four guesses out. Then the whole dump answers, one row per click.</p></div>
-  <table class="engineer-gt" style="left:100px;width:1400px;top:226px">
-    <tr><th style="width:200px">Knob</th><th style="width:300px">Your guess</th><th>The whole dump says (recall@5, 205 questions)</th></tr>
-    <tr><td class="kn">Chunk size</td><td class="gs">…</td><td class="ds step"><b>200 tokens</b>: <span data-e="slices.size.0.recall@5" data-f="r3"></span>. 400: <span data-e="slices.size.1.recall@5" data-f="r3"></span>, 1,200: <span data-e="slices.size.3.recall@5" data-f="r3"></span>.</td></tr>
-    <tr><td class="kn">Search</td><td class="gs">…</td><td class="ds step"><b>BM25</b>: <span data-e="slices.search.1.recall@5" data-f="r3"></span>. Hybrid <span data-e="slices.search.2.recall@5" data-f="r3"></span>, dense <span data-e="slices.search.0.recall@5" data-f="r3"></span> (all with the reranker).</td></tr>
-    <tr><td class="kn">Reranker</td><td class="gs">…</td><td class="ds step"><b>Yes</b>: +<span data-e="context.rerank_gain_points"></span> points for <span data-e="context.rerank_cost_ms"></span> ms more at p95.</td></tr>
-    <tr><td class="kn">k</td><td class="gs">…</td><td class="ds step"><b>10</b>: recall@10 <span data-e="slices.k.2.recall" data-f="r3"></span>; answers right <span data-e="scorecard.answers.answer_correct" data-f="pct"></span> against <span data-e="context.k5_answer_correct" data-f="pct"></span> at k = 5.</td></tr>
-  </table>
-  <div class="opens step" style="top:560px;background:var(--g4)"><span class="k">Where one document misled us: chunk size</span>On the Purchase Policy alone, 400-token chunks put §6.2 first: there were only <span data-e="context.doc_chunks_400"></span> chunks to beat. Across <span data-e="context.chunks" data-f="n"></span> chunks and 224 questions, 200 tokens wins, and with dense search too (<span data-e="slices.interaction_size_x_search.dense.200" data-f="r3"></span> against <span data-e="slices.interaction_size_x_search.dense.400" data-f="r3"></span>).</div>
+  <div class="lec-top"><h2>Your guesses against the data</h2><p class="sub">Say your guess for each knob. Then the whole dump answers, one row per click. Blue: the best setting.</p></div>
+  <div class="fig" data-fig="engineer_guess" style="left:100px;top:218px;width:1400px;height:650px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
 <section class="slide" data-plate="The Selection Rule">
@@ -1035,10 +1087,10 @@ modal run experiments/l3_modal.py::answers \
 </section>
 
 <section class="slide" data-plate="The Chosen Configuration, Scored">
-  <div class="lec-top"><h2>The chosen configuration, against our targets</h2><p class="sub">Structured parser · structure-aware 200-token chunks, 15% overlap · BM25 · bge-reranker-base over the top 20 · top 10 to the answer.</p></div>
+  <div class="lec-top"><h2>The chosen configuration, against our targets</h2><p class="sub">Structured parser · structure-aware 200-token chunks, 15% overlap · BM25 · reranker over the top 20 · top-k = 10.</p></div>
   <div class="fig" data-fig="engineer_score" style="left:100px;top:262px;width:1400px;height:500px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
-  <div class="cap" style="left:100px;top:790px;width:1400px">Search and answers on all 224 questions, answers at the 150-word cap used before the race (<code>rag_best.json</code>). The race reruns every method at 250 words.</div>
+  <div class="cap" style="left:100px;top:790px;width:1400px">Search and answers on all 224 questions, answers capped at 150 words (<code>rag_best.json</code>). The race later in this lecture reruns every method at 250 words.</div>
 </section>
 
 <section class="slide" data-plate="Where It Still Fails">
@@ -1080,36 +1132,9 @@ modal run experiments/l3_modal.py::answers \
 </section>
 
 <section class="slide" data-plate="What a Vector Store Keeps">
-  <div class="store-col" style="left:100px;top:118px;width:420px">
-    <h2>One record per chunk</h2>
-    <p>A vector store is a table. Each row is one chunk. Here is the row for §6 of document D, read back from Chroma.</p>
-    <p class="step">The <b>metadata</b> travels with it: the file, and the flags we filter on.</p>
-    <p class="step">The <b>embedding</b>: 384 numbers, length 1. Only these are searched.</p>
-    <p class="step">A hit returns the id, the text and the metadata. That is how the answer cites “POL-PUR-001 v4.1, p.2, § 6”.</p>
-  </div>
-  <div class="fig" data-fig="store_record" style="left:570px;top:118px;width:930px;height:700px"></div>
-</section>
-
-<section class="slide" data-plate="Document D in Chroma">
-  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">Fifteen chunks, written to a folder</h2><p class="sub">The course code, on Modal: <code>rag.Index.build</code> on D’s chunks. Then we list what it wrote.</p></div>
-  <div class="fig" data-fig="store_code" data-code="chroma_build" data-hl=";8;9;10" style="left:100px;top:250px;width:620px;height:300px"></div>
-  <div class="fig store-term" data-fig="store_files" data-set="D" data-hl="sqlite|header,length,level0,link_lists|level0" style="left:750px;top:250px;width:750px;height:300px"></div>
-  <ol class="store-notes" style="position:absolute;left:100px;top:590px;width:1400px">
-    <li class="step"><span><b>chroma.sqlite3</b> holds the 15 records: ids, text, metadata, and the vectors in a write log (<span data-st="local.D.sqlite_tables.embeddings_queue" data-f="n"></span> rows).</span></li>
-    <li class="step"><span>The folder with a long id is the <b>HNSW index</b>: <code>data_level0.bin</code> keeps vectors and links, <code>link_lists.bin</code> the upper layers.</span></li>
-    <li class="step"><span><span data-st="local.D.files.0.bytes" data-f="mb"></span> for 15 vectors? It holds <span data-st="local.D.hnsw_headers_first.cur_element_count" data-f="n"></span> of them, with room for <span data-st="local.D.hnsw_headers_first.max_elements" data-f="n"></span> set aside. Chroma moves vectors from the log into HNSW once <span data-st="local.D.collection_config.hnsw.sync_threshold" data-f="n"></span> are waiting.</span></li>
-  </ol>
-</section>
-
-<section class="slide" data-plate="The Whole Dump in Chroma">
-  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">28,953 chunks: 196 MB on disk</h2><p class="sub"><code>rag.add_vectors</code> with the grid’s bge-small vectors, timed on Modal: <span data-st="local.dump.add_s"></span> s for all of them.</p></div>
-  <div class="fig store-term" data-fig="store_files" data-set="dump" data-hl="sqlite|data_level0,link_lists,index_metadata|a" style="left:100px;top:240px;width:900px;height:420px"></div>
-  <div class="store-col" style="left:1040px;top:240px;width:460px">
-    <p>Two collections, as the course builds them: <b><span data-st="local.dump.counts.bge-small" data-f="n"></span></b> chunks staff may read, and <b><span data-st="local.dump.counts.bge-small__hr" data-f="n"></span></b> HR-confidential chunks on their own.</p>
-    <p class="step">SQLite is the big file: every chunk’s text twice (records and a keyword index) and <span data-st="local.dump.sqlite_tables.embedding_metadata" data-f="n"></span> metadata rows, 9 per chunk.</p>
-    <p class="step">The HNSW files hold <span data-st="local.dump.hnsw_main.cur_element_count" data-f="n"></span> vectors, <span data-st="local.dump.hnsw_main.size_data_per_element" data-f="n"></span> bytes each: 384 × 4 bytes plus <span data-st="local.dump.hnsw_main.maxM0"></span> links. The last few hundred still wait in SQLite’s log.</p>
-    <p class="step">The raw vectors alone are <span data-st="local.dump.raw_vector_bytes" data-f="mb"></span>. The rest is text, metadata and the graph.</p>
-  </div>
+  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">Per chunk: an id, the text, the metadata, the vector</h2><p class="sub">The record for §6 of document D (chunk 5 of its 15), read back from Chroma on Modal.</p></div>
+  <div class="fig" data-fig="store_keeps" style="left:100px;top:214px;width:1400px;height:620px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
 <section class="slide" data-plate="Searching Chroma">
@@ -1119,26 +1144,53 @@ modal run experiments/l3_modal.py::answers \
   <p class="cap step" style="left:100px;top:700px;width:660px;font-size:21px">E-mails about Brightcell share Emma’s words. The store returns the nearest vectors; it does not know which one holds the rule.</p>
 </section>
 
-<section class="slide" data-plate="A Filter in the Query">
-  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">Metadata filters: drop old copies</h2><p class="sub">“<span data-st="local.dump.version_demo.question"></span>” (<span data-st="local.dump.version_demo.id"></span>). The whole dump, top 5.</p></div>
-  <div class="fig" data-fig="store_res" data-path="local.dump.version_demo.plain" data-title="No filter" style="left:100px;top:240px;width:680px;height:330px"></div>
-  <div class="fig step" data-fig="store_res" data-path="local.dump.version_demo.where_not_superseded" data-title='where={"superseded": False}' data-k0="0" style="left:820px;top:240px;width:680px;height:330px"></div>
-  <div class="fig step" data-fig="store_bars" data-rows="Chroma, no filter · p50|local.dump.latency_ms.plain.p50|220|ms;Chroma, no filter · p95|local.dump.latency_ms.plain.p95|220|ms;b:with the where filter · p50|local.dump.latency_ms.where_not_superseded.p50|220|ms;b:with the where filter · p95|local.dump.latency_ms.where_not_superseded.p95|220|ms" data-cap="Search time for the 224 golden questions, k = 10, Chroma 1.0.15 in a Modal container. The filter is applied outside the HNSW graph." style="left:100px;top:610px;width:1000px;height:200px"></div>
-  <div class="store-pin step" style="left:1140px;top:610px;width:360px">That is why the course keeps HR’s chunks in <b>their own collection</b>: Emma’s search never opens it, and costs nothing extra.</div>
+<section class="slide" data-plate="Metadata: What Each Chunk Says About Itself">
+  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">Metadata: fields stored with each chunk</h2><p class="sub">The parser read them from the file itself: its header, its name, its folder. The store keeps them beside the vector.</p></div>
+  <div class="fig" data-fig="store_payload" style="left:100px;top:205px;width:640px;height:380px"></div>
+  <div class="step" style="position:absolute;left:0;top:0;width:1600px;height:900px;pointer-events:none">
+  <div class="store-pin" style="left:100px;top:600px;width:640px"><b>Superseded</b> means replaced by a newer version of the same document. The Approval Matrix v2.0 (2024) was replaced by v3.0 (2026), but the old file is still in the dump.</div>
+  <div class="fig" data-fig="store_shot" data-img="filter_superseded.jpg" data-what="Qdrant dashboard: Points tab filtered by superseded:true" data-hl="38,30,60,7;20,75,22,6" style="left:780px;top:205px;width:720px;height:450px"></div>
+  <p class="cap" style="left:780px;top:664px;width:720px;font-size:17px">Our dashboard, Points tab, filter <code>superseded:true</code>. First hit: point <span data-st="latency.eu.facts.point_192.id"></span>, <span data-st="latency.eu.facts.point_192.doc_id"></span> v<span data-st="latency.eu.facts.point_192.version"></span>, status <span data-st="latency.eu.facts.point_192.status"></span>.</p></div>
+  <div class="fig step" data-fig="store_status" style="left:100px;top:728px;width:1400px;height:110px"></div>
 </section>
 
-<section class="slide" data-plate="A Vector Database Is an Approximate Search">
-  <div class="store-col" style="left:100px;top:118px;width:470px">
-    <h2>HNSW: a graph it walks</h2>
-    <p>Comparing the question with all 28,941 vectors is exact, but grows with the dump. HNSW links each vector to its near neighbours, in layers.</p>
-    <p class="step">The search starts at the top, sparse layer, steps to whichever neighbour is closer to the question, and drops a layer when none is.</p>
-    <p class="step">It stops early, so it can miss. We measured it: share of the exact top 10 that came back, 224 questions.</p>
-    <p class="step">One setting, <code>ef_search</code> (how many candidates it keeps), fixed it. Now in <code>rag.HNSW</code>.</p>
+<section class="slide" data-plate="A Filter Inside the Search">
+  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">A filter: a condition the store checks during the search</h2><p class="sub" style="font-size:22px">Q-605 from a purchase executive: “What is a purchase executive’s approval limit?” The dump gives <span data-st="q605_amounts.0"></span>, <span data-st="q605_amounts.1"></span> and <span data-st="q605_amounts.2"></span>. One is in force.</p></div>
+  <div class="store-col" style="left:100px;top:222px;width:560px">
+    <p>Every store takes a filter with the query: Chroma’s <code>where=</code>, Qdrant’s <code>query_filter=</code>, pgvector’s SQL <code>WHERE</code>.</p>
   </div>
-  <div class="fig" data-fig="store_hnsw" data-w="880" style="left:620px;top:100px;width:880px;height:430px"></div>
-  <div class="fig step" data-fig="store_bars" data-rows="Chroma defaults|hnsw.default.overlap@10|1|pct;ef_search 200|hnsw.ef_search200.overlap@10|1|pct|1;ef_search 1,000|hnsw.ef_search1000.overlap@10|1|pct|1;hi:ef_search 4,000|hnsw.ef_search4000.overlap@10|1|pct|1" data-cap="hnsw_check.json: bge-small, 13,606 chunks (structured, 400 tokens), chromadb 1.0.15. Time per query: 3.3 ms at the defaults, 7.3 ms at 4,000." style="left:620px;top:600px;width:880px;height:220px"></div>
-  <span class="step" style="display:none"></span>
-  <p class="cap" style="left:620px;top:520px;width:880px">A toy graph of 42 points, searched by the real greedy rule. Chroma’s graph for the dump has <span data-st="local.dump.hnsw_main.layers"></span> layers and links each vector to up to <span data-st="local.dump.hnsw_main.M"></span> others (<span data-st="local.dump.hnsw_main.maxM0"></span> on the bottom layer).</p>
+  <div class="fig" data-fig="store_code" data-code="filter" data-hl=";;2,7;" style="left:100px;top:322px;width:560px;height:215px"></div>
+  <div class="fig step" data-fig="store_res" data-path="latency.eu.facts.q605.emma.hybrid" data-w="52" data-d="4" data-flag="approval_limits.html|3" data-title="Before · hybrid, top 5 · HR filter only" style="left:720px;top:222px;width:780px;height:290px"></div>
+  <div class="step" style="position:absolute;left:0;top:0;width:1600px;height:900px;pointer-events:none">
+  <p class="store-col" style="left:100px;top:560px;width:560px;font-size:23px;line-height:1.42">The store checks it inside the search. A chunk that fails never competes, so all five places go to chunks that pass.</p>
+  <div class="fig" data-fig="store_res" data-path="latency.eu.facts.q605.emma_current.hybrid" data-w="52" data-d="4" data-flag="approval_limits.html|3" data-title="After · + superseded = false" style="left:720px;top:540px;width:780px;height:290px"></div></div>
+  <p class="store-pin step" style="left:100px;top:700px;width:560px;margin:0">The 2016 page stays first: nothing in it says it is old, so its metadata is empty. A filter is only as good as the metadata.</p>
+</section>
+
+<section class="slide" data-plate="HNSW, Word by Word">
+  <div class="store-col" style="left:100px;top:110px;width:480px">
+    <h2 style="font-size:40px">HNSW: Hierarchical Navigable Small World</h2>
+    <p>Exact search compares the question with all 28,941 vectors. Fine today; slow at ten times the size. HNSW follows links instead.</p>
+    <p class="step"><b>Small world.</b> Each point links to a few near neighbours, plus a few long links. Any point is then a few hops from any other.</p>
+    <p class="step"><b>Navigable.</b> A greedy walk: step to whichever neighbour is closer to the question. Stop when none is.</p>
+    <p class="step"><b>Hierarchical.</b> Sparse upper layers for long jumps, a dense bottom layer for the fine search: motorways, then local roads.</p>
+  </div>
+  <div class="fig" data-fig="store_hnsw" data-w="900" style="left:600px;top:110px;width:900px;height:560px"></div>
+  <p class="cap" style="left:600px;top:690px;width:900px;font-size:17px">A toy graph of 42 points, searched by the real greedy rule. Chroma’s graph for the dump has <span data-st="local.dump.hnsw_main.layers"></span> layers; our Qdrant collection links each point to <span data-st="ingest.info.hnsw.m"></span> others.</p>
+</section>
+
+<section class="slide" data-plate="Two Settings, and Why It Can Miss">
+  <div class="store-col" style="left:100px;top:110px;width:500px">
+    <h2 style="font-size:42px">Two settings you will meet</h2>
+    <p><b>m</b>: links per point. More links, a better graph, more memory. Qdrant’s default, on our collection: <span data-st="ingest.info.hnsw.m"></span>.</p>
+    <p><b>ef</b>: how many candidates the walk keeps as it searches. Larger: closer to exact, and slower.</p>
+  </div>
+  <div class="step" style="position:absolute;left:0;top:0;width:1600px;height:900px;pointer-events:none">
+  <p class="store-col" style="left:100px;top:430px;width:500px;font-size:23px;line-height:1.42">It can miss: the walk stops where no neighbour is closer, even if a closer vector sits elsewhere.</p>
+  <div class="fig store-narrow" data-fig="store_bars" data-rows="b:Chroma · defaults|hnsw.default.overlap@10|1|pct;Chroma · ef 4,000|hnsw.ef_search4000.overlap@10|1|pct;b:Qdrant · defaults|latency.eu.facts.overlap_at_10_vs_exact.default.mean|1|pct;hi:Qdrant · ef 2,000|latency.eu.facts.overlap_at_10_vs_exact.hnsw_ef_2000.mean|1|pct" data-cap="Our own check: share of the exact top 10 that came back (ef: ef_search in Chroma, hnsw_ef in Qdrant). Chroma: hnsw_check.json, 13,606 chunks (3.3 ms → 7.3 ms per query). Qdrant: our cluster, 224 golden questions." style="left:100px;top:560px;width:520px;height:260px"></div></div>
+  <div class="step" style="position:absolute;left:0;top:0;width:1600px;height:900px;pointer-events:none">
+  <div class="fig" data-fig="store_shot" data-img="ann_recall.jpg" data-what="Qdrant dashboard: ANN Recall check on northbridge_docs" style="left:660px;top:110px;width:840px;height:525px"></div>
+  <p class="cap" style="left:660px;top:645px;width:840px;font-size:17px;margin:0">Qdrant’s own check agrees. ANN Recall tab on our collection: <span data-st="dashboard.ann_recall.sampled_points"></span> stored points as questions, HNSW at the defaults against exact search. Mean recall@10 <span data-st="dashboard.ann_recall.mean_recall_at_10"></span> ± <span data-st="dashboard.ann_recall.std" data-f="r2"></span>; exact ≈ <span data-st="dashboard.ann_recall.exact_ms_typical"></span> ms, HNSW ≈ <span data-st="dashboard.ann_recall.hnsw_ms_typical"></span> ms per search.</p></div>
 </section>
 
 <section class="slide q hero" data-plain="1">
@@ -1179,134 +1231,122 @@ modal run experiments/l3_modal.py::answers \
   <div class="fig" data-fig="store_pick" style="left:600px;top:118px;width:900px;height:700px"></div>
 </section>
 
-<section class="slide" data-plate="Walkthrough · 1 · A Free Cluster">
-  <div class="store-col" style="left:100px;top:118px;width:400px">
-    <h2>A free cluster</h2>
-    <p>At cloud.qdrant.io: sign up, <b>Create cluster</b>, choose the free tier.</p>
-    <p class="step">One node: <span data-st="dashboard.cluster.vcpu"></span> vCPU, <span data-st="dashboard.cluster.ram"></span> RAM, <span data-st="dashboard.cluster.disk"></span> disk. Ours runs on GCP <b><span data-st="dashboard.cluster.cloud_provider"></span></b> (Frankfurt): the data stays in the EU.</p>
-    <p class="step">Version <span data-st="dashboard.cluster.version"></span>, so BM25 runs inside the engine. Keep the endpoint: the code needs it.</p>
+<section class="slide" data-plate="The Engineer’s Checklist for a New Store">
+  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">Ten decisions in your control</h2><p class="sub">For any new RAG project, in this order: what we chose, and (in blue) what it bought us.</p></div>
+  <div class="fig store-ck" data-fig="store_ck" style="left:100px;top:230px;width:1400px;height:560px">
+    <div class="c" data-k="0"><i>1</i><b>Region and tier</b>Next to the app, where the data may live. Ours: Frankfurt, free.<em>Round trip <span data-st="latency.default_region.rtt.p50" data-f="ms"></span> → <span data-st="latency.eu.rtt.p50" data-f="ms"></span></em></div>
+    <div class="c" data-k="0"><i>2</i><b>The key</b>In one secret file, never in code, logs or prompts.<em>The script refuses to write a log that holds it</em></div>
+    <div class="c" data-k="0"><i>3</i><b>Schema = the model</b>384 numbers, cosine: what bge-small makes.<em>A new model: a new collection</em></div>
+    <div class="c" data-k="0"><i>4</i><b>Indexes on filter fields</b>And a BM25 text index, before the upload.<em>Filter cost: nothing measurable</em></div>
+    <div class="c" data-k="0"><i>5</i><b>Upload, then look</b>Batches of 256; open the dashboard and read.<em><span data-st="ingest.count" data-f="n"></span> points in <span data-st="ingest.rest.upsert_s"></span> s</em></div>
+    <div class="c" data-k="1"><i>6</i><b>Recall, then ef</b>Golden set on the store; we set hnsw_ef 2,000.<em>Recall@5 <span data-st="ef.runs.default.recall@5" data-f="r3"></span> → <span data-st="ef.runs.hnsw_ef_2000.recall@5" data-f="r3"></span></em></div>
+    <div class="c" data-k="1"><i>7</i><b>Filter by who asks</b>Every request carries the asker’s filter.<em>HR chunks in top 5: 2 → 0</em></div>
+    <div class="c" data-k="1"><i>8</i><b>One hybrid request</b>Dense + BM25 + RRF in one call, not two.<em><span data-st="latency.suite_default_region.rest.two_calls_client_rrf.p50" data-f="ms"></span> → <span data-st="latency.suite_default_region.rest.hybrid_payload_cite.p50" data-f="ms"></span></em></div>
+    <div class="c" data-k="1"><i>9</i><b>Count round trips</b>Where the time goes, and how to cut it.<em>Ten searches: <span data-st="latency.suite_default_region.rest.ten_sequential.p50" data-f="ms"></span> → <span data-st="latency.suite_default_region.rest.ten_one_batch.p50" data-f="ms"></span></em></div>
+    <div class="c" data-k="1"><i>10</i><b>An alias</b>So the next model is a switch, not a rewrite.<em>One atomic switch, and back</em></div>
   </div>
-  <div class="fig" data-fig="store_shot" data-img="cluster_overview.jpg" data-what="Qdrant Cloud: the free cluster’s overview" data-hl="2,45,62,10;2,70,62,11" style="left:540px;top:118px;width:960px;height:600px"></div>
-  <p class="cap" style="left:540px;top:730px;width:960px">Screenshot of our cluster, 4 Nov 2026, after the upload.</p>
+  <span class="step" style="display:none"></span>
 </section>
 
-<section class="slide" data-plate="Walkthrough · 2 · The Key Lives in One File">
-  <div class="store-col" style="left:100px;top:118px;width:440px">
-    <h2>The key lives in one file</h2>
-    <p>The cluster’s <b>API Keys</b> tab makes a database key. Anyone holding it can read all of Northbridge’s documents.</p>
-    <p class="step">It goes in <code>vectordb.env</code>, which git ignores (<code>*.env</code>), and nowhere else.</p>
-    <p class="step">Not in code, not in a notebook cell, not in a log, not in the model’s prompt, not on a slide.</p>
+<section class="slide" data-plate="Checklist · 1–2 · Region, Tier and Key">
+  <div class="store-col" style="left:100px;top:110px;width:440px">
+    <h2 style="font-size:40px">1 · Where it runs</h2>
+    <p>Choose the region first: next to your app, and where the data may live. Ours: GCP <b><span data-st="dashboard.cluster.cloud_provider"></span></b>, Frankfurt. The data stays in the EU.</p>
+    <p class="step">A round trip from Modal in the US: <b><span data-st="latency.default_region.rtt.p50" data-f="ms"></span></b>. From Modal’s EU region: <b><span data-st="latency.eu.rtt.p50" data-f="ms"></span></b>.</p>
+    <p class="step">Free tier: <span data-st="dashboard.cluster.vcpu"></span> vCPU, <span data-st="dashboard.cluster.ram"></span> RAM, <span data-st="dashboard.cluster.disk"></span> disk, $0. We use <span data-st="dashboard.usage_after_ingest.disk_used_mib" data-f="mib"></span> of disk, <span data-st="dashboard.usage_after_ingest.ram_used_mib" data-f="mib"></span> of RAM.</p>
+    <div class="step"><h2 style="font-size:40px;margin-top:22px">2 · The key, in one secret</h2>
+    <p><code>vectordb.env</code>, ignored by git; a Modal secret on the server. Never in code, a notebook, a log, a prompt or a slide.</p></div>
   </div>
-  <div class="fig" data-fig="store_code" data-code="env" data-title="vectordb.env and how the script reads it" data-hl=";1-3;5-10" style="left:600px;top:150px;width:900px;height:330px"></div>
-  <div class="store-pin step" style="left:600px;top:520px;width:900px">On Modal it arrives as a <b>secret</b>. The script checks every log it writes and refuses to save one that contains the key or the endpoint.</div>
+  <div class="fig" data-fig="store_shot" data-img="cluster_overview.jpg" data-what="Qdrant Cloud: the free cluster’s overview" data-hl="4,41,59,10;4,66,59,10;14,25,9,7" style="left:580px;top:118px;width:920px;height:575px"></div>
+  <p class="cap" style="left:580px;top:705px;width:920px;font-size:17px">Our cluster’s overview, 4 Nov 2026, after the upload. The cluster ID and endpoint are blurred: the endpoint is not the secret, the key is.</p>
 </section>
 
-<section class="slide" data-plate="Walkthrough · 3 · Create the Collection">
+<section class="slide" data-plate="Checklist · 3–4 · Schema and Indexes">
   <div class="fig" data-fig="store_code" data-code="create" data-hl="3-4;6-10;12-15" style="left:100px;top:110px;width:850px;height:450px"></div>
-  <ol class="store-notes" style="position:absolute;left:100px;top:590px;width:850px">
-    <li><span>One vector per point, named <code>dense</code>: <b>384</b> numbers, <b>cosine</b>. It must match the model.</span></li>
-    <li class="step"><span>Payload indexes on the flags, before the data: filters then run inside the HNSW search.</span></li>
-    <li class="step"><span>A full-text index with <b>BM25</b> scoring on the chunk text: the keyword half of hybrid.</span></li>
+  <ol class="store-notes" style="position:absolute;left:100px;top:586px;width:850px">
+    <li><span><b>3</b> · The vector’s size and distance must match the model: <b>384</b>, <b>cosine</b>, for bge-small. Another model means another collection.</span></li>
+    <li class="step"><span><b>4</b> · A payload index on every field you filter on, made before the upload. And a full-text index with <b>BM25</b> scoring on the text.</span></li>
+    <li class="step"><span>What the index buys, p50: Chroma’s <code>where</code> (no index) <span data-st="local.dump.latency_ms.plain.p50" data-f="ms"></span> → <span data-st="local.dump.latency_ms.where_not_superseded.p50" data-f="ms"></span>. Qdrant with it: <span data-st="cloud.filter_latency_ms.none.p50" data-f="ms"></span> → <span data-st="cloud.filter_latency_ms.emma.p50" data-f="ms"></span>.</span></li>
   </ol>
   <div class="fig" data-fig="store_shot" data-img="collection_info_json.jpg" data-what="Qdrant dashboard: the collection’s Info tab" style="left:980px;top:110px;width:520px;height:532px"></div>
-  <p class="cap" style="left:980px;top:655px;width:520px">The dashboard’s Info tab on our cluster: 384 · Cosine, HNSW m = 16, ef_construct = 100 (Qdrant’s defaults).</p>
+  <p class="cap" style="left:980px;top:655px;width:520px;font-size:17px">The Info tab on our cluster: 384 · Cosine, m = <span data-st="ingest.info.hnsw.m"></span>, ef_construct = <span data-st="ingest.info.hnsw.ef_construct"></span>. Qdrant times include the trip to Frankfurt: the filter itself cost nothing measurable.</p>
 </section>
 
-<section class="slide" data-plate="Walkthrough · 4 · Upsert D, Then the Dump">
-  <div class="fig" data-fig="store_code" data-code="upsert" data-hl=";6-9;10" style="left:100px;top:110px;width:860px;height:300px"></div>
-  <ol class="store-notes" style="position:absolute;left:1000px;top:118px;width:500px">
-    <li><span>Each point: an id, the vector, and a payload with the text, the citation and the flags.</span></li>
-    <li class="step"><span>D first: <b><span data-st="ingest.D.n"></span></b> points in <span data-st="ingest.D.upsert_s"></span> s, so we can find them in the dashboard.</span></li>
-    <li class="step"><span>Then the other <b><span data-st="ingest.rest.n" data-f="n"></span></b> in <span data-st="ingest.rest.upsert_s"></span> s, in batches of 256, from Modal in the US to Frankfurt.</span></li>
-  </ol>
-  <div class="fig step" data-fig="store_shot" data-img="collections.jpg" data-what="Qdrant dashboard: the collections list" style="left:100px;top:440px;width:600px;height:375px"></div>
-  <div class="fig step" data-fig="store_kpi" data-items="points|ingest.count|n;HR confidential|ingest.count_confidential|n;superseded|ingest.count_superseded|n;in the HNSW graph|ingest.info.indexed_vectors_count|n" style="left:740px;top:440px;width:760px;height:120px"></div>
-  <p class="store-pin step" style="left:740px;top:600px;width:760px;margin:0">Not every point is in the graph: Qdrant leaves small segments unindexed and scans them exactly. Search still sees all <span data-st="ingest.count" data-f="n"></span>.</p>
+<section class="slide" data-plate="Checklist · 5 · Upload, Then Look">
+  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">5 · Upload in batches, then look at what landed</h2><p class="sub" style="font-size:22px">D first: <span data-st="ingest.D.n"></span> points in <span data-st="ingest.D.upsert_s"></span> s. Then the other <span data-st="ingest.rest.n" data-f="n"></span>, in batches of 256: <span data-st="ingest.rest.upsert_s"></span> s from Modal in the US.</p></div>
+  <div class="fig" data-fig="store_shot" data-img="visualize_all.jpg" data-what="Qdrant dashboard: Visualize, 3,000 dense vectors coloured by folder" style="left:100px;top:212px;width:720px;height:450px"></div>
+  <p class="cap" style="left:100px;top:672px;width:720px;font-size:17px">Visualize tab: Qdrant’s own map of <span data-st="dashboard.visualize.sample" data-f="n"></span> of our vectors, coloured by folder. Chunks of one kind sit together; <span data-st="dashboard.visualize.legend.06_transactions" data-f="n"></span> of them are transactions.</p>
+  <div class="step" style="position:absolute;left:0;top:0;width:1600px;height:900px;pointer-events:none">
+  <div class="fig" data-fig="store_shot" data-img="point_106.jpg" data-what="Qdrant dashboard: point 106 (§6 of D) with its payload" data-view="330px 96px 46px 232px" style="left:850px;top:212px;width:392px;height:450px"></div>
+  <p class="cap" style="left:850px;top:672px;width:392px;font-size:17px">Points tab, <code>id:106</code>: §6 of D, its payload and its 384-number vector. Open a few and read them.</p></div>
+  <div class="step" style="position:absolute;left:0;top:0;width:1600px;height:900px;pointer-events:none">
+  <div class="fig" data-fig="store_kpi" data-items="points|ingest.count|n;HR confidential|ingest.count_confidential|n;superseded|ingest.count_superseded|n;in the HNSW graph|ingest.info.indexed_vectors_count|n" style="left:1272px;top:212px;width:228px;height:450px;grid-template-columns:1fr"></div>
+  <p class="cap" style="left:1272px;top:672px;width:228px;font-size:15px">Counts, read back. Small segments stay out of the graph and are scanned exactly.</p></div>
 </section>
 
-<section class="slide" data-plate="Walkthrough · 5 · The Points in the Dashboard">
-  <div class="fig" data-fig="store_shot" data-img="point_106.jpg" data-what="Qdrant dashboard: point 106 (§6 of D) with its payload" data-hl="2,43,96,16;2,63,96,13;2,80,96,8" style="left:100px;top:96px;width:640px;height:734px"></div>
-  <div class="store-col" style="left:800px;top:118px;width:700px">
-    <h2 style="font-size:42px">§6 of D, on the cluster</h2>
-    <p>Collections → <b>northbridge_docs</b> → Points, filter <code>id:106</code>. The same chunk Chroma held.</p>
-    <p class="step">The payload: the citation, the text, the file, the section.</p>
-    <p class="step">Version, status and the three flags: what the filters read.</p>
-    <p class="step">The vector: <code>dense</code>, length 384. <b>Find Similar</b> runs a nearest-neighbour search from it.</p>
-    <p class="step">Check your own ingestion here: open a few points and read them.</p>
-  </div>
-</section>
-
-<section class="slide" data-plate="Walkthrough · 6 · Search in the Console">
-  <div class="fig" data-fig="store_shot" data-img="console_bm25.jpg" data-what="Qdrant dashboard console: a BM25 text query for ERR-PO-0412 with Emma’s filter" data-hl="26,11,35,46;26,24,34,30;61,14,39,23;61,76,39,6" style="left:100px;top:100px;width:960px;height:720px"></div>
-  <div class="store-col" style="left:1100px;top:118px;width:400px">
-    <p>The console sends REST calls to the cluster. No code needed to try a query.</p>
-    <p class="step">A BM25 text query on the <code>text</code> field, for <b>ERR-PO-0412</b>.</p>
-    <p class="step">Emma’s filter is part of the request: no HR-confidential chunk can come back.</p>
-    <p class="step">First: the quick-fix card for ERR-PO-0412.</p>
-    <p class="step">Third: <b>ERR-MAT-0412</b>, a different error. The tokenizer split the code into err, po, 0412.</p>
-  </div>
-</section>
-
-<section class="slide" data-plate="Walkthrough · 7 · Emma’s Filter, From Python">
-  <div class="fig" data-fig="store_code" data-code="search" data-hl=";1-2" style="left:100px;top:110px;width:700px;height:200px"></div>
-  <div class="store-col" style="left:840px;top:118px;width:660px">
-    <p>A purchase executive asks: “<span data-st="cloud.permission.question"></span>”</p>
-    <p class="step">Without the filter, HR’s confidential chunks rank near the top. With it, they never enter the search.</p>
-  </div>
-  <div class="fig step" data-fig="store_res" data-path="cloud.permission.no_filter" data-title="Q-901 · hybrid · no filter" data-w="50" data-d="4" style="left:100px;top:350px;width:680px;height:300px"></div>
-  <div class="fig step" data-fig="store_res" data-path="cloud.permission.filter_must_not_confidential" data-title="Q-901 · hybrid · Emma’s filter" data-w="50" data-d="4" style="left:820px;top:350px;width:680px;height:300px"></div>
-  <div class="fig step" data-fig="store_kpi" data-items="dense, no filter · p50|cloud.filter_latency_ms.none.p50|ms;Emma’s filter · p50|cloud.filter_latency_ms.emma.p50|ms;+ not superseded · p50|cloud.filter_latency_ms.emma_current.p50|ms;network round trip · p50|cloud.rtt_ms.p50|ms" style="left:100px;top:690px;width:1400px;height:120px"></div>
-</section>
-
-<section class="slide" data-plate="Walkthrough · 8 · Measure Recall on the Cluster">
+<section class="slide" data-plate="Checklist · 6 · Measure Recall, Set ef">
   <div class="store-col" style="left:100px;top:118px;width:460px">
-    <h2>The same trap, again</h2>
-    <p>Dense recall@5 on the cluster, 224 golden questions, against the width of the HNSW search, <code>hnsw_ef</code>.</p>
+    <h2 style="font-size:40px">6 · Measure recall on your golden set, then set ef</h2>
+    <p>Dense recall@5 on our cluster, 224 golden questions, against the search width <code>hnsw_ef</code>.</p>
     <p class="step">Qdrant’s default lost a quarter of what exact search finds, as Chroma’s did.</p>
-    <p class="step">At our size even exact search is cheap. We use <code>hnsw_ef=2000</code>: nearly exact, a few ms.</p>
-    <p class="step">The lesson holds for any store: run your golden set against it before you trust it.</p>
+    <p class="step">At our size even exact search is cheap. We set <code>hnsw_ef=2000</code>: nearly exact, a few ms.</p>
+    <p class="step">For any store: run your golden set against it before you trust it.</p>
   </div>
-  <div class="fig" data-fig="store_bars" data-rows="b:Qdrant default|ef.runs.default.recall@5|0.6|pct;hnsw_ef 128|ef.runs.hnsw_ef_128.recall@5|0.6|pct|1;hnsw_ef 512|ef.runs.hnsw_ef_512.recall@5|0.6|pct|1;hi:hnsw_ef 2,000|ef.runs.hnsw_ef_2000.recall@5|0.6|pct|2;exact (brute force)|ef.runs.exact.recall@5|0.6|pct|2" data-cap="Dense bge-small, Emma’s filter for staff, k = 10, from Modal. The course grid (Chroma, ef_search 4,000) measured 0.561 on the same chunks." style="left:620px;top:150px;width:880px;height:300px"></div>
+  <div class="fig" data-fig="store_bars" data-rows="b:Qdrant default|ef.runs.default.recall@5|0.6|pct;hnsw_ef 128|ef.runs.hnsw_ef_128.recall@5|0.6|pct|1;hnsw_ef 512|ef.runs.hnsw_ef_512.recall@5|0.6|pct|1;hi:hnsw_ef 2,000|ef.runs.hnsw_ef_2000.recall@5|0.6|pct|2;exact (brute force)|ef.runs.exact.recall@5|0.6|pct|2" data-cap="Dense bge-small, the asker’s filter, top-k = 10, from Modal. The course grid (Chroma, ef_search 4,000) measured 0.561 on the same chunks." style="left:620px;top:150px;width:880px;height:300px"></div>
   <div class="fig step" data-fig="store_bars" data-rows="default · p50|ef.runs.default.latency_s.p50|0.13|s;hnsw_ef 2,000 · p50|ef.runs.hnsw_ef_2000.latency_s.p50|0.13|s;exact · p50|ef.runs.exact.latency_s.p50|0.13|s" data-cap="Time per query, network included: about 100 ms of it was the trip to Frankfurt in this run." style="left:620px;top:520px;width:880px;height:200px"></div>
 </section>
 
-<section class="slide" data-plate="Walkthrough · 9 · Hybrid Inside the Engine">
+<section class="slide" data-plate="Checklist · 7 · Filter by Who Is Asking">
+  <div class="fig" data-fig="store_code" data-code="search" data-hl=";1-2" style="left:100px;top:110px;width:700px;height:200px"></div>
+  <div class="store-col" style="left:840px;top:110px;width:660px">
+    <h2 style="font-size:40px">7 · Filter by who is asking</h2>
+    <p>A purchase executive asks: “<span data-st="cloud.permission.question"></span>” Every request carries the asker’s filter.</p>
+    <p class="step">Without it, HR’s confidential salary bands rank first and second. With it, they never enter the search.</p>
+  </div>
+  <div class="fig step" data-fig="store_res" data-path="cloud.permission.no_filter" data-title="Q-901 · hybrid · no filter" data-w="50" data-d="4" style="left:100px;top:350px;width:680px;height:300px"></div>
+  <div class="fig step" data-fig="store_res" data-path="cloud.permission.filter_must_not_confidential" data-title="Q-901 · hybrid · the HR filter" data-w="50" data-d="4" style="left:820px;top:350px;width:680px;height:300px"></div>
+  <div class="fig step" data-fig="store_kpi" data-items="dense, no filter · p50|cloud.filter_latency_ms.none.p50|ms;HR filter · p50|cloud.filter_latency_ms.emma.p50|ms;+ not superseded · p50|cloud.filter_latency_ms.emma_current.p50|ms;network round trip · p50|cloud.rtt_ms.p50|ms" style="left:100px;top:690px;width:1400px;height:120px"></div>
+</section>
+
+<section class="slide" data-plate="Checklist · 8 · One Hybrid Request">
   <div class="fig" data-fig="store_code" data-code="hybrid" data-hl=";1-2;4-6;7" style="left:100px;top:110px;width:860px;height:240px"></div>
-  <div class="store-col" style="left:1000px;top:118px;width:500px">
-    <p>Two lists inside one request: the dense neighbours and the BM25 matches, 20 each.</p>
-    <p class="step">Fused by RRF on the server: arithmetic on ranks, as our <code>rag.rrf</code>. The reranker still runs in our service, on the top 20.</p>
+  <div class="store-col" style="left:1000px;top:110px;width:500px">
+    <h2 style="font-size:40px">8 · One hybrid request</h2>
+    <p>Dense and BM25 lists, 20 each, in one request, fused by RRF on the server: the RRF constant, 60, as in <code>rag.rrf</code>.</p>
+    <p class="step">The reranker still runs in our service, on the top 20.</p>
   </div>
-  <div class="fig step" data-fig="store_res" data-path="cloud.code.dense:text.results" data-n="3" data-w="40" data-title="ERR-PO-0412 · dense" data-d="3" style="left:100px;top:390px;width:440px;height:240px"></div>
-  <div class="fig step" data-fig="store_res" data-path="cloud.code.bm25:text.results" data-n="3" data-w="40" data-title="BM25 (word tokenizer)" data-d="1" style="left:580px;top:390px;width:440px;height:240px"></div>
-  <div class="fig step" data-fig="store_res" data-path="cloud.code.hybrid:text.results" data-n="3" data-w="40" data-title="Hybrid · RRF k = 60" data-d="4" style="left:1060px;top:390px;width:440px;height:240px"></div>
-  <div class="fig step" data-fig="store_bars" data-rows="dense · hnsw_ef 2,000|cloud.golden.dense_ef2000.overall.recall@5|1|pct;BM25 · word tokenizer|cloud.golden.bm25_word.overall.recall@5|1|pct;BM25 · code tokenizer|cloud.golden.bm25_code.overall.recall@5|1|pct;hi:hybrid · RRF|cloud.golden.hybrid_rrf_ef2000.overall.recall@5|1|pct" data-cap="Recall@5, 224 golden questions, scored by evaluate.py, on our cluster with each asker’s filter. Hybrid is below BM25 alone, as in our own grid (rag.BM25: 0.771): why we chose BM25 + the reranker." style="left:100px;top:650px;width:1400px;height:180px"></div>
+  <div class="fig step" data-fig="store_bars" data-rows="dense · hnsw_ef 2,000|cloud.golden.dense_ef2000.overall.recall@5|1|pct;BM25 · word tokenizer|cloud.golden.bm25_word.overall.recall@5|1|pct;hi:hybrid · RRF on the server|cloud.golden.hybrid_rrf_ef2000.overall.recall@5|1|pct" data-cap="Recall@5, 224 golden questions, evaluate.py, on our cluster with each asker’s filter. Hybrid sits below BM25 alone, as in our own grid: why we chose BM25 + the reranker." style="left:100px;top:400px;width:860px;height:200px"></div>
+  <div class="step" style="position:absolute;left:0;top:0;width:1600px;height:900px;pointer-events:none">
+  <div class="fig" data-fig="store_bars" data-rows="b:two requests|latency.suite_default_region.rest.two_calls_client_rrf.p50|220|ms;hi:one hybrid request|latency.suite_default_region.rest.hybrid_payload_cite.p50|220|ms" data-cap="Two requests: dense, then BM25, RRF in our code. Time per question from Modal in the US, p50, 30 golden questions (v5_store_latency.py)." style="left:100px;top:630px;width:860px;height:150px"></div>
+  <p class="store-pin" style="left:1000px;top:630px;width:500px;margin:0">One request saves one round trip per question. In an agent that searches five times, that is five trips.</p></div>
 </section>
 
-<section class="slide" data-plate="Walkthrough · 10 · How Fast, and What It Costs">
-  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">Measured from Modal, on our cluster</h2><p class="sub">224 golden questions, one at a time, k = 10. Modal runs in the US; the cluster is in Frankfurt.</p></div>
-  <div class="fig" data-fig="store_bars" data-rows="network round trip · p50|cloud.rtt_ms.p50|300|ms;dense · p50|cloud.golden.dense_ef2000.latency_s.p50|0.3|s;BM25 · p50|cloud.golden.bm25_word.latency_s.p50|0.3|s;hybrid · p50|cloud.golden.hybrid_rrf_ef2000.latency_s.p50|0.3|s;hi:hybrid · p95|cloud.golden.hybrid_rrf_ef2000.latency_s.p95|0.3|s;b:Qdrant in our own container · hybrid p95|selfhost.query.golden.hybrid_rrf.latency_s.p95|0.3|s|1" style="left:100px;top:240px;width:1000px;height:330px"></div>
-  <div class="store-col" style="left:1140px;top:240px;width:360px">
-    <p>Nearly all of it is the trip across the Atlantic. Put the app in the same region as the store.</p>
-    <p class="small">An earlier run, another Modal container: round trip <span data-st="cloud_run1.rtt_ms.p50" data-f="ms"></span>, hybrid p50 <span data-st="cloud_run1.hybrid_latency_s.p50" data-f="s2ms"></span>.</p>
-    <p class="step">The same code against Qdrant in our own container: a few milliseconds (small segments, scanned exactly).</p>
+<section class="slide" data-plate="Checklist · 9 · Where One Question’s Time Goes">
+  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">9 · Where one question’s time goes</h2><p class="sub" style="font-size:22px">Emma’s pipeline, each part measured on Modal in the US, median. The store is in Frankfurt.</p></div>
+  <div class="fig store-wide" data-fig="store_bars" data-rows="embed the question (CPU)|latency.default_region.embed.p50|4000|ms;round trip to the store|latency.default_region.rtt.p50|4000|ms;search inside the store|latency.default_region.server_hybrid.p50|4000|ms;b:rerank the top 20 · CPU|rerank.cpu.rerank_20.p50_ms|4000|ms|1;hi:rerank the top 20 · GPU|rerank.gpu.rerank_20.p50_ms|4000|ms|1;b:write the answer|latency.default_region.answer_model.p50|4000|ms|2" data-cap="Embed: bge-small on the container’s CPU. Search inside the store: the time Qdrant itself reports for the hybrid request. Answer: gemini-3.8-flash from the top 5, 5 calls. Rerank: bge-reranker-base over 20 candidates, 4-vCPU container or an L4 GPU (logs/v5_lexical_rerank_latency.json). The rest: logs/v5_store_latency.json, 30 golden questions." style="left:100px;top:230px;width:1000px;height:360px"></div>
+  <div class="store-col" style="left:1140px;top:230px;width:360px">
+    <p>The store’s own search: <b><span data-st="latency.default_region.server_hybrid.p50" data-f="ms"></span></b>. The trip to it: <b><span data-st="latency.default_region.rtt.p50" data-f="ms"></span></b>.</p>
+    <p class="step">The reranker on a CPU costs seconds. On a GPU: <span data-st="rerank.gpu.rerank_20.p50_ms" data-f="ms"></span>.</p>
+    <p class="step">The answer model is the largest part, and it is not the store’s.</p>
   </div>
-  <div class="store-kpi step" style="left:100px;top:690px;width:1400px">
-    <div class="m"><div class="v">$0</div><div class="k">a month, on the free tier</div></div>
-    <div class="m"><div class="v" data-st="dashboard.usage_after_ingest.disk_used_mib" data-f="mib"></div><div class="k">disk used, of 4 GiB</div></div>
-    <div class="m"><div class="v" data-st="dashboard.usage_after_ingest.ram_used_mib" data-f="mib"></div><div class="k">RAM used, of 1 GiB</div></div>
-    <div class="m"><div class="v" data-st="ingest.count" data-f="n"></div><div class="k">points, with text and payload</div></div>
-  </div>
+  <div class="store-pin step" style="left:100px;top:660px;width:1400px">But an agent searches several times per question, and each search pays the trip again. Of all the parts, the round trips are the ones you can cut without changing a model.</div>
 </section>
 
-<section class="slide" data-plate="Walkthrough · 11 · When the Model Changes">
+<section class="slide" data-plate="Checklist · 9 · Cutting Round Trips">
+  <div class="lec-top" style="top:90px"><h2 style="font-size:46px">Five ways to cut round trips</h2><p class="sub" style="font-size:22px">Measured on our cluster from Modal, p50, 30 golden questions: before, after.</p></div>
+  <div class="fig" data-fig="store_levers" style="left:100px;top:210px;width:1400px;height:640px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+</section>
+
+<section class="slide" data-plate="Checklist · 10 · An Alias for the Next Model">
   <div class="store-col" style="left:100px;top:118px;width:460px">
-    <h2>A new model means a new index</h2>
+    <h2 style="font-size:40px">10 · A new model means a new index</h2>
     <p>Vectors from two models do not mix. Change the model and every chunk must be embedded again.</p>
-    <p class="step">So the app never names a collection. It queries an <b>alias</b>, <code>northbridge</code>.</p>
+    <p class="step">So from day one the app never names a collection. It queries an <b>alias</b>, <code>northbridge</code>.</p>
     <p class="step">Build the new collection beside the old, run the golden set on it, then switch the alias in one atomic call. Roll back the same way.</p>
   </div>
   <div class="fig" data-fig="store_code" data-code="alias" data-hl=";1;2-3;4-7" style="left:600px;top:150px;width:900px;height:260px"></div>
-  <div class="store-pin step" style="left:600px;top:450px;width:900px">Ours: alias <b>northbridge</b> → <b><span data-st="ingest.alias.northbridge"></span></b>. Every query in this walkthrough went through it.</div>
+  <div class="store-pin step" style="left:600px;top:450px;width:900px">Ours: alias <b>northbridge</b> → <b><span data-st="ingest.alias.northbridge"></span></b>. Every query in this section went through it.</div>
 </section>
 
 <section class="slide q hero" data-plain="1">
@@ -1325,8 +1365,8 @@ modal run experiments/l3_modal.py::answers \
     <p class="q-label">Check · Where the vectors live</p>
     <ol class="chk-list">
       <li><span class="chk-q"><b>1</b>Who adds Emma’s filter?</span><span class="chk-a step">The search service, from the signed-in user’s role. The model never sees an option to skip it, so no prompt can talk it out of it.</span></li>
-      <li><span class="chk-q"><b>2</b>Chroma’s filter on the dump cost how much, and why did Qdrant’s not?</span><span class="chk-a step">p50 <span data-st="local.dump.latency_ms.plain.p50" data-f="ms"></span> → <span data-st="local.dump.latency_ms.where_not_superseded.p50" data-f="ms"></span> in Chroma. Qdrant filters inside the graph on a payload index: <span data-st="cloud.filter_latency_ms.none.p50" data-f="ms"></span> → <span data-st="cloud.filter_latency_ms.emma.p50" data-f="ms"></span>, network included.</span></li>
-      <li><span class="chk-q"><b>3</b>You switch from bge-small to a 768-d model. What happens to the collection?</span><span class="chk-a step">A new collection with size 768, every chunk embedded again, the golden set rerun on it, then one alias switch. The old one stays until you are sure.</span></li>
+      <li><span class="chk-q"><b>2</b>After the superseded filter, the 2016 intranet page still came first for Q-605. Why, and what fixes it?</span><span class="chk-a step">Nothing in the page says it is old, so its metadata is empty and the filter cannot see it. A rule at parse time (everything in the 2016 intranet export is history) sets <code>superseded</code>.</span></li>
+      <li><span class="chk-q"><b>3</b>Your app is in the US, the store in Frankfurt, and the agent sends ten searches per question. What cuts the most?</span><span class="chk-a step">Run the app next to the store (round trip <span data-st="latency.default_region.rtt.p50" data-f="ms"></span> → <span data-st="latency.eu.rtt.p50" data-f="ms"></span>), and send the ten as one batch (<span data-st="latency.suite_default_region.rest.ten_sequential.p50" data-f="ms"></span> → <span data-st="latency.suite_default_region.rest.ten_one_batch.p50" data-f="ms"></span> from the US).</span></li>
     </ol>
   </div>
 </section>
@@ -1632,8 +1672,8 @@ modal run experiments/l3_modal.py::answers \
 
 <section class="slide" data-plate="The Winner as a Tool">
   <div class="col" style="width:470px">
-    <h2>One tool: <code>search_docs</code></h2>
-    <p>The race winner, wrapped so the model can ask for it. Lecture 4 opens tools properly; this is a first look.</p>
+    <h2>The search, as one tool: <code>search_docs</code></h2>
+    <p>Today’s RAG pipeline, wrapped in one function the model may call when it needs a document. It only reads. Lecture 4 opens tools properly, and its tools act in Ledgerline; this is a first look.</p>
     <p class="step">The description tells the model when to use it.</p>
     <p class="step">The input: the question, in plain words or with the exact code.</p>
     <p class="step">The output: cited passages with their status, and the withheld flag.</p>

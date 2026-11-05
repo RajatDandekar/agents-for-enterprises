@@ -6,6 +6,11 @@ Every number on these slides is read from `v5/engineer_data.js`, written by `exp
 `race.json`, `audit.json`, `v5_dense.json` (the one-document playground) and the Volume `northbridge-raglab`
 (`/vol/grid/*.json`, container wall times).
 
+Revised 5 Nov 2026 after Dr. Rajat Dandekar's review: the class question spells out each knob; "The Grid of Knobs"
+now separates index knobs from search knobs and defines top-k; "The Code That Runs It" is removed (its machine and
+time line is on the grid slide); "Your Guesses Against the Data" is one row per knob with bars and a why. Words as in
+the earlier sections: top-k (k = how many chunks go to the model), "the RRF constant, 60", the header line.
+
 ## Part slide · "Which settings win on all 224 questions, and how would we know?"
 On one document we could see every knob work. Now we have to choose settings for Henrik's whole dump, and the only
 honest way is to measure on everything.
@@ -16,13 +21,17 @@ One policy: 26 units, 15 chunks, one question. We could read every chunk.
 [click] The grid is 2,112 settings × 224 questions = 473,088 searches. Nobody reads that. We decide with averages,
 measured the same way for every setting.
 
-## (q hero) Write your four guesses
-Ask them to write down chunk size, search mode, reranker yes/no and k. Keep the chat open: we read the guesses on
+## (q hero) Four settings for the whole dump: what is your guess for each?
+Read the four lines out, so nobody needs the earlier slides to answer:
+chunk size = how many tokens go in one chunk (200, 400, 800, 1,200); search = dense (by meaning), BM25 (by matching
+words) or hybrid (both lists fused with RRF); reranker = re-read the top 20 with the cross-encoder and reorder them,
+yes or no; top-k = how many chunks go to the model with the question (3, 5, 10).
+Ask for one line in the chat: size · search · reranker · top-k. Keep the chat open: we read the guesses on
 "Your Guesses Against the Data".
 
 ## Recall@5 and MRR, on Emma's Question
-Emma's question searched in the whole dump with the default pipeline (BM25 → bge-reranker-base over the top 20,
-structure-aware 200-token chunks). The top 10 as the chosen configuration returned them.
+Emma's question searched in the whole dump with BM25 then the reranker (bge-reranker-base over the top 20,
+structure-aware 200-token chunks): the setting we end up choosing. The top 10 as the chosen configuration returned them.
 [click] Gold marks: passages from files her golden-set record lists (same file, same page where the gold names one).
 Rank 1 and rank 5 are the Brightcell quotation e-mail.
 [click] Recall@5 for this question is 1: a gold passage is in the top 5. If none were, 0.
@@ -55,7 +64,8 @@ own timings (48.5 ms). Two timing runs, same machine type.
 Emma's answer: 2,368 tokens in × $0.825/M = $0.00195.
 [click] 251 tokens out × $4.125/M = $0.00104; total $0.0030.
 [click] Mean of all 224: 2,307 in, 103 out → $0.0023 a question.
-[click] 224 questions a day ≈ $0.52. The judge's calls are the cost of testing: $0.92 for 2,016 judgements.
+[click] 224 questions a day ≈ $0.52. Checking answers with a second model (the judge, next slide) is the cost of
+testing, not of answering: $0.92 for 2,016 checks (9 answered settings × 224).
 Search costs nothing per call: BM25 and the reranker run in our container.
 
 ## Judging One Answer
@@ -68,11 +78,23 @@ The real answer RAG gave Emma at the 150-word cap (before the race).
 The race (later) reruns at 250 words, where the cap stops cutting facts.
 
 ## The Grid of Knobs
-Parser 2 × chunker 3 × size 4 × overlap 2 = 48 indexes (each embedded with all 5 models and given a BM25 index).
-[click] Search: BM25, dense × 5 models, hybrid × 5 models = 11; × reranker × rewriting = 44 settings per index;
-48 × 44 = 2,112 configurations.
-[click] k is free: each setting searches once for the top 10, recall@3 and @5 are read off the same list.
-2,112 × 224 = 473,088 searches.
+Two kinds of knob. Say it plainly: some knobs change what is stored, the rest change only how we search it.
+Index knobs (orange): parser 2 (plain, structured; structured also puts the header line on each chunk) × chunker 3 ×
+chunk size 4 × overlap 2 = 48 indexes. Each is built once: cut the dump, embed every chunk, build the BM25 table. The
+48 tiles: rows = parser · chunker, columns = size, each pair = overlap 0% / 15%. Blue: the index we end up choosing.
+The embedding model also changes what is stored, so every index holds all 5 vector sets (bge-small, bge-base,
+e5-small, gte-small, nomic).
+[click] Search knobs (blue): search method 11 (BM25, dense on one of the 5 vector sets, hybrid on one of the 5) ×
+reranker off/on (re-read the top 20) × query rewriting off/on (an LLM rewrites the question first) = 44 settings on
+each index. No rebuild: every setting runs on every index. The RRF constant stays at 60 (not varied). The 44 dots:
+columns = search method, rows = reranker × rewriting; blue = BM25 + reranker, the one we choose.
+[click] top-k: k = how many chunks go to the model. It is free: each search returns the top 10 once, and recall@3
+and recall@5 are read off the same list.
+[click] 48 indexes × 44 search settings = 2,112 rows; each searches all 224 questions = 473,088 searches.
+On Modal: one L4 GPU container per index (4 vCPU, 16 GiB), up to 16 at once, 10 to 18 minutes each, 12.0 L4-hours
+in all (container wall times from the Volume northbridge-raglab, /vol/grid; 2.69 million vectors embedded).
+The commands, for anyone who asks: `modal run experiments/l3_modal.py::grid_build`, then `::collect`
+(→ logs/rag_grid.json), then `::answers --configs <ids>`.
 
 ## One Knob at a Time
 The chosen setting (blue row) and three one-knob changes: size 400 → 0.878, reranker off → 0.771, hybrid → 0.859.
@@ -81,15 +103,6 @@ The chosen setting (blue row) and three one-knob changes: size 400 → 0.878, re
 [click] BM25 + reranker: best at 200 tokens (0.893 against 0.756 at 1,200).
 [click] Knobs interact. Tuning size with the reranker off would have picked 1,200. That is why we ran the full grid
 and then read it one knob at a time from the chosen setting.
-
-## The Code That Runs It
-`experiments/l3_modal.py`, `_eval_chunking`, lines 494–512: the list of 11 search modes (line 498).
-[click] For every search mode × reranker × rewriting: a Config and a Retriever (lines 499–504).
-[click] Every golden question searched once, top 10, scored with `E.gold_hits` (lines 507–511).
-[click] The three commands: `grid_build` (48 containers), `collect` (→ rag_grid.json), `answers --configs`.
-[click] Machine and time: Modal L4, 4 vCPU, 16 GiB; 48 containers, up to 16 at once, 10 to 18 minutes each;
-12.0 L4-hours in all (last full run, from /vol/grid); 2.69 million vectors embedded.
-[click] Then 9 settings answered and judged: 2,016 answers, $4.23 for answers + $0.92 for the judge.
 
 ## Results: How We Cut
 One panel per knob, all else at the chosen setting.
@@ -104,15 +117,23 @@ Search mode with the reranker: dense (bge-small) 0.663, BM25 0.893, hybrid 0.859
 on 0.893 (48 ms).
 [click] Query rewriting: 0.839, and 10.6 s p95 (the recorded LLM call): over budget and worse. Embedding model
 (hybrid + reranker, where a model is used): 0.839–0.868, under 3 points apart.
-[click] k: recall@3 0.795, @5 0.893, @10 0.912. Answers: top 5 → 79.5%, top 10 → 87.1% judge-correct, same search.
+[click] top-k: recall@3 0.795, @5 0.893, @10 0.912. Answers: top 5 → 79.5%, top 10 → 87.1% judge-correct, same search.
 
 ## Your Guesses Against the Data
-Read the class's guesses for each row, then click.
-[click] Size: 200. [click] Search: BM25 (with the reranker). [click] Reranker: yes, +12.2 points for 47 ms.
-[click] k: 10 for the answer.
-[click] Where one document misled: on the Purchase Policy alone (v5_dense.json, bge-small), §6.2 ranked 1st with
-400-token chunks (7 chunks to beat) and 3rd with 200. On the whole dump 200 wins, with dense search too
-(0.561 against 0.556 without the reranker).
+Knob names and empty "your guess" boxes are on screen. For each row, ask a few people for their guess, then click.
+The bars are the options, everything else held at the setting we choose; blue = best.
+[click] Chunk size (recall@5, BM25 + reranker): 200 → 0.893, 400 → 0.878, 800 → 0.771, 1,200 → 0.756. Why: a small
+chunk holds one rule, so the right one can rank first; the reranker reads it faster too (47.6 ms against 127.6 ms
+at p95).
+[click] Search (recall@5, all with the reranker): dense (bge-small) 0.663, BM25 0.893, hybrid 0.859. Why: with dense
+search gold reaches the top 5 for only about two questions in three; fusing its list in costs 3.4 points.
+[click] Reranker (recall@5, BM25): no 0.771, yes 0.893. +12.2 points for 47 ms more at p95 (0.6 → 47.6 ms).
+[click] top-k (a gold chunk among the k handed over = recall@k): 3 → 0.795, 5 → 0.893, 10 → 0.912. Answers right
+(judge, all 224): 79.5% at k = 5, 87.1% at k = 10, for $0.0014 against $0.0023 a question (same search).
+[click] Where one document misled us (its own click): on the Purchase Policy alone (v5_dense.json, bge-small,
+15% overlap), §6.2 ranked 3rd of 15 chunks at 200 tokens and 1st of 7 at 400. On the whole dump 200 wins: 0.893
+against 0.878 with BM25 + reranker, and 0.561 against 0.556 with dense alone (no reranker). With only 7 big chunks
+there was little to beat; with thousands, the small chunk that holds just the rule wins.
 
 ## The Selection Rule
 2,112 configurations measured.
@@ -124,24 +145,26 @@ Rewriting is out (10.6 s).
 
 ## The Chosen Configuration, Scored
 Structured parser, structure-aware 200-token chunks, 15% overlap, BM25, bge-reranker-base over the top 20, top 10.
-Recall@5 0.893 against ≥ 0.90: missed by 0.7 points (recall@10 0.912). MRR 0.673. Search 44.5 / 48.5 ms: met.
+Recall@5 0.893 against ≥ 0.90: missed by 0.7 points (recall@10 0.912, one reason for top-k = 10). MRR 0.673. Search 44.5 / 48.5 ms: met.
 [click] Answer correct 87.1% (≥ 90%: missed); exact facts 86.2%; citations 92.7% (≥ 95%: missed).
 [click] Time to answer 5.8 / 13.2 s (p95 ≤ 4 s: missed: the answer model's own time). Cost $0.0023.
 All at the 150-word cap; the race reruns at 250 words.
 
 ## Where It Still Fails
 One real question per failure type, from the chosen configuration's own records.
-Multi-hop (Emma): 2 of 11 gold passages; the CAB minutes and patch notes behind PUR.CERT_CHK never came back, and the
+Multi-hop (Emma): 2 of 11 gold passages; the change-board (CAB) minutes and patch notes that switch on the
+certificate check PUR.CERT_CHK never came back, and the
 150-word answer dropped the two prices it had. All gold in the top 10 for 24% of the 21 multi-hop questions.
 [click] Tables (Q-401, reorder level of BAT-500): the current item master row never reached the top 10; a superseded
-2025 export did; the answer said "not in the documents" (it is 3,000). Table lookups: right passage in the top 10
+2025 export did (an older copy); the answer said "not in the documents" (it is 3,000). Table lookups: right passage in the top 10
 for 71%.
 [click] Old versions (Q-602, cycle-count tolerance): MAN-INV-72 v7.2.2 ranked 1st above the current v7.2.3; the
 answer still gave 1.5%. A stale copy in the top 5 for 14 of 20 version questions, above the gold for 4.
 [click] Procedures (Q-101): the onboarding policy outranked the procedure SOP-PUR-001; NBC-F-112 and NBC-F-113
 missing. 13 of 20 procedure answers right.
 [click] Permissions (Q-902): the confidential salary file is filtered out, so the answer said "not in the documents"
-instead of refusing; 5 of 10 right. The race's withheld notice fixes this. What to do next, per type.
+instead of refusing; 5 of 10 right. The race fixes this by telling the model a file was withheld. What to do next,
+per type; metadata filters are taught in the next section (the store).
 
 ## (q hero) A new embedding model claims +5 points
 Expected answer: add it as one more value of the model knob, run it on our golden set (224 questions) with

@@ -58,33 +58,60 @@ FIGS.parse_txt = (el) => {
   return { step(k) { el.querySelectorAll('mark.parse-mk').forEach((m) => m.classList.toggle('on', +m.dataset.k <= k)); } };
 };
 
-/* metadata records, as corpus.file_meta returned them. data-files="0,1,2" (indexes into files.meta.records),
-   data-k0="1": the first record appears on click 1, the next on click 2, and so on */
-FIGS.parse_meta = (el) => {
-  const d = D(); const recs = d && d.files.meta && d.files.meta.records;
-  if (!recs) return miss(el, 'metadata records');
-  const pick = (el.dataset.files || '0,1,2').split(',').map(Number), k0 = +(el.dataset.k0 || 1);
-  const v = (x) => (x === true ? '<span class="hot">true</span>' : x === false ? 'false' : x === '' ? '<span class="nil">""</span>' : esc(x));
-  el.innerHTML = pick.map((i, j) => {
-    const r = recs[i]; const f = r.fields;
-    const hot = (k) => (k === 'superseded' && f.superseded) || (k === 'future' && f.future) || (k === 'confidential' && f.confidential) || (k === 'status' && /SUPERSEDED|ISSUED/.test(f.status));
-    return `<div class="parse-rec tr" data-k="${k0 + j}">
-      <div class="f">${esc(r.file)}</div>
-      ${r.answer ? `<div class="parse-ans">says <b>${esc(r.answer)}</b></div>` : ''}
-      <div class="kv">${Object.keys(f).map((k) => `<span>${k}</span><span class="${hot(k) ? 'hot' : ''}">${v(f[k])}</span>`).join('')}</div>
-      <div class="parse-sl">${r.status_line ? `chunk header adds: <b>${esc(r.status_line)}</b>` : '<span class="nil">chunk header adds nothing</span>'}${r.may_read && !r.may_read['PUR-EXEC'] ? ` · may_read(Emma) = <b class="hot">false</b>` : ''}</div></div>`;
-  }).join('');
-  return { step(k) { el.querySelectorAll('.parse-rec').forEach((x) => x.classList.toggle('fade-hide', +x.dataset.k > k)); } };
+/* the e-mail slide: quoted-printable decoded by hand on the real bytes (files.email.qp, computed with Python's quopri).
+   Stage n appears on click n (1..5); all stages fade on click data-until (the decoded text takes their place). */
+FIGS.parse_qp = (el) => {
+  const d = D(); const q = d && d.files.email && d.files.email.qp;
+  if (!q) return miss(el, 'quoted-printable data');
+  el.classList.add('parse-qp');
+  const until = +(el.dataset.until || 6);
+  const mk = (t) => esc(t).replace(esc(q.esc), `<mark class="parse-mk b on">${esc(q.esc)}</mark>`);
+  const st = [
+    [`1 · One line of the body, as stored`, `<div class="mono">${mk(q.tail)}</div>`],
+    [`2 · “=” then two hexadecimal digits is one byte`, `<div class="row">${q.bytes.map((b) => `<span class="tile">${esc(b.code)}</span><span class="arr">→</span><span class="tile byte">byte ${esc(b.hex)}<small>= ${b.dec}</small></span>`).join('<span class="gap2"></span>')}
+      <span class="sm">Hex digits: 0–9, then A–F. Two make 00 to FF: one byte, 0 to 255.</span></div>`],
+    [`3 · ${esc(q.utf8)} are the two bytes UTF-8 uses for “${esc(q.char)}”`, `<div class="sm">“${esc(q.char)}” is character ${q.cp_dec}. Above 127, UTF-8 needs two bytes or more: ${esc(q.utf8)}.</div>
+      <div class="row"><span class="mono">${mk(q.esc + '104.00')}</span><span class="arr">→</span><span class="mono ok">${esc(q.char)}104.00</span></div>`],
+    [`4 · “=” at the end of a line is a soft break`, `<div class="row"><span class="mono">per ${esc(q.join_a)}<span class="nl">⏎</span>${esc(q.join_b)}</span><span class="arr">→</span><span class="mono ok">per ${esc(q.joined)}</span></div>
+      <div class="sm">Not a real line end: delete the “=” and the break. This file has ${q.soft_breaks}.</div>`],
+    [`5 · Why a mail gateway writes text this way`, `<div class="sm">E-mail was built for plain ASCII (bytes 0 to 127) in short lines. So the gateway (${esc(q.mailer)}) writes every other byte as =XX and cuts lines at ${q.max_line} characters with a soft break. The header says so (blue, left).</div>`],
+  ];
+  el.innerHTML = st.map(([h, b], i) => `<div class="parse-qs tr" data-k="${i + 1}"><div class="h">${h}</div>${b}</div>`).join('');
+  return { step(k) { el.querySelectorAll('.parse-qs').forEach((x) => x.classList.toggle('fade-hide', +x.dataset.k > k || k >= until)); } };
 };
 
-/* the check slide: three real snippets, what the parser does with each appears on clicks 1, 2, 3 */
+/* the check slide: three real snippets. What each is and where it is from shows at once; the verb and the reason on clicks 1, 2, 3 */
 FIGS.parse_snips = (el) => {
-  const d = D(); const S = d && d.files.check_three && d.files.check_three.snips;
+  const d = D(); const C = d && d.files.check_three; const S = C && C.snips;
   if (!S) return miss(el, 'snippets');
   el.classList.add('parse-snips');
-  el.innerHTML = S.map((s, i) => `<div class="parse-snip"><div class="from">${esc(s.from)}</div><pre>${esc(s.text)}</pre><div class="do tr" data-k="${i + 1}">${esc(s.do)}</div></div>`).join('');
+  el.innerHTML = S.map((s, i) => `<div class="parse-snip"><div class="what"><b>${esc(s.what)}</b><span>${esc(s.from)}</span></div><pre>${esc(s.text)}</pre>
+    <div class="do tr" data-k="${i + 1}"><span class="verb v-${esc(s.verb.toLowerCase())}">${esc(s.verb)}</span>${esc(s.do)}</div></div>`).join('');
   return { step(k) { el.querySelectorAll('.do').forEach((x) => x.classList.toggle('fade-hide', +x.dataset.k > k)); } };
 };
+
+/* the three verbs of the check slide, defined before any answer */
+FIGS.parse_legend = (el) => {
+  const d = D(); const L = d && d.files.check_three && d.files.check_three.legend;
+  if (!L) return miss(el, 'legend');
+  el.classList.add('parse-legend');
+  el.innerHTML = L.map((x) => `<div><span class="verb v-${esc(x.verb.toLowerCase())}">${esc(x.verb)}</span>${esc(x.def)}</div>`).join('');
+  return { step() {} };
+};
+
+/* simple file-type icons, drawn here: <span class="parse-ico" data-ico="pdf"></span> */
+const ICO = { pdf: ['PDF', '#c4511f'], scan: ['SCAN', '#7a5b2e'], poor: ['SCAN', '#8a8a8a'], xlsx: ['XLSX', '#138a60'], eml: ['EML', '#0b57d0'], docx: ['DOCX', '#2f5fb3'], html: ['HTML', '#6b4fbb'] };
+FIGS.parse_icons = () => document.querySelectorAll('.parse-ico[data-ico]').forEach((e) => {
+  if (e.firstChild) return;
+  const [lab, c] = ICO[e.dataset.ico] || ['FILE', '#666'];
+  const body = { scan: '<rect x="11" y="18" width="24" height="16" rx="2" fill="none" stroke="#7a5b2e" stroke-width="1.6"/><path d="M13 31l6-7 5 5 3-3 6 5" fill="none" stroke="#7a5b2e" stroke-width="1.6"/>',
+    poor: '<path d="M11 20q4-3 8 0t8 0 8 0M11 26q4-3 8 0t8 0 8 0M11 32q4-3 8 0t8 0" fill="none" stroke="#8a8a8a" stroke-width="1.6"/>',
+    xlsx: '<path d="M11 18h24v16H11zM11 23.3h24M11 28.6h24M19 18v16M27 18v16" fill="none" stroke="#138a60" stroke-width="1.4"/>',
+    eml: '<rect x="11" y="19" width="24" height="15" rx="2" fill="none" stroke="#0b57d0" stroke-width="1.6"/><path d="M11.5 20l11.5 8 11.5-8" fill="none" stroke="#0b57d0" stroke-width="1.6"/>',
+    html: '<circle cx="23" cy="26" r="8" fill="none" stroke="#6b4fbb" stroke-width="1.6"/><path d="M15 26h16M23 18q-5 8 0 16M23 18q5 8 0 16" fill="none" stroke="#6b4fbb" stroke-width="1.4"/>' }[e.dataset.ico]
+    || `<path d="M12 20h22M12 25h22M12 30h15" stroke="${c}" stroke-width="1.8"/>`;
+  e.innerHTML = `<svg viewBox="0 0 46 58" width="46" height="58" aria-hidden="true"><path d="M4 2h27l11 11v41a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#fff" stroke="#c9ced6" stroke-width="1.5"/><path d="M31 2v9a2 2 0 0 0 2 2h9" fill="none" stroke="#c9ced6" stroke-width="1.5"/>${body}<rect x="1" y="40" width="42" height="14" rx="3" fill="${c}"/><text x="22" y="51" text-anchor="middle" font-family="Google Sans Flex, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#fff" style="font-size:12.5px">${lab}</text></svg>`;
+});
 
 /* numbers that live in the data, written into spans: <span data-pv="ocr.tesseract.secs"></span> */
 FIGS.parse_fill = () => {
@@ -94,5 +121,6 @@ FIGS.parse_fill = () => {
     if (v != null) s.textContent = typeof v === 'number' ? v.toLocaleString('en-GB') : v;
   });
 };
-if (document.readyState !== 'loading') FIGS.parse_fill(); else document.addEventListener('DOMContentLoaded', FIGS.parse_fill);
+const boot = () => { FIGS.parse_fill(); FIGS.parse_icons(); };
+if (document.readyState !== 'loading') boot(); else document.addEventListener('DOMContentLoaded', boot);
 })();

@@ -10,6 +10,8 @@ Every text on the slides is cut from a parser's real output; cuts are marked wit
 """
 import json
 import pathlib
+import quopri
+import re
 import statistics
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -79,20 +81,34 @@ pp = {p["page"]: p["text"] for p in K["pur_plain_pages"]}
 tail = pp[2][pp[2].index("Direct order (DIR)"):]
 head3 = "\n".join(pp[3].splitlines()[:2])
 u2 = K["units_p2"]
+# page 2 as plain hands it on, cut to its headings (each body replaced by "⋯ n clauses") and its last lines
+_p2 = pp[2].splitlines()
+_heads = [u["first"] for u in u2]
+_out, _n, _cur = [], 0, None
+for _l in _p2:
+    if _l in _heads or _l.startswith("Northbridge Cycles Ltd"):
+        if _cur is not None:
+            _out.append(f"{_cur} ⋯ {_n} clause{'s' if _n != 1 else ''}" if _n else f"{_cur} ⋯ a table")
+        _cur, _n = (_l, 0) if _l in _heads else (None, 0)
+        if _l.startswith("Northbridge Cycles Ltd"):
+            _out.extend(_p2[_p2.index(_l):])
+            break
+    elif _cur is not None and __import__("re").match(r"^\d+\.\d+ ", _l):
+        _n += 1
+PP2_OUTLINE = "\n".join(_out)
+PP2_TOK = next(p["tokens"] for p in K["pur_plain_pages"] if p["page"] == 2)
 c6 = K["chunk6"]["chunks"][0]
 files["pur"] = {
-    "file": PUR, "q": q("Q-EMMA", "§ 6.2 and § 6.4, both in the unit at page 2, § 6. Supplier qualification."),
+    "file": PUR, "q": q("Q-EMMA", "§ 6.2 and § 6.4. Both sit in one unit: page 2, § 6."),
     "images": {"page": img("pur", "page", alt="Purchase Policy v4.1, page 2"), "crop6": img("pur", "crop6", alt="Purchase Policy v4.1, section 6")},
     "texts": {
-        "naive": {"title": "Naive · end of page 2, start of page 3", "cls": "b", "fs": 14,
-                  "text": "⋯\n" + tail.rstrip() + "\n" + head3 + "\n⋯",
-                  "marks": [{"s": "Northbridge Cycles Ltd\nPOL-PUR-001 | v4.1\nInternal. Uncontrolled when printed.\nPage 2 of 4", "k": 1, "cls": "b"}]},
+        "naive": {"title": "Naive · page 2 is one unit", "sub": f"{PP2_TOK} tokens", "cls": "b", "fs": 14,
+                  "text": PP2_OUTLINE,
+                  "marks": [{"s": "Northbridge Cycles Ltd\nPOL-PUR-001 | v4.1\nInternal. Uncontrolled when printed.\nPage 2 of 4", "k": 1, "cls": "b"},
+                            {"s": "6. Supplier qualification", "k": 3, "cls": "g"}]},
         "units": {"title": "Structured · page 2 units", "sub": f"{K['n_units_pur']} in the policy", "cls": "a", "fs": 15,
                   "text": "\n".join(f"p.{u['loc']['page']}  § {u['loc']['section']:<28} {u['tokens']:>4} tokens" for u in u2),
-                  "marks": [{"s": "§ 6. Supplier qualification", "k": 3, "cls": "g"}]},
-        "chunk": {"title": "A chunk of § 6 begins", "sub": f"{c6['tokens']} tokens", "cls": "a", "fs": 15,
-                  "text": c6["header"] + "\n" + c6["body"].split("\n")[0] + "\n⋯",
-                  "marks": [{"s": c6["header"], "k": 3, "cls": "g"}]}},
+                  "marks": [{"s": "§ 6. Supplier qualification", "k": 3, "cls": "g"}]}},
 }
 nums["pur"] = {"n_units": K["n_units_pur"], "n_tokens": K["n_tokens_pur"], "chunk_config": K["chunk6"]["config"],
                "plain_pages": len(K["pur_plain_pages"]), "cite6": c6["cite"]}
@@ -181,17 +197,36 @@ files["email"] = {
     "file": EML, "q": q("Q-EMMA", "£104.00 per pack, delivered (DAP) to Manchester."),
     "texts": {
         "raw": {"title": "The file on disk · what parser=\"plain\" indexes", "sub": f"{X[EML]['plain']['tokens']} tokens", "cls": "b", "raw": True, "fs": 13.5, "text": raw.rstrip(),
-                "marks": [{"s": "=C2=A3", "k": 1, "cls": "b"}, {"s": "=\n", "k": 1, "cls": "b"},
-                          {"s": "Content-Transfer-Encoding: quoted-printable", "k": 1, "cls": "k"},
-                          {"s": "Message-ID: <c0e8939f459f7898bbeb@mail.northbridgecycles.example>\nX-Mailer: NBC Mail Gateway 4.2\nContent-Type: text/plain; charset=\"utf-8\"", "k": 2, "cls": "s"},
-                          {"s": "MIME-Version: 1.0", "k": 2, "cls": "s"}]},
+                "marks": [{"s": "=C2=A3", "k": 1, "cls": "b"}, {"s": "=\n", "k": 4, "cls": "b"},
+                          {"s": "Content-Transfer-Encoding: quoted-printable", "k": 5, "cls": "k"},
+                          {"s": "Message-ID: <c0e8939f459f7898bbeb@mail.northbridgecycles.example>\nX-Mailer: NBC Mail Gateway 4.2\nContent-Type: text/plain; charset=\"utf-8\"", "k": 6, "cls": "s"},
+                          {"s": "MIME-Version: 1.0", "k": 6, "cls": "s"}]},
         "struct": {"title": "Structured · decoded", "sub": f"{X[EML]['structured']['tokens']} tokens", "cls": "a", "fs": 12.8, "text": eu[: eu.index("December 2026.") + len("December 2026.")] + "\n⋯ the signature follows",
-                   "marks": [{"s": "Subject: Quotation Q-BE-26-0917 - 36 V 500 Wh battery packs", "k": 2, "cls": "g"},
-                             {"s": "From: Julien Marchand <j.marchand@brightcell-energy.example>", "k": 2, "cls": "g"},
-                             {"s": "To: Emma Clarke <emma.clarke@northbridgecycles.example>", "k": 2, "cls": "g"}, {"s": "Date: Thu, 22 Oct 2026 16:41:00 +0000", "k": 2, "cls": "g"},
-                             {"s": "£104.00 per pack, delivered (DAP) to Manchester", "k": 3, "cls": "a"},
-                             {"s": "the new report is expected in December 2026", "k": 3, "cls": "a"}]}},
+                   "marks": [{"s": "Subject: Quotation Q-BE-26-0917 - 36 V 500 Wh battery packs", "k": 6, "cls": "g"},
+                             {"s": "From: Julien Marchand <j.marchand@brightcell-energy.example>", "k": 6, "cls": "g"},
+                             {"s": "To: Emma Clarke <emma.clarke@northbridgecycles.example>", "k": 6, "cls": "g"}, {"s": "Date: Thu, 22 Oct 2026 16:41:00 +0000", "k": 6, "cls": "g"},
+                             {"s": "£104.00 per pack, delivered (DAP) to Manchester", "k": 7, "cls": "a"},
+                             {"s": "the new report is expected in December 2026", "k": 7, "cls": "a"}]}},
 }
+# quoted-printable, decoded by hand on the real bytes (Python's quopri, the same rule the e-mail parser applies)
+_body = raw.split("\n\n", 1)[1]
+_bl = _body.split("\n")
+_li = next(i for i, l in enumerate(_bl) if "=C2=A3" in l)
+_line = _bl[_li]
+_esc = _line[_line.index("=C2=A3"):_line.index("=C2=A3") + 6]
+_bytes = [{"code": "=" + h, "hex": h, "dec": int(h, 16), "bin": format(int(h, 16), "08b")} for h in _esc.split("=")[1:]]
+_pound = bytes(int(b["hex"], 16) for b in _bytes).decode("utf-8")
+assert _pound == "£" and "£".encode("utf-8").hex(" ").upper() == "C2 A3"
+_tail = _line[_line.index("mounting:"):]
+_join_a, _join_b = _line[_line.rindex(" ") + 1:], _bl[_li + 1].split(" ")[0]
+files["email"]["qp"] = {
+    "tail": "⋯ " + _tail, "esc": _esc, "bytes": _bytes, "char": _pound, "cp": f"U+{ord(_pound):04X}", "cp_dec": ord(_pound),
+    "utf8": "£".encode("utf-8").hex(" ").upper(),
+    "decoded_tail": quopri.decodestring(_tail.encode()).decode("utf-8").rstrip("="),
+    "join_a": _join_a, "join_b": _join_b, "joined": quopri.decodestring((_join_a + "\n" + _join_b).encode()).decode("utf-8"),
+    "soft_breaks": raw.count("=\n"), "max_line": max(len(l) for l in _bl), "mailer": "NBC Mail Gateway 4.2",
+    "cte": "Content-Transfer-Encoding: quoted-printable"}
+assert "X-Mailer: NBC Mail Gateway 4.2" in raw and files["email"]["qp"]["cte"] in raw
 nums["email"] = {"soft_breaks": raw.count("=\n"), "soft_breaks_dump": A["plain_vs_structured"]["eml_quoted_printable_soft_breaks_in_plain"],
                  "meta": {k: X[EML]["structured"]["meta"][k] for k in ("title", "effective")},
                  "plain_finds": K["facts"]["email"]["plain"], "struct_finds": K["facts"]["email"]["structured"]}
@@ -216,31 +251,72 @@ nums["apr2"] = {"docx_tables_dump": A["plain_vs_structured"]["docx_table_units_d
                 "f113_plain_tokens": X["02_procedures/forms/Final_FINAL_onboarding checklist NBC-F-113.docx"]["plain"]["tokens"],
                 "f113_struct_tokens": X["02_procedures/forms/Final_FINAL_onboarding checklist NBC-F-113.docx"]["structured"]["tokens"]}
 
-# ---------------------------------------------------------------- 8 · an old intranet page
+# ---------------------------------------------------------------- 8 · an old intranet page: what a naive HTML parser returns
 hraw = (DUMP / INTRA).read_text(encoding="utf-8")
 hu = X[INTRA]["structured"]["units"][0]["text"]
+H = json.loads((LOGS / "v5_parse_html.json").read_text())
+HP = H["pages"]["approval_limits.html"]
+gt = re.sub(r"\n\s*\n+", "\n", HP["text"]["bs4_get_text"]).strip()          # blank lines squeezed, nothing else changed
+gt_cut = gt[: gt.index("Limits are on the net value before VAT.") + len("Limits are on the net value before VAT.")]
+menu = between(gt, "Purchasing home", "Ledgerline 7 training")
+pim = img("intra", "page", alt="The 2016 intranet page in a browser")
+pim["boxes"] = [dict(bx, k={2: 3, 3: 4}.get(bx["k"], bx["k"])) for bx in pim["boxes"]]
 files["intra"] = {
     "file": INTRA, "q": q("Q-605", "In 2016: £150,000, on the net value before VAT. Long superseded."),
-    "images": {"page": img("intra", "page", alt="The 2016 intranet page in a browser")},
+    "images": {"page": pim},
     "texts": {
-        "naive": {"title": "Naive · the markup, parser=\"plain\"", "sub": f"{X[INTRA]['plain']['tokens']} tokens", "cls": "b", "raw": True, "fs": 13,
-                  "text": between(hraw, "<body>", "<h1>Approval limits (2016)</h1>") + "\n⋯ then the table, a note, a heading and four paragraphs",
-                  "marks": [{"s": between(hraw, '<div id="banner">', "</ul></div>"), "k": 1, "cls": "b"}]},
-        "struct": {"title": "Structured · text by heading, no navigation", "sub": f"{X[INTRA]['structured']['tokens']} tokens · {X[INTRA]['structured']['n_units']} units", "cls": "a", "fs": 13.5,
-                   "text": hu,
-                   "marks": [{"s": " Purchase executive | £150,000", "k": 3, "cls": "a"}, {"s": "Limits are on the net value before VAT.", "k": 3, "cls": "g"}]}},
+        "naive": {"title": "Naive · BeautifulSoup get_text()", "sub": f"{HP['tokens']['bs4_get_text']} tokens · blank lines removed", "cls": "b", "fs": 13.5, "cols": 2,
+                  "text": gt_cut + "\n⋯ then a heading and four paragraphs",
+                  "marks": [{"s": HP["title"], "k": 1, "cls": "b"}, {"s": "NBC Intranet » Purchasing", "k": 1, "cls": "b"}, {"s": menu, "k": 1, "cls": "b"},
+                            {"s": "RoleLimit", "k": 2, "cls": "b"}, {"s": "Purchase executive£150,000", "k": 2, "cls": "b"}]},
+        "struct": {"title": "Structured · text by heading, no banner or menu", "sub": f"{X[INTRA]['structured']['tokens']} tokens · {X[INTRA]['structured']['n_units']} units", "cls": "a", "fs": 13.5,
+                   "text": hu[: hu.index("Limits are on the net value before VAT.") + len("Limits are on the net value before VAT.")],
+                   "marks": [{"s": " Purchase executive | £150,000", "k": 4, "cls": "a"}, {"s": "Limits are on the net value before VAT.", "k": 4, "cls": "g"}]}},
 }
+assert gt.startswith(HP["title"]) and "Purchase executive£150,000" in gt
 nums["intra"] = {"plain_tokens": X[INTRA]["plain"]["tokens"], "struct_tokens": X[INTRA]["structured"]["tokens"],
+                 "bs4_tokens": HP["tokens"]["bs4_get_text"], "n_pages": H["n_pages"], "bs4_version": H["versions"]["beautifulsoup4"],
+                 "matches": H["matches"],
                  "nav_links": hraw[hraw.index('<div id="nav">'):hraw.index("</ul></div>")].count("<li>")}
 
-# ---------------------------------------------------------------- 9 · metadata the parser keeps
-FIELDS = ("doc_id", "version", "effective", "status", "superseded", "future", "confidential")
-meta = []
-for rel, m in K["meta"].items():
-    s = m["structured"]
-    meta.append({"file": rel, "fields": {k: s[k] for k in FIELDS}, "title": s["title"], "status_line": m["status_line"], "may_read": m["may_read"],
-                 "answer": {APR: "£250,000 gross", APR2: "£200,000 gross", INTRA: "£150,000 net"}.get(rel)})
-files["meta"] = {"records": meta}
+# ---------------------------------------------------------------- Docling, run for real (experiments/v5_parse_docling.py on Modal)
+DL = json.loads((LOGS / "v5_parse_docling.json").read_text())
+dla = DL["files"]["apr"]["pages_md"]["1"]
+dla = dla[dla.index("## 3. The limits"):].rstrip()
+_dl = []
+for _l in dla.splitlines():
+    if _l.startswith(("- 3.2", "- 3.3", "- 3.4")):
+        _l = _l[: _l.index(" ", 30)] + " ⋯"
+    _dl.append(_l)
+dla_cut = "\n".join(_dl)
+_tab_first = next(l for l in _dl if l.startswith("| Role code"))
+_row_exec = next(l for l in _dl if l.startswith("| PUR-EXEC"))
+_scan_md = DL["files"]["scan"]["markdown"].strip()
+_our_secs = {k: X[f]["structured"]["secs"] for k, f in (("pur", PUR), ("apr", APR), ("scan", SCAN))}
+_split_heading = [u["loc"]["section"] for u in X[PUR]["structured"]["units"] if u["loc"].get("section") == "signed off?"]
+_dl_whole = [h for h in DL["files"]["pur"]["section_headers"] if h.endswith("already signed off?")]
+assert _split_heading and _dl_whole
+_dcrop = img("apr", "crop", alt="Approval Matrix v3.0, page 1, section 3: the limits table")
+_dcrop["boxes"] = [dict(bx, k=1) for bx in _dcrop["boxes"]]
+files["docling"] = {
+    "images": {"crop": _dcrop},
+    "texts": {
+        "apr": {"title": "Docling · export_to_markdown()", "sub": "Approval Matrix v3.0, page 1, § 3", "cls": "a", "fs": 13.5,
+                "text": dla_cut,
+                "marks": [{"s": _tab_first, "k": 1, "cls": "g"}, {"s": _row_exec, "k": 1, "cls": "g"},
+                          {"s": "- 3.1 Each role's approval limit, gross including VAT:", "k": 2, "cls": "b"}]},
+        "scan": {"title": "Docling on the scan", "sub": "with its OCR", "cls": "a", "fs": 13, "text": _scan_md,
+                 "marks": [{"s": "<!-- image -->", "k": 3, "cls": "g"}, {"s": "BAT-500Quantity", "k": 3, "cls": "b"}, {"s": "VC-EIN-0042Voltway", "k": 3, "cls": "b"}]}}}
+nums["docling"] = {
+    "version": DL["versions"]["docling"], "machine": DL["machine"], "init_secs": DL["converter_init_secs"],
+    "ocr": "RapidOCR " + DL["ocr_packages"]["rapidocr"] if DL["ocr_packages"].get("rapidocr") else "",
+    "pur_warm": DL["files"]["pur"]["warm_secs"], "pur_cold": DL["files"]["pur"]["cold_secs"], "pur_pages": DL["files"]["pur"]["n_pages"],
+    "pur_per_page": round(DL["files"]["pur"]["warm_secs"] / DL["files"]["pur"]["n_pages"], 1),
+    "apr_warm": DL["files"]["apr"]["warm_secs"], "apr_pages": DL["files"]["apr"]["n_pages"], "scan_warm": DL["files"]["scan"]["warm_secs"],
+    "pur_furniture": len(DL["files"]["pur"]["page_furniture"]), "pur_headings": len(DL["files"]["pur"]["section_headers"]),
+    "pur_tables": len(DL["files"]["pur"]["tables"]), "apr_tables": len(DL["files"]["apr"]["tables"]),
+    "ours_secs": _our_secs, "ours_pur_secs_s": f"{_our_secs['pur']:.2f}",
+    "split_heading": _dl_whole[0]}
 
 # ---------------------------------------------------------------- the check slides
 r25 = {p: next(u["text"] for u in X[ITEM][p]["units"] if u["loc"].get("sheet") == "Items" and u["loc"].get("row") == 25) for p in ("plain", "structured")}
@@ -251,11 +327,20 @@ files["check_item"] = {"q": q("Q-436", "reorder level 200, and cell_safety 1, so
                                             "marks": [{"s": "cell_safety: 1", "k": 1, "cls": "a"}, {"s": "reorder_lvl: 200", "k": 1, "cls": "a"}]}}}
 fw = (DUMP / "09_email_archive/2026/2026-09-25_RE_ RE_ FW_ Voltway Cells - BAT-500 price from 1 October 2026.eml").read_text(encoding="utf-8")
 snip_qp = fw[fw.index("our price for the 36 V"):].split("\n")[0]
+snip_next = fw[fw.index(snip_qp) + len(snip_qp) + 1:].split("\n")[0]
+qp_dec = quopri.decodestring((snip_qp + "\n" + snip_next).encode()).decode("utf-8")
 files["check_three"] = {"snips": [
-    {"from": PUR + ", page 2 (plain)", "text": "Internal. Uncontrolled when printed.\nPage 2 of 4", "do": "Drop it: a running footer, on every page. Our parser removes lines repeated in the top and bottom bands, and “Page x of y”."},
-    {"from": "09_email_archive/2026/2026-09-25_RE_ RE_ FW_ Voltway Cells - BAT-500 price from 1 October 2026.eml", "text": snip_qp,
-     "do": "Decode it: quoted-printable. “=C2=A3” is the two UTF-8 bytes of “£”, and “=” at a line end is a soft break. Decoded: “£119.00 from 1 October 2026”."},
-    {"from": APR2 + " (structured)", "text": "Status | SUPERSEDED", "do": "Keep it as metadata: status SUPERSEDED, superseded = true. Every chunk of this file then says so in its header, and a filter can drop it."}]}
+    {"what": "The last two lines of a page", "from": "Document D, page 2, as the naive parser reads it", "file": PUR,
+     "text": "Internal. Uncontrolled when printed.\nPage 2 of 4", "verb": "Drop",
+     "do": "It is the running footer, printed on every page. It says nothing about buying; left in, it lands in the middle of a chunk. Our parser removes lines repeated at the top and bottom of every page, and “Page x of y”."},
+    {"what": "One line of an e-mail body", "from": "Voltway Cells’ price e-mail of 25 Sep 2026, as the file is stored on disk", "file": "09_email_archive/2026/2026-09-25_RE_ RE_ FW_ Voltway Cells - BAT-500 price from 1 October 2026.eml",
+     "text": snip_qp, "verb": "Decode",
+     "do": f"Quoted-printable, as on the Brightcell e-mail: =C2=A3 is “£”, and the “=” at the end is a soft break. Decoded: “{qp_dec[qp_dec.index('£'):].strip()}”."},
+    {"what": "One row of the box at the top of page 1", "from": "The 2024 Approval Matrix v2.0 (Word), as our parser reads it", "file": APR2,
+     "text": "Status | SUPERSEDED", "verb": "Keep",
+     "do": f"It is the one line that says this file is out of date: £200,000 is no longer the limit. Our parser keeps it, and writes “{K['meta'][APR2]['status_line']}” at the top of every chunk of the file."}],
+    "legend": [{"verb": "Keep", "def": "index it as it is: it is content"}, {"verb": "Decode", "def": "turn it back into the text the writer typed, then index it"},
+               {"verb": "Drop", "def": "remove it before indexing: it is not content"}]}
 
 data = {"generated_from": ["logs/v5_parse_explore.json", "logs/v5_parse_render.json", "logs/v5_parse_ocr.json", "logs/v5_parse_checks.json", "logs/audit.json", "northbridge-docs/eval/questions.jsonl"],
         "facts": K["facts"], "files": files, "nums": nums}

@@ -33,10 +33,9 @@ Re-run `python3 gen_figdata.py` after any experiment or NB3 run.
 - **Title.** Today's promise: audit, decide, build two methods, race, ship.
 - **Where We Are in the Course.** L2's brain alone made up Emma's stock number every time. The brain never saw
   Northbridge's documents. `[click]` That is today's job.
-- **Monday, 9:40 AM.** The recorded run at the knowledge stage: Emma's Brightcell question, two `search_docs` calls ("Brightcell
+- **Monday, 9:40 AM.** The recorded run at the knowledge stage: Emma's Brightcell question, two searches of the documents (in code, the function `search_docs`; say it only reads, unlike the Lecture 4 tools) ("Brightcell
   Energy", then the policy clauses), an answer with §6.2 and the reasons. Say: "This is where we end. Let's earn it." `[click]` ×2.
-- **One Question, Eleven Sources.** The golden set's own list: eleven passages in six folders, plus the supplier
-  master, which must *not* contain Brightcell. `[click]` ×3. Point: the answer is spread across policies, procedures, a patch note and e-mails.
+- **One Question, Eight Documents.** [click ×9] one row per document: what it adds to Emma's answer. The golden set's record Q-EMMA lists twelve facts from eight files in six folders (eleven passages, plus the supplier master, where the fact is that Brightcell is absent). [click] Short answer: not yet. Don't explain how we find them; that is the lecture.
 - **Ask the class 1.** Where should the rules come from? Keep the answers; 6–8 settle it.
 - **Today's Question, Today's Map.**
 

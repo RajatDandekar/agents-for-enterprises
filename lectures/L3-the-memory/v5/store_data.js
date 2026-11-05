@@ -2936,6 +2936,40 @@ window.L3V5.store = {
 "disk_total_gib": 4.0,
 "ram_used_mib": 251.37,
 "ram_total_gib": 1.0
+},
+"ann_recall": {
+"source": "v5/img/store/ann_recall.jpg: ANN Recall tab -> Check Index Quality, read from the screenshot the lead took on 5 Nov 2026",
+"sampled_points": 100,
+"settings": "the collection's default HNSW search settings",
+"mean_recall_at_10": 0.835,
+"std": 0.3026,
+"exact_ms_typical": 9,
+"exact_ms_range": [
+9,
+19
+],
+"hnsw_ms_typical": 2,
+"hnsw_ms_range": [
+2,
+9
+]
+},
+"visualize": {
+"source": "v5/img/store/visualize_all.jpg: Visualize tab, {limit: 3000, using: dense, color_by: payload folder}, 5 Nov 2026",
+"sample": 3000,
+"legend": {
+"06_transactions": 1849,
+"05_master_data": 713,
+"03_ledgerline_manuals": 178,
+"04_service_definitions": 99,
+"02_procedures": 42,
+"01_policies": 25,
+"07_data_dictionary": 24,
+"08_release_notes": 22,
+"09_email_archive": 14,
+"10_meeting_notes": 14,
+"Other": 20
+}
 }
 },
 "ef": {
@@ -3022,12 +3056,1287 @@ window.L3V5.store = {
 "max": 0.1091
 }
 },
+"latency": {
+"what": "L3 v5 · store: where one question's time goes, and which round trips an engineer can cut. Read-only against our\nQdrant Cloud cluster (free tier, GCP europe-west3, Frankfurt): nothing is created, changed or deleted.",
+"script": "experiments/v5_store_latency.py",
+"reranker_from_log": "logs/v5_lexical_rerank_latency.json (bge-reranker-base over 20 candidates)",
+"default_region": {
+"date": "2026-11-05 05:10 UTC",
+"modal_region": "us-east",
+"modal_cloud": "CLOUD_PROVIDER_AZURE",
+"cluster": "Qdrant Cloud free tier, GCP europe-west3 (Frankfurt)",
+"collection": "northbridge -> northbridge_docs",
+"hnsw_ef": 2000,
+"n_questions": 30,
+"errors": {},
+"embed": {
+"n": 30,
+"p50": 13.6,
+"p95": 16.1,
+"min": 10.6
+},
+"rtt": {
+"n": 30,
+"p50": 93.9,
+"p95": 95.8,
+"min": 93.5
+},
+"hybrid_rest": {
+"n": 30,
+"p50": 101.0,
+"p95": 108.6,
+"min": 99.3
+},
+"dense_rest": {
+"n": 30,
+"p50": 101.1,
+"p95": 109.2,
+"min": 98.7
+},
+"server_hybrid": {
+"n": 30,
+"p50": 6.3,
+"p95": 11.9,
+"min": 4.2
+},
+"hybrid_raw_http_wall": {
+"n": 30,
+"p50": 101.1,
+"p95": 131.8,
+"min": 98.4
+},
+"server_dense": {
+"n": 30,
+"p50": 6.1,
+"p95": 10.2,
+"min": 3.6
+},
+"reconnect_per_question": {
+"n": 30,
+"p50": 298.6,
+"p95": 314.3,
+"min": 293.7
+},
+"reconnect_no_version_check": {
+"n": 30,
+"p50": 295.2,
+"p95": 305.7,
+"min": 292.1
+},
+"two_calls_client_rrf": {
+"n": 30,
+"p50": 195.0,
+"p95": 227.1,
+"min": 193.4
+},
+"two_calls_same_top10_as_server_rrf": "13/30",
+"ten_questions_sequential": {
+"n": 5,
+"p50": 1032.3,
+"p95": 1092.3,
+"min": 1017.8
+},
+"ten_questions_one_batch": {
+"n": 5,
+"p50": 407.3,
+"p95": 481.9,
+"min": 238.1
+},
+"rtt_grpc": {
+"n": 30,
+"p50": 94.1,
+"p95": 96.1,
+"min": 93.5
+},
+"hybrid_grpc": {
+"n": 30,
+"p50": 102.2,
+"p95": 118.6,
+"min": 98.4
+},
+"answer_model": {
+"model": "gemini-3.8-flash (Google API, OpenAI-compatible endpoint)",
+"n": 5,
+"p50": 3961.7,
+"p95": 4544.3,
+"min": 3554.6,
+"tokens_in_out": [
+[
+1334,
+16
+],
+[
+1334,
+15
+],
+[
+1334,
+15
+],
+[
+1334,
+13
+],
+[
+1334,
+16
+]
+],
+"answer_last": "No, you cannot buy the battery packs from Brightcell Energy at this time ["
+}
+},
+"eu": {
+"date": "2026-11-05 05:10 UTC",
+"modal_region": "eu-south",
+"modal_cloud": "CLOUD_PROVIDER_GCP",
+"cluster": "Qdrant Cloud free tier, GCP europe-west3 (Frankfurt)",
+"collection": "northbridge -> northbridge_docs",
+"hnsw_ef": 2000,
+"n_questions": 30,
+"errors": {},
+"embed": {
+"n": 30,
+"p50": 24.2,
+"p95": 28.2,
+"min": 21.1
+},
+"rtt": {
+"n": 30,
+"p50": 14.0,
+"p95": 15.5,
+"min": 13.5
+},
+"hybrid_rest": {
+"n": 30,
+"p50": 62.4,
+"p95": 69.0,
+"min": 59.8
+},
+"dense_rest": {
+"n": 30,
+"p50": 61.4,
+"p95": 63.2,
+"min": 20.8
+},
+"server_hybrid": {
+"n": 30,
+"p50": 6.2,
+"p95": 8.9,
+"min": 4.3
+},
+"hybrid_raw_http_wall": {
+"n": 30,
+"p50": 62.0,
+"p95": 64.7,
+"min": 59.9
+},
+"server_dense": {
+"n": 30,
+"p50": 5.5,
+"p95": 10.3,
+"min": 4.0
+},
+"reconnect_per_question": {
+"n": 30,
+"p50": 61.6,
+"p95": 66.5,
+"min": 57.1
+},
+"reconnect_no_version_check": {
+"n": 30,
+"p50": 57.0,
+"p95": 72.0,
+"min": 54.1
+},
+"two_calls_client_rrf": {
+"n": 30,
+"p50": 35.5,
+"p95": 43.4,
+"min": 32.0
+},
+"two_calls_same_top10_as_server_rrf": "13/30",
+"ten_questions_sequential": {
+"n": 5,
+"p50": 619.3,
+"p95": 633.7,
+"min": 610.5
+},
+"ten_questions_one_batch": {
+"n": 5,
+"p50": 153.1,
+"p95": 194.7,
+"min": 104.9
+},
+"rtt_grpc": {
+"n": 30,
+"p50": 13.2,
+"p95": 13.9,
+"min": 12.8
+},
+"hybrid_grpc": {
+"n": 30,
+"p50": 19.9,
+"p95": 35.9,
+"min": 18.6
+},
+"answer_model": {
+"model": "gemini-3.8-flash (Google API, OpenAI-compatible endpoint)",
+"n": 5,
+"p50": 3781.5,
+"p95": 4726.7,
+"min": 3511.1,
+"tokens_in_out": [
+[
+1334,
+12
+],
+[
+1334,
+16
+],
+[
+1334,
+11
+],
+[
+1334,
+11
+],
+[
+1334,
+15
+]
+],
+"answer_last": "No, you cannot buy the battery packs from Brightcell Energy at this time"
+},
+"facts": {
+"status_values": [
+{
+"value": "",
+"count": 25871
+},
+{
+"value": "CURRENT",
+"count": 2879
+},
+{
+"value": "SUPERSEDED",
+"count": 180
+},
+{
+"value": "DRAFT",
+"count": 7
+},
+{
+"value": "ISSUED, IN FORCE FROM 2027-01-01",
+"count": 7
+},
+{
+"value": "PREVIEW, NOT INSTALLED",
+"count": 6
+},
+{
+"value": "ISSUED, NOT YET IN FORCE",
+"count": 3
+}
+],
+"counts": {
+"all": 28953,
+"superseded": 736,
+"future": 16,
+"confidential": 12
+},
+"superseded_docs": [
+[
+"",
+"",
+"04_service_definitions/_legacy_6x/PO_ENTRY_SAVE.xml"
+],
+[
+"",
+"",
+"04_service_definitions/_legacy_6x/REQ_ENTRY.xml"
+],
+[
+"",
+"",
+"04_service_definitions/_legacy_6x/VENDOR_ADD.xml"
+],
+[
+"",
+"",
+"05_master_data/old/item_master_export_2025-03.csv"
+],
+[
+"",
+"",
+"11_training/old/Ledgerline basics for new starters (2019) deck export.pdf"
+],
+[
+"",
+"6.4",
+"03_ledgerline_manuals/old/LL6_purchasing_quickguide.docx"
+],
+[
+"MAN-INV-72",
+"7.2.2",
+"03_ledgerline_manuals/old/MAN-INV-72 Inventory v7.2.2 (old).pdf"
+],
+[
+"MAN-PUR-70",
+"7.0",
+"03_ledgerline_manuals/old/Ledgerline 7.0 Purchasing Manual (2015).pdf"
+],
+[
+"POL-APR-002",
+"2.0",
+"01_policies/old/Approval_Matrix_v2.0_2024.docx"
+],
+[
+"POL-PUR-001",
+"3.0",
+"01_policies/old/purchase_policy_v3_2019.docx"
+],
+[
+"POL-PUR-001",
+"4.0",
+"01_policies/old/Purchase Policy v4.0.docx"
+],
+[
+"POL-SUP-003",
+"2.2",
+"01_policies/old/Supplier_Policy_v2.2.docx"
+],
+[
+"SOP-PUR-001",
+"2.0",
+"02_procedures/old/SOP-PUR-001 Supplier onboarding v2.0 (2021).docx"
+],
+[
+"SOP-PUR-002",
+"1.3",
+"02_procedures/SOP-PUR-002 PR to PO v1.3 (FINAL).pdf"
+]
+],
+"point_106": {
+"id": 106,
+"doc_id": "POL-PUR-001",
+"title": "Purchase Policy",
+"version": "4.1",
+"effective": "2026-04-01",
+"status": "CURRENT",
+"superseded": false,
+"future": false,
+"confidential": false,
+"audience": "all staff",
+"file": "01_policies/POL-PUR-001_Purchase_Policy_v4.1.pdf",
+"cite": "POL-PUR-001 v4.1, p.2, § 6. Supplier qualification"
+},
+"point_192": {
+"id": 192,
+"doc_id": "POL-APR-002",
+"title": "Approval Matrix for Purchasing",
+"version": "2.0",
+"effective": "2024-04-01",
+"status": "SUPERSEDED",
+"superseded": true,
+"future": false,
+"confidential": false,
+"audience": "all staff",
+"file": "01_policies/old/Approval_Matrix_v2.0_2024.docx",
+"cite": "POL-APR-002 v2.0, § Approval Matrix for Purchasing"
+},
+"q605": {
+"id": "Q-605",
+"question": "What is a purchase executive's approval limit?",
+"role": "PUR-EXEC",
+"reference_answer": "£250,000 gross under approval matrix v3.0 (April 2026). The superseded v2.0 (2024) and the 2024 induction deck say £200,000; the 2016 intranet said £150,000 on net value.",
+"emma": {
+"dense": [
+{
+"id": 28811,
+"score": 0.8519,
+"cite": "approval_limits.html, § Approval limits (2016)",
+"file": "11_training/intranet_export_2016/approval_limits.html",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£150,000 net"
+},
+{
+"id": 38,
+"score": 0.788,
+"cite": "POL-APR-002 v3.0, p.1, § 3. The limits",
+"file": "01_policies/POL-APR-002 Approval Matrix v3.0.pdf",
+"doc_id": "POL-APR-002",
+"version": "3.0",
+"status": "CURRENT",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£250,000 gross"
+},
+{
+"id": 2515,
+"score": 0.7615,
+"cite": "MAN-PUR-70 v7.0, p.4, § Practical Tips",
+"file": "03_ledgerline_manuals/old/Ledgerline 7.0 Purchasing Manual (2015).pdf",
+"doc_id": "MAN-PUR-70",
+"version": "7.0",
+"status": "SUPERSEDED",
+"superseded": true,
+"future": false,
+"confidential": false,
+"says": null
+},
+{
+"id": 105,
+"score": 0.7606,
+"cite": "POL-PUR-001 v4.1, p.2, § 5. Approval limits",
+"file": "01_policies/POL-PUR-001_Purchase_Policy_v4.1.pdf",
+"doc_id": "POL-PUR-001",
+"version": "4.1",
+"status": "CURRENT",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+},
+{
+"id": 199,
+"score": 0.7549,
+"cite": "POL-PUR-001 v4.0, § 5. Approval limits",
+"file": "01_policies/old/Purchase Policy v4.0.docx",
+"doc_id": "POL-PUR-001",
+"version": "4.0",
+"status": "SUPERSEDED",
+"superseded": true,
+"future": false,
+"confidential": false,
+"says": null
+}
+],
+"bm25": [
+{
+"id": 28811,
+"score": 26.2494,
+"cite": "approval_limits.html, § Approval limits (2016)",
+"file": "11_training/intranet_export_2016/approval_limits.html",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£150,000 net"
+},
+{
+"id": 9701,
+"score": 25.1321,
+"cite": "Users_and_approval_limits.xlsx, Users rows 100-101",
+"file": "05_master_data/Users_and_approval_limits.xlsx",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+},
+{
+"id": 9663,
+"score": 24.9903,
+"cite": "Users_and_approval_limits.xlsx, Users rows 24-25",
+"file": "05_master_data/Users_and_approval_limits.xlsx",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+},
+{
+"id": 38,
+"score": 24.1042,
+"cite": "POL-APR-002 v3.0, p.1, § 3. The limits",
+"file": "01_policies/POL-APR-002 Approval Matrix v3.0.pdf",
+"doc_id": "POL-APR-002",
+"version": "3.0",
+"status": "CURRENT",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£250,000 gross"
+},
+{
+"id": 9653,
+"score": 22.4995,
+"cite": "Users_and_approval_limits.xlsx, Users rows 4-5",
+"file": "05_master_data/Users_and_approval_limits.xlsx",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+}
+],
+"hybrid": [
+{
+"id": 28811,
+"score": 0.0333,
+"cite": "approval_limits.html, § Approval limits (2016)",
+"file": "11_training/intranet_export_2016/approval_limits.html",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£150,000 net"
+},
+{
+"id": 38,
+"score": 0.0323,
+"cite": "POL-APR-002 v3.0, p.1, § 3. The limits",
+"file": "01_policies/POL-APR-002 Approval Matrix v3.0.pdf",
+"doc_id": "POL-APR-002",
+"version": "3.0",
+"status": "CURRENT",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£250,000 gross"
+},
+{
+"id": 41,
+"score": 0.0286,
+"cite": "POL-APR-002 v3.0, p.2, § 5. Examples",
+"file": "01_policies/POL-APR-002 Approval Matrix v3.0.pdf",
+"doc_id": "POL-APR-002",
+"version": "3.0",
+"status": "CURRENT",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£250,000 gross"
+},
+{
+"id": 192,
+"score": 0.0286,
+"cite": "POL-APR-002 v2.0, § Approval Matrix for Purchasing",
+"file": "01_policies/old/Approval_Matrix_v2.0_2024.docx",
+"doc_id": "POL-APR-002",
+"version": "2.0",
+"status": "SUPERSEDED",
+"superseded": true,
+"future": false,
+"confidential": false,
+"says": "£200,000"
+},
+{
+"id": 105,
+"score": 0.0285,
+"cite": "POL-PUR-001 v4.1, p.2, § 5. Approval limits",
+"file": "01_policies/POL-PUR-001_Purchase_Policy_v4.1.pdf",
+"doc_id": "POL-PUR-001",
+"version": "4.1",
+"status": "CURRENT",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+}
+]
+},
+"emma_current": {
+"dense": [
+{
+"id": 28811,
+"score": 0.8519,
+"cite": "approval_limits.html, § Approval limits (2016)",
+"file": "11_training/intranet_export_2016/approval_limits.html",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£150,000 net"
+},
+{
+"id": 38,
+"score": 0.788,
+"cite": "POL-APR-002 v3.0, p.1, § 3. The limits",
+"file": "01_policies/POL-APR-002 Approval Matrix v3.0.pdf",
+"doc_id": "POL-APR-002",
+"version": "3.0",
+"status": "CURRENT",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£250,000 gross"
+},
+{
+"id": 105,
+"score": 0.7606,
+"cite": "POL-PUR-001 v4.1, p.2, § 5. Approval limits",
+"file": "01_policies/POL-PUR-001_Purchase_Policy_v4.1.pdf",
+"doc_id": "POL-PUR-001",
+"version": "4.1",
+"status": "CURRENT",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+},
+{
+"id": 28812,
+"score": 0.7416,
+"cite": "approval_limits.html, § Approval limits (2016)",
+"file": "11_training/intranet_export_2016/approval_limits.html",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+},
+{
+"id": 39,
+"score": 0.7404,
+"cite": "POL-APR-002 v3.0, p.1, § 3. The limits",
+"file": "01_policies/POL-APR-002 Approval Matrix v3.0.pdf",
+"doc_id": "POL-APR-002",
+"version": "3.0",
+"status": "CURRENT",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+}
+],
+"bm25": [
+{
+"id": 28811,
+"score": 26.2494,
+"cite": "approval_limits.html, § Approval limits (2016)",
+"file": "11_training/intranet_export_2016/approval_limits.html",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£150,000 net"
+},
+{
+"id": 9701,
+"score": 25.1321,
+"cite": "Users_and_approval_limits.xlsx, Users rows 100-101",
+"file": "05_master_data/Users_and_approval_limits.xlsx",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+},
+{
+"id": 9663,
+"score": 24.9903,
+"cite": "Users_and_approval_limits.xlsx, Users rows 24-25",
+"file": "05_master_data/Users_and_approval_limits.xlsx",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+},
+{
+"id": 38,
+"score": 24.1042,
+"cite": "POL-APR-002 v3.0, p.1, § 3. The limits",
+"file": "01_policies/POL-APR-002 Approval Matrix v3.0.pdf",
+"doc_id": "POL-APR-002",
+"version": "3.0",
+"status": "CURRENT",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£250,000 gross"
+},
+{
+"id": 9653,
+"score": 22.4995,
+"cite": "Users_and_approval_limits.xlsx, Users rows 4-5",
+"file": "05_master_data/Users_and_approval_limits.xlsx",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+}
+],
+"hybrid": [
+{
+"id": 28811,
+"score": 0.0333,
+"cite": "approval_limits.html, § Approval limits (2016)",
+"file": "11_training/intranet_export_2016/approval_limits.html",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£150,000 net"
+},
+{
+"id": 38,
+"score": 0.0323,
+"cite": "POL-APR-002 v3.0, p.1, § 3. The limits",
+"file": "01_policies/POL-APR-002 Approval Matrix v3.0.pdf",
+"doc_id": "POL-APR-002",
+"version": "3.0",
+"status": "CURRENT",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£250,000 gross"
+},
+{
+"id": 9701,
+"score": 0.0299,
+"cite": "Users_and_approval_limits.xlsx, Users rows 100-101",
+"file": "05_master_data/Users_and_approval_limits.xlsx",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+},
+{
+"id": 41,
+"score": 0.0295,
+"cite": "POL-APR-002 v3.0, p.2, § 5. Examples",
+"file": "01_policies/POL-APR-002 Approval Matrix v3.0.pdf",
+"doc_id": "POL-APR-002",
+"version": "3.0",
+"status": "CURRENT",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£250,000 gross"
+},
+{
+"id": 9653,
+"score": 0.029,
+"cite": "Users_and_approval_limits.xlsx, Users rows 4-5",
+"file": "05_master_data/Users_and_approval_limits.xlsx",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+}
+]
+},
+"emma_in_force": {
+"dense": [
+{
+"id": 28811,
+"score": 0.8519,
+"cite": "approval_limits.html, § Approval limits (2016)",
+"file": "11_training/intranet_export_2016/approval_limits.html",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£150,000 net"
+},
+{
+"id": 38,
+"score": 0.788,
+"cite": "POL-APR-002 v3.0, p.1, § 3. The limits",
+"file": "01_policies/POL-APR-002 Approval Matrix v3.0.pdf",
+"doc_id": "POL-APR-002",
+"version": "3.0",
+"status": "CURRENT",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£250,000 gross"
+},
+{
+"id": 105,
+"score": 0.7606,
+"cite": "POL-PUR-001 v4.1, p.2, § 5. Approval limits",
+"file": "01_policies/POL-PUR-001_Purchase_Policy_v4.1.pdf",
+"doc_id": "POL-PUR-001",
+"version": "4.1",
+"status": "CURRENT",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+},
+{
+"id": 28812,
+"score": 0.7416,
+"cite": "approval_limits.html, § Approval limits (2016)",
+"file": "11_training/intranet_export_2016/approval_limits.html",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+},
+{
+"id": 39,
+"score": 0.7404,
+"cite": "POL-APR-002 v3.0, p.1, § 3. The limits",
+"file": "01_policies/POL-APR-002 Approval Matrix v3.0.pdf",
+"doc_id": "POL-APR-002",
+"version": "3.0",
+"status": "CURRENT",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+}
+],
+"bm25": [
+{
+"id": 28811,
+"score": 26.2494,
+"cite": "approval_limits.html, § Approval limits (2016)",
+"file": "11_training/intranet_export_2016/approval_limits.html",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£150,000 net"
+},
+{
+"id": 9701,
+"score": 25.1321,
+"cite": "Users_and_approval_limits.xlsx, Users rows 100-101",
+"file": "05_master_data/Users_and_approval_limits.xlsx",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+},
+{
+"id": 9663,
+"score": 24.9903,
+"cite": "Users_and_approval_limits.xlsx, Users rows 24-25",
+"file": "05_master_data/Users_and_approval_limits.xlsx",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+},
+{
+"id": 38,
+"score": 24.1042,
+"cite": "POL-APR-002 v3.0, p.1, § 3. The limits",
+"file": "01_policies/POL-APR-002 Approval Matrix v3.0.pdf",
+"doc_id": "POL-APR-002",
+"version": "3.0",
+"status": "CURRENT",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£250,000 gross"
+},
+{
+"id": 9653,
+"score": 22.4995,
+"cite": "Users_and_approval_limits.xlsx, Users rows 4-5",
+"file": "05_master_data/Users_and_approval_limits.xlsx",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+}
+],
+"hybrid": [
+{
+"id": 28811,
+"score": 0.0333,
+"cite": "approval_limits.html, § Approval limits (2016)",
+"file": "11_training/intranet_export_2016/approval_limits.html",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£150,000 net"
+},
+{
+"id": 38,
+"score": 0.0323,
+"cite": "POL-APR-002 v3.0, p.1, § 3. The limits",
+"file": "01_policies/POL-APR-002 Approval Matrix v3.0.pdf",
+"doc_id": "POL-APR-002",
+"version": "3.0",
+"status": "CURRENT",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£250,000 gross"
+},
+{
+"id": 9701,
+"score": 0.0299,
+"cite": "Users_and_approval_limits.xlsx, Users rows 100-101",
+"file": "05_master_data/Users_and_approval_limits.xlsx",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+},
+{
+"id": 41,
+"score": 0.0295,
+"cite": "POL-APR-002 v3.0, p.2, § 5. Examples",
+"file": "01_policies/POL-APR-002 Approval Matrix v3.0.pdf",
+"doc_id": "POL-APR-002",
+"version": "3.0",
+"status": "CURRENT",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": "£250,000 gross"
+},
+{
+"id": 9653,
+"score": 0.029,
+"cite": "Users_and_approval_limits.xlsx, Users rows 4-5",
+"file": "05_master_data/Users_and_approval_limits.xlsx",
+"doc_id": "",
+"version": "",
+"status": "",
+"superseded": false,
+"future": false,
+"confidential": false,
+"says": null
+}
+]
+}
+},
+"overlap_at_10_vs_exact": {
+"default": {
+"n": 224,
+"mean": 0.7911,
+"share_below_0.5": 0.1696
+},
+"hnsw_ef_2000": {
+"n": 224,
+"mean": 0.9723,
+"share_below_0.5": 0.0179
+}
+}
+}
+},
+"suite_default_region": {
+"date": "2026-11-05 05:13 UTC",
+"modal_region": "us-east",
+"modal_cloud": "CLOUD_PROVIDER_AZURE",
+"errors": {},
+"rest": {
+"rtt": {
+"n": 30,
+"p50": 95.5,
+"p95": 390.6,
+"min": 94.3
+},
+"hybrid_payload_cite": {
+"n": 30,
+"p50": 103.4,
+"p95": 109.1,
+"min": 100.9
+},
+"hybrid_no_payload": {
+"n": 30,
+"p50": 102.5,
+"p95": 110.5,
+"min": 99.7
+},
+"reconnect_per_question": {
+"n": 30,
+"p50": 312.9,
+"p95": 384.6,
+"min": 305.1
+},
+"two_calls_client_rrf": {
+"n": 30,
+"p50": 202.0,
+"p95": 255.3,
+"min": 197.3
+},
+"ten_sequential": {
+"n": 5,
+"p50": 1051.1,
+"p95": 1065.2,
+"min": 1041.8
+},
+"ten_one_batch": {
+"n": 5,
+"p50": 202.0,
+"p95": 377.9,
+"min": 149.7
+}
+},
+"grpc": {
+"rtt": {
+"n": 30,
+"p50": 94.6,
+"p95": 95.8,
+"min": 93.9
+},
+"hybrid_payload_cite": {
+"n": 30,
+"p50": 102.3,
+"p95": 105.7,
+"min": 100.2
+},
+"hybrid_no_payload": {
+"n": 30,
+"p50": 101.9,
+"p95": 111.3,
+"min": 99.3
+},
+"reconnect_per_question": {
+"n": 30,
+"p50": 122.4,
+"p95": 145.5,
+"min": 119.0
+},
+"two_calls_client_rrf": {
+"n": 30,
+"p50": 198.9,
+"p95": 209.4,
+"min": 196.2
+},
+"ten_sequential": {
+"n": 5,
+"p50": 1020.1,
+"p95": 1053.8,
+"min": 1018.4
+},
+"ten_one_batch": {
+"n": 5,
+"p50": 219.5,
+"p95": 378.9,
+"min": 154.1
+}
+}
+},
+"suite_eu": {
+"date": "2026-11-05 05:13 UTC",
+"modal_region": "eu-north",
+"modal_cloud": "CLOUD_PROVIDER_AWS",
+"errors": {},
+"rest": {
+"rtt": {
+"n": 30,
+"p50": 30.0,
+"p95": 31.3,
+"min": 29.4
+},
+"hybrid_payload_cite": {
+"n": 30,
+"p50": 77.2,
+"p95": 81.8,
+"min": 40.3
+},
+"hybrid_no_payload": {
+"n": 30,
+"p50": 36.9,
+"p95": 43.2,
+"min": 33.9
+},
+"reconnect_per_question": {
+"n": 30,
+"p50": 103.5,
+"p95": 145.5,
+"min": 100.1
+},
+"two_calls_client_rrf": {
+"n": 30,
+"p50": 149.4,
+"p95": 154.2,
+"min": 112.9
+},
+"ten_sequential": {
+"n": 5,
+"p50": 775.1,
+"p95": 790.7,
+"min": 693.3
+},
+"ten_one_batch": {
+"n": 5,
+"p50": 187.2,
+"p95": 217.3,
+"min": 89.2
+}
+},
+"grpc": {
+"rtt": {
+"n": 30,
+"p50": 27.9,
+"p95": 29.2,
+"min": 27.5
+},
+"hybrid_payload_cite": {
+"n": 30,
+"p50": 34.7,
+"p95": 39.3,
+"min": 33.4
+},
+"hybrid_no_payload": {
+"n": 30,
+"p50": 33.6,
+"p95": 35.6,
+"min": 31.6
+},
+"reconnect_per_question": {
+"n": 30,
+"p50": 47.4,
+"p95": 52.8,
+"min": 45.1
+},
+"two_calls_client_rrf": {
+"n": 30,
+"p50": 63.2,
+"p95": 71.4,
+"min": 60.9
+},
+"ten_sequential": {
+"n": 5,
+"p50": 352.7,
+"p95": 363.1,
+"min": 347.6
+},
+"ten_one_batch": {
+"n": 5,
+"p50": 121.0,
+"p95": 199.5,
+"min": 116.1
+}
+}
+}
+},
+"rerank": {
+"gpu": {
+"device": "cuda",
+"torch_threads": 4,
+"gpu": "NVIDIA L4",
+"rerank_20": {
+"p50_ms": 41.07,
+"p95_ms": 42.95,
+"n": 40
+},
+"rerank_1": {
+"p50_ms": 11.44,
+"p95_ms": 11.91,
+"n": 40
+},
+"bm25_query": {
+"p50_ms": 0.44,
+"p95_ms": 0.47,
+"n": 40
+},
+"embed_query": {
+"p50_ms": 11.44,
+"p95_ms": 13.02,
+"n": 40
+}
+},
+"cpu": {
+"machine": "Modal CPU container, 4 vCPU, 16 GiB",
+"device": "cpu",
+"torch_threads": 4,
+"gpu": null,
+"rerank_20": {
+"p50_ms": 2387.93,
+"p95_ms": 2546.64,
+"n": 15
+},
+"rerank_1": {
+"p50_ms": 108.06,
+"p95_ms": 111.35,
+"n": 15
+},
+"bm25_query": {
+"p50_ms": 0.31,
+"p95_ms": 0.34,
+"n": 15
+},
+"embed_query": {
+"p50_ms": 19.25,
+"p95_ms": 20.14,
+"n": 15
+}
+}
+},
+"q605_says": {
+"01_policies/POL-APR-002 Approval Matrix v3.0.pdf": "£250,000 gross",
+"01_policies/old/Approval_Matrix_v2.0_2024.docx": "£200,000",
+"11_training/New starter - Purchasing (2024) deck export.pdf": "£200,000",
+"11_training/intranet_export_2016/approval_limits.html": "£150,000 net"
+},
+"q605_amounts": [
+"£250,000",
+"£200,000",
+"£150,000"
+],
 "shots": [
+"ann_recall.jpg",
 "cluster_overview.jpg",
 "collection_info.jpg",
 "collection_info_json.jpg",
 "collections.jpg",
 "console_bm25.jpg",
-"point_106.jpg"
+"filter_superseded.jpg",
+"point_106.jpg",
+"visualize_all.jpg"
 ]
 };

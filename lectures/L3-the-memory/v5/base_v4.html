@@ -37,16 +37,28 @@
   <div class="col" style="width:440px">
     <h2>Where we end today</h2>
     <p>Emma Clarke, purchase executive, has a cheaper quote for the battery packs.</p>
-    <p class="step">Ask Northbridge, at the knowledge stage, has one tool, <code>search_docs</code>, and calls it twice.</p>
+    <p class="step">Ask Northbridge, at the knowledge stage, can do one thing: search Northbridge’s documents. It calls that search twice.</p>
+    <p class="step tiny">In code the search is a function named <code>search_docs</code>: a question in, cited passages out. Today we build what is inside it. It only reads. The tools in Lecture 4 act in Ledgerline.</p>
     <p class="step">It answers with the rule, the reason and the documents. This is the recorded run we deploy today.</p>
   </div>
   <div class="fig" data-fig="chatk" data-turns="0" style="left:600px;top:110px;width:900px;height:720px"></div>
 </section>
 
-<section class="slide" data-plate="One Question, Eleven Sources">
-  <div class="lec-top"><h2>One sentence from Emma needs eleven passages</h2><p class="sub">“Can I buy the battery packs from Brightcell Energy? They quote £104.” The golden set’s list of what a complete answer uses.</p></div>
-  <div class="fig" data-fig="goldmap" style="left:100px;top:230px;width:1400px;height:560px"></div>
-  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+<section class="slide" data-plate="One Question, Eight Documents">
+  <div class="lec-top"><h2>One question from Emma needs eight documents</h2><p class="sub">“Can I buy the battery packs from Brightcell Energy? They quote £104.” Each document adds one piece of the full answer.</p></div>
+  <table class="t" style="position:absolute;left:100px;width:1400px;top:210px;font-size:19px">
+    <tr><th>Folder</th><th>Document</th><th>What it adds to the answer</th></tr>
+    <tr class="step"><td><code>01_policies/</code></td><td><b>Purchase Policy v4.1, §6.2</b></td><td>Battery packs are lithium-cell parts: buy only from a supplier whose UN 38.3 certificate is on file.</td></tr>
+    <tr class="step"><td><code>01_policies/</code></td><td><b>Purchase Policy v4.1, §6.4</b></td><td>A cheaper quote alone is no reason to change supplier for such a part.</td></tr>
+    <tr class="step"><td><code>01_policies/</code></td><td><b>Amendment AMD-SUP-2026-02</b></td><td>Since 1 September 2026 the test report must be under 12 months old, and valid 60 days past the order.</td></tr>
+    <tr class="step"><td><code>05_master_data/</code></td><td><b>Supplier master (spreadsheet)</b></td><td>Brightcell is not in it: a fact you find by its absence.</td></tr>
+    <tr class="step"><td><code>02_procedures/</code></td><td><b>SOP-PUR-001, Supplier Onboarding</b></td><td>How to add a supplier: form NBC-F-112, upload the certificate, a senior buyer checks it.</td></tr>
+    <tr class="step"><td><code>08_release_notes/</code></td><td><b>Patch notes RN-7.2.3-P4</b></td><td>Ledgerline gained a certificate check, PUR.CERT_CHK: off by default, and only a warning when on.</td></tr>
+    <tr class="step"><td><code>10_meeting_notes/</code></td><td><b>Change-board minutes, 7 Oct 2026</b></td><td>The board kept PUR.CERT_CHK off until after the spring launch. So the check is Emma’s.</td></tr>
+    <tr class="step"><td><code>09_email_archive/</code></td><td><b>Brightcell’s quotation e-mail</b></td><td>£104.00 a pack, and their certificate is still being renewed.</td></tr>
+    <tr class="step"><td><code>05_master_data/</code></td><td><b>Rate contracts 2026–27, row 1450</b></td><td>Voltway Cells, the current supplier: £119.00 under contract.</td></tr>
+  </table>
+  <div class="cap step" style="left:100px;top:800px;width:1400px">From the golden set’s record for this question (<code>Q-EMMA</code>, <code>northbridge-docs/eval/questions.jsonl</code>): twelve facts from eight files in six folders. Short answer: not yet.</div>
 </section>
 
 <section class="slide q hero" data-plain="1">
@@ -214,8 +226,8 @@
   <span class="hero-num q-mark" aria-hidden="true">?</span>
   <div class="qbox">
     <p class="q-label">Ask the class · Section 3 · <span class="qnum"></span></p>
-    <h2 class="q-text">“What was our total spend with Voltway Cells from May to September 2026?” <em>Which kind is it?</em></h2>
-    <div class="q-opts"><span class="q-opt"><b>1</b> Genesis</span><span class="q-opt"><b>2</b> Analytical</span><span class="q-opt"><b>3</b> Documentation</span></div>
+    <h2 class="q-text">“Which supplier certificates expire in the next 90 days?” <em>Which kind is it?</em></h2>
+    <div class="q-opts"><span class="q-opt"><b>1</b> Genesis: do something in Ledgerline</span><span class="q-opt"><b>2</b> Analytical: compute it from the data</span><span class="q-opt"><b>3</b> Documentation: it is written down</span></div>
     <p class="q-cue">Type 1, 2 or 3. And: could a document search answer it?</p>
   </div>
 </section>
@@ -759,8 +771,8 @@
 
 <section class="slide" data-plate="The Winner as a Tool">
   <div class="col" style="width:470px">
-    <h2>One tool: <code>search_docs</code></h2>
-    <p>The race winner, wrapped so the model can ask for it. Lecture 4 opens tools properly; this is a first look.</p>
+    <h2>The search, as one tool: <code>search_docs</code></h2>
+    <p>Today’s RAG pipeline, wrapped in one function the model may call when it needs a document. It only reads. Lecture 4 opens tools properly, and its tools act in Ledgerline; this is a first look.</p>
     <p class="step">The description tells the model when to use it.</p>
     <p class="step">The input: the question, in plain words or with the exact code.</p>
     <p class="step">The output: cited passages with their status, and the withheld flag.</p>

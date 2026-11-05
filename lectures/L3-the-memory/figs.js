@@ -248,11 +248,13 @@ FIGS.parsers = (el) => {
 /* ======================= genesis / analytical / documentation ======================= */
 FIGS.taxonomy = (el) => {
   const Q = get('questions'); if (!Q) return need(el, 'questions.jsonl.');
-  const col = (cat, tag, what, cls, k) => `<div class="card tx ${cls}" data-k="${k}"><span class="tag ${cls === 'af' ? 'af' : 'nt'}">${tag}</span><h3>${fmt(Q.categories[cat])} ${cat}</h3><p class="tx-w">${what}</p>
-    <ul>${Q.examples[cat].slice(0, 4).map((x) => `<li>“${esc(x.q)}”</li>`).join('')}</ul></div>`;
-  el.innerHTML = `<div class="three tx3">${col('genesis', 'Create something', 'Fires write services: a tool, then an approval. Lecture 4 onward.', '', 0)}
-    ${col('analytical', 'Count, sum, compare', 'Reads transactions and runs a query. Tools and SQL, later.', '', 1)}
-    ${col('documentation', 'How, what, which rule', 'The answer is written down somewhere in the dump. <b>Today.</b>', 'af', 2)}</div>`;
+  // The documentation examples are spread over its ten types; the other two categories have their own lists.
+  const ex = (cat) => Q.examples[cat] || ['single_lookup', 'procedure', 'rule', 'exact_code'].map((t) => Q.examples[t][0]);
+  const col = (cat, name, tag, what, cls, k) => `<div class="card tx ${cls}" data-k="${k}"><span class="tag ${cls === 'af' ? 'af' : 'nt'}">${tag}</span><h3>${name} · ${fmt(Q.categories[cat])}</h3><p class="tx-w">${what}</p>
+    <ul>${ex(cat).slice(0, 3).map((x) => `<li>“${esc(x.q)}”</li>`).join('')}</ul></div>`;
+  el.innerHTML = `<div class="three tx3">${col('genesis', 'Genesis', 'Create or change something', '<b>Genesis</b> (making): the answer is an action in Ledgerline, such as raising an order. It needs write tools and an approval. Lecture 4 onward.', '', 0)}
+    ${col('analytical', 'Analytical', 'Count, sum, compare', '<b>Analytical</b>: the answer is computed from the transaction data, by a query. Tools and SQL, later.', '', 1)}
+    ${col('documentation', 'Documentation', 'How, what, which rule', '<b>Documentation</b>: the answer is written down somewhere in the dump, so we must find it. <b>Today.</b>', 'af', 2)}</div>`;
   return { step(k) { reveal(el, k); } };
 };
 

@@ -13,6 +13,7 @@ const ms1 = (s) => (s == null ? '–' : (s * 1000).toFixed(1) + ' ms');
 const reveal = (el, k) => el.querySelectorAll('[data-k]').forEach((x) => x.classList.toggle('engineer-off', +x.dataset.k > k));
 const need = (el, w) => { el.innerHTML = `<div class="todo-card"><span class="todo-k">TODO(engineer data)</span><div>${esc(w)}</div></div>`; return { step() {} }; };
 const get = (path) => { let v = D(); for (const k of path.split('.')) v = v == null ? v : v[k]; return v; };
+const ord = (n) => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
 const md = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').split(/\n+/).filter((x) => x.trim()).map((p) => `<p>${p}</p>`).join('');
 const bar = (label, v, { max = 1, ch = false, over = false, extra = '', f = r3 } = {}) =>
   `<div class="engineer-br${ch ? ' ch' : ''}${over ? ' over' : ''}"><span class="l">${label}</span><span class="t"><i style="width:${Math.max(0.8, 100 * (v || 0) / max)}%"></i></span><span class="v">${f(v)}</span><span class="e">${extra}</span></div>`;
@@ -89,7 +90,7 @@ FIGS.engineer_cost = (el) => {
   const pin = 0.825, pout = 4.125;
   const cin = (q.tokens_in * pin) / 1e6, cout = (q.tokens_out * pout) / 1e6;
   el.innerHTML = `<div class="engineer-cost" style="inset:0">
-    <div class="engineer-eq"><span>${fmt(q.tokens_in)} tokens in<small>Emma’s question, the prompt and 10 passages</small></span><span class="o">×</span><span>$${pin} per million</span><span class="o">=</span><span class="res">$${cin.toFixed(5)}</span></div>
+    <div class="engineer-eq"><span>${fmt(q.tokens_in)} tokens in<small>Emma’s question, the prompt and the 10 chunks (top-k = 10)</small></span><span class="o">×</span><span>$${pin} per million</span><span class="o">=</span><span class="res">$${cin.toFixed(5)}</span></div>
     <div class="engineer-eq engineer-k" data-k="1"><span>${fmt(q.tokens_out)} tokens out<small>the answer, with its thinking tokens</small></span><span class="o">×</span><span>$${pout} per million</span><span class="o">=</span><span class="res">$${cout.toFixed(5)}</span></div>
     <div class="engineer-eq tot engineer-k" data-k="1"><span><b>Emma’s question</b></span><span></span><span></span><span class="o">=</span><span class="res">$${(cin + cout).toFixed(4)}</span></div>
     <div class="engineer-eq tot engineer-k" data-k="2"><span><b>Mean of all 224</b><small>${fmt(Math.round(A.tokens_in_per_q))} in, ${fmt(Math.round(A.tokens_out_per_q))} out on average</small></span><span></span><span></span><span class="o">=</span><span class="res">$${A.cost_per_q_usd.toFixed(4)}</span></div>
@@ -102,7 +103,7 @@ FIGS.engineer_judge = (el) => {
   const q = get('per_question.Q-EMMA'), A = get('scorecard.answers'); if (!q) return need(el, 'Q-EMMA answer');
   const miss = new Set(q.fact.missing || []);
   el.innerHTML = `<div class="engineer-judge" style="inset:0">
-    <div class="engineer-ans"><span class="who">The answer RAG gave Emma (150-word cap, before the race)</span>${md(q.answer)}</div>
+    <div class="engineer-ans"><span class="who">The answer RAG gave Emma (capped at 150 words)</span>${md(q.answer)}</div>
     <div class="engineer-checks">
       <div class="engineer-chk engineer-k" data-k="1"><span class="h">1 · Exact facts <span class="bad">${q.must_contain.length - miss.size} of ${q.must_contain.length}: not correct</span></span>Does the answer contain every string the golden set says it must?
         <div class="engineer-pills">${q.must_contain.map((s) => `<span class="${miss.has(s) ? 'x' : ''}">${esc(s)}</span>`).join('')}</div></div>
@@ -113,37 +114,61 @@ FIGS.engineer_judge = (el) => {
   return { step(k) { reveal(el, k); } };
 };
 
-/* ---------- the grid of knobs, multiplied out ---------- */
+/* ---------- the grid of knobs: index knobs (one index per combination) × search knobs (tried on every index) ---------- */
 FIGS.engineer_knobs = (el) => {
-  const S = get('scale'); if (!S) return need(el, 'scale');
-  const kr = (k, lab, chips, x) => `<div class="engineer-kr engineer-k" data-k="${k}"><span class="kl">${lab}</span><span class="engineer-chips">${chips.map((c) => `<span>${c}</span>`).join('')}</span><span class="x">${x}</span></div>`;
-  el.innerHTML = `<div class="engineer-knobs" style="inset:0">
-    ${kr(0, 'Parser', ['plain', 'structured'], '2')}
-    ${kr(0, 'Chunker', ['fixed', 'recursive', 'structure-aware'], '× 3')}
-    ${kr(0, 'Chunk size', ['200', '400', '800', '1200 tokens'], '× 4')}
-    ${kr(0, 'Overlap', ['0%', '15%'], '× 2')}
-    <div class="engineer-tot engineer-k" data-k="0"><span></span><span>indexes to build (chunk, embed with 5 models, BM25)</span><span class="v">= ${S.n_chunkings}</span></div>
-    ${kr(1, 'Search', ['BM25', 'dense × 5 models', 'hybrid × 5 models'], '11')}
-    ${kr(1, 'Reranker', ['off', 'on'], '× 2')}
-    ${kr(1, 'Rewriting', ['off', 'on'], '× 2')}
-    <div class="engineer-tot engineer-k" data-k="1"><span></span><span>search settings per index · ${S.n_chunkings} × ${S.settings_per_chunking} =</span><span class="v">${fmt(S.n_rows)}</span></div>
-    ${kr(2, 'k', ['3', '5', '10'], 'free')}
-    <div class="engineer-tot engineer-k" data-k="2"><span></span><span>Each setting searches all ${S.questions} questions once, top 10. Recall@3 and @5 are read off the same list. ${fmt(S.n_rows)} × ${S.questions} =</span><span class="v">${fmt(S.searches)}</span></div>
+  const S = get('scale'), SL = get('slices'), C = get('context'); if (!S || !SL) return need(el, 'scale');
+  const models = SL.model_dense.map((x) => x.setting);
+  const nIdx = 2 * 3 * 4 * 2, nSet = (1 + 2 * models.length) * 2 * 2;
+  if (nIdx !== S.n_chunkings || nSet !== S.settings_per_chunking || nIdx * nSet !== S.n_rows) return need(el, 'knob counts do not match rag_grid.json');
+  const kr = (lab, chips, x, note = '') => `<div class="engineer-kr2"><span class="kl">${lab}</span><span class="engineer-chips">${chips.map((c) => `<span>${c}</span>`).join('')}${note ? `<em>${note}</em>` : ''}</span><span class="x">${x}</span></div>`;
+  // the 48 indexes: rows = parser · chunker, columns = size · overlap; the chosen one in blue
+  const pc = [['plain', 'fixed'], ['plain', 'recursive'], ['plain', 'structure'], ['structured', 'fixed'], ['structured', 'recursive'], ['structured', 'structure']];
+  const so = [200, 400, 800, 1200].flatMap((z) => [[z, 0], [z, 15]]);
+  const tiles = `<div class="engineer-tiles"><span></span>${[200, 400, 800, 1200].map((z) => `<span class="zh">${fmt(z)}</span>`).join('')}
+    ${pc.map(([p, c]) => `<span class="rl">${p} · ${c === 'structure' ? 'structure-aware' : c}</span>${so.map(([z, o]) => `<i class="${p === 'structured' && c === 'structure' && z === 200 && o === 15 ? 'on' : ''}"></i>`).join('')}`).join('')}
+    <span></span><span class="oh">each pair: overlap 0% · 15% · blue: the index we end up choosing</span></div>`;
+  // the 44 search settings of one index: columns = search method, rows = reranker × rewriting
+  const cols = ['BM25', ...models.map((m) => 'dense ' + m), ...models.map((m) => 'hybrid ' + m)];
+  const rows = [['off', 'off'], ['on', 'off'], ['off', 'on'], ['on', 'on']];
+  const dots = `<div class="engineer-dots"><span></span><span class="ch1">BM25</span><span class="ch5">dense · 5 models</span><span class="ch5">hybrid · 5 models</span>
+    ${rows.map(([rr, qr]) => `<span class="rl">reranker ${rr} · rewriting ${qr}</span>${cols.map((c, j) => `<i class="${j === 0 && rr === 'on' && qr === 'off' ? 'on' : ''}"></i>`).join('')}`).join('')}</div>`;
+  el.innerHTML = `<div class="engineer-kn" style="inset:0">
+    <div class="engineer-kcol engineer-k" data-k="0"><span class="tag bf">1 · Index knobs: change what is stored</span>
+      <p class="engineer-kwhy">Each combination needs its own index: cut the dump, embed every chunk, build the BM25 table.</p>
+      ${kr('Parser', ['plain', 'structured'], '2', 'structured adds the header line')}
+      ${kr('Chunker', ['fixed', 'recursive', 'structure-aware'], '× 3')}
+      ${kr('Chunk size', ['200', '400', '800', '1,200 tokens'], '× 4')}
+      ${kr('Overlap', ['0%', '15%'], '× 2')}
+      <div class="engineer-tot2"><span>indexes, one per combination</span><span class="v">= ${S.n_chunkings}</span></div>
+      ${tiles}
+      <p class="engineer-kwhy">Embedding model: ${models.length} models. They change the stored vectors too, so every index holds all ${models.length} vector sets.</p></div>
+    <div class="engineer-kcol engineer-k" data-k="1"><span class="tag af">2 · Search knobs: change only how one index is searched</span>
+      <p class="engineer-kwhy">No rebuild: every search setting runs on every index.</p>
+      ${kr('Search', ['BM25', 'dense × 5', 'hybrid × 5'], '11', 'one per stored vector set')}
+      ${kr('Reranker', ['off', 'on: re-read the top 20'], '× 2')}
+      ${kr('Rewriting', ['off', 'on: an LLM rewrites the question first'], '× 2')}
+      ${kr('RRF constant', ['60'], 'fixed')}
+      <div class="engineer-tot2"><span>search settings on each index</span><span class="v">= ${S.settings_per_chunking}</span></div>
+      ${dots}
+      <div class="engineer-kr2 engineer-k topk" data-k="2"><span class="kl">top-k</span><span class="engineer-chips"><span>3</span><span>5</span><span>10</span><em>k = how many chunks go to the model</em></span><span class="x">free</span></div>
+      <p class="engineer-kwhy engineer-k" data-k="2">Free: each search returns the top 10 once, and recall@3 and recall@5 are read off the same list.</p></div>
+    <div class="engineer-ktot engineer-k" data-k="3"><b>${S.n_chunkings}</b> indexes <span class="o">×</span> <b>${S.settings_per_chunking}</b> search settings <span class="o">=</span> <b class="a">${fmt(S.n_rows)}</b> rows <span class="o">·</span> each searches all ${S.questions} questions <span class="o">=</span> <b class="a">${fmt(S.searches)}</b> searches
+      <small>On Modal: one L4 GPU container per index, up to ${S.container_wall_s.max_parallel} at once, ${Math.round(S.container_wall_s.min / 60)} to ${Math.round(S.container_wall_s.max / 60)} minutes each, ${(+C.gpu_hours).toFixed(1)} L4-hours in all.</small></div>
   </div>`;
-  return { step(k) { reveal(el, k); } };
+  return { step(k) { reveal(el, k); el.querySelectorAll('.engineer-tiles i.on, .engineer-dots i.on').forEach((x) => x.classList.toggle('engineer-lit', k >= 1)); } };
 };
 
 /* ---------- one knob at a time, and an interaction ---------- */
 FIGS.engineer_okat = (el) => {
   const B = get('base'), S = get('slices'); if (!B || !S) return need(el, 'slices');
-  const knobs = [['parser', 'structured'], ['chunker', 'structure'], ['size', '200'], ['overlap', '15%'], ['search', 'BM25'], ['model', 'none'], ['reranker', 'on'], ['rewriting', 'off'], ['k', '10']];
+  const knobs = [['parser', 'structured'], ['chunker', 'structure'], ['size', '200'], ['overlap', '15%'], ['search', 'BM25'], ['model', 'none'], ['reranker', 'on'], ['rewriting', 'off'], ['top-k', '10']];
   const row = (name, chg, val, r5, k, cls = '') => `<div class="engineer-cfg ${cls} engineer-k" data-k="${k}"><span class="nm">${name}</span>
     ${knobs.map(([kn, v]) => `<span class="ch${chg && chg[0] === kn ? ' chg' : ''}"><i>${kn}</i>${esc(chg && chg[0] === kn ? chg[1] : v)}</span>`).join('')}<span class="rv">${r3(r5)}</span></div>`;
   const s = (sl, set) => S[sl].find((x) => String(x.setting) === String(set));
   const I = S.interaction_size_x_search, sizes = ['200', '400', '800', '1200'];
   const withRR = S.size.map((x) => [x.setting, x['recall@5']]);
   const grp = (title, pairs, k) => { const best = Math.max(...pairs.map((p) => p[1]));
-    return `<div class="engineer-k" data-k="${k}"><h4>${title}</h4>${pairs.map(([sz, v]) => bar(sz + ' tokens', v, { ch: v === best })).join('')}</div>`; };
+    return `<div class="engineer-k" data-k="${k}"><h4>${title}</h4>${pairs.map(([sz, v]) => bar(fmt(+sz) + ' tokens', v, { ch: v === best })).join('')}</div>`; };
   el.innerHTML = `<div class="engineer-okat" style="inset:0">
     <div class="engineer-cfg"><span class="nm"></span>${knobs.map(() => '<span></span>').join('')}<span class="rv" style="font:500 14px var(--font);color:var(--ink-3)">recall@5</span></div>
     ${row('chosen', null, null, B['recall@5'], 0, 'base')}
@@ -151,25 +176,10 @@ FIGS.engineer_okat = (el) => {
     ${row('change reranker', ['reranker', 'off'], null, s('rerank', 'False')['recall@5'], 1)}
     ${row('change search', ['search', 'hybrid'], null, s('search', 'hybrid')['recall@5'], 1)}
     <div class="engineer-inter">
-      ${grp('BM25 alone: best at 1200 tokens', sizes.map((z) => [z, I.bm25[z]]), 2)}
+      ${grp('BM25 alone: best at 1,200 tokens', sizes.map((z) => [z, I.bm25[z]]), 2)}
       ${grp('BM25 + reranker: best at 200 tokens', withRR, 3)}
     </div></div>`;
   return { step(k) { reveal(el, k); } };
-};
-
-/* ---------- the real grid loop, highlighted per click ---------- */
-FIGS.engineer_code = (el) => {
-  const C = get('code'); if (!C) return need(el, 'code');
-  const hl = window.L3hl || esc;
-  const steps = (el.dataset.hl || '').split(';');
-  el.classList.add('nbcell');
-  const draw = (k) => {
-    const spec = k === 0 ? (el.dataset.hl0 || '') : steps[Math.min(k, steps.length) - 1];
-    const on = new Set(); spec.split(',').filter(Boolean).forEach((r) => { const [a, b] = r.split('-').map(Number); for (let i = a; i <= (b || a); i++) on.add(i); });
-    el.innerHTML = `<span class="hd">${esc(C.file)} · the grid loop, lines ${C.from}–${C.from + C.lines.length - 1}</span>` +
-      C.lines.map((t, i) => { const n = C.from + i; return `<span class="ln${on.has(n) ? ' hl' : ''}"><i class="lno">${n}</i>${hl(t.length > 118 ? t.slice(0, 117) + '…' : t) || ' '}</span>`; }).join('');
-  };
-  return { step(k) { draw(k); } };
 };
 
 /* ---------- small multiples: one knob per panel, everything else at the chosen setting ---------- */
@@ -177,16 +187,16 @@ const PANELS = {
   cut: (S) => [
     { t: 'Parser', rows: S.parser.map((x) => [x.setting, x['recall@5'], x.chosen]) , rd: 'The structured parser keeps headings and table headers.' },
     { t: 'Chunker', lw: 160, rows: S.chunker.map((x) => [x.setting === 'structure' ? 'structure-aware' : x.setting, x['recall@5'], x.chosen]), rd: 'Cutting at headings beats cutting every n tokens.' },
-    { t: 'Chunk size', sub: 'search p95', lw: 120, xw: 70, rows: S.size.map((x) => [x.setting + ' tokens', x['recall@5'], x.chosen, ms(x.p95_s)]), rd: 'Smaller wins, and the reranker reads small chunks faster.' },
+    { t: 'Chunk size', sub: 'search p95', lw: 120, xw: 70, rows: S.size.map((x) => [fmt(+x.setting) + ' tokens', x['recall@5'], x.chosen, ms(x.p95_s)]), rd: 'Smaller wins, and the reranker reads small chunks faster.' },
     { t: 'Overlap', rows: S.overlap.map((x) => [x.setting === '0.0' ? '0%' : '15%', x['recall@5'], x.chosen]), rd: 'Repeating 15% at each cut keeps a sentence that straddles two chunks findable.' },
   ],
   search: (S) => [
     { t: 'Search mode', sub: 'with the reranker · p95', xw: 70, rows: S.search.map((x) => [x.setting === 'dense' ? 'dense (bge-small)' : x.setting === 'hybrid' ? 'hybrid (bge-small)' : 'BM25', x['recall@5'], x.chosen, ms(x.p95_s)]), lw: 170 },
     { t: 'Reranker', sub: 'search p95', xw: 70, rows: S.rerank.map((x) => [x.setting === 'True' ? 'on' : 'off', x['recall@5'], x.chosen, ms(x.p95_s)]) },
     { t: 'Query rewriting', sub: 'search p95', xw: 70, rows: S.rewrite.map((x) => [x.setting === 'True' ? 'on' : 'off', x['recall@5'], x.chosen, ms(x.p95_s), x.p95_s > 0.2]), rd: 'An LLM rewrites the question before the search: one more model call, and worse here.' },
-    { t: 'Embedding model', sub: 'hybrid + reranker', rows: S.model_hybrid_rerank.map((x) => [x.setting, x['recall@5'], false]), lw: 110, rd: 'The chosen setting uses no embeddings. Where they are used, the model moves recall by under 3 points.' },
-    { t: 'k: passages kept', sub: 'recall@k', rows: S.k.map((x) => ['top ' + x.setting, x.recall, x.setting === 10]) },
-    { t: 'k: answers', sub: 'judge correct, 224', f: pct, rows: [['top 5', get('answered').find((a) => a.config.endsWith('rr1|qr0|k5') && a.config.startsWith('structured-structure-200')).answer_correct, false], ['top 10', get('scorecard.answers.answer_correct'), true]], rd: 'Same search; 5 more passages for the answer model.' },
+    { t: 'Embedding model', sub: 'hybrid + reranker', rows: S.model_hybrid_rerank.map((x) => [x.setting, x['recall@5'], false]), lw: 110, rd: 'The setting we choose uses no embeddings. Where they are used, the model moves recall by under 3 points.' },
+    { t: 'top-k: chunks to the model', sub: 'recall@k', rows: S.k.map((x) => ['top ' + x.setting, x.recall, x.setting === 10]) },
+    { t: 'top-k: answers', sub: 'judge correct, 224', f: pct, rows: [['top 5', get('answered').find((a) => a.config.endsWith('rr1|qr0|k5') && a.config.startsWith('structured-structure-200')).answer_correct, false], ['top 10', get('scorecard.answers.answer_correct'), true]], rd: 'Same search; 5 more chunks for the answer model.' },
   ],
 };
 FIGS.engineer_panels = (el) => {
@@ -196,6 +206,38 @@ FIGS.engineer_panels = (el) => {
     <h4>${p.t}${p.sub ? `<small>${p.sub}</small>` : ''}</h4>
     ${p.rows.map(([l, v, ch, ex, over]) => bar(esc(l), v, { ch, over, extra: ex || '', f: p.f || r3 })).join('')}
     ${p.rd ? `<div class="rd">${p.rd}</div>` : ''}</div>`).join('')}</div>`;
+  return { step(k) { reveal(el, k); } };
+};
+
+/* ---------- your guesses against the data: one row per knob, then where one document misled us ---------- */
+FIGS.engineer_guess = (el) => {
+  const S = get('slices'), A = get('answered'), PG = (get('playground') || {})['rank_of_6.2_by_size'], C = get('context'), B = get('base');
+  if (!S || !A || !PG || !C || !B) return need(el, 'slices / answered / playground');
+  const k5 = A.find((a) => a.config === B.id.replace(/\|k10$/, '|k5')), k10 = A.find((a) => a.config === B.id);
+  if (!k5 || !k10) return need(el, 'answered k5 / k10');
+  const best = (rows) => Math.max(...rows.map((r) => r[1]));
+  const bars = (rows) => { const b = best(rows); return rows.map(([l, v]) => bar(l, v, { ch: v === b })).join(''); };
+  const size = S.size.map((x) => [fmt(+x.setting), x['recall@5']]);
+  const search = ['dense', 'bm25', 'hybrid'].map((m) => [m === 'bm25' ? 'BM25' : m, S.search.find((x) => x.setting === m)['recall@5']]);
+  const rr = [['no', S.rerank.find((x) => x.setting === 'False')['recall@5']], ['yes', S.rerank.find((x) => x.setting === 'True')['recall@5']]];
+  const kk = S.k.map((x) => ['top ' + x.setting, x.recall]);
+  const p = (a, b) => (100 * (a - b)).toFixed(1);
+  const sz = (z) => S.size.find((x) => x.setting === String(z));
+  const row = (k, knob, metric, rows, why) => `<div class="engineer-gr"><span class="kn">${knob}</span><span class="gs"></span>
+    <div class="ds engineer-k" data-k="${k}"><small>${metric}</small>${bars(rows)}</div><div class="wy engineer-k" data-k="${k}">${why}</div></div>`;
+  el.innerHTML = `<div class="engineer-guess" style="inset:0">
+    <div class="engineer-gr hd"><span>Knob</span><span>Your guess</span><span>What the whole dump says</span><span>Why</span></div>
+    ${row(1, 'Chunk size', 'recall@5 · BM25 + reranker', size, `<b>200 tokens.</b> A small chunk holds one rule, so the right one can rank first. The reranker reads it faster too: ${ms1(sz(200).p95_s)} against ${ms1(sz(1200).p95_s)} at p95.`)}
+    ${row(2, 'Search', 'recall@5 · all with the reranker', search, `<b>BM25.</b> With dense search, gold reaches the top 5 for only about two questions in three. Fusing its list in (hybrid) costs ${p(search[1][1], search[2][1])} points.`)}
+    ${row(3, 'Reranker', 'recall@5 · BM25', rr, `<b>Yes.</b> +${(+C.rerank_gain_points).toFixed(1)} points for ${Math.round(C.rerank_cost_ms)} ms more at p95. It reads the question and each chunk together.`)}
+    ${row(4, 'top-k', 'a gold chunk among the k handed over', kk, `<b>10.</b> More gold reaches the model: answers right ${pct(k5.answer_correct)} at k = 5, ${pct(k10.answer_correct)} at k = 10, for $${k5.cost_per_q_usd.toFixed(4)} against $${k10.cost_per_q_usd.toFixed(4)} a question.`)}
+    <div class="engineer-mis engineer-k" data-k="5"><span class="tag bf">Where one document misled us: chunk size</span>
+      <div class="engineer-mis2"><div><small>On the Purchase Policy alone, dense search: rank of §6.2</small>
+        <span>200 tokens: <b>${ord(PG['s200-o15'].rank62)}</b> of ${PG['s200-o15'].n_chunks} chunks</span><span>400 tokens: <b class="w">${ord(PG['s400-o15'].rank62)}</b> of ${PG['s400-o15'].n_chunks} chunks</span></div>
+        <div><small>On the whole dump, ${fmt(C.chunks)} chunks, 205 questions: recall@5</small>
+        <span>BM25 + reranker: <b class="w">${r3(sz(200)['recall@5'])}</b> at 200 against ${r3(sz(400)['recall@5'])} at 400</span><span>dense alone: <b class="w">${r3(S.interaction_size_x_search.dense['200'])}</b> at 200 against ${r3(S.interaction_size_x_search.dense['400'])} at 400</span></div></div>
+      With only ${PG['s400-o15'].n_chunks} big chunks there was little to beat. With thousands, the small chunk that holds just the rule wins.</div>
+  </div>`;
   return { step(k) { reveal(el, k); } };
 };
 
@@ -226,7 +268,7 @@ FIGS.engineer_score = (el) => {
   const R = get('scorecard.retrieval'), A = get('scorecard.answers'); if (!R || !A) return need(el, 'scorecard');
   const v = (ok) => `<span class="engineer-met ${ok === null ? 'r' : ok ? 'y' : 'n'}">${ok === null ? 'report' : ok ? 'met' : 'missed'}</span>`;
   const rows = [
-    ['Recall@5', r3(R['recall@5']) + ` <span class="engineer-note">(recall@10 ${r3(R['recall@10'])})</span>`, '≥ 0.90', R['recall@5'] >= 0.9, 'by 0.7 points; k = 10 is why the answers use ten passages'],
+    ['Recall@5', r3(R['recall@5']) + ` <span class="engineer-note">(recall@10 ${r3(R['recall@10'])})</span>`, '≥ 0.90', R['recall@5'] >= 0.9, 'by 0.7 points; recall@10 is higher, one reason for top-k = 10'],
     ['MRR', r3(R.mrr), '', null, ''],
     ['Search p50 · p95', `${ms1(A.retrieval_s.p50)} · ${ms1(A.retrieval_s.p95)}`, '≤ 200 ms', A.retrieval_s.p95 <= 0.2, 'BM25 under 1 ms, the reranker the rest'],
     ['Answer correct (judge)', pct(A.answer_correct), '≥ 90%', A.answer_correct >= 0.9, ''],
@@ -246,12 +288,12 @@ FIGS.engineer_fail = (el) => {
   const mh = F.multi_hop, vc = F.version_conflict;
   const card = (k, tag, q, what, n) => `<div class="card engineer-k" data-k="${k}"><span class="tag bf">${tag}</span><span class="q">“${esc(q)}”</span>${what}<span class="n">${n}</span></div>`;
   el.innerHTML = `<div class="engineer-fails" style="inset:0">
-    ${card(0, 'Multi-hop', P['Q-EMMA'].question, `Only 2 of its 11 gold passages were found. The CAB minutes and patch notes behind PUR.CERT_CHK never came back, and the 150-word answer dropped the two prices it did have.`, `All gold passages in the top 10: ${pct(mh.all_gold10 ?? mh['all_gold@10'], 0)} of ${mh.n} multi-hop questions.`)}
-    ${card(1, 'Tables', P['Q-401'].question, `The current item master row never reached the top 10; a superseded 2025 export did. The answer said “not in the documents”. It is 3,000.`, `Table lookups: right passage in the top 10 for ${pct(get('scorecard.retrieval.by_type_recall@10.table_lookup'), 0)}.`)}
-    ${card(2, 'Old versions', P['Q-602'].question, `An old copy (MAN-INV-72 v7.2.2) ranked 1st, the current v7.2.3 2nd. This time the answer still gave 1.5%.`, `A superseded or future copy in the top 5 for ${vc.stale_in_top5} of ${vc.n} version questions; above the gold for ${vc.stale_ranked_above_gold}.`)}
+    ${card(0, 'Multi-hop', P['Q-EMMA'].question, `Only 2 of its 11 gold passages were found. The change-board minutes and patch notes that switch on the certificate check never came back, and the 150-word answer dropped the two prices it did have.`, `All gold passages in the top 10: ${pct(mh.all_gold10 ?? mh['all_gold@10'], 0)} of ${mh.n} multi-hop questions.`)}
+    ${card(1, 'Tables', P['Q-401'].question, `The current item master row never reached the top 10; an older 2025 export did. The answer said “not in the documents”. It is 3,000.`, `Table lookups: right passage in the top 10 for ${pct(get('scorecard.retrieval.by_type_recall@10.table_lookup'), 0)}.`)}
+    ${card(2, 'Old versions', P['Q-602'].question, `An old copy (MAN-INV-72 v7.2.2) ranked 1st, the current v7.2.3 2nd. This time the answer still gave 1.5%.`, `An old or not-yet-valid copy in the top 5 for ${vc.stale_in_top5} of ${vc.n} version questions; above the gold for ${vc.stale_ranked_above_gold}.`)}
     ${card(3, 'Procedures', P['Q-101'].question, `The policy on onboarding outranked the procedure (SOP-PUR-001), so the forms NBC-F-112 and NBC-F-113 were missing.`, `Procedures: ${X.procedure.n_type - X.procedure.n_judged_wrong} of ${X.procedure.n_type} answers right.`)}
-    ${card(4, 'Permissions', P['Q-902'].question, `The confidential salary file is filtered out, so the answer said “not in the documents”. It should refuse and say who may see it.`, `Permission questions: ${X.permission.n_type - X.permission.n_judged_wrong} of ${X.permission.n_type} right. The race fixes this with a withheld notice.`)}
-    <div class="card engineer-k" data-k="4" style="background:var(--g1)"><span class="tag af">What to do next</span><span class="q">Each type points at a fix</span>Multi-hop: search more than once (an agent, Lecture 5). Tables and versions: better parsing and metadata filters. Permissions: tell the model what was withheld.</div>
+    ${card(4, 'Permissions', P['Q-902'].question, `The confidential salary file is filtered out, so the answer said “not in the documents”. It should refuse and say who may see it.`, `Permission questions: ${X.permission.n_type - X.permission.n_judged_wrong} of ${X.permission.n_type} right. The race fixes this: it tells the model a file was withheld.`)}
+    <div class="card engineer-k" data-k="4" style="background:var(--g1)"><span class="tag af">What to do next</span><span class="q">Each type points at a fix</span>Multi-hop: search more than once (an agent, Lecture 5). Tables and versions: better parsing and metadata filters (next section). Permissions: tell the model what was withheld.</div>
   </div>`;
   return { step(k) { reveal(el, k); } };
 };

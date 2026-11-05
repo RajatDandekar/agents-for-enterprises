@@ -1,4 +1,4 @@
-/* L3 v5 · section `store`: where the vectors live (Chroma for real, then production on Qdrant Cloud). Classes prefixed store-. */
+/* L3 v5 · section `store`: where the vectors live (what a store keeps, metadata and filters, HNSW, the checklist on Qdrant Cloud). Classes prefixed store-. */
 .store-off{opacity:.12!important;transition:opacity .4s}
 .store-hide{opacity:0!important;pointer-events:none;transition:opacity .4s}
 [data-k]{transition:opacity .4s}
@@ -10,34 +10,6 @@
 .store-notes{list-style:none;margin:0;padding:0;counter-reset:n}
 .store-notes li{display:grid;grid-template-columns:36px 1fr;gap:10px;font-size:22px;line-height:1.4;margin-bottom:14px}
 .store-notes li::before{counter-increment:n;content:counter(n);display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(18,19,23,.14);font:500 15px/1 var(--font);color:var(--ink-2);margin-top:2px}
-
-/* one stored record */
-.store-rec{display:flex;flex-direction:column;gap:12px;height:100%}
-.store-rec .r{display:grid;grid-template-columns:150px 1fr;gap:14px;background:#fff;border-radius:18px;box-shadow:var(--shadow);padding:14px 18px;align-items:start}
-.store-rec .k{font:600 13px/1.3 var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--after);padding-top:4px}
-.store-rec .k small{display:block;font:400 13px/1.3 var(--font);letter-spacing:0;text-transform:none;color:var(--ink-3);margin-top:4px}
-.store-rec pre{font:400 14.5px/1.5 var(--mono);white-space:pre-wrap;color:var(--ink)}
-.store-rec .doc{white-space:pre-wrap}
-.store-rec .doc mark{background:#fff1b8;border-radius:3px;padding:0 1px}
-.store-rec .meta{display:flex;flex-wrap:wrap;gap:6px}
-.store-rec .meta span{font:400 14px/1 var(--mono);background:var(--card);border-radius:999px;padding:7px 10px}
-.store-rec .meta span b{font-weight:600;color:var(--ink-2)}
-.store-rec .meta span.hot{background:var(--gold-soft);color:var(--gold)}
-.store-rec .vec{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
-.store-rec .vec i{font:normal 500 14px/1 var(--mono);padding:7px 7px;border-radius:8px;color:#fff;min-width:66px;text-align:center}
-.store-rec .vec em{font:normal 400 15px/1.3 var(--font);color:var(--ink-3);margin-left:6px}
-
-/* terminal */
-.store-term{position:absolute;background:#121317;color:#e8eaf0;border-radius:18px;box-shadow:var(--shadow);overflow:hidden;font:400 15px/1.55 var(--mono)}
-.store-term .bar{display:flex;gap:7px;align-items:center;padding:10px 14px;background:#1d1f25;font:500 13px/1 var(--font);color:#8b93a7}
-.store-term .bar i{width:11px;height:11px;border-radius:50%;background:#3a3d46;display:inline-block}
-.store-term .bar span{margin-left:8px}
-.store-term .body{padding:12px 18px;white-space:pre;overflow:hidden}
-.store-term .p{color:#8dbcff}.store-term .c{color:#8b93a7}.store-term .s{color:#f6c38f}.store-term .g{color:#9be3b0}.store-term .w{color:#ffd27a}.store-term .x{color:#ff9d7a}
-.store-term .ln{display:block}
-.store-term .hl{background:rgba(141,188,255,.16);box-shadow:inset 3px 0 0 #8dbcff}
-.store-term .sz{display:inline-block;width:110px;text-align:right;color:#f6c38f;margin-right:16px}
-.store-term .barv{display:inline-block;height:9px;border-radius:4px;background:#5a9cf5;vertical-align:middle;margin-left:12px}
 
 /* code card (static source) */
 .store-code{position:absolute;background:#121317;color:#e8eaf0;font:400 15px/1.55 var(--mono);border-radius:18px;padding:14px 0;box-shadow:var(--shadow);overflow:hidden}
@@ -116,3 +88,82 @@ table.store-t .q{background:#9aa0aa}table.store-t .q::before{content:"?"}
 .store-kpi .m .k{font:500 15px/1.3 var(--font);color:var(--ink-2);margin-top:4px}
 .store-why .w.el{background:var(--card)}.store-why .w.el::before{content:"→";color:var(--ink-2)}
 .store-why .w{font-size:20px;padding:11px 16px}
+
+/* what a store keeps: one record, an index, a folder */
+.store-keeps{position:absolute}
+.store-keeps .folder{position:absolute;inset:0;border:2px dashed #9fb6d8;border-radius:22px;background:rgba(238,244,253,.35)}
+.store-keeps .folder .tab{position:absolute;left:22px;top:-15px;background:var(--paper);padding:2px 12px;font:600 16px/1.3 var(--mono);color:var(--after)}
+.store-keeps .rec{position:absolute;left:24px;top:30px;width:930px;display:flex;flex-direction:column;gap:10px}
+.store-keeps .r{display:grid;grid-template-columns:140px 1fr;gap:14px;background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:11px 16px;align-items:start}
+.store-keeps .k{font:600 14px/1.3 var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--after);padding-top:3px}
+.store-keeps .k small{display:block;font:400 13px/1.3 var(--font);letter-spacing:0;text-transform:none;color:var(--ink-3);margin-top:3px}
+.store-keeps pre{font:400 14px/1.48 var(--mono);white-space:pre-wrap;color:var(--ink);margin:0}
+.store-keeps .doc mark{background:#fff1b8;border-radius:3px;padding:0 1px}
+.store-keeps .meta{display:flex;flex-wrap:wrap;gap:6px}
+.store-keeps .meta span{font:400 14px/1 var(--mono);background:var(--card);border-radius:999px;padding:7px 10px}
+.store-keeps .meta span b{font-weight:600;color:var(--ink-2)}
+.store-keeps .meta span.hot{background:var(--gold-soft);color:var(--gold)}
+.store-keeps .vec{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.store-keeps .vec i{font:normal 500 13.5px/1 var(--mono);padding:7px 6px;border-radius:8px;color:#fff;min-width:64px;text-align:center}
+.store-keeps .vec em{font:normal 400 15px/1.3 var(--font);color:var(--ink-3);margin-left:6px}
+.store-keeps .idx{position:absolute;left:984px;top:30px;width:392px;background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:14px 16px}
+.store-keeps .idx b{display:block;font:600 20px/1.3 var(--font);color:var(--after);margin-bottom:6px}
+.store-keeps .idx svg{display:block;width:100%;height:auto}
+.store-keeps .idx p{font-size:18px;line-height:1.4;margin:8px 0 0}
+.store-keeps .idx p.n{color:var(--ink-2)}
+.store-keeps .idx p b{display:inline;font:inherit;font-weight:600;color:var(--ink);margin:0}
+.store-keeps .sizes{position:absolute;left:24px;right:24px;bottom:18px;font-size:20px;line-height:1.4;color:var(--ink-2)}
+.store-keeps .sizes b{color:var(--ink)}
+
+/* a payload, field by field */
+.store-pay{position:absolute;background:#fff;border-radius:18px;box-shadow:var(--shadow);padding:10px 18px;overflow:hidden}
+.store-pay .h{font:600 17px/1.3 var(--font);color:var(--after);padding:4px 0 8px;border-bottom:1px solid var(--rule)}
+.store-pay .h span{font-weight:400;color:var(--ink-3)}
+.store-pay .r{display:grid;grid-template-columns:130px 220px 1fr;gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid var(--rule);font-size:16px}
+.store-pay .r:last-child{border-bottom:0}
+.store-pay .r code{font:600 15px/1.2 var(--mono);color:var(--ink-2);background:none;padding:0}
+.store-pay .r .v{font:400 15px/1.2 var(--mono);color:#1b7a46;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.store-pay .r .v.b{color:var(--gold)}
+.store-pay .r .m{color:var(--ink-3);font-size:15px;white-space:nowrap}
+
+/* status values and flags */
+.store-stat{position:absolute;display:flex;flex-direction:column;gap:10px}
+.store-stat .ln{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.store-stat .lab{font:600 13px/1.2 var(--font);letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-right:4px}
+.store-stat .chip{font:400 14px/1.2 var(--font);background:var(--card);border-radius:999px;padding:6px 10px;color:var(--ink-2)}
+.store-stat .chip b{font:600 13px/1.2 var(--mono);color:var(--ink)}
+.store-stat .chip.o{background:var(--before-soft)}.store-stat .chip.o b{color:var(--before)}
+.store-stat .chip.cf{background:#ffe9e2}
+.store-stat .chip.nil b{font-family:var(--font);font-weight:500;color:var(--ink-3)}
+
+/* result rows: what a hit says, and a flagged row */
+.store-res .it .tg.s{background:#e8f0fe;color:var(--after);text-transform:none;letter-spacing:0;font-size:13.5px}
+.store-res .it.fl.on{box-shadow:inset 0 0 0 2.5px #d08a1e,0 1px 3px rgba(18,19,23,.08)}
+
+/* the checklist */
+.store-ck{position:absolute;display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.store-ck .c{background:var(--card);border-radius:18px;padding:14px 16px 16px;font-size:18px;line-height:1.36;color:var(--ink-2);min-height:236px;display:flex;flex-direction:column}
+.store-ck .c em{display:block;margin-top:auto;padding-top:10px;font:600 17px/1.3 var(--font);font-style:normal;color:var(--after)}
+.store-ck .c i{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:#fff;color:var(--after);font:600 18px/1 var(--font);font-style:normal;box-shadow:0 1px 3px rgba(18,19,23,.12);margin-bottom:10px}
+.store-ck .c b{display:block;font:600 21px/1.25 var(--font);color:var(--ink);margin-bottom:6px}
+
+/* round-trip levers */
+.store-lev{position:absolute;display:flex;flex-direction:column;gap:14px}
+.store-lev .row{display:grid;grid-template-columns:520px 1fr 140px;gap:22px;align-items:center;background:#fff;border-radius:18px;box-shadow:var(--shadow);padding:12px 18px;transition:opacity .4s}
+.store-lev .t{display:grid;grid-template-columns:40px 1fr;column-gap:10px}
+.store-lev .t i{grid-row:span 2;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--card);color:var(--after);font:600 16px/1 var(--font);font-style:normal}
+.store-lev .t b{font:600 20px/1.3 var(--font)}
+.store-lev .t span{font-size:15px;line-height:1.35;color:var(--ink-3)}
+.store-lev .bars{display:flex;flex-direction:column;gap:7px}
+.store-lev .br{display:grid;grid-template-columns:190px 1fr 86px;gap:10px;align-items:center;font-size:15px}
+.store-lev .br .l{text-align:right;color:var(--ink-2)}
+.store-lev .br .tr{height:18px;background:var(--card);border-radius:7px;overflow:hidden}
+.store-lev .br .tr i{display:block;height:100%;border-radius:7px;background:linear-gradient(90deg,#1b5fb5,#5a9cf5)}
+.store-lev .br.b .tr i{background:linear-gradient(90deg,#c4511f,#eb6834)}
+.store-lev .br .v{font:500 15px/1.2 var(--mono);color:var(--ink-2)}
+.store-lev .dl{font:600 24px/1.1 var(--font);color:var(--after);font-variant-numeric:tabular-nums;white-space:nowrap}
+.store-lev .dl .pc{font:500 15px/1.3 var(--font);color:var(--ink-3);margin-top:3px}
+
+/* narrow and wide bar charts */
+.fig.store-narrow .store-bars .row{grid-template-columns:200px 1fr 70px;font-size:17px}
+.fig.store-wide .store-bars .row{grid-template-columns:300px 1fr 110px}

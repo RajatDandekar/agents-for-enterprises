@@ -1,5 +1,5 @@
-/* Lecture 3 v5 · section `store`: where the vectors live. Chroma for real on document D and the whole dump, HNSW, the
-   production choice, and the Qdrant Cloud walkthrough. Figures are FIGS.store_<fig>; every number, record, file size and
+/* Lecture 3 v5 · section `store`: where the vectors live. What a store keeps (Chroma, document D), metadata and filters,
+   HNSW word by word, the production choice, and the engineer's checklist on our Qdrant Cloud cluster (latency included). Figures are FIGS.store_<fig>; every number, record, file size and
    result comes from window.L3V5.store (v5/store_data.js, written by experiments/v5_store_data.py from
    experiments/logs/v5_store*.json and hnsw_check.json). Source code shown on slides is in CODE below (it is code, not data).
    Each figure returns { step(k) }, k = the number of .step elements shown on its slide. */
@@ -14,7 +14,7 @@ const hide = (el, k) => el.querySelectorAll('[data-k]').forEach((x) => x.classLi
 const need = (el, what) => { el.innerHTML = `<div class="todo-card"><span class="todo-k">TODO(store data)</span><div>${what}</div><div class="todo-s">Fills in from v5/store_data.js (experiments/v5_store_data.py).</div></div>`; return { step() {} }; };
 const BASE = /\/v5\/[^/]*$/.test(location.pathname) ? '' : 'v5/';
 const bytes = (b) => (b >= 1e6 ? (b / 1e6).toFixed(1) + ' MB' : b >= 1e3 ? (b / 1e3).toFixed(1) + ' KB' : b + ' B');
-const ms = (v) => (v == null ? '–' : (+v >= 100 ? Math.round(+v) : (+v).toFixed(1)) + ' ms');
+const ms = (v) => (v == null ? '–' : (+v >= 1000 ? fmt(Math.round(+v)) : +v >= 100 ? Math.round(+v) : (+v).toFixed(1)) + ' ms');
 const short = (cite, n = 70) => { const s = String(cite || '').replace(/, § body$/, '').replace(/\.(eml|md)(,|$)/, '$2'); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
 
 /* ---- [data-st="path"] spans; formats: n, ms (value in ms), s2ms (value in s), mb (bytes), r2, r3, pct0, pct1 ---- */
@@ -49,17 +49,11 @@ function hl(line) {
 
 /* the source shown on slides: the course code and experiments/v5_store_cloud.py, abridged only by dropping lines */
 const CODE = {
-  chroma_build: ['from ledgerline.course.l3 import rag', '',
-    '# document D at the chosen chunking: 15 chunks', 'd = [c for c in chunks if c.file == D_PATH]', '',
-    'idx = rag.Index.build(d, ["bge-small"], "store_D",', '                      vectors={"bge-small": d_vecs})',
-    '# writes chromadb.PersistentClient("store_D/chroma")', '# two collections: "bge-small" and "bge-small__hr"',
-    '# HNSW: cosine, ef_search 4000, max_neighbors 32'],
   chroma_query: ['col = idx.collection("bge-small")', 'q = rag.Embedder("bge-small").query(emma)          # 384 numbers',
     'col.query(query_embeddings=[q.tolist()], n_results=5,', '          include=["distances", "metadatas", "documents"])'],
-  chroma_where: ['col.query(query_embeddings=[q.tolist()], n_results=10,', '          where={"superseded": False})       # drop old copies'],
-  env: ['# vectordb.env  (gitignored: *.env)', 'QDRANT_URL=https://<cluster-id>.europe-west3-0.gcp.cloud.qdrant.io', 'QDRANT_API_KEY=••••••••••••••••••••', '',
-    '# experiments/v5_store_cloud.py: read on the laptop, passed to Modal as a secret', 'def _creds():', '    for line in ENV.read_text().splitlines():',
-    '        k, v = line.split("=", 1)', '        if k in ("QDRANT_URL", "QDRANT_API_KEY"): out[k] = v', '    return out            # never printed, never logged'],
+  filter: ['# in words, as SQL would say it', 'WHERE superseded = false', '  AND confidential = false      -- Emma is not in HR', '',
+    '# to Qdrant, sent with the query', '"filter": {"must_not": [', '  {"key": "superseded",   "match": {"value": true}},',
+    '  {"key": "confidential", "match": {"value": true}}]}'],
   create: ['q = QdrantClient(url=os.environ["QDRANT_URL"],', '                 api_key=os.environ["QDRANT_API_KEY"])',
     'q.create_collection("northbridge_docs",', '    vectors_config={"dense": VectorParams(size=384, distance=Distance.COSINE)})', '',
     '# payload indexes BEFORE the upsert: filters run inside the HNSW search', 'for f in ("confidential", "superseded", "future"):',
@@ -67,10 +61,6 @@ const CODE = {
     '    q.create_payload_index("northbridge_docs", f, field_schema="keyword")', '',
     '# BM25 inside the engine (Qdrant 1.20): a full-text index with BM25 scoring', 'q.create_payload_index("northbridge_docs", "text", field_schema=TextIndexParams(',
     '    type="text", tokenizer="word", lowercase=True, stopwords="english",', '    scoring=TextScoringParams(type="bm25")))'],
-  upsert: ['def payload(c, i):', '    return {"cite": c.cite, "text": c.text, "file": c.file, "section": c.locs["sections"][0],',
-    '            "doc_id": ..., "version": ..., "status": ..., "superseded": ...,', '            "confidential": ...}', '',
-    'ids = [i for i, c in enumerate(chunks) if c.file == D]                  # D first: 15 points', 'q.upsert("northbridge_docs", wait=True, points=[',
-    '    PointStruct(id=i, vector={"dense": vecs[i].tolist()}, payload=payload(chunks[i], i))', '    for i in ids])', '# then the other 28,938, in batches of 256'],
   search: ['emma_filter = Filter(must_not=[', '    FieldCondition(key="confidential", match=MatchValue(value=True))])', '',
     'q.query_points("northbridge", query=q_vec, using="dense",', '               query_filter=emma_filter, limit=10)'],
   hybrid: ['bm25 = TextQuery(text=TextQueryInput(query=question,', '                  scoring=Bm25Scoring(bm25=Bm25Params(k=1.2, b=0.75))))', '',
@@ -90,39 +80,55 @@ FIGS.store_code = (el) => {
   return { step(k) { const g = groups[k] || new Set(); el.querySelectorAll('.l').forEach((x) => x.classList.toggle('hl', g.has(+x.dataset.i))); } };
 };
 
-/* ======================= one stored record: id, document, metadata, embedding ======================= */
+/* ======================= what a store keeps: one record (id, text, metadata, vector), an index, a folder ======================= */
 const vcol = (v) => { const a = Math.min(1, Math.abs(v) / 0.07); return v >= 0 ? `rgba(11,87,208,${0.25 + 0.75 * a})` : `rgba(196,81,31,${0.25 + 0.75 * a})`; };
-FIGS.store_record = (el) => {
-  const r = get('local.D.record'); if (!r) return need(el, 'v5_store_local.json → D.record');
+FIGS.store_keeps = (el) => {
+  const r = get('local.D.record'), dump = get('local.dump'); if (!r || !dump) return need(el, 'v5_store_local.json → D.record, dump');
   // the stored text keeps the PDF's line breaks; join wrapped lines so each clause reads as one paragraph
   const joined = r.document.split('\n').reduce((a, l) => { if (a.length && !/^(\[|\d+(\.\d+)*\.?\s)/.test(l)) a[a.length - 1] += ' ' + l; else a.push(l); return a; }, []).join('\n');
   const doc = esc(joined).replace(/(6\.2 Lithium-cell[\s\S]*?counts as no certificate\.)/, '<mark>$1</mark>').replace(/(6\.4 Prefer[\s\S]*?lithium-cell part\.)/, '<mark>$1</mark>');
   const m = r.metadata;
-  const keys = ['file', 'folder', 'fmt', 'doc_id', 'i', 'confidential', 'superseded', 'future'];
-  el.innerHTML = `<div class="store-rec">
-    <div class="r" data-k="0"><span class="k">id</span><pre>"${esc(r.id)}"   <span style="color:var(--ink-3)">· ${esc(r.cite)}</span></pre></div>
-    <div class="r" data-k="0"><span class="k">document<small>the text that was embedded</small></span><pre class="doc">${doc}</pre></div>
-    <div class="r" data-k="1"><span class="k">metadata<small>filterable fields</small></span><div class="meta">${keys.filter((k) => k in m).map((k) => `<span class="${k === 'confidential' || k === 'superseded' ? 'hot' : ''}"><b>${k}</b> ${esc(JSON.stringify(m[k]))}</span>`).join('')}</div></div>
-    <div class="r" data-k="2"><span class="k">embedding<small>${r.embedding_len} numbers, length ${(+r.embedding_norm).toFixed(2)}</small></span><div class="vec">${r.embedding_first.map((v) => `<i style="background:${vcol(v)}">${v.toFixed(4)}</i>`).join('')}<em>… ${r.embedding_len - r.embedding_first.length} more</em></div></div>
-  </div>`;
-  return { step(k) { reveal(el, k); } };
+  const keys = ['doc_id', 'file', 'folder', 'fmt', 'superseded', 'future', 'confidential'];
+  const total = Object.values(dump.counts || {}).reduce((a, b) => a + b, 0);
+  el.classList.add('store-keeps');
+  el.innerHTML = `<div class="folder" data-k="4"><span class="tab">store_D/chroma/ &nbsp;·&nbsp; a folder on disk</span></div>
+    <div class="rec">
+      <div class="r" data-k="0"><span class="k">id</span><pre>"${esc(r.id)}"   <span style="color:var(--ink-3)">· ${esc(r.cite)}</span></pre></div>
+      <div class="r" data-k="0"><span class="k">text<small>what was embedded</small></span><pre class="doc">${doc}</pre></div>
+      <div class="r" data-k="1"><span class="k">metadata<small>fields to filter on</small></span><div class="meta">${keys.filter((k) => k in m).map((k) => `<span class="${k === 'confidential' || k === 'superseded' ? 'hot' : ''}"><b>${k}</b> ${esc(JSON.stringify(m[k]))}</span>`).join('')}</div></div>
+      <div class="r" data-k="2"><span class="k">vector<small>${r.embedding_len} numbers, length ${(+r.embedding_norm).toFixed(2)}</small></span><div class="vec">${r.embedding_first.map((v) => `<i style="background:${vcol(v)}">${v.toFixed(4)}</i>`).join('')}<em>… ${r.embedding_len - r.embedding_first.length} more</em></div></div>
+    </div>
+    <div class="idx" data-k="3"><b>+ an index for fast search</b>
+      <svg viewBox="0 0 360 150" width="360" height="150">${(() => { const P = [[30, 40], [80, 20], [120, 70], [60, 110], [170, 30], [200, 100], [250, 55], [300, 25], [320, 110], [140, 130], [230, 135]]; const E = [[0, 1], [0, 3], [1, 2], [1, 4], [2, 3], [2, 5], [4, 6], [5, 6], [6, 7], [6, 8], [5, 9], [3, 9], [9, 10], [8, 10], [2, 4]]; return E.map(([a, b]) => `<line x1="${P[a][0]}" y1="${P[a][1]}" x2="${P[b][0]}" y2="${P[b][1]}" stroke="#b7c7df" stroke-width="2"/>`).join('') + P.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="7" fill="#7f9cc4"/>`).join(''); })()}</svg>
+      <p>Links between nearby vectors (HNSW), so a search does not read every row. More on it in a moment.</p>
+      <p class="n">One record per chunk: <b>15</b> for D, <b>${fmt(total)}</b> for the whole dump.</p></div>
+    <div class="sizes" data-k="4">On disk, the whole dump in Chroma takes <b>${bytes(dump.bytes_total)}</b>. The vectors alone are <b>${bytes(dump.raw_vector_bytes)}</b>; the rest is text, metadata and the index.</div>`;
+  return { step(k) { hide(el, k); } };
 };
 
-/* ======================= the files Chroma wrote, with their real sizes ======================= */
-FIGS.store_files = (el) => {
-  const set = el.dataset.set || 'D';
-  const d = get('local.' + set); if (!d || !d.files) return need(el, 'v5_store_local.json → ' + set + '.files');
-  const root = set === 'D' ? 'store_D' : 'store_dump';
-  const max = Math.max(...d.files.map((f) => f.bytes));
-  const groups = (el.dataset.hl || '').split('|').map((g) => g.split(',').filter(Boolean));
-  const uu = {}; let n = 0;
-  const show = (p) => p.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/, (u) => (uu[u] = uu[u] || u.slice(0, 8) + '…'));
-  const head = d.hnsw_headers || {};
-  const tag = (p) => { const u = (p.match(/[0-9a-f]{8}-[0-9a-f-]{27}/) || [])[0]; const h = u && head[u]; return h && p.endsWith('header.bin') ? `  <span class="c"># ${fmt(h.cur_element_count)} vectors · room for ${fmt(h.max_elements)}</span>` : ''; };
-  el.classList.add('store-term');
-  el.innerHTML = `<div class="bar"><i></i><i></i><i></i><span>Modal container · ${esc(root)}/ · real sizes</span></div><div class="body"><span class="ln"><span class="p">$</span> find ${root} -type f -exec ls -l {} +</span>${d.files.map((f) => { n++; return `<span class="ln" data-p="${esc(f.path)}"><span class="sz">${fmt(f.bytes)}</span>${esc(show(f.path))}<span class="barv" style="width:${Math.max(2, Math.round(150 * f.bytes / max))}px"></span>${tag(f.path)}</span>`; }).join('')}<span class="ln"><span class="p">$</span> du -sb ${root}  <span class="s">${fmt(d.bytes_total)}</span> <span class="c">bytes (${bytes(d.bytes_total)})</span></span></div>`;
-  return { step(k) { const g = k > 0 ? (groups[k - 1] || []) : []; el.querySelectorAll('.ln[data-p]').forEach((x) => x.classList.toggle('hl', g.some((t) => x.dataset.p.includes(t)))); } };
+/* one chunk's payload on our cluster (point 106 = §6 of D), each field with what it means */
+const MEANS = { doc_id: 'which document', version: 'which edition', effective: 'in force from', status: 'what the file says it is',
+  superseded: 'replaced by a newer version?', future: 'not yet in force?', confidential: 'HR only?', audience: 'who may read it', file: 'where it came from' };
+FIGS.store_payload = (el) => {
+  const p = get('latency.eu.facts.point_106'); if (!p) return need(el, 'v5_store_latency.json → eu.facts.point_106');
+  el.classList.add('store-pay');
+  el.innerHTML = `<div class="h">Point ${p.id} on our cluster = §6 of D <span>· its payload, as stored</span></div>` +
+    Object.keys(MEANS).map((k) => `<div class="r"><code>${k}</code><span class="v${typeof p[k] === 'boolean' ? ' b' : ''}">${esc(typeof p[k] === 'string' ? '"' + (k === 'file' ? short(p[k].replace(/^01_policies\//, '…/'), 40) : p[k]) + '"' : JSON.stringify(p[k]))}</span><span class="m">${MEANS[k]}</span></div>`).join('');
+  return { step() {} };
 };
+
+/* the status values that occur in our payloads (a facet over the collection), and the three flags */
+FIGS.store_status = (el) => {
+  const f = get('latency.eu.facts'); if (!f || !f.status_values) return need(el, 'v5_store_latency.json → eu.facts.status_values');
+  const sv = f.status_values.filter((x) => x.value).concat(f.status_values.filter((x) => !x.value));
+  el.classList.add('store-stat');
+  el.innerHTML = `<div class="ln"><span class="lab">status, in the files’ own words</span>${sv.map((x) => `<span class="chip${x.value === 'SUPERSEDED' ? ' o' : x.value ? '' : ' nil'}"><b>${x.value ? esc(x.value) : 'nothing stated'}</b> ${fmt(x.count)}</span>`).join('')}</div>
+    <div class="ln"><span class="lab">flags the parser sets</span><span class="chip o"><b>superseded = true</b> ${fmt(f.counts.superseded)} chunks: status SUPERSEDED, or the file sits in an old/ or _legacy folder</span><span class="chip"><b>future = true</b> ${fmt(f.counts.future)}</span><span class="chip cf"><b>confidential = true</b> ${fmt(f.counts.confidential)}</span></div>`;
+  return { step() {} };
+};
+
+/* the checklist cards: row two fades in on the click */
+FIGS.store_ck = (el) => ({ step(k) { reveal(el, k); } });
 
 /* ======================= ranked results (Chroma or Qdrant) ======================= */
 function resList(rows, opts = {}) {
@@ -130,15 +136,17 @@ function resList(rows, opts = {}) {
   return rows.slice(0, opts.n || rows.length).map((x, i) => {
     const conf = x.confidential, old = x.superseded, g = gold && String(x.cite || '').includes(gold);
     const val = x.similarity != null ? (+x.similarity).toFixed(3) : x.score != null ? (+x.score).toFixed(opts.d || 3) : '';
-    return `<div class="it${g ? ' gold' : ''}${old ? ' old' : ''}${conf ? ' conf' : ''}" data-k="${opts.kOf ? opts.kOf(i) : 0}"><span class="n">${i + 1}</span><span class="ct">${esc(short(x.cite, opts.w || 74))}</span><span class="tgs">${g ? '<span class="tg g">§6 of D</span>' : ''}${old ? '<span class="tg o">superseded</span>' : ''}${conf ? '<span class="tg cf">HR confidential</span>' : ''}</span><span class="v">${val}</span></div>`;
+    const fl = opts.flag && String(x.cite || '').includes(opts.flag) ? ' fl' : '';
+    return `<div class="it${g ? ' gold' : ''}${old ? ' old' : ''}${conf ? ' conf' : ''}${fl}" data-k="${opts.kOf ? opts.kOf(i) : 0}"><span class="n">${i + 1}</span><span class="ct">${esc(short(x.cite, opts.w || 74))}</span><span class="tgs">${x.says ? `<span class="tg s">says ${esc(x.says)}</span>` : ''}${g ? '<span class="tg g">§6 of D</span>' : ''}${old ? '<span class="tg o">superseded</span>' : ''}${conf ? '<span class="tg cf">HR confidential</span>' : ''}</span><span class="v">${val}</span></div>`;
   }).join('');
 }
 FIGS.store_res = (el) => {
   const rows = get(el.dataset.path); if (!rows) return need(el, el.dataset.path);
   const n = +(el.dataset.n || rows.length), k1 = +(el.dataset.k1 || 99);
   const t = get(el.dataset.ms || '__none');
-  el.innerHTML = `<div class="store-res">${el.dataset.title ? `<h4>${esc(el.dataset.title)}</h4>` : ''}${resList(rows, { n, gold: el.dataset.gold, w: +(el.dataset.w || 74), kOf: (i) => (i >= k1 ? 1 : 0), d: +(el.dataset.d || 3) })}${t != null ? `<div class="ms">${esc(el.dataset.msl || 'one query')}: ${ms(t)}</div>` : ''}</div>`;
-  return { step(k) { (el.dataset.mode === 'hide' ? hide : reveal)(el, k - (+el.dataset.k0 || 0)); } };
+  const [flag, fk] = (el.dataset.flag || '').split('|');
+  el.innerHTML = `<div class="store-res">${el.dataset.title ? `<h4>${esc(el.dataset.title)}</h4>` : ''}${resList(rows, { n, gold: el.dataset.gold, w: +(el.dataset.w || 74), kOf: (i) => (i >= k1 ? 1 : 0), d: +(el.dataset.d || 3), flag })}${t != null ? `<div class="ms">${esc(el.dataset.msl || 'one query')}: ${ms(t)}</div>` : ''}</div>`;
+  return { step(k) { (el.dataset.mode === 'hide' ? hide : reveal)(el, k - (+el.dataset.k0 || 0)); el.querySelectorAll('.it.fl').forEach((x) => x.classList.toggle('on', k >= +(fk || 99))); } };
 };
 
 /* ======================= bars ======================= */
@@ -155,64 +163,118 @@ FIGS.store_bars = (el) => {
   return { step(k) { reveal(el, k); } };
 };
 
-/* ======================= HNSW: a toy graph searched by the real greedy rule, then the measured check ======================= */
+/* ======================= HNSW word by word: a toy graph searched by the real greedy rule =======================
+   k0 the points · k1 small world (near + long links) · k2 navigable (a greedy walk on that one layer) ·
+   k3 hierarchical (three layers; the walk starts at the top). The toy is not data: 42 random points, a fixed seed. */
 function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 FIGS.store_hnsw = (el) => {
   const NS = 'http://www.w3.org/2000/svg';
-  const W = +(el.dataset.w || 820), H = 430;
-  const N = 42, Q = [0.70, 0.62];
+  const W = +(el.dataset.w || 900), H = 640;
+  const N = 42, Q = [0.74, 0.62];
   const d2 = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2;
-  // build a toy HNSW for a seed and walk it greedily; keep the first seed whose walk is visible and ends at the true nearest
   const build = (seed) => {
     const R = rng(seed), pts = Array.from({ length: N }, () => [0.04 + 0.92 * R(), 0.08 + 0.84 * R()]);
     const order = pts.map((_, i) => i).sort(() => R() - 0.5);
     const lvl = new Array(N).fill(0); order.slice(0, 12).forEach((i) => (lvl[i] = 1)); order.slice(0, 3).forEach((i) => (lvl[i] = 2));
-    const nbr = {}; // per layer: each point's nearest within the layer (3 at the bottom, 2 above), made undirected
-    for (let L = 0; L <= 2; L++) {
+    const nbr = {}, long = [];
+    for (let L = 0; L <= 2; L++) { // each point's nearest within its layer (3 at the bottom, 2 above), made undirected
       const ids = pts.map((_, i) => i).filter((i) => lvl[i] >= L);
       nbr[L] = {}; ids.forEach((i) => (nbr[L][i] = new Set()));
       ids.forEach((i) => ids.filter((j) => j !== i).sort((a, b) => d2(pts[i], pts[a]) - d2(pts[i], pts[b])).slice(0, L === 0 ? 3 : 2).forEach((j) => { nbr[L][i].add(j); nbr[L][j].add(i); }));
     }
-    let cur = order.slice(0, 3).sort((a, b) => d2(pts[b], Q) - d2(pts[a], Q))[0]; const path = [];
-    for (let L = 2; L >= 0; L--) {
-      path.push([L, cur]);
-      for (;;) { let best = cur; nbr[L][cur].forEach((j) => { if (d2(pts[j], Q) < d2(pts[best], Q)) best = j; }); if (best === cur) break; cur = best; path.push([L, cur]); }
-    }
+    for (let t = 0; long.length < 4 && t < 500; t++) { const a = Math.floor(R() * N), b = Math.floor(R() * N); if (a !== b && d2(pts[a], pts[b]) > 0.3 && !nbr[0][a].has(b)) { nbr[0][a].add(b); nbr[0][b].add(a); long.push([a, b]); } }
+    const walk = (L, cur, path) => { for (;;) { let best = cur; nbr[L][cur].forEach((j) => { if (d2(pts[j], Q) < d2(pts[best], Q)) best = j; }); if (best === cur) return cur; cur = best; path.push([L, cur]); } };
+    const entry = order.slice(0, 3).sort((a, b) => d2(pts[b], Q) - d2(pts[a], Q))[0];
+    const flat = [[0, entry]]; const fEnd = walk(0, entry, flat);
+    let cur = entry; const path = [];
+    for (let L = 2; L >= 0; L--) { path.push([L, cur]); cur = walk(L, cur, path); }
     const exact = pts.map((_, i) => i).sort((a, b) => d2(pts[a], Q) - d2(pts[b], Q))[0];
-    return { pts, lvl, nbr, path, cur, exact };
+    const isLong = (a, b) => long.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
+    const usesLong = flat.some((p, i) => i && isLong(flat[i - 1][1], p[1]));
+    const hops = [0, 1, 2].map((L) => path.filter((p) => p[0] === L).length - 1);
+    return { pts, lvl, nbr, long, flat, fEnd, path, cur, exact, entry, usesLong, hops, isLong };
   };
   let G = null;
-  for (let seed = 1; seed < 400 && !G; seed++) { const g = build(seed); const hops = [0, 1, 2].map((L) => g.path.filter((p) => p[0] === L).length - 1); if (g.cur === g.exact && hops[0] >= 2 && hops[1] >= 1 && hops[2] >= 1) G = g; }
-  G = G || build(7);
-  const { pts, lvl, nbr, path, cur, exact } = G;
-  const pw = W - 300, ph = 108, skew = 90, gap = 132, x0 = 150, y0 = 18;
-  const P = (L, p) => [x0 + p[0] * pw + (1 - p[1]) * skew, y0 + (2 - L) * gap + p[1] * ph];
-  const s = document.createElementNS(NS, 'svg'); s.setAttribute('width', W); s.setAttribute('height', H); s.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  for (let seed = 1; seed < 2000 && !G; seed++) { const g = build(seed); if (g.cur === g.exact && g.fEnd === g.exact && g.flat.length > 5 && g.hops.every((h) => h >= 1) && g.usesLong && g.hops[0] + 2 <= g.flat.length - 1) G = g; }
+  G = G || build(4);
+  const { pts, lvl, nbr, long, flat, path, cur, hops, isLong } = G;
+  const dia = (x, y, r = 10) => `<path d="M${x} ${y - r} l${r} ${r} l${-r} ${r} l${-r} ${-r}z" fill="#c4511f"/>`;
   let h = '';
-  const counts = [0, 1, 2].map((L) => lvl.filter((v) => v >= L).length);
-  for (let L = 2; L >= 0; L--) {
-    const c = [P(L, [0, 0]), P(L, [1, 0]), P(L, [1, 1]), P(L, [0, 1])];
-    h += `<g data-k="0"><polygon points="${c.map((p) => p.join(',')).join(' ')}" fill="${L === 0 ? '#eef4fd' : '#f5f8fd'}" stroke="#c9d6ea"/>`;
-    h += `<text x="14" y="${y0 + (2 - L) * gap + ph / 2 + 2}" font-size="17" font-weight="600" fill="#45474d">Layer ${L}</text><text x="14" y="${y0 + (2 - L) * gap + ph / 2 + 22}" font-size="14" fill="#6b6e76">${counts[L]} points</text>`;
-    Object.entries(nbr[L]).forEach(([i, set]) => set.forEach((j) => { if (+i < j) { const a = P(L, pts[i]), b = P(L, pts[j]); h += `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#b7c7df" stroke-width="1.2"/>`; } }));
-    pts.forEach((p, i) => { if (lvl[i] >= L) { const a = P(L, p); h += `<circle cx="${a[0]}" cy="${a[1]}" r="${L ? 5.5 : 4.5}" fill="#7f9cc4"/>`; } });
+  // ---- the flat view: one layer, large (k0–k2)
+  { const pw = W - 230, ph = 400, skew = 110, x0 = 50, y0 = 30;
+    const P = (p) => [x0 + p[0] * pw + (1 - p[1]) * skew, y0 + p[1] * ph];
+    const c = [P([0, 0]), P([1, 0]), P([1, 1]), P([0, 1])];
+    h += `<g data-r="0-2"><polygon points="${c.map((p) => p.join(',')).join(' ')}" fill="#eef4fd" stroke="#c9d6ea"/>`;
+    h += '<g data-k="1">';
+    Object.entries(nbr[0]).forEach(([i, set]) => set.forEach((j) => { if (+i < j) { const a = P(pts[i]), b = P(pts[j]); const lg = isLong(+i, j); h += `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${lg ? '#d08a1e' : '#b7c7df'}" stroke-width="${lg ? 2.4 : 1.4}"${lg ? ' stroke-dasharray="7 5"' : ''}/>`; } }));
     h += '</g>';
-  }
-  // the query and the greedy path
-  h += '<g data-k="1">';
-  for (let L = 2; L >= 0; L--) { const q = P(L, Q); h += `<path d="M${q[0]} ${q[1] - 9} l8 9 l-8 9 l-8 -9z" fill="#c4511f"/>`; }
-  for (let t = 1; t < path.length; t++) {
-    const [La, a] = path[t - 1], [Lb, b] = path[t]; const A = P(La, pts[a]), B = P(Lb, pts[b]);
-    h += La === Lb ? `<line x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}" stroke="#0b57d0" stroke-width="3.2" stroke-linecap="round"/>` : `<line x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}" stroke="#0b57d0" stroke-width="1.6" stroke-dasharray="5 5"/>`;
-  }
-  path.forEach(([L, i]) => { const a = P(L, pts[i]); h += `<circle cx="${a[0]}" cy="${a[1]}" r="7" fill="#0b57d0" stroke="#fff" stroke-width="2"/>`; });
-  const e = P(0, pts[cur]); h += `<circle cx="${e[0]}" cy="${e[1]}" r="12" fill="none" stroke="#138a60" stroke-width="3"/><text x="${e[0] + 18}" y="${e[1] - 16}" font-size="15" fill="#138a60" font-weight="600">${cur === exact ? 'found: the true nearest' : 'found: close, not the nearest'}</text>`;
-  const st = P(2, pts[path[0][1]]); h += `<text x="${st[0] - 10}" y="${st[1] - 14}" font-size="15" fill="#0b57d0" font-weight="600" text-anchor="end">start</text>`;
-  h += '</g>';
+    pts.forEach((p) => { const a = P(p); h += `<circle cx="${a[0]}" cy="${a[1]}" r="5.5" fill="#7f9cc4"/>`; });
+    const q = P(Q); h += dia(q[0], q[1], 11) + `<text x="${q[0] + 16}" y="${q[1] + 5}" font-size="16" fill="#c4511f" font-weight="600">the question</text>`;
+    h += '<g data-k="2">';
+    for (let t = 1; t < flat.length; t++) { const A = P(pts[flat[t - 1][1]]), B = P(pts[flat[t][1]]); h += `<line x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}" stroke="#0b57d0" stroke-width="3.4" stroke-linecap="round"/>`; }
+    flat.forEach(([, i]) => { const a = P(pts[i]); h += `<circle cx="${a[0]}" cy="${a[1]}" r="7.5" fill="#0b57d0" stroke="#fff" stroke-width="2"/>`; });
+    const st = P(pts[flat[0][1]]); h += `<text x="${st[0]}" y="${st[1] - 16}" font-size="16" fill="#0b57d0" font-weight="600" text-anchor="middle">start</text>`;
+    const e = P(pts[cur]); h += `<circle cx="${e[0]}" cy="${e[1]}" r="13" fill="none" stroke="#138a60" stroke-width="3"/>`;
+    h += '</g>';
+    h += `<g data-k="1"><line x1="60" y1="${y0 + ph + 52}" x2="100" y2="${y0 + ph + 52}" stroke="#b7c7df" stroke-width="2"/><text x="110" y="${y0 + ph + 58}" font-size="16" fill="#45474d">near links: each point to its 3 nearest</text>
+      <line x1="440" y1="${y0 + ph + 52}" x2="480" y2="${y0 + ph + 52}" stroke="#d08a1e" stroke-width="2.4" stroke-dasharray="7 5"/><text x="490" y="${y0 + ph + 58}" font-size="16" fill="#45474d">${long.length} long links</text></g>`;
+    h += `<text data-k="2" x="60" y="${y0 + ph + 92}" font-size="17" fill="#0b57d0" font-weight="600">Greedy walk: ${flat.length - 1} hops from the start to the nearest point (green), then no neighbour is closer.</text>`;
+    h += '</g>'; }
+  // ---- the layered view (k3)
+  { const pw = W - 300, ph = 116, skew = 90, gap = 170, x0 = 150, y0 = 16;
+    const P = (L, p) => [x0 + p[0] * pw + (1 - p[1]) * skew, y0 + (2 - L) * gap + p[1] * ph];
+    const counts = [0, 1, 2].map((L) => lvl.filter((v) => v >= L).length);
+    h += '<g data-r="3-9">';
+    for (let L = 2; L >= 0; L--) {
+      const c = [P(L, [0, 0]), P(L, [1, 0]), P(L, [1, 1]), P(L, [0, 1])];
+      h += `<polygon points="${c.map((p) => p.join(',')).join(' ')}" fill="${L === 0 ? '#eef4fd' : '#f5f8fd'}" stroke="#c9d6ea"/>`;
+      h += `<text x="10" y="${y0 + (2 - L) * gap + ph / 2 - 4}" font-size="17" font-weight="600" fill="#45474d">Layer ${L}</text><text x="10" y="${y0 + (2 - L) * gap + ph / 2 + 17}" font-size="14" fill="#6b6e76">${counts[L]} points</text><text x="10" y="${y0 + (2 - L) * gap + ph / 2 + 36}" font-size="14" fill="#6b6e76">${L === 2 ? 'motorways' : L === 1 ? 'main roads' : 'local roads'}</text>`;
+      Object.entries(nbr[L]).forEach(([i, set]) => set.forEach((j) => { if (+i < j) { const a = P(L, pts[i]), b = P(L, pts[j]); h += `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${L === 0 && isLong(+i, j) ? '#e2c08a' : '#b7c7df'}" stroke-width="1.2"/>`; } }));
+      pts.forEach((p, i) => { if (lvl[i] >= L) { const a = P(L, p); h += `<circle cx="${a[0]}" cy="${a[1]}" r="${L ? 5.5 : 4.5}" fill="#7f9cc4"/>`; } });
+      const q = P(L, Q); h += dia(q[0], q[1], 8);
+    }
+    for (let t = 1; t < path.length; t++) {
+      const [La, a] = path[t - 1], [Lb, b] = path[t]; const A = P(La, pts[a]), B = P(Lb, pts[b]);
+      h += La === Lb ? `<line x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}" stroke="#0b57d0" stroke-width="3.2" stroke-linecap="round"/>` : `<line x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}" stroke="#0b57d0" stroke-width="1.6" stroke-dasharray="5 5"/>`;
+    }
+    path.forEach(([L, i]) => { const a = P(L, pts[i]); h += `<circle cx="${a[0]}" cy="${a[1]}" r="7" fill="#0b57d0" stroke="#fff" stroke-width="2"/>`; });
+    const e = P(0, pts[cur]); h += `<circle cx="${e[0]}" cy="${e[1]}" r="12" fill="none" stroke="#138a60" stroke-width="3"/>`;
+    const st = P(2, pts[path[0][1]]); h += `<text x="${st[0] - 12}" y="${st[1] - 12}" font-size="15" fill="#0b57d0" font-weight="600" text-anchor="end">start</text>`;
+    h += `<text x="10" y="${y0 + 2 * gap + ph + 62}" font-size="17" fill="#0b57d0" font-weight="600">From the top: ${hops[2]} hop on layer 2, ${hops[1]} on layer 1, then ${hops[0]} at the bottom (the flat walk needed ${flat.length - 1}).</text>`;
+    h += '</g>'; }
+  const s = document.createElementNS(NS, 'svg'); s.setAttribute('width', W); s.setAttribute('height', H); s.setAttribute('viewBox', `0 0 ${W} ${H}`);
   s.innerHTML = h;
   el.classList.add('store-hn');
   el.innerHTML = ''; el.appendChild(s);
-  return { step(k) { reveal(el, k); } };
+  return { step(k) {
+    el.querySelectorAll('[data-r]').forEach((x) => { const [a, b] = x.dataset.r.split('-').map(Number); x.classList.toggle('store-hide', k < a || k > b); });
+    hide(el, k);
+  } };
+};
+
+/* ======================= round-trip levers: before and after, measured ======================= */
+FIGS.store_levers = (el) => {
+  const L = get('latency'); if (!L || !L.suite_default_region) return need(el, 'v5_store_latency.json (run v5_store_latency.py and ::levers)');
+  const cloud = (x) => String(x || '').replace('CLOUD_PROVIDER_', '');
+  const us = L.suite_default_region.rest, eu = L.suite_eu;
+  const rows = [
+    ['Run the app next to the store', `The round trip alone. After: Modal’s EU region (${cloud(L.eu.modal_cloud)} ${L.eu.modal_region}); Frankfurt itself is not offered. Another EU run (${cloud(eu.modal_cloud)} ${eu.modal_region}): ${ms(eu.grpc.rtt.p50)}.`,
+      ['from the US', L.default_region.rtt.p50], ['from the EU', L.eu.rtt.p50]],
+    ['Keep one connection open', 'A new connection per question repeats the handshake: about two extra trips. From the US, REST.',
+      ['new client per question', us.reconnect_per_question.p50], ['one client, kept open', us.hybrid_payload_cite.p50]],
+    ['One hybrid request, not two searches', 'Dense, then BM25, then RRF in our code, against one request with RRF on the server. From the US.',
+      ['two requests', us.two_calls_client_rrf.p50], ['one request', us.hybrid_payload_cite.p50]],
+    ['Ten questions in one call', 'Ten hybrid requests one after another, against one query_batch_points call. From the US.',
+      ['ten calls', us.ten_sequential.p50], ['one batch call', us.ten_one_batch.p50]],
+    ['gRPC instead of REST, near the store', `From the EU (${cloud(eu.modal_cloud)} ${eu.modal_region}), one hybrid request. From the US the two were level (${ms(us.hybrid_payload_cite.p50)} and ${ms(L.suite_default_region.grpc.hybrid_payload_cite.p50)}): the trip hides it.`,
+      ['REST', eu.rest.hybrid_payload_cite.p50], ['gRPC', eu.grpc.hybrid_payload_cite.p50]],
+  ];
+  el.classList.add('store-lev');
+  el.innerHTML = rows.map(([t, note, b, a], i) => `<div class="row" data-k="${i}"><div class="t"><i>${i + 1}</i><b>${esc(t)}</b><span>${esc(note)}</span></div>
+    <div class="bars"><div class="br b"><span class="l">${esc(b[0])}</span><span class="tr"><i style="width:100%"></i></span><span class="v">${ms(b[1])}</span></div>
+      <div class="br a"><span class="l">${esc(a[0])}</span><span class="tr"><i style="width:${Math.max(1, 100 * a[1] / b[1]).toFixed(1)}%"></i></span><span class="v">${ms(a[1])}</span></div></div>
+    <div class="dl"><div>−${ms(b[1] - a[1])}</div><div class="pc">${Math.round(100 * (1 - a[1] / b[1]))}% less</div></div></div>`).join('');
+  return { step(k) { hide(el, k); } };
 };
 
 /* ======================= decision tables ======================= */
@@ -247,7 +309,8 @@ FIGS.store_shot = (el) => {
   el.classList.add('store-shot');
   if (!have) { el.innerHTML = `<div class="todo"><div class="todo-card f3"><span class="todo-k">Screenshot pending</span><div>${esc(el.dataset.what || name)}</div><div class="todo-s">v5/img/store/${esc(name)}, taken from the Qdrant Cloud dashboard</div></div></div>`; return { step() {} }; }
   const boxes = (el.dataset.hl || '').split(';').map((b) => (b ? b.split(',').map(Number) : null));
-  el.innerHTML = `<img src="${BASE}img/store/${esc(name)}" alt="${esc(el.dataset.what || name)}">` + boxes.map((b, i) => (b ? `<div class="hl" data-k="${i + 1}" style="left:${b[0]}%;top:${b[1]}%;width:${b[2]}%;height:${b[3]}%"></div>` : '')).join('');
+  const zoom = el.dataset.view ? ` style="object-view-box:inset(${esc(el.dataset.view)})"` : '';   // crop to a region of the screenshot, inside the box
+  el.innerHTML = `<img src="${BASE}img/store/${esc(name)}" alt="${esc(el.dataset.what || name)}"${zoom}>` + boxes.map((b, i) => (b ? `<div class="hl" data-k="${i + 1}" style="left:${b[0]}%;top:${b[1]}%;width:${b[2]}%;height:${b[3]}%"></div>` : '')).join('');
   return { step(k) { el.querySelectorAll('.hl').forEach((x) => x.classList.toggle('store-hide', +x.dataset.k !== k)); } };
 };
 

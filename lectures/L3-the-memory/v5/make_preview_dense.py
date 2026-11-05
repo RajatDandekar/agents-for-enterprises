@@ -5,6 +5,8 @@ idx = (V5.parent / "index.html").read_text()
 head = idx[:idx.index('<div class="deck" id="deck">')]
 head = head.replace('href="../../engine/plates.css"', 'href="../../../engine/plates.css"').replace('href="l3.css"', 'href="../l3.css"')
 head = head.replace("<title>Lecture 3 · The Memory</title>", "<title>Lecture 3 · The Memory · dense preview</title>")
+import re
+head = re.sub(r'<link rel="stylesheet" href="v5/[a-z]+\.css">\n?', "", head)   # the assembled deck links every fragment; the preview loads only ours
 head = head.replace("</head>", '<link rel="stylesheet" href="dense.css">\n</head>')
 tail = """</div>
 <script src="../figdata.js"></script>

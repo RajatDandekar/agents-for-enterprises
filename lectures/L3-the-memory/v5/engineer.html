@@ -27,14 +27,19 @@
   <span class="hero-num q-mark" aria-hidden="true">?</span>
   <div class="qbox">
     <p class="q-label">Ask the class · RAG engineering · <span class="qnum"></span></p>
-    <h2 class="q-text">For this data: which chunk size, which search, reranker or not, which k? <em>Write your four guesses.</em></h2>
-    <div class="q-opts"><span class="q-opt"><b>Size</b>200 · 400 · 800 · 1200</span><span class="q-opt"><b>Search</b>dense · BM25 · hybrid</span><span class="q-opt"><b>Reranker</b>yes · no</span><span class="q-opt"><b>k</b>3 · 5 · 10</span></div>
-    <p class="q-cue">Keep them. We check them against the data in a few slides</p>
+    <h2 class="q-text">Four settings for the whole dump. <em>What is your guess for each?</em></h2>
+    <div class="engineer-qk">
+      <div><b>Chunk size</b><span class="w">how many tokens go in one chunk</span><span class="o">200 · 400 · 800 · 1,200</span></div>
+      <div><b>Search</b><span class="w">by meaning (dense), by matching words (BM25), or both, fused with RRF (hybrid)</span><span class="o">dense · BM25 · hybrid</span></div>
+      <div><b>Reranker</b><span class="w">re-read the top 20 with the cross-encoder and reorder them, or not</span><span class="o">yes · no</span></div>
+      <div><b>top-k</b><span class="w">how many chunks go to the model with the question</span><span class="o">3 · 5 · 10</span></div>
+    </div>
+    <p class="q-cue">One line in the chat: size · search · reranker · top-k. We check it against the data in a few slides</p>
   </div>
 </section>
 
 <section class="slide" data-plate="Recall@5 and MRR, on Emma’s Question">
-  <div class="lec-top"><h2>Is a gold passage in the top 5?</h2><p class="sub">Emma’s question in the whole dump, default pipeline. Gold: a passage her golden-set record lists.</p></div>
+  <div class="lec-top"><h2>Is a gold passage in the top 5?</h2><p class="sub">Emma’s question in the whole dump, BM25 + reranker. Gold: a passage her golden-set record lists.</p></div>
   <div class="fig" data-fig="engineer_top" data-q="Q-EMMA" style="left:100px;top:250px;width:1400px;height:560px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
@@ -55,73 +60,52 @@
     <p class="step small">Time to answer adds the answer model: p50 <span data-e="latency.total_p50_s" data-f="s1"></span>, p95 <span data-e="latency.total_p95_s" data-f="s1"></span>, against a 4 s target. <b class="b">Missed.</b> The search is under 1% of it.</p>
   </div>
   <div class="fig" data-fig="engineer_lat" style="left:640px;top:150px;width:860px;height:600px"></div>
-  <div class="cap" style="left:640px;top:770px;width:860px">The chosen configuration on all 224 questions, BM25 plus the reranker (<code>rag_answers/…k10.json</code>, field <code>retrieval_s</code>). Percentiles as <code>evaluate.pct</code> computes them.</div>
+  <div class="cap" style="left:640px;top:770px;width:860px">The configuration we end up choosing, on all 224 questions: BM25 plus the reranker (<code>rag_answers/…k10.json</code>, field <code>retrieval_s</code>). Percentiles as <code>evaluate.pct</code> computes them.</div>
 </section>
 
 <section class="slide" data-plate="Cost per Question">
   <div class="lec-top"><h2>Cost: tokens times the price</h2><p class="sub">The answer model is billed per token. Search adds nothing: BM25 and the reranker run on our own machine.</p></div>
   <div class="fig" data-fig="engineer_cost" style="left:100px;top:250px;width:1400px;height:400px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
-  <div class="opens step" style="top:680px;background:var(--g1)"><span class="k" style="color:var(--after)">Per day</span>224 questions a day costs about $<span data-e="context.day_usd_224" data-f="r2"></span>. Judging the answers is the cost of testing, not of answering: $<span data-e="answer_spend.judge_usd" data-f="r2"></span> for all <span data-e="answer_spend.n_answers" data-f="n"></span> judgements.</div>
+  <div class="opens step" style="top:680px;background:var(--g1)"><span class="k" style="color:var(--after)">Per day</span>224 questions a day costs about $<span data-e="context.day_usd_224" data-f="r2"></span>. Checking answers with a second model (next slide) is the cost of testing, not of answering: $<span data-e="answer_spend.judge_usd" data-f="r2"></span> for all <span data-e="answer_spend.n_answers" data-f="n"></span> checks.</div>
   <div class="cap" style="left:100px;top:820px;width:1400px">Price: the course’s list price for gemini-3.8-flash, $0.825 in and $4.125 out per million tokens (<code>evaluate.PRICE_USD</code>).</div>
 </section>
 
 <section class="slide" data-plate="Judging One Answer">
-  <div class="lec-top"><h2>Three checks on Emma’s answer</h2><p class="sub">Retrieval scored 1 for her question. Was the answer right?</p></div>
+  <div class="lec-top"><h2>Three checks on Emma’s answer</h2><p class="sub">Recall@5 was 1 for her question. Was the answer right?</p></div>
   <div class="fig" data-fig="engineer_judge" style="left:100px;top:230px;width:1400px;height:620px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
 <section class="slide" data-plate="The Grid of Knobs">
-  <div class="lec-top"><h2>Every combination of the knobs</h2><p class="sub">The knobs from this lecture, each with the settings we tried, in every combination.</p></div>
-  <div class="fig" data-fig="engineer_knobs" style="left:100px;top:232px;width:1400px;height:610px"></div>
-  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="lec-top"><h2>Two kinds of knob: build an index, or query it</h2><p class="sub">Some knobs change what is stored, so each choice needs its own index. The rest change only how one index is searched.</p></div>
+  <div class="fig" data-fig="engineer_knobs" style="left:100px;top:226px;width:1400px;height:640px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
 <section class="slide" data-plate="One Knob at a Time">
-  <div class="lec-top"><h2>Change one knob, hold the rest</h2><p class="sub">Read off the full grid: start from the chosen setting, change one knob, compare recall@5.</p></div>
+  <div class="lec-top"><h2>Change one knob, hold the rest</h2><p class="sub">Read off the full grid: start from the setting we end up choosing (blue), change one knob, compare recall@5.</p></div>
   <div class="fig" data-fig="engineer_okat" style="left:100px;top:232px;width:1400px;height:500px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
   <div class="opens step" style="top:745px;background:var(--g4)"><span class="k">Knobs interact</span>Tune chunk size with the reranker off and you pick 1,200 tokens. With it on, 200 wins. So we ran every combination, then read it one knob at a time.</div>
 </section>
 
-<section class="slide" data-plate="The Code That Runs It">
-  <div class="lec-top"><h2>The code that runs the grid</h2><p class="sub">One container per index. Inside, every search setting answers every golden question.</p></div>
-  <div class="fig" data-fig="engineer_code" data-hl0="498" data-hl="499-504;507-511" style="left:100px;top:232px;width:860px;height:500px"></div>
-  <div class="code step" style="position:absolute;left:1000px;top:232px;width:500px;height:200px;font-size:14px;white-space:pre"><span class="c"># build + search, 48 containers</span>
-modal run experiments/l3_modal.py::grid_build
-<span class="c"># one row per setting → logs/rag_grid.json</span>
-modal run experiments/l3_modal.py::collect
-<span class="c"># answer + judge the candidates</span>
-modal run experiments/l3_modal.py::answers \
-    --configs &lt;9 ids&gt;</div>
-  <div class="card step" style="position:absolute;left:1000px;top:452px;width:500px;font-size:19px;padding:16px 20px"><span class="tag nt">Machine and time</span><br>Modal L4 GPU, 4 vCPU, 16 GiB. <span data-e="scale.n_chunkings"></span> containers, up to 16 at once, <span data-e="scale.container_wall_s.min" data-f="min"></span> to <span data-e="scale.container_wall_s.max" data-f="min"></span> minutes each: <span data-e="context.gpu_hours"></span> L4-hours. <span data-e="scale.vectors_embedded" data-f="M"></span> vectors embedded.</div>
-  <div class="card step" style="position:absolute;left:1000px;top:632px;width:500px;font-size:19px;padding:16px 20px"><span class="tag nt">Then the answers</span><br><span data-e="answered.length"></span> settings answered and judged: <span data-e="answer_spend.n_answers" data-f="n"></span> answers, $<span data-e="answer_spend.answer_usd" data-f="r2"></span>, plus $<span data-e="answer_spend.judge_usd" data-f="r2"></span> for the judge.</div>
-  <div class="cap" style="left:100px;top:750px;width:860px">Each row stores recall@3/5/10, MRR, coverage and the p50/p95 search time. Container times from the Volume <code>northbridge-raglab</code>, <code>/vol/grid</code>.</div>
-</section>
-
 <section class="slide" data-plate="Results: How We Cut">
-  <div class="lec-top"><h2>How we cut: one knob per panel</h2><p class="sub">Recall@5 on 205 questions. In each panel only that knob changes; the rest stays at the chosen setting. Blue: chosen.</p></div>
+  <div class="lec-top"><h2>How we cut: one knob per panel</h2><p class="sub">Recall@5 on 205 questions. In each panel only that knob changes; the rest stays at the setting we choose (blue).</p></div>
   <div class="fig" data-fig="engineer_panels" data-set="cut" data-per="1" data-cols="2" style="left:100px;top:240px;width:1400px;height:580px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
 <section class="slide" data-plate="Results: How We Search">
-  <div class="lec-top"><h2>How we search: one knob per panel</h2><p class="sub">Recall@5 on 205 questions, on the chosen cut. Blue: chosen. Orange: over the 200 ms budget.</p></div>
+  <div class="lec-top"><h2>How we search: one knob per panel</h2><p class="sub">Recall@5 on 205 questions, on the cut we choose. Blue: the setting we choose. Orange: over the 200 ms budget.</p></div>
   <div class="fig" data-fig="engineer_panels" data-set="search" data-per="2" data-cols="3" style="left:100px;top:240px;width:1400px;height:590px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
 <section class="slide" data-plate="Your Guesses Against the Data">
-  <div class="lec-top"><h2>Your guesses against the data</h2><p class="sub">Read your four guesses out. Then the whole dump answers, one row per click.</p></div>
-  <table class="engineer-gt" style="left:100px;width:1400px;top:226px">
-    <tr><th style="width:200px">Knob</th><th style="width:300px">Your guess</th><th>The whole dump says (recall@5, 205 questions)</th></tr>
-    <tr><td class="kn">Chunk size</td><td class="gs">…</td><td class="ds step"><b>200 tokens</b>: <span data-e="slices.size.0.recall@5" data-f="r3"></span>. 400: <span data-e="slices.size.1.recall@5" data-f="r3"></span>, 1,200: <span data-e="slices.size.3.recall@5" data-f="r3"></span>.</td></tr>
-    <tr><td class="kn">Search</td><td class="gs">…</td><td class="ds step"><b>BM25</b>: <span data-e="slices.search.1.recall@5" data-f="r3"></span>. Hybrid <span data-e="slices.search.2.recall@5" data-f="r3"></span>, dense <span data-e="slices.search.0.recall@5" data-f="r3"></span> (all with the reranker).</td></tr>
-    <tr><td class="kn">Reranker</td><td class="gs">…</td><td class="ds step"><b>Yes</b>: +<span data-e="context.rerank_gain_points"></span> points for <span data-e="context.rerank_cost_ms"></span> ms more at p95.</td></tr>
-    <tr><td class="kn">k</td><td class="gs">…</td><td class="ds step"><b>10</b>: recall@10 <span data-e="slices.k.2.recall" data-f="r3"></span>; answers right <span data-e="scorecard.answers.answer_correct" data-f="pct"></span> against <span data-e="context.k5_answer_correct" data-f="pct"></span> at k = 5.</td></tr>
-  </table>
-  <div class="opens step" style="top:560px;background:var(--g4)"><span class="k">Where one document misled us: chunk size</span>On the Purchase Policy alone, 400-token chunks put §6.2 first: there were only <span data-e="context.doc_chunks_400"></span> chunks to beat. Across <span data-e="context.chunks" data-f="n"></span> chunks and 224 questions, 200 tokens wins, and with dense search too (<span data-e="slices.interaction_size_x_search.dense.200" data-f="r3"></span> against <span data-e="slices.interaction_size_x_search.dense.400" data-f="r3"></span>).</div>
+  <div class="lec-top"><h2>Your guesses against the data</h2><p class="sub">Say your guess for each knob. Then the whole dump answers, one row per click. Blue: the best setting.</p></div>
+  <div class="fig" data-fig="engineer_guess" style="left:100px;top:218px;width:1400px;height:650px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
 <section class="slide" data-plate="The Selection Rule">
@@ -131,10 +115,10 @@ modal run experiments/l3_modal.py::answers \
 </section>
 
 <section class="slide" data-plate="The Chosen Configuration, Scored">
-  <div class="lec-top"><h2>The chosen configuration, against our targets</h2><p class="sub">Structured parser · structure-aware 200-token chunks, 15% overlap · BM25 · bge-reranker-base over the top 20 · top 10 to the answer.</p></div>
+  <div class="lec-top"><h2>The chosen configuration, against our targets</h2><p class="sub">Structured parser · structure-aware 200-token chunks, 15% overlap · BM25 · reranker over the top 20 · top-k = 10.</p></div>
   <div class="fig" data-fig="engineer_score" style="left:100px;top:262px;width:1400px;height:500px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
-  <div class="cap" style="left:100px;top:790px;width:1400px">Search and answers on all 224 questions, answers at the 150-word cap used before the race (<code>rag_best.json</code>). The race reruns every method at 250 words.</div>
+  <div class="cap" style="left:100px;top:790px;width:1400px">Search and answers on all 224 questions, answers capped at 150 words (<code>rag_best.json</code>). The race later in this lecture reruns every method at 250 words.</div>
 </section>
 
 <section class="slide" data-plate="Where It Still Fails">

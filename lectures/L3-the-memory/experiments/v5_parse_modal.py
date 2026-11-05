@@ -569,3 +569,65 @@ def deck():
         print(rel[-50:], m["status_line"], m["may_read"])
     for c in out["chunk6"]["chunks"]:
         print(c["cite"], c["tokens"], c["header"].replace("\n", " "))
+
+
+# =============================================================================== what a naive HTML parser returns (review 2026-11-05)
+# BeautifulSoup's get_text() is what most tutorials call "parse the HTML": the tags go, every text node stays. We run it,
+# trafilatura's main-text extractor and the course's structured parser on all 23 pages of the 2016 export and count how
+# many pages each reading lets a phrase search match.
+html_image = (
+    modal.Image.debian_slim(python_version="3.11")
+    .pip_install("pypdf==5.1.0", "pdfplumber==0.11.4", "openpyxl==3.1.5", "python-docx==1.1.2", "pyyaml==6.0.2",
+                 "tiktoken==0.8.0", "pytesseract==0.3.13", "pillow==11.0.0", "beautifulsoup4==4.12.3", "trafilatura==2.0.0")
+    .run_commands("python -c \"import tiktoken; tiktoken.get_encoding('o200k_base')\"")
+    .env({"PYTHONPATH": "/course/ledgerline", "NORTHBRIDGE_DOCS": "/dump", "NB_L3_CACHE": "/tmp/l3cache"})
+    .add_local_dir(COURSE / "ledgerline" / "ledgerline", "/course/ledgerline/ledgerline",
+                   ignore=lambda p: any(x in SKIP for x in pathlib.Path(p).parts) or str(p).endswith((".png", ".mp4")))
+    .add_local_dir(DUMP / "11_training" / "intranet_export_2016", "/dump/11_training/intranet_export_2016")
+)
+INTRA_DIR = "11_training/intranet_export_2016"
+PHRASES = ["Approval limits", "How to raise an order", "Supplier list", "Ledgerline 7 training"]
+
+
+@app.function(image=html_image, timeout=600)
+def html_remote() -> dict:
+    import importlib.metadata as md
+
+    import trafilatura
+    from bs4 import BeautifulSoup
+
+    from ledgerline.course.l3 import corpus as C
+
+    root = pathlib.Path("/dump")
+    pages = sorted(p.name for p in (root / INTRA_DIR).glob("*.html"))
+    out = {"versions": {p: md.version(p) for p in ("beautifulsoup4", "trafilatura")}, "n_pages": len(pages), "pages": {}}
+    for name in pages:
+        rel = f"{INTRA_DIR}/{name}"
+        raw = (root / rel).read_text(encoding="utf-8")
+        soup = BeautifulSoup(raw, "html.parser")
+        title = soup.title.get_text() if soup.title else ""
+        readings = {"bs4_get_text": soup.get_text(),
+                    "trafilatura": trafilatura.extract(raw) or "",
+                    "structured": "\n".join(u.text for u in C.parse_file(root, rel, "structured")),
+                    "plain_markup": raw}
+        out["pages"][name] = {"title": title,
+                              "tokens": {k: C.n_tokens(v) for k, v in readings.items()},
+                              "has": {k: {ph: (ph.lower() in v.lower()) for ph in PHRASES} for k, v in readings.items()},
+                              "text": {k: v for k, v in readings.items() if name == "approval_limits.html" and k != "plain_markup"}}
+    out["matches"] = {k: {ph: sum(1 for p in out["pages"].values() if p["has"][k][ph]) for ph in PHRASES}
+                      for k in ("bs4_get_text", "trafilatura", "structured", "plain_markup")}
+    return out
+
+
+@app.local_entrypoint()
+def html():
+    out = html_remote.remote()
+    out["generated"] = time.strftime("%Y-%m-%d %H:%M")
+    out["script"] = "experiments/v5_parse_modal.py::html"
+    (LOGS / "v5_parse_html.json").write_text(json.dumps(out, indent=1, ensure_ascii=False))
+    print(out["versions"], out["n_pages"], "pages")
+    print(json.dumps(out["matches"], indent=1))
+    p = out["pages"]["approval_limits.html"]
+    print(p["tokens"])
+    for k, v in p["text"].items():
+        print(f"--- {k}\n{v[:1500]}")

@@ -17,9 +17,26 @@
      Numbers: window.L3V5.dense (v5/dense_data.js, from experiments/logs/v5_dense*.json). Figures: v5/dense.js. CSS: v5/dense.css. -->
 
 <section class="slide part" data-plain="1" data-num="6">
-  <div class="center"><span class="num">Dense retrieval, by hand</span>
+  <div class="center"><span class="num">RAG, by eye</span>
     <div class="recall"><b>Last section</b>Pasting every document does not fit and costs too much. We must find the few passages that answer.</div>
     <h1 class="q2">How does a computer find the one clause that answers Emma?</h1></div>
+</section>
+
+<section class="slide" data-plate="What RAG Means">
+  <div class="lec-top"><h2>RAG: Retrieval-Augmented Generation</h2><p class="sub">Search first, then let the model read only what the search found. Three words, three steps.</p></div>
+  <div class="dense-rag" style="left:100px;top:262px;width:1400px">
+    <div class="card"><h3><span class="dense-rag-l">R</span>etrieval</h3><p>Search the documents for the few passages that answer the question.</p><p class="dense-rag-ex">Emma, on D: the 5 of D’s <span data-dn="play.s200-o15.n"></span> chunks closest to her question.</p></div>
+    <div class="card step"><h3><span class="dense-rag-l">A</span>ugmented</h3><p>Put those passages into the prompt, next to the question, each with where it came from.</p><p class="dense-rag-ex">Her question, then those 5 chunks: <span data-dn="play.s200-o15.topk.4.tokens" data-f="n"></span> tokens.</p></div>
+    <div class="card step"><h3><span class="dense-rag-l">G</span>eneration</h3><p>The model writes the answer from those passages and cites them, so a person can check.</p><p class="dense-rag-ex">An answer that quotes §6.2 and §6.4 and names POL-PUR-001 v4.1.</p></div>
+  </div>
+  <div class="opens step" style="top:640px;background:var(--g1)"><span class="k" style="color:var(--after)">Against the last section</span>Pasting the 648-file part read <span data-l3="paste.sample.tokens_in_per_q" data-f="n"></span> tokens and cost <span data-l3="paste.sample.cost_per_q_usd" data-f="usd2"></span> for each question. The whole dump, <span data-l3="paste.total" data-f="n"></span> tokens, fits no model at all.</div>
+  <p class="cap" style="left:100px;top:790px;width:1400px">The name: Lewis et al., 2020, “Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks”.</p>
+</section>
+
+<section class="slide" data-plate="RAG in One Figure">
+  <div class="lec-top" style="top:88px"><h2 style="font-size:50px">The whole pipeline, box by box</h2><p class="sub">The top row runs once, before any question. The bottom row runs for every question. Then we open each box on D.</p></div>
+  <div class="fig" data-fig="dense_flow" data-build="1" style="left:100px;top:238px;width:1400px;height:600px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
 <section class="slide" data-plate="One Document, One Question">
@@ -77,6 +94,7 @@
 </section>
 
 <section class="slide" data-plate="D in 15 Chunks">
+  <div class="fig" data-fig="dense_flow" data-mini="1" data-stage="chunk" style="left:1080px;top:30px;width:420px;height:56px"></div>
   <div class="lec-top" style="top:88px"><h2 style="font-size:50px">The chunker cuts D into <span data-dn="play.s200-o15.n"></span> pieces</h2><p class="sub">Structure-aware, about 200 tokens, 15% overlap, a header line on each. Every chunk of D, in reading order; colour = section.</p></div>
   <div class="fig" data-fig="dense_chunks" style="left:100px;top:226px;width:1400px;height:462px"></div>
   <div class="dense-callouts" style="left:100px;top:700px;width:1400px">
@@ -99,8 +117,9 @@
 </section>
 
 <section class="slide" data-plate="From Chunk to 384 Numbers">
+  <div class="fig" data-fig="dense_flow" data-mini="1" data-stage="embed" style="left:1080px;top:30px;width:420px;height:56px"></div>
   <div class="lec-top" style="top:88px"><h2 style="font-size:50px">From chunk #5 to 384 numbers</h2><p class="sub">bge-small-en-v1.5 (<code>rag.EMBED_MODELS["bge-small"]</code>), run on Modal. Every value below is this chunk’s.</p></div>
-  <div class="fig" data-fig="dense_flow" style="left:100px;top:226px;width:1400px;height:620px"></div>
+  <div class="fig" data-fig="dense_embed" style="left:100px;top:226px;width:1400px;height:620px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
 
@@ -130,6 +149,7 @@
 </section>
 
 <section class="slide" data-plate="Every Chunk of D, in 3D">
+  <div class="fig" data-fig="dense_flow" data-mini="1" data-stage="store" style="left:1080px;top:30px;width:420px;height:56px"></div>
   <div class="fig" data-fig="dense_space" data-mode="chunks" style="left:100px;top:90px;width:980px;height:760px"></div>
   <span class="step" style="display:none"></span>
   <ol class="dense-notes" style="left:1120px;top:120px;width:380px">
@@ -140,12 +160,16 @@
 </section>
 
 <section class="slide" data-plate="Emma’s Question Lands">
+  <div class="fig" data-fig="dense_flow" data-mini="1" data-stage="query,nearest" style="left:1080px;top:30px;width:420px;height:56px"></div>
   <div class="fig" data-fig="dense_space" data-mode="query" style="left:100px;top:90px;width:900px;height:760px"></div>
   <span class="step" style="display:none"></span>
-  <div style="position:absolute;left:1040px;top:110px;width:460px">
-    <p style="font-size:21px;margin-bottom:12px">The question goes through the same model, with bge’s search instruction in front: <i>“<span data-dn="model_info.query_prefix"></span>”</i>. Projected with the same PCA.</p>
-    <div class="step"><div class="dense-h4">Nearest 5, cosine in 384 dimensions</div><div class="fig" data-fig="dense_ranked" data-n="5" style="position:relative"></div></div>
-    <p class="step" style="font-size:20px;margin-top:14px">All three nearest are about the battery rule: the change log, the plain-words restatement, the rule itself. None of them says Brightcell.</p>
+  <div style="position:absolute;left:1040px;top:116px;width:460px">
+    <p style="font-size:20px;margin-bottom:12px">The question goes through the same model, with bge’s search instruction in front, and lands in the same space.</p>
+    <div class="step"><div class="dense-kdef"><b>top-k</b>k = how many of the nearest chunks we hand to the model. Here k = 5.</div>
+      <div class="fig" data-fig="dense_ranked" data-n="5" style="position:relative"></div>
+      <p style="font-size:17px;margin-top:8px;color:var(--ink-2)">Cosine in 384 dimensions. §6 (#5) comes 3rd. None of the five says Brightcell.</p></div>
+    <div class="step dense-kmore"><div><b>k = 1</b><span data-dn="play.s200-o15.topk.0.tokens" data-f="n"></span> tokens, no §6</div><div><b>k = 5</b><span data-dn="play.s200-o15.topk.4.tokens" data-f="n"></span> tokens, §6.2 and §6.4 in</div><div><b>k = 10</b><span data-dn="play.s200-o15.topk.9.tokens" data-f="n"></span> tokens, the same <span data-dn="play.s200-o15.topk.9.answer_tokens"></span> answer tokens</div>
+      <p>Bigger k: more context, more noise, more tokens to pay for. (The RRF constant, 60, in the next section is a different number.)</p></div>
   </div>
 </section>
 
@@ -194,7 +218,7 @@
 </section>
 
 <section class="slide" data-plate="Other Knobs: k, the Header, the Model">
-  <div class="lec-top" style="top:84px"><h2 style="font-size:44px">Three more knobs, on the same space</h2><p class="sub" style="font-size:21px">Click through: k = 1, k = 10, the header prefix off, a second model. Each model has its own space.</p></div>
+  <div class="lec-top" style="top:84px"><h2 style="font-size:44px">Three more knobs, on the same space</h2><p class="sub" style="font-size:21px">Click through k = 1 and k = 10 (top-k: how many chunks go to the model), the header off, a second model.</p></div>
   <div class="fig" data-fig="dense_play" data-preset="knobs" style="left:100px;top:200px;width:1400px;height:650px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
 </section>
@@ -205,7 +229,7 @@
   <div style="position:absolute;left:960px;top:200px;width:540px">
     <div class="dense-h4">Inside MAN-ERR-72 · nearest 6</div>
     <div class="fig" data-fig="dense_errlist" style="position:relative"></div>
-    <div class="dense-why step" style="margin-top:12px"><span class="k">Why</span>The nearest is ERR-MAT-0412: same digits, different error. The model reads a code as a few pieces (<code>er ##r - po - 04 ##12</code>); change one piece and the vector barely moves. In the whole dump the entry ranks <b data-dn="fail.Q-0412.shown.dense_rank" data-f="ord"></b>.</div>
+    <div class="dense-why step" style="margin-top:12px"><span class="k">Why</span>The nearest is ERR-MAT-0412: same digits, different error. The model reads a code as a few pieces (<code>er ##r - po - 04 ##12</code>); change one piece and the vector barely moves. In the whole dump this entry ranks <b data-dn="fail.Q-0412.shown.dense_rank" data-f="ord"></b>; the first chunk from any of the question’s gold sources, <b data-dn="fail.Q-0412.dense_rank_first_answer_chunk" data-f="ord"></b>.</div>
   </div>
   <span class="step" style="display:none"></span>
 </section>
@@ -268,6 +292,12 @@
     <div class="card ok af step"><h3>Different words</h3><span class="q">Q-101 · onboard a supplier</span><span class="r"><span data-dn="fail.Q-101.shown.dense_rank" data-f="ord"></span></span><span class="f">Dense wins; a keyword match ranks it <span data-dn="fail.Q-101.bm25_rank_first_answer_chunk" data-f="ord"></span></span></div>
   </div>
   <p class="cap step" style="left:100px;top:620px;width:1400px">Ranks over 28,953 chunks of the whole dump, bge-small, exact search, the first chunk holding a gold fact. <code>experiments/logs/v5_dense_failures.json</code>. Next: a search that counts words.</p>
+</section>
+
+<section class="slide" data-plate="Emma’s Question, End to End">
+  <div class="lec-top" style="top:88px"><h2 style="font-size:50px">Emma’s question, end to end</h2><p class="sub">The same figure, with the values of our run on D (bge-small, 200-token chunks, k = 5).</p></div>
+  <div class="fig" data-fig="dense_flow" data-values="emma" style="left:100px;top:222px;width:1400px;height:580px"></div>
+  <p class="cap step" style="left:100px;top:818px;width:1400px">On D, retrieval did its job: §6 came 3rd and k = 5 carried it to the model. The failure cases show where the whole dump is harder.</p>
 </section>
 
 <section class="slide q hero" data-plain="1">
