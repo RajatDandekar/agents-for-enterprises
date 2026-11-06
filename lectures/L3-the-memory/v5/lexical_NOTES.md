@@ -10,7 +10,8 @@ the built index), the dense ranks from the dense section's `logs/v5_dense_failur
 Words used on the slides (review of 5 Nov 2026): `rag.tokenize` is called **our word splitter** (code name in small type
 only); BM25's units are **words**, never "tokens" (tokens and pieces belong to the model's WordPiece tokenizer in the dense
 section). The weight has three coloured parts, always in the same colours: **idf** green (across all chunks),
-**saturation** orange (inside this chunk), **length** plum (inside this chunk, against the average). The RRF number 60 is
+**repeats** orange (tf, inside this chunk), **length** plum (inside this chunk, against the average). Since the review of
+6 Nov 2026 the word "saturation" is not used on slides: say "the 2nd mention adds less than the 1st". The RRF number 60 is
 **the RRF constant** (`rag.RRF_K`), never bare "k"; **top-k** is only the number of chunks handed to the model.
 
 ## Part slide · "Can plain word counting find what the vectors missed?"
@@ -66,45 +67,30 @@ chunks**. idf(word) = ln(1 + (N − df + 0.5) / (df + 0.5)), the line in `rag.BM
   dump: buy 9.87, £104 9.36, brightcell 8.40, energy 7.30, quote 5.91, they 5.54, pack 4.13, battery 3.50, purchase 2.07,
   order 1.53. Students can toggle the buttons.
 - [click] idf belongs to the collection you search, not to English. It is counted once, before any question. On the next
-  two slides idf stays fixed: "the idf we computed on From Counts to a Weight".
+  slide idf stays fixed: "the idf we computed on From Counts to a Weight".
 
-## Saturation: Repeats Inside One Chunk
-Part 2, orange: measured **inside one chunk**. tf = how many times the word appears in that chunk. Make the contrast
-explicit, it is Dr. Dandekar's own reading: idf is across chunks, saturation is within one chunk.
-- The real case (right): "supplier" is in 9 of D's 15 chunks, so its idf is 0.52 (across chunks, from the idf slide).
-  Inside §6, chunk 5, it appears 10 times (tf = 10, inside this chunk). That is where the "ten mentions" are.
-- The dashed grey line is a plain count: 10 mentions would count 10. k1 = 1.2 sets the ceiling, k1 + 1 = 2.2.
-- [click] The BM25 curve, tf·(k1 + 1) / (tf + k1), at average chunk length (length part 1; §6 is 104 words against an
-  average of 100.9, so it is almost exactly average).
-- [click] One mention 1.00, two 1.38, ten 1.96: the second adds less than the first, the tenth almost nothing.
-- [click] The same numbers in words; the tenth adds 0.023. Drag k1: small k1 saturates at once (presence is all), large
-  k1 trusts counts.
-- [click] So §6's ten "supplier"s weigh 0.52 × 1.96 = 1.02 (rag.BM25 stored 1.0215, with §6's real length part 1.023),
-  not 0.52 × 10 = 5.21.
-
-## Long Chunks Are Damped
-Part 3, plum: measured **inside one chunk, against the average chunk**. Show where it enters the formula: the length part
-1 − b + b · dl / avgdl multiplies k1 in the denominator, so in a long chunk each mention counts less.
-dl = the chunk's length in words (after our word splitter), avgdl = 100.9, the average over D's 15 chunks, b = 0.75.
-Chunk 1 (version-history line, 57 words) and chunk 5 (§6, 104 words; its §6.2 clause shown) each say battery once and
-packs once.
-- [click] dl / avgdl: 0.565 and 1.030.
-- [click] Length part with b = 0.75: 0.674 and 1.023.
-- [click] Weight of battery (idf 1.52, tf 1): 1.52 · 2.2 / (1 + 1.2 · length part) = 1.849 against 1.501 (exactly what
-  rag.BM25 stored). Drag b to 0: length is ignored and both weigh the same. This is why the version line will outrank
-  the rule.
-
-## BM25 for Emma's Question, on D
-The full formula, once, with the three parts in their colours and the legend: idf across all chunks; saturation inside
-this chunk; length inside this chunk, against the average. A chunk's score = the sum of the weights of the question's
-words it contains. Each cell of the table is one weight; the five words D never uses share one column of zeros.
-- Chunk 12 (FAQ on battery packs): battery 1.94 + pack 1.94 + they 1.67 = 5.54, rank 1.
-- [click] Chunk 1 (version history): 1.85 + 1.85 = 3.70, rank 2.
-- [click] Chunk 5 (§6, holds §6.2 and §6.4): 1.50 + 1.50 = 3.00, rank 3.
-- [click] Chunk 4 (§5 Approval limits): "they" alone, 2.02 ("an order they raised"). The other 11 chunks hold none of
-  Emma's words: score 0, tied.
-- [click] Read it: the FAQ restates §6.2 and §6.4, good. The version line is short, so length lifts it above the rule.
-  "they" is noise. On D, dense ranked the same three on top (chunks 1, 12, 5).
+## How BM25 Weighs a Word
+Replaces the three slides Saturation, Long Chunks Are Damped and BM25 for Emma's Question (review of 6 Nov 2026: "simplify,
+no need of too much math, make intuitive"). Three rules, one picture and one plain sentence each, real counts from D.
+Say: a chunk's score adds up one weight per question word it holds; three plain rules set that weight.
+- Rule 1, green, across all chunks: a rare word counts more. battery is in 3 of D's 15 chunks (chunks 1, 5, 12): idf 1.52.
+  purchase is in all 15 (the header line puts it there): idf 0.03. Finding "purchase" tells you almost nothing. (Recap of
+  the idf slide.)
+- [click] Rule 2, orange, inside one chunk: the 2nd mention adds less than the 1st. §6 (chunk 5) says "supplier" 10 times.
+  The bars are what each mention adds in rag.BM25 for that chunk: 1st +0.99, 2nd +0.38, 3rd +0.20, … 10th +0.02. Together
+  1.96: BM25 counts ten mentions as about two. (Logged curve `walk.sat.curve_chunk5_length`, logs/v5_lexical_walk.json;
+  at exactly average length it would be 1.00, 1.38, …, 1.96.) Why: a chunk that says a word ten times is not ten times as
+  relevant; after the first few mentions we already know the chunk is about it.
+- [click] Rule 3, plum, inside one chunk, against the average: a word in a short chunk counts more. Chunk 1 (version line,
+  57 words) and chunk 5 (§6, 104 words) each say "battery" once. rag.BM25 stored 1.85 and 1.50. D's average chunk is 101
+  words (100.9). Bars are drawn to scale; the amber tick is the one "battery".
+- [click] In one line, small: weight = idf × tf · (k1 + 1) / (tf + k1 · (1 − b + b · dl / avgdl)), k1 = 1.2, b = 0.75 (rag.BM25).
+  Point at the colours: green is rule 1, orange tf is rule 2, plum is rule 3. k1 caps how much repeats can add (never past
+  k1 + 1 = 2.2 at average length); b sets how much length counts (b = 0 ignores it). No need to compute with it: the next
+  slide does that.
+- [click] Emma on D, the result: the FAQ (chunk 12) says "battery packs" twice → 1st, 5.54. The 57-word version line →
+  2nd, 3.70: length lifts it above the rule. §6, the rule, longer and one mention each → 3rd, 3.00. ("they" also adds 2.02
+  to §5 for "an order they raised": noise.) Next slide: the same sums, step by step.
 
 ## When a Question Arrives
 What BM25 actually does at question time, in five clicks, on the FAQ that wins (chunk 12) and on §6 (chunk 5). Numbers
@@ -112,7 +98,7 @@ from `logs/v5_lexical_walk.json`.
 - 1 · Split the question with our word splitter: buy, battery, pack, brightcell, energy, they, quote, £104.
 - [click] 2 · Find: for each chunk, which of those words it holds and how often. Chunk 12: battery ×2, pack ×2, they ×1;
   not buy, brightcell, energy, quote, £104. Chunk 5: battery ×1, pack ×1. Every chunk is checked; most hold none.
-- [click] 3 · Weigh each word found: weight = idf × tf · 2.2 / (tf + 1.2 × length part). Chunk 12 (129 words, length part
+- [click] 3 · Weigh each word found with the three rules (the one-line formula of the last slide). Chunk 12 (129 words, length part
   1.21): battery 1.52, tf 2 → 1.94; pack the same; they, idf 1.86, tf 1 → 1.67. Chunk 5 (104 words, 1.02): battery 1.52,
   tf 1 → 1.50; pack 1.50. The idf column is the same in both chunks (across chunks); tf and length differ (inside each).
 - [click] 4 · Add: chunk 12 = 1.94 + 1.94 + 1.67 = 5.54; chunk 5 = 1.50 + 1.50 = 3.00.
@@ -193,26 +179,33 @@ The default pipeline (`rag_best.json`): BM25 top 20 over the whole dump → rera
   The reranker can only reorder what search hands it.
 
 ## What Reranking Costs
-Medians on Modal: BM25 0.31 ms (4 CPU cores); embedding the question 11.4 ms (L4); [click] reranker on 20 pairs 41.1 ms on
-an L4 GPU (p95 43.0); [click] 2.4 s on 4 CPU cores (p95 2.5 s); [click] gemini-3.8-flash asked to order the same 20:
-21.8 to 29.3 s per call (three runs), 4,670 tokens in.
-- [click] The costlier variant: hosted rerank APIs, or prompting an LLM. Our LLM run put D's FAQ 3rd or 4th (the
-  cross-encoder: 10th), but each run gave a different order and each took over 20 s; the cross-encoder gave the same order
-  in 10 of 10 runs.
+One point (review of 6 Nov 2026: "confusing"): the reranker reads the question together with each chunk, one pair at a time,
+and that is slow, so it reads only the top 20. Plain linear time axis, 0 to 60 s. Numbers from
+logs/v5_lexical_rerank_latency.json (Modal, medians).
+- The reranker on the top 20 pairs: 41 ms on an L4 GPU (median of 40 runs; p95 43 ms). The bar is a sliver.
+- [click] Every chunk in the dump, 28,953 pairs: about 60 s per question (59.5 s), **estimated** at the same rate
+  (41.07 ms × 28,953 / 20), not run; hatched to say so. One question, a minute of GPU.
+- [click] BM25 over all 28,953 chunks: 0.3 ms (0.31 ms, 4 CPU cores): it only looks words up in a prebuilt index.
+- [click] So search narrows first, the reranker re-reads its top 20. With no GPU, on 4 CPU cores, 20 pairs already take
+  2.4 s (2,388 ms median, p95 2.5 s).
+- If asked about LLM reranking: we also asked gemini-3.8-flash to order the same 20 (4,670 tokens in): 21.8 to 29.3 s per
+  call over three runs, a different order each run; the cross-encoder gave the same order in 10 of 10 runs. Not on the
+  slide any more.
 
 ## The Whole Pipeline, With Keywords
 The flowchart from the start of "RAG, by eye", now complete. `[click ×11]` box by box: the indexing row as before; then the question goes to **two** searches, dense and BM25; RRF adds 1/(60 + rank) from each list (60 is the RRF constant, not top-k); the reranker re-reads the top 20 and keeps the best k; prompt; cited answer. Say: "Every box on this slide is something we have now opened by hand on one policy. Next: which settings win on all 224 questions." Be honest ahead of time: this is the general shape; on our data the measurement will drop the dense branch (BM25 + reranker wins).
 
 ## Ask the class (q hero)
-"Over the whole dump, BM25 ranks D's §6 255th for Emma, and the reranker sees only the top 20. What would you change?"
-Discussion facts (measured): 1 · reranking 300 would include it, at about 41 ms per 20 pairs on the GPU (about 0.6 s per
-question by that rate); 2 · dense ranks §6 about 120th (dense section), so hybrid's top 20 does not reach it either;
-3 · the RRF constant changes nothing when neither list has it; 4 · a second search with the rule's words is what the agent does later in
-the lecture (it calls search_docs twice).
+"Chunk 1 says 'battery' once in 57 words. Chunk 12 says it twice in 129 words. Which gets more weight for 'battery'?"
+(Replaces the old "§6 ranked 255th, what would you change?", review of 6 Nov 2026.) Answerable from How BM25 Weighs a
+Word and When a Question Arrives. Let them argue rule 2 against rule 3 first.
+Answer: **2, chunk 12**, but only just: 1.94 against 1.85 (rag.BM25, logs/v5_lexical.json). The second mention adds less
+than the first, and chunk 12 is longer than average (129 against 101 words), so it is damped, yet two mentions still beat
+one. Not 4: idf is the same for both, because it is the same word in the same 15 chunks; only tf and length differ.
 
 ## Check · BM25, RRF and the reranker
 1. [click] D writes bought, buys and purchase, never buy, and BM25 matches exact words only (the second group on Which
    Chunks Hold Which Words; our word splitter only drops a plural s).
-2. [click] idf is measured across all chunks (how many contain the word); saturation and length inside one chunk.
+2. [click] idf is measured across all chunks (how many contain the word); repeats (tf) and length inside one chunk.
 3. [click] (1, 2) and (2, 1) both give 0.032522; the reranker breaks the tie: §6 1st, FAQ 2nd, …, version line 4th.
 4. [click] 41.1 ms per 20 pairs on the L4 → about 59.5 s for all 28,953 at that rate; 2.4 s for 20 on 4 CPU cores.

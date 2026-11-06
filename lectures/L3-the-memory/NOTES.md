@@ -1,6 +1,6 @@
 # Lecture 3 · The Knowledge: retrieving from Northbridge's documents · speaker notes (v4, Northbridge)
 
-Sat 7 Nov 2026, 7:00–9:00 AM IST. 201 slides. Plate titles are given below so you can find a slide in the deck.
+Sat 7 Nov 2026, 7:00–9:00 AM IST. 182 slides. Plate titles are given below so you can find a slide in the deck.
 `[click]` = one step. Dr. Rajat Dandekar presents.
 
 **The one idea.** A model knows nothing about Northbridge. What it knows of Northbridge is what we let it find, in under a second, with
@@ -233,25 +233,6 @@ all six clean scans; spend the model on scans and on any page where Tesseract is
 low: on the poor copy, "Danlel" had confidence 14 and "PO/2026/00852" 33). Every page of every file (1) costs time and
 money for files that already have a text layer.
 
-### Check: Which Unit Answers?
-Q-436: reorder level of BAT-625-INT, and is it a lithium-cell part? Read both units aloud.
-[click] Only the structured one: reorder level 200, cell_safety 1, so yes. In plain, "1 1 200 20 42" could be any five
-columns.
-
-### Check: Keep, Decode or Drop?
-Before a parser indexes any text it decides one of three things: keep it (index it as it is, it is content), decode it (turn it
-back into what the writer typed, then index it), or drop it (remove it before indexing, it is not content). Read the legend.
-Three real snippets, each with what it is and where it comes from. Ask the class for each before clicking.
-[click] "Internal. Uncontrolled when printed. / Page 2 of 4", the last two lines of D's page 2 as the naive parser reads it:
-drop. It is the running footer, on every page; left in, it lands in the middle of a chunk. Our parser removes lines repeated at
-the top and bottom of every page, and "Page x of y".
-[click] "our price for the 36 V 500 Wh pack (your BAT-500) will be =C2=A3119.00 from=", one line of Voltway Cells' price e-mail of
-25 Sep 2026 as stored on disk: decode. Quoted-printable, as on the Brightcell e-mail: =C2=A3 is "£" and the final "=" is a soft
-break. Decoded: "£119.00 from 1 October 2026".
-[click] "Status | SUPERSEDED", one row of the box at the top of the 2024 Approval Matrix v2.0 (Word) as our parser reads it: keep.
-It is the one line that says this file is out of date (£200,000 is no longer the limit). Our parser keeps it and writes
-"SUPERSEDED / old copy" at the top of every chunk of the file.
-
 ## 4 · The questions (about 7 minutes)
 
 - **Three Kinds of Question.** `[click]` genesis, analytical, documentation. Genesis and analytical need services and
@@ -265,7 +246,7 @@ It is the one line that says this file is out of date (£200,000 is no longer th
 
 - **Metrics First.** Read the left column, `[click]` through the targets. We set them before we build.
 - **Why Latency Weighs Heavily.** p95, a budget per part, agents multiply it. `[click]` ×2.
-- **The Golden Set, One Record.** Q-0412 as stored: question, reference, must_contain, gold sources. `[click]` ×3.
+- **The Golden Set.** Say it plainly: 224 real staff questions, each with its true answer, written before any method was built. One record has four parts: the question, `[click]` the true answer (checked by script, `eval/check_gold.py`), `[click]` the gold sources (where the answer lives), `[click]` the facts it must contain. The real Q-0412 record on the right, highlighted part by part.
   Judge and fact check agree on 94.6% (κ 0.77): the judge is the same model as the answer model; we report both.
 - **Ask the class.** 93% in 13 s or 89% in 6 s. (These are close to the hybrid and RAG; we meet them in Section 8.)
 
@@ -456,7 +437,8 @@ the built index), the dense ranks from the dense section's `logs/v5_dense_failur
 Words used on the slides (review of 5 Nov 2026): `rag.tokenize` is called **our word splitter** (code name in small type
 only); BM25's units are **words**, never "tokens" (tokens and pieces belong to the model's WordPiece tokenizer in the dense
 section). The weight has three coloured parts, always in the same colours: **idf** green (across all chunks),
-**saturation** orange (inside this chunk), **length** plum (inside this chunk, against the average). The RRF number 60 is
+**repeats** orange (tf, inside this chunk), **length** plum (inside this chunk, against the average). Since the review of
+6 Nov 2026 the word "saturation" is not used on slides: say "the 2nd mention adds less than the 1st". The RRF number 60 is
 **the RRF constant** (`rag.RRF_K`), never bare "k"; **top-k** is only the number of chunks handed to the model.
 
 ### Part slide · "Can plain word counting find what the vectors missed?"
@@ -512,45 +494,30 @@ chunks**. idf(word) = ln(1 + (N − df + 0.5) / (df + 0.5)), the line in `rag.BM
   dump: buy 9.87, £104 9.36, brightcell 8.40, energy 7.30, quote 5.91, they 5.54, pack 4.13, battery 3.50, purchase 2.07,
   order 1.53. Students can toggle the buttons.
 - [click] idf belongs to the collection you search, not to English. It is counted once, before any question. On the next
-  two slides idf stays fixed: "the idf we computed on From Counts to a Weight".
+  slide idf stays fixed: "the idf we computed on From Counts to a Weight".
 
-### Saturation: Repeats Inside One Chunk
-Part 2, orange: measured **inside one chunk**. tf = how many times the word appears in that chunk. Make the contrast
-explicit, it is Dr. Dandekar's own reading: idf is across chunks, saturation is within one chunk.
-- The real case (right): "supplier" is in 9 of D's 15 chunks, so its idf is 0.52 (across chunks, from the idf slide).
-  Inside §6, chunk 5, it appears 10 times (tf = 10, inside this chunk). That is where the "ten mentions" are.
-- The dashed grey line is a plain count: 10 mentions would count 10. k1 = 1.2 sets the ceiling, k1 + 1 = 2.2.
-- [click] The BM25 curve, tf·(k1 + 1) / (tf + k1), at average chunk length (length part 1; §6 is 104 words against an
-  average of 100.9, so it is almost exactly average).
-- [click] One mention 1.00, two 1.38, ten 1.96: the second adds less than the first, the tenth almost nothing.
-- [click] The same numbers in words; the tenth adds 0.023. Drag k1: small k1 saturates at once (presence is all), large
-  k1 trusts counts.
-- [click] So §6's ten "supplier"s weigh 0.52 × 1.96 = 1.02 (rag.BM25 stored 1.0215, with §6's real length part 1.023),
-  not 0.52 × 10 = 5.21.
-
-### Long Chunks Are Damped
-Part 3, plum: measured **inside one chunk, against the average chunk**. Show where it enters the formula: the length part
-1 − b + b · dl / avgdl multiplies k1 in the denominator, so in a long chunk each mention counts less.
-dl = the chunk's length in words (after our word splitter), avgdl = 100.9, the average over D's 15 chunks, b = 0.75.
-Chunk 1 (version-history line, 57 words) and chunk 5 (§6, 104 words; its §6.2 clause shown) each say battery once and
-packs once.
-- [click] dl / avgdl: 0.565 and 1.030.
-- [click] Length part with b = 0.75: 0.674 and 1.023.
-- [click] Weight of battery (idf 1.52, tf 1): 1.52 · 2.2 / (1 + 1.2 · length part) = 1.849 against 1.501 (exactly what
-  rag.BM25 stored). Drag b to 0: length is ignored and both weigh the same. This is why the version line will outrank
-  the rule.
-
-### BM25 for Emma's Question, on D
-The full formula, once, with the three parts in their colours and the legend: idf across all chunks; saturation inside
-this chunk; length inside this chunk, against the average. A chunk's score = the sum of the weights of the question's
-words it contains. Each cell of the table is one weight; the five words D never uses share one column of zeros.
-- Chunk 12 (FAQ on battery packs): battery 1.94 + pack 1.94 + they 1.67 = 5.54, rank 1.
-- [click] Chunk 1 (version history): 1.85 + 1.85 = 3.70, rank 2.
-- [click] Chunk 5 (§6, holds §6.2 and §6.4): 1.50 + 1.50 = 3.00, rank 3.
-- [click] Chunk 4 (§5 Approval limits): "they" alone, 2.02 ("an order they raised"). The other 11 chunks hold none of
-  Emma's words: score 0, tied.
-- [click] Read it: the FAQ restates §6.2 and §6.4, good. The version line is short, so length lifts it above the rule.
-  "they" is noise. On D, dense ranked the same three on top (chunks 1, 12, 5).
+### How BM25 Weighs a Word
+Replaces the three slides Saturation, Long Chunks Are Damped and BM25 for Emma's Question (review of 6 Nov 2026: "simplify,
+no need of too much math, make intuitive"). Three rules, one picture and one plain sentence each, real counts from D.
+Say: a chunk's score adds up one weight per question word it holds; three plain rules set that weight.
+- Rule 1, green, across all chunks: a rare word counts more. battery is in 3 of D's 15 chunks (chunks 1, 5, 12): idf 1.52.
+  purchase is in all 15 (the header line puts it there): idf 0.03. Finding "purchase" tells you almost nothing. (Recap of
+  the idf slide.)
+- [click] Rule 2, orange, inside one chunk: the 2nd mention adds less than the 1st. §6 (chunk 5) says "supplier" 10 times.
+  The bars are what each mention adds in rag.BM25 for that chunk: 1st +0.99, 2nd +0.38, 3rd +0.20, … 10th +0.02. Together
+  1.96: BM25 counts ten mentions as about two. (Logged curve `walk.sat.curve_chunk5_length`, logs/v5_lexical_walk.json;
+  at exactly average length it would be 1.00, 1.38, …, 1.96.) Why: a chunk that says a word ten times is not ten times as
+  relevant; after the first few mentions we already know the chunk is about it.
+- [click] Rule 3, plum, inside one chunk, against the average: a word in a short chunk counts more. Chunk 1 (version line,
+  57 words) and chunk 5 (§6, 104 words) each say "battery" once. rag.BM25 stored 1.85 and 1.50. D's average chunk is 101
+  words (100.9). Bars are drawn to scale; the amber tick is the one "battery".
+- [click] In one line, small: weight = idf × tf · (k1 + 1) / (tf + k1 · (1 − b + b · dl / avgdl)), k1 = 1.2, b = 0.75 (rag.BM25).
+  Point at the colours: green is rule 1, orange tf is rule 2, plum is rule 3. k1 caps how much repeats can add (never past
+  k1 + 1 = 2.2 at average length); b sets how much length counts (b = 0 ignores it). No need to compute with it: the next
+  slide does that.
+- [click] Emma on D, the result: the FAQ (chunk 12) says "battery packs" twice → 1st, 5.54. The 57-word version line →
+  2nd, 3.70: length lifts it above the rule. §6, the rule, longer and one mention each → 3rd, 3.00. ("they" also adds 2.02
+  to §5 for "an order they raised": noise.) Next slide: the same sums, step by step.
 
 ### When a Question Arrives
 What BM25 actually does at question time, in five clicks, on the FAQ that wins (chunk 12) and on §6 (chunk 5). Numbers
@@ -558,7 +525,7 @@ from `logs/v5_lexical_walk.json`.
 - 1 · Split the question with our word splitter: buy, battery, pack, brightcell, energy, they, quote, £104.
 - [click] 2 · Find: for each chunk, which of those words it holds and how often. Chunk 12: battery ×2, pack ×2, they ×1;
   not buy, brightcell, energy, quote, £104. Chunk 5: battery ×1, pack ×1. Every chunk is checked; most hold none.
-- [click] 3 · Weigh each word found: weight = idf × tf · 2.2 / (tf + 1.2 × length part). Chunk 12 (129 words, length part
+- [click] 3 · Weigh each word found with the three rules (the one-line formula of the last slide). Chunk 12 (129 words, length part
   1.21): battery 1.52, tf 2 → 1.94; pack the same; they, idf 1.86, tf 1 → 1.67. Chunk 5 (104 words, 1.02): battery 1.52,
   tf 1 → 1.50; pack 1.50. The idf column is the same in both chunks (across chunks); tf and length differ (inside each).
 - [click] 4 · Add: chunk 12 = 1.94 + 1.94 + 1.67 = 5.54; chunk 5 = 1.50 + 1.50 = 3.00.
@@ -639,27 +606,34 @@ The default pipeline (`rag_best.json`): BM25 top 20 over the whole dump → rera
   The reranker can only reorder what search hands it.
 
 ### What Reranking Costs
-Medians on Modal: BM25 0.31 ms (4 CPU cores); embedding the question 11.4 ms (L4); [click] reranker on 20 pairs 41.1 ms on
-an L4 GPU (p95 43.0); [click] 2.4 s on 4 CPU cores (p95 2.5 s); [click] gemini-3.8-flash asked to order the same 20:
-21.8 to 29.3 s per call (three runs), 4,670 tokens in.
-- [click] The costlier variant: hosted rerank APIs, or prompting an LLM. Our LLM run put D's FAQ 3rd or 4th (the
-  cross-encoder: 10th), but each run gave a different order and each took over 20 s; the cross-encoder gave the same order
-  in 10 of 10 runs.
+One point (review of 6 Nov 2026: "confusing"): the reranker reads the question together with each chunk, one pair at a time,
+and that is slow, so it reads only the top 20. Plain linear time axis, 0 to 60 s. Numbers from
+logs/v5_lexical_rerank_latency.json (Modal, medians).
+- The reranker on the top 20 pairs: 41 ms on an L4 GPU (median of 40 runs; p95 43 ms). The bar is a sliver.
+- [click] Every chunk in the dump, 28,953 pairs: about 60 s per question (59.5 s), **estimated** at the same rate
+  (41.07 ms × 28,953 / 20), not run; hatched to say so. One question, a minute of GPU.
+- [click] BM25 over all 28,953 chunks: 0.3 ms (0.31 ms, 4 CPU cores): it only looks words up in a prebuilt index.
+- [click] So search narrows first, the reranker re-reads its top 20. With no GPU, on 4 CPU cores, 20 pairs already take
+  2.4 s (2,388 ms median, p95 2.5 s).
+- If asked about LLM reranking: we also asked gemini-3.8-flash to order the same 20 (4,670 tokens in): 21.8 to 29.3 s per
+  call over three runs, a different order each run; the cross-encoder gave the same order in 10 of 10 runs. Not on the
+  slide any more.
 
 ### The Whole Pipeline, With Keywords
 The flowchart from the start of "RAG, by eye", now complete. `[click ×11]` box by box: the indexing row as before; then the question goes to **two** searches, dense and BM25; RRF adds 1/(60 + rank) from each list (60 is the RRF constant, not top-k); the reranker re-reads the top 20 and keeps the best k; prompt; cited answer. Say: "Every box on this slide is something we have now opened by hand on one policy. Next: which settings win on all 224 questions." Be honest ahead of time: this is the general shape; on our data the measurement will drop the dense branch (BM25 + reranker wins).
 
 ### Ask the class (q hero)
-"Over the whole dump, BM25 ranks D's §6 255th for Emma, and the reranker sees only the top 20. What would you change?"
-Discussion facts (measured): 1 · reranking 300 would include it, at about 41 ms per 20 pairs on the GPU (about 0.6 s per
-question by that rate); 2 · dense ranks §6 about 120th (dense section), so hybrid's top 20 does not reach it either;
-3 · the RRF constant changes nothing when neither list has it; 4 · a second search with the rule's words is what the agent does later in
-the lecture (it calls search_docs twice).
+"Chunk 1 says 'battery' once in 57 words. Chunk 12 says it twice in 129 words. Which gets more weight for 'battery'?"
+(Replaces the old "§6 ranked 255th, what would you change?", review of 6 Nov 2026.) Answerable from How BM25 Weighs a
+Word and When a Question Arrives. Let them argue rule 2 against rule 3 first.
+Answer: **2, chunk 12**, but only just: 1.94 against 1.85 (rag.BM25, logs/v5_lexical.json). The second mention adds less
+than the first, and chunk 12 is longer than average (129 against 101 words), so it is damped, yet two mentions still beat
+one. Not 4: idf is the same for both, because it is the same word in the same 15 chunks; only tf and length differ.
 
 ### Check · BM25, RRF and the reranker
 1. [click] D writes bought, buys and purchase, never buy, and BM25 matches exact words only (the second group on Which
    Chunks Hold Which Words; our word splitter only drops a plural s).
-2. [click] idf is measured across all chunks (how many contain the word); saturation and length inside one chunk.
+2. [click] idf is measured across all chunks (how many contain the word); repeats (tf) and length inside one chunk.
 3. [click] (1, 2) and (2, 1) both give 0.032522; the reranker breaks the tie: §6 1st, FAQ 2nd, …, version line 4th.
 4. [click] 41.1 ms per 20 pairs on the L4 → about 59.5 s for all 28,953 at that rate; 2.4 s for 20 on 4 CPU cores.
 
@@ -850,11 +824,14 @@ cost. This slide shows the same numbers without either problem. The cascade (old
 
 ## 10 · Where the vectors live
 Where the vectors live: what a store keeps (Chroma, document D), metadata and filters, HNSW word by word, the production
-choice, and the engineer’s checklist on our real Qdrant Cloud cluster, latency included. Every number on the slides comes
+choice, and setting up our real Qdrant Cloud cluster in five slides, latency included. Every number on the slides comes
 from `window.L3V5.store` (`v5/store_data.js`, written by `experiments/v5_store_data.py`) and the logs named below.
 Runs: Chroma and the survey on 4 Nov 2026; the cluster walkthrough on 4 Nov; latency, the status facet, Q-605 and the
 HNSW overlap check on 5 Nov (`experiments/v5_store_latency.py` → `logs/v5_store_latency.json`, read-only on the cluster).
-Reworked 5 Nov 2026 after Dr. Rajat Dandekar’s review (`v5/REVIEW_2026-11-05.md`).
+Reworked 5 Nov 2026 after Dr. Rajat Dandekar’s review (`v5/REVIEW_2026-11-05.md`), and again on 6 Nov
+(`v5/REVIEW_2026-11-06.md`): “Searching Chroma” cut; a hop-by-hop HNSW example added; the dashboard captures cut to two,
+cropped and large (the Visualize map, point 106); the rest shown as clean panels of the same real data from our cluster; the
+ten-step checklist (overview + nine slides) is now five slides. 24 slides → 19.
 
 ### Part · Where do 28,953 vectors actually live?
 Bridge from the dense section: every chunk is 384 numbers; the question too. Now: where are they kept, and what do teams
@@ -867,7 +844,7 @@ with `col.get(include=[documents, metadatas, embeddings])` on Modal.
 - Read the id and the text: the context header, then 6.1 to 6.4. The highlighted clauses are §6.2 and §6.4, the ideal answer.
 - [click] Metadata: what `rag.add_vectors` stores (doc_id, file, folder, fmt, superseded, future, confidential). Next slides explain them.
 - [click] The vector: first 8 of 384 numbers (−0.0353, 0.0477, …), length 1.00 (normalised, so cosine = dot product).
-- [click] Plus an index: links between nearby vectors (HNSW, explained in two slides) so a search need not read every row.
+- [click] Plus an index: links between nearby vectors (HNSW, explained three slides on) so a search need not read every row.
   One record per chunk: 15 for D, 28,953 for the whole dump.
 - [click] It is a folder on disk. The whole dump in Chroma: 195.5 MB (195,546,412 bytes); the raw vectors alone 44.5 MB
   (28,953 × 384 × 4 bytes). The rest is text, metadata and the index.
@@ -879,22 +856,21 @@ vectors in SQLite’s log until `sync_threshold` = 1,000 are waiting. For the du
 (the record and a full-text index) and 260,577 metadata rows (9 per chunk); the main HNSW segment holds 28,000 vectors,
 1,804 bytes each (384 × 4 + 64 links); the last 941 still wait in the log. Building it: `rag.add_vectors`, 26.5 s on a 4-vCPU
 Modal container. Source: `logs/v5_store_local.json` (`experiments/v5_store_local.py`).
-
-### Searching Chroma
-`col.query(query_embeddings=[q], n_results=5)` with Emma’s question embedded by `rag.Embedder("bge-small")`.
-- Inside D only: §6 comes 3rd (0.644), after the revision table (0.673) and the FAQ answer on battery packs (0.667). One query: 4.1 ms.
-- [click] Against all 28,941 staff chunks: the top 6 are e-mails and the weekly meeting note about Brightcell (0.835 … 0.746). One query: 5.8 ms.
-- [click] The store just returns the nearest vectors. Retrieval quality was the previous sections’ job; the store makes it fast and durable.
+If asked how fast a query is (from the cut slide “Searching Chroma”): `col.query(query_embeddings=[q], n_results=5)` with Emma’s
+question took 4.1 ms inside D (§6 came 3rd, 0.644) and 5.8 ms against all 28,941 staff chunks (the top 6 were Brightcell
+e-mails and a meeting note). The store returns the nearest vectors; which one holds the rule was the earlier sections’ job.
 
 ### Metadata: What Each Chunk Says About Itself
 Teach from zero. Metadata = fields stored with each chunk that the parser read from the file itself: its header block
 (Document, Version, Effective, Status, Classification), its name and its folder (`corpus.file_meta`). The store keeps them
-beside the vector. The card is point 106 on our cluster = §6 of D, payload as stored: doc_id POL-PUR-001, version 4.1,
-effective 2026-04-01, status CURRENT, superseded false, future false, confidential false, audience “all staff”, file.
+beside the vector. The left card is point 106 on our cluster = §6 of D, payload as stored (read-only from the cluster by
+`v5_store_latency.py`): doc_id POL-PUR-001, version 4.1, effective 2026-04-01, status CURRENT, superseded false, future false,
+confidential false, audience “all staff”, file. “From our cluster” means exactly that: these are the stored values, not a mock.
 - [click] **Superseded**: replaced by a newer version of the same document. The Approval Matrix POL-APR-002 v2.0 (effective
-  2024-04-01) was replaced by v3.0 (April 2026), but the old file is still in the dump (`01_policies/old/`). The screenshot is our
-  dashboard’s Points tab filtered by `superseded:true`: the first hit is point 192, that v2.0, status "SUPERSEDED". The box moves
-  from the filter to the status lines on the next click.
+  2024-04-01) was replaced by v3.0 (April 2026), but the old file is still in the dump (`01_policies/old/`). The right card is the
+  first hit when you filter the collection by `superseded = true`: point 192, that v2.0, status "SUPERSEDED", file
+  `01_policies/old/Approval_Matrix_v2.0_2024.docx` (same data as the dashboard capture `img/store/filter_superseded.jpg`, which
+  was too small to read on a slide).
 - [click] The status values that occur in our payloads, a facet over the whole collection: CURRENT 2,879 chunks, SUPERSEDED 180,
   DRAFT 7, “ISSUED, IN FORCE FROM 2027-01-01” 7, “PREVIEW, NOT INSTALLED” 6, “ISSUED, NOT YET IN FORCE” 3, nothing stated
   25,871 (e-mails, transactions, master data state no status). The flags the parser sets: superseded = true on 736 chunks
@@ -917,7 +893,7 @@ HR-confidential chunks must never reach a purchase executive.
 - [click] The 2016 page stays first in both. Nothing in it says it is old (its metadata is empty: no doc_id, version or status),
   so no filter can drop it. A filter is only as good as the metadata: a human rule at parse time (“everything in
   `intranet_export_2016/` is history”) would fix it. This is check question 2.
-Source: `logs/v5_store_latency.json → eu.facts.q605` (read-only on the cluster, 5 Nov). Same mechanism for HR: checklist step 7.
+Source: `logs/v5_store_latency.json → eu.facts.q605` (read-only on the cluster, 5 Nov). Same mechanism for HR: “Measure Recall; Filter Every Request”.
 
 ### HNSW, Word by Word
 Answers “HNSW full form? Explain properly.” HNSW = Hierarchical Navigable Small World. Exact search compares the question with
@@ -931,16 +907,38 @@ searched by the real greedy rule. Build it one word at a time:
   roads. From the top: 1 hop on layer 2, 2 on layer 1, 1 at the bottom (the flat walk needed 5).
 Real graphs: Chroma’s graph for the dump has 4 layers (parsed header); our Qdrant collection uses m = 16.
 
+### Finding the Nearest Point, Hop by Hop
+Answers “explain with an example exactly how we find vectors”. A toy, not data: ten points A–J on a plane and the question
+(the diamond). Each point links to a few nearby points. Distance here is straight-line on the picture (computed in the figure
+from the coordinates); a real store uses cosine distance on 384 numbers. The rule, said once: look at the neighbours’ distances
+to the question, move to the closest, repeat until none is closer.
+- Start: the search always begins at a fixed entry point, A (8.06 from the question).
+- [click] At A: neighbours B 7.07, C 6.08, D 4.47 → move to D.
+- [click] At D (4.47): A 8.06, B 7.07, C 6.08, E 3.00, F 5.39 → E.
+- [click] At E (3.00): C 6.08, D 4.47, G 2.24, I 2.83 → G.
+- [click] At G (2.24): E 3.00, F 5.39, H 3.16, J 1.41 → J.
+- [click] At J (1.41): G 2.24, H 3.16, I 2.83. None is closer: stop. J is the nearest point (green ring), 4 hops. Be honest:
+  on ten points the walk touched all ten, so exact search would be as quick. It pays off in a large store, where each hop
+  still looks at only a few neighbours.
+- [click] Layers, the shortcut: A, B and G also sit on a sparse upper layer (layer 1), joined by long links (orange). Start at
+  A on that layer.
+- [click] Layer 1: at A, B 7.07 and G 2.24 → G. At G, A 8.06 and B 7.07: none closer → go down to layer 0, still at G.
+- [click] Layer 0: at G, E 3.00 · F 5.39 · H 3.16 · J 1.41 → J; at J none closer → stop. 2 hops instead of 4: a long jump on top,
+  a short step below. Real HNSW stacks a few such layers; Chroma’s graph for our dump has 4 (`v5_store_local.json`, parsed header).
+That is all HNSW is: the previous slide’s 42-point graph and our 28,941 chunks use exactly this rule.
+
 ### Two Settings, and Why It Can Miss
-- **m**: links per point. More links, a better graph, more memory. Qdrant’s default on our collection: 16 (Info tab).
+- **m**: links per point. More links, a better graph, more RAM. Qdrant’s default on our collection: 16 (Info tab).
 - **ef**: how many candidates the walk keeps as it searches (`ef_search` in Chroma, `hnsw_ef` in Qdrant). Larger: closer to exact, slower.
-- [click] It can miss: the walk stops where no neighbour is closer, even if a closer vector sits elsewhere. Our own checks,
-  share of the exact top 10 that came back: Chroma defaults 73.3%, ef_search 4,000 99.9% (`logs/hnsw_check.json`, 13,606
-  chunks, 3.3 ms → 7.3 ms per query); our Qdrant cluster at the defaults 79.1%, hnsw_ef 2,000 97.2% (224 golden questions, no
-  filter, `eu.facts.overlap_at_10_vs_exact`; 17% of questions got less than half of the exact top 10 at the defaults).
-- [click] Qdrant’s own ANN Recall check on our collection agrees (screenshot by the lead, 5 Nov): 100 stored points as
+- [click] It can miss: the walk stops where no neighbour is closer, even if a closer vector sits elsewhere (point back at the
+  ten-point walk: had A’s links been different, it could have stopped early). Our own checks, share of the exact top 10 that
+  came back: Chroma defaults 73.3%, ef_search 4,000 99.9% (`logs/hnsw_check.json`, 13,606 chunks, 3.3 ms → 7.3 ms per query);
+  our Qdrant cluster at the defaults 79.1%, hnsw_ef 2,000 97.2% (224 golden questions, no filter,
+  `eu.facts.overlap_at_10_vs_exact`; 17% of questions got less than half of the exact top 10 at the defaults).
+- [click] Qdrant’s own check on our collection agrees (ANN Recall tab → Check Index Quality, 5 Nov): 100 stored points used as
   questions, HNSW at the default settings against exact search, mean recall@10 0.835 ± 0.30; exact ≈ 9 ms, HNSW ≈ 2 ms per
-  search. An independent confirmation of our own measurement. Recorded in `logs/v5_store_dashboard.json → ann_recall`.
+  search. Shown as a clean panel because the capture (`img/store/ann_recall.jpg`) is unreadable on a slide; the numbers are
+  recorded in `logs/v5_store_dashboard.json → ann_recall`. The dashboard sign-in has since expired, so it was not re-run.
 
 ### Ask the class · Chroma in a folder works on one laptop. What must change when 200 staff search it all day?
 Expect: a server, backups, permissions, many users at once, monitoring, updates when documents change, region. Then the next slide.
@@ -953,6 +951,8 @@ Source: `logs/v5_store_research.json → considerations`.
 ### Dedicated Vector Databases
 Checked 4 Nov 2026 on vendors’ own pages (URLs per row in `logs/v5_store_research.json`). Talking points:
 - Qdrant: hybrid in the engine via Query API prefetch + RRF; BM25 on a full-text index since 1.20 (Oct 2026); filters during HNSW; free 1 GB RAM / 4 GB disk, paused after a week idle.
+- The footnote, said once: a full-text index with BM25 = for each word, the list of chunks that contain it (an inverted index),
+  so a keyword query is a lookup, not a scan; BM25 then scores those chunks.
 - Pinecone: free Starter is us-east-1 only; EU from the $20 Builder plan; no London; full-text is a separate search you fuse yourself.
 - Weaviate: hybrid built in; free sandbox capped at 100,000 objects (fits now, not at ten times).
 - Zilliz (Milvus): built-in BM25 and server-side RRF; London free region verified.
@@ -971,72 +971,54 @@ Why (blue): hybrid in one call; filters inside HNSW; same code on a laptop (Dock
 - [click] [click] Limits (orange), two of them measured by us on our cluster: the default HNSW width lost recall (0.434 vs 0.566 exact), and its BM25 tokenizer splits ERR-PO-0412. Free clusters pause after a week, deleted after four; ours is Frankfurt.
 - [click] When to choose something else: Postgres shop → pgvector; Microsoft shop with strict UK residency → Azure AI Search UK South.
 
-### The Engineer’s Checklist for a New Store
-Replaces the 11-step walkthrough (“good but tough”): the same real cluster, now told as ten decisions that are in the
-student’s control, in the order a new project meets them, each with what we chose for Northbridge and the measured effect
-(blue). Read row one; [click] row two. “For your own project, walk this list.”
-1 round trip 93.9 → 14.0 ms · 2 the script refuses a log that holds the key · 3 a new model is a new collection · 4 filter
-cost nothing measurable · 5 28,953 points in 131 s · 6 recall@5 0.434 → 0.551 · 7 HR chunks in the top 5: 2 → 0 · 8 202 →
-103 ms · 9 ten searches 1,051 → 202 ms · 10 one atomic alias switch.
+### Before the Upload: Region, Shape, Indexes
+Replaces the ten-step checklist (“make the Qdrant part short and more intuitive”). Three decisions in the student’s control,
+before any data goes in; for each, what we chose and (blue) what it bought us. One card per click.
+- 1 · Region, next to the app (and where the data may live). Ours: GCP europe-west3, Frankfurt, free tier: 1 node, 0.5 vCPU,
+  1 GiB RAM, 4 GiB disk, $0 (we use 121 MiB of disk and 251 MiB of RAM; `logs/v5_store_dashboard.json`). One round trip, the
+  smallest call: 93.9 ms from Modal in the US, 14.0 ms from Modal’s EU region (`region="eu"`, it landed on GCP eu-south; Modal
+  refused europe-west3 and eu-central-1). The key: one secret file (`vectordb.env`, gitignored), a Modal secret on the server;
+  the scripts refuse to write a log that holds it. Anyone holding it can read every document.
+- [click] 2 · The shape must match the model: one named vector `dense`, 384 numbers, cosine (bge-small). A 768-d model needs a new
+  collection. So from day one the app asks for an alias, `northbridge` → `northbridge_docs`: build the new collection beside the
+  old, run the golden set on it, then switch the alias in one atomic call (`update_collection_aliases`); roll back the same way.
+  Every query in this section went through the alias.
+- [click] 3 · Indexes, before the upload: a payload index on every field you filter on (bool: confidential, superseded, future;
+  keyword: folder, doc_id, file, status). Cost of the HR filter on the cluster, dense p50 over 224 questions: 277.5 ms without,
+  277.4 ms with (+ not superseded 277.7 ms); the round trip alone was 273.5 ms in that run. Chroma’s `where` without such an
+  index: 7.0 → 204.5 ms. And a full-text index with BM25 on `text` (word tokenizer). Say the plain line: the store also keeps,
+  for each word, the list of chunks that contain it (an inverted index), so a keyword query is a lookup instead of a scan; BM25
+  then scores only those chunks. Like the index at the back of a book. The word lists on the card are real, from our dump with
+  `rag.tokenize` (`logs/v5_lexical.json → df`, copied by `v5_store_data.py`): brightcell 6 chunks, £104 2, quote 78, battery 873
+  of 28,953 (in D: chunks 1, 5, 12; §6 is chunk 5). Qdrant’s own tokenizer splits words slightly differently; the idea is the same.
 
-### Checklist · 1–2 · Region, Tier and Key
-1 · Choose the region first: next to the app, and where the data may live. Ours: GCP europe-west3, Frankfurt (the AWS free
-tier only offered São Paulo). Screenshot: RAGProject, v1.20.0, HEALTHY, FREE TIER; ID and endpoint blurred.
-- [click] (box: the provider) Round trip, the smallest call (count): 93.9 ms from Modal in the US, 14.0 ms from Modal’s EU region
-  (`region="eu"`; it landed on GCP eu-south. Modal does not offer europe-west3 or eu-central-1 to this workspace: both refused).
-- [click] (box: the node) Free tier: 1 node, 0.5 vCPU, 1 GiB RAM, 4 GiB disk, $0. We use 121 MiB of disk and 251 MiB of RAM
-  (console, read after the upload, `logs/v5_store_dashboard.json`).
-- [click] (box: API Keys) 2 · The key: the cluster’s API Keys tab makes a database key; anyone holding it can read every document.
-  It lives in `vectordb.env` (gitignored by `*.env`), reaches Modal as a secret, and the scripts assert that neither the key nor
-  the endpoint appears in any log they write. Never in code, a notebook, a log, the model’s prompt or a slide.
+### What We Uploaded, Seen in Qdrant
+28,953 points: D first (15 points in 0.31 s, ids 101–115; §6 is 106), then 28,938 in 131.17 s, batches of 256, Modal (US) →
+Frankfurt. Two captures from Qdrant’s own dashboard (taken 4–5 Nov by the lead), cropped to the part that matters:
+- Visualize tab: Qdrant’s UMAP map of a 3,000-point sample of our dense vectors, coloured by folder (request
+  `{"limit": 3000, "using": "dense", "color_by": {"payload": "folder"}}`). The legend under it is the dashboard’s own legend,
+  redrawn large: transactions 1,849, master data 713, ledgerline manuals 178, service definitions 99, other folders 161.
+  Chunks of one kind sit together: each island is a family of similar records. “This is what we uploaded.”
+- [click] Points tab, `id:106`: §6 of D with its payload, as stored. Below it in the dashboard (outside the crop): its vector,
+  named `dense`, length 384. Open a few points and read them: the cheapest ingestion test there is.
+If asked: 25,103 of the 28,953 points sat in the HNSW graph at the time; Qdrant scans small unindexed segments exactly, so
+search still covers all points. 12 HR-confidential, 736 superseded.
 
-### Checklist · 3–4 · Schema and Indexes
-Code from `experiments/v5_store_cloud.py::do_ingest` (created in 1.82 s).
-- 3 · One named vector `dense`, 384, cosine: it must match the model (bge-small). A 768-d model needs another collection (step 10).
-- [click] 4 · Payload indexes on the fields you filter on, before the data (bool: confidential, superseded, future; keyword:
-  folder, doc_id, file, status), and a full-text index with BM25 scoring on `text` (word tokenizer; a second on `text_code`
-  with the code tokenizer, to compare).
-- [click] What the index buys, p50 over 224 questions: Chroma’s `where` (no payload index, evaluated outside the graph) 7.0 →
-  204.5 ms; Qdrant with the index 277.5 → 277.4 ms, network included (~273 ms of it is the trip). That is why the course keeps
-  HR’s chunks in their own Chroma collection, and why in Qdrant a filter is free.
-Screenshot: the Info tab (green, 384 · Cosine, m 16, ef_construct 100).
+### Measure Recall; Filter Every Request
+Left, `logs/v5_store_ef.json`: dense recall@5 on the cluster, 224 golden questions, each asker’s filter: default 0.434,
+hnsw_ef 512 0.468, 2,000 0.551, exact 0.566 (hnsw_ef 128: 0.439, not shown; the course grid, Chroma with ef_search 4,000,
+measured 0.561 for bge-small on the same chunks). p50 103 / 106 / 110 ms (default / 2,000 / exact, network included). The
+default lost almost a quarter of what exact finds; we set hnsw_ef = 2,000 everywhere after this.
+- [click] For any store: run your golden set against it before you trust it.
+- [click] Right: Q-901 “What is the salary band for a senior buyer?” asked as a purchase executive, hybrid (hnsw_ef 2,000). No
+  filter: ranks 1 and 2 are HR-CONF-007 (salary bands), confidential. The HR filter: none; approval_limits.html first. Filter
+  cost: nothing measurable (277.5 vs 277.4 ms). A scan of five HR questions: unfiltered top 5 held confidential chunks for 4 of
+  5. Who adds the filter is the class question that follows: do not answer it here.
+If asked about one hybrid request’s recall (`logs/v5_store_cloud.json → golden`): dense 0.551, BM25 (word tokenizer) 0.737,
+hybrid with RRF on the server 0.702. Hybrid below BM25 alone, as in our own grid (rag.BM25 0.771, hybrid 0.742): why the chosen
+pipeline is BM25 + the reranker. The reranker stays in our service, on the top 20.
 
-### Checklist · 5 · Upload, Then Look
-D first: 15 points in 0.31 s (ids 101–115; §6 is 106), then 28,938 in 131.17 s, batches of 256, Modal (US) → Frankfurt.
-Screenshot: Visualize tab, Qdrant’s own UMAP map of a 3,000-point sample of our dense vectors coloured by folder
-(request `{"limit": 3000, "using": "dense", "color_by": {"payload": "folder"}}`); legend counts are of the sample:
-transactions 1,849, master data 713, manuals 178, service definitions 99, procedures 42, policies 25 … Chunks of the same kind
-sit together: the islands are families of similar records. “This is what we uploaded.”
-- [click] Points tab, `id:106` (cropped to the payload): §6 of D with its payload and its 384-number vector. Open a few points
-  and read them: the cheapest ingestion test there is.
-- [click] Counts read back: 28,953 points · 12 HR-confidential · 736 superseded · 25,103 in the HNSW graph. Qdrant leaves small
-  segments unindexed and scans them exactly; search still covers all points.
-
-### Checklist · 6 · Measure Recall, Set ef
-`logs/v5_store_ef.json`: dense recall@5 on the cluster: default 0.434, hnsw_ef 128 0.439, 512 0.468, 2,000 0.551, exact 0.566
-(the course grid, Chroma with ef_search 4,000, measured 0.561 for bge-small on the same chunking: `rag_grid.json`).
-p50 103 / 106 / 110 ms (default / 2,000 / exact, network included, ~99 ms round trip in that run).
-[click] [click] [click] “Default lost almost a quarter of what exact finds”; we set hnsw_ef = 2,000 everywhere after this.
-
-### Checklist · 7 · Filter by Who Is Asking
-Q-901 “What is the salary band for a senior buyer?” asked as PUR-EXEC, hybrid (hnsw_ef 2,000). Every request carries the
-asker’s filter (who adds it is the class question that follows: do not answer it here).
-- [click] No filter: ranks 1 and 2 are HR-CONF-007 (salary bands), confidential.
-- [click] The HR filter: none; the top is approval_limits.html.
-- [click] Cost of the filter on the cluster: dense p50 277.5 ms (none) vs 277.4 ms (HR filter) vs 277.7 ms (+ not superseded);
-  round trip 273.5 ms. Payload index + filterable HNSW: no extra cost, unlike Chroma’s `where`.
-Scan of five HR questions (`permission_scan`): unfiltered top 5 held confidential chunks for 4 of 5 questions.
-
-### Checklist · 8 · One Hybrid Request
-Prefetch dense (20) + BM25 (20), fused on the server by `RrfQuery(Rrf(k=60))`: the RRF constant, 60, as `rag.RRF_K`.
-- [click] The reranker (bge-reranker-base, a cross-encoder) stays in our service, on the top 20.
-- [click] Recall@5 (224 golden, evaluate.py, each asker’s filter): dense 0.551, BM25 word 0.737, hybrid 0.702. Hybrid below
-  BM25 alone, as in our own grid (rag.BM25 0.771, hybrid 0.742): why the chosen pipeline is BM25 + reranker.
-- [click] Time per question from Modal in the US, p50, 30 golden questions: two requests (dense, then BM25, RRF in our code)
-  202 ms vs one hybrid request 103 ms. One request saves one round trip; an agent that searches five times saves five.
-Source: `logs/v5_store_cloud.json → golden`, `logs/v5_store_latency.json → suite_default_region.rest`.
-
-### Checklist · 9 · Where One Question’s Time Goes
+### Where One Question’s Time Goes
 Dr. Rajat Dandekar liked the latency part: this slide and the next. Emma’s pipeline, each part measured on Modal in the US,
 median (`v5_store_latency.py`, 30 golden questions unless said):
 - embed the question, bge-small on the container’s CPU: 13.6 ms
@@ -1047,13 +1029,15 @@ median (`v5_store_latency.py`, 30 golden questions unless said):
 - [click] For one question, the models dominate. But an agent searches several times per question and each search pays the trip
   again: the round trips are the part you can cut without changing a model.
 
-### Checklist · 9 · Cutting Round Trips
+### Cutting Round Trips
 Five levers, each measured on our cluster from Modal, p50, before → after. [click] reveals the next row.
 1. Run the app next to the store: round trip 93.9 ms (US) → 14.0 ms (Modal `region="eu"`, GCP eu-south). Modal refuses
    `europe-west3` and `eu-central-1` here, so Frankfurt itself was not available; a second EU run landed on AWS eu-north: 27.9 ms.
 2. Keep one connection open: a new client per question 313 ms → one client kept open 103 ms (US, REST). A new connection
    repeats the TCP + TLS handshake, about two extra trips (and the client’s version check). With gRPC: 122 → 102 ms.
-3. One hybrid request, not two searches: 202 → 103 ms (US, REST). From the EU over gRPC: 63 → 35 ms.
+3. One hybrid request, not two searches: dense and BM25 lists, 20 each, fused by RRF on the server (the RRF constant, 60, as
+   `rag.rrf`), against dense, then BM25, then RRF in our code: 202 → 103 ms (US, REST). From the EU over gRPC: 63 → 35 ms. In an
+   agent that searches five times, that is five trips saved.
 4. Ten questions in one call (`query_batch_points`): ten requests one after another 1,051 ms → one call 202 ms (US, REST).
    From the EU over gRPC: 353 → 121 ms. Useful when an agent fans out several searches at once.
 5. gRPC instead of REST, near the store: one hybrid request from the EU 77.2 ms (REST) → 34.7 ms (gRPC). From the US the two
@@ -1063,11 +1047,6 @@ Five levers, each measured on our cluster from Modal, p50, before → after. [cl
 Sources: `logs/v5_store_latency.json` (`default_region`, `eu`: first pass; `suite_default_region`, `suite_eu`: the second
 pass with the same payload on every call). Note: server-side RRF and our `rag.rrf` gave the same top 10 for 13 of 30
 questions (ties and pool order differ); recall on the golden set is what we compared, not identical lists.
-
-### Checklist · 10 · An Alias for the Next Model
-Vectors from two models cannot be compared. [click] From day one the app queries the alias `northbridge`. [click] New
-collection, re-embed, run the golden set, switch the alias atomically; roll back the same way. [click] Ours: northbridge →
-northbridge_docs.
 
 ### Ask the class · Who should add Emma’s filter?
 Answer: 3, the search service, from the signed-in user’s role. Never the model (a prompt can be talked out of it), and not a
@@ -1084,17 +1063,28 @@ parameter the agent chooses.
 - **Question → Film 1 (`rag`) → Check.**
 
 ## 11 · The LLM Wiki
-One document (D = `POL-PUR-001_Purchase_Policy_v4.1.pdf`) and one question (Emma's, `Q-EMMA`) all the way through, as in
-RAG. Every intermediate on the slides is real: `experiments/v5_wiki_modal.py` ran the course's own builder
-(`wiki_build.build(files=[D])`, then `wiki_build.update([AMD-SUP-2026-02])`) on Modal with gemini-3.8-flash and logged every
-prompt and reply (`experiments/logs/v5_wiki_ingest.json`, `v5_wiki_update.json`); the query replays the race's recorded calls
-on the full wiki (`v5_wiki_query.json`); tokens per part are Gemini's own count (`v5_wiki_counts.json`). The slides read
-`v5/wiki_data.js`, written by `experiments/v5_wiki_data.py` (failure evidence in `logs/v5_wiki_failures.json`).
-Film 2 is placed by the lead.
+Simpler and more visual, as asked on 6 Nov: start from one real page (the amendment AMD-SUP-2026-02), show the wiki as
+the files it is, walk ingest and query one step at a time, then step up to D's six pages. Every file, line and number on
+the slides is from a recorded run:
+- `experiments/v5_wiki_simple_modal.py` (6 Nov, Modal, gemini-3.8-flash, Google direct): the amendment ingested **alone**
+  into an empty wiki by the course's own builder (`wiki_build.build(files=[AMD])`), every call logged
+  (`logs/v5_wiki_simple_ingest.json`); and four staff questions read through the nine-page wiki (D, then the amendment)
+  by the course's own `wiki_query.Navigator` and the race's answer step (`logs/v5_wiki_simple_query.json`).
+- `experiments/v5_wiki_modal.py` (4 Nov): D ingested alone (six pages), then the amendment ingested into it
+  (`logs/v5_wiki_ingest.json`, `logs/v5_wiki_update.json`). The full-wiki numbers come from the race (`logs/race.json`)
+  and the build (`logs/wiki_build.json`).
+- `experiments/v5_wiki_simple_data.py` writes `window.L3V5.wiki.simple` into `v5/wiki_data.js` and checks that every
+  highlighted line is an exact substring of the real file. `experiments/v5_wiki_nav_gif_modal.py` renders the GIF.
+Film 2 is placed by the lead (between the class question and the check).
+
+What moved out of the slides (say it only if asked): the ingest prompt's five parts (D's READ call: 8,460 tokens in,
+about half the same for every source), the reply JSON, the quote check's normalising, AGENTS.md rule by rule, the query's
+token bars, lint's 1,073 findings, where the wiki lives (git, a section index, one audience per page). All are in the
+4 Nov notes and logs.
 
 ### Section 7 (part slide) · What if the model wrote Northbridge's wiki first?
-RAG searches the raw text every time a question arrives. Turn it around: let the model read each document once, now, and write
-down what it learned as pages. Then questions read the pages.
+RAG searches the raw text every time a question arrives. Turn it around: let the model read each document once, now, and
+write down what it learned as pages. Then questions read the pages.
 
 ### The Idea in One Picture
 Karpathy's gist, April 2026. Read it after class.
@@ -1102,148 +1092,137 @@ Karpathy's gist, April 2026. Read it after class.
 [click] People write one file, AGENTS.md: the rules every ingest follows.
 [click] Query: read index.md, open pages, answer; each sentence cites a raw source.
 [click] RAG, for contrast: nothing is written in advance; it searches the chunks on every question.
-The difference to keep: the wiki spends its model calls before the question, RAG at the question.
+The one thing to keep: the wiki spends its model calls before the question, RAG at the question.
 
 ### A Wikipedia Page, Read as a Design
-Kept from v4. Nine clicks, one part each: title, lead, infobox, contents, blue links, references, "needs citations", view
-history, search. Each one has a counterpart in our wiki.
+Kept. Nine clicks, one part each: title, lead, infobox, contents, blue links, references, "needs citations", view
+history, search. Each has a counterpart in our wiki; we will see most of them in a real file in two slides.
 
-### One Document, Read by Hand
-Before any model: what would a careful person write from D?
-[click] The policy itself: code, version 4.1, in force since 1 April 2026, its history. That is a page.
-[click] A rule with a number: §3.3, direct orders up to £50,000 gross. A fact on that page, with its clause.
-[click] §5 names another document, POL-APR-002. D only says what it is for.
-[click] Emma's two clauses: §6.2 (UN 38.3) and §6.4 (a cheaper quote is no reason). UN 38.3 is a topic many documents share.
-[click] Things it mentions: screen FIN-CC-01, tax codes, Henrik Weber. Each could be a page that links back.
-[click] What the model wrote: 6 pages, 29 facts (22 on pol-pur-001). Its proposed `topic-tax-codes` was mapped to
-`data-tax-codes` by the build's MERGE call. Ask: did it miss anything we found? D names POL-SUP-003 but says nothing about it.
+### Start Small: One Page In
+The smallest real source in the dump: AMD-SUP-2026-02, one PDF page. It changes one rule of the Supplier Policy: from
+1 September 2026 a UN 38.3 certificate counts only if issued in the last 12 months and valid 60 days past the order.
+Read it as a careful person first. Ask: what would you write down, and where?
+[click] The amendment itself: a page about what changes, from when, and why (§1, §2).
+[click] The rule it replaces lives in another document, POL-SUP-003 §4.4. Its page should hold the old rule and the new.
+[click] UN 38.3 certificates: many documents talk about them. One topic page that every source adds to.
+[click] The senior buyer runs the monthly expiry report (§3.2): a role page.
+[click] What the model wrote, reading only this page: 5 pages, 13 facts. Our four, plus `items-bat` for the BAT-* packs
+(§3.1, "lithium-cell part"). Every fact carries a quote copied from the page; code found all 13 quotes. That is the
+whole idea of ingest: one source, several pages, because a page is about a thing, not about a file.
 
-### Ingest, Step 1: The Prompt
-One call reads all of D: 8,460 tokens in, 3,687 out, 20.7 s (this READ call is the very one from the full build, replayed
-from its recording; the request was byte-identical).
-[click] Part 1, about 2,900 tokens: the instructions and the whole of AGENTS.md.
-[click] Part 2, about 2,100 tokens: the registry, the 100 slugs that exist, so every source names things the same way.
-[click] Part 3: the source header (file, version, effective date, status today, audience).
-[click] Part 4: D itself, pages 1 to 4, 2,211 tokens. Note §6.2.
-[click] Part 5: the rules and the JSON reply format. "quote is 5 to 25 words copied exactly … it is checked by code".
-Point: more than half of the prompt is the same for every source.
+### The Wiki Is a Folder of Files
+The same run, on disk. Nothing magic: plain text files.
+Point at the tree: `index.md`, `log.md`, `pages/` (one file per page), `lists/` (pages named by a code, listed),
+`restricted/` (the HR-only index, empty here), `facts.jsonl`, `sources.jsonl`, `manifest.json`. 12 files, 5 pages,
+1,485 words, 19 links, 13 references.
+[click] `index.md`: one line per page, `[[slug]] Title: summary`, grouped by type. Every question reads it first.
+[click] `log.md`: one line per ingest (`+5 ~0`: five created, none updated) and one for the index rebuild.
+[click] A page. Its first lines are the front matter. Next slide opens it properly.
+Students may click any file.
 
-### Ingest, Step 2: The Reply
-[click] The source note: what D is, its date and status.
-[click] The pages D touches, with how many facts each.
-[click] One fact, for §6.2: the fact in the model's words, the quote in D's words, page 2, section 6.
-[click] Conflicts it noticed: v4.0 superseded; AMD-PUR-2026-03 future-dated (1 December).
+### One Page, Opened
+`pages/amd-sup-2026-02.md`, the real file (67 lines). The line numbers are the file's own; a dashed line means lines
+were skipped to fit.
+[click] Front matter: title, type, slug, summary, audience, sources, dates. Code reads it: index.md is built from the
+summaries; audience decides who may open the page.
+[click] The lead: what it is, what matters today.
+[click] Sections: fixed by the page type in AGENTS.md. For a policy, one `###` per clause, then Versions and conflicts,
+See also, References. (The infobox appears twice in this file, once from the renderer and once from the model: a real
+slip, harmless.)
+[click] Links: `[[pol-sup-003|POL-SUP-003]]`, like a blue link. This is what the reader follows at query time.
+[click] Citations: `[^r2]` ends the sentence; References line 61 turns it into the PDF, page 1, §1. Every sentence can be
+checked by eye against the source.
 
-### Ingest, Step 3: The Quote Check
-No model: a string search in code.
-[click] Both sides normalised: lower case, no spaces, plain quotes.
-[click] Found on page 2. Verified.
-[click] A real miss on D: the quote for pol-apr-002 joins §5.1 and §5.2, but D prints "5.2" between them. Not found.
-[click] 27 of 29 verified on D; 12,018 of 12,095 in the full build. The check marks a fact; it does not delete it.
-pol-apr-002 was still written from its two unverified facts; lint lists such references later.
+### Ingest, Step by Step
+Four steps. Two are model calls, two are plain code.
+[click] 1, Read: one call gets the instructions with AGENTS.md, the list of page names that already exist, and the whole
+page. 6,552 tokens in, 2,443 out, 14.5 s. The list of names is why two sources about one thing land on one page.
+[click] 2, Decide: the same reply is JSON: the pages, and facts for each with a quote. Code checks every quote is in the
+page: 13 of 13. A small second call (1,143 tokens) checks new names against old ones: nothing merged.
+[click] 3, Write: one call per page, five calls side by side, 7.8 s. The writer sees that page's facts with keys, never
+the source: so every sentence it writes can cite.
+[click] 4, List and log: code rebuilds index.md from the summaries and appends one line to log.md.
+[click] In all: 7 calls, 25,846 tokens in, 5,315 out, $0.043, 25.0 s of model steps, for one page. (Parsing and loading
+the registry of names took another 38.5 s; not shown.)
 
-### Ingest, Step 4: The Written Page
-One more call per page (6 here). The writer sees the numbered facts, never D.
-[click] The lead's last sentence: keys r2, r16, r20 lead to the version history, §6.2 and §7.2.
-[click] §3.3 sentence → r6 → "£50,000 or less".
-[click] §6.2 sentence → r16 → the quote we just checked.
-[click] §6.4 sentence → r18 → "does not by itself justify a change of supplier". Emma's rule, traced by eye.
-Students may click any sentence.
+### Step Up: D Becomes Six Pages
+D, the Purchase Policy from the RAG sections: four pages, nine sections. Same ingest, 8 calls, $0.055.
+[click] The policy's own page, `pol-pur-001.md`, takes 22 of the 29 facts, from every section but §1.
+[click] The five things D names or mentions get their own pages: the approval matrix (§5), UN 38.3 certificates (§6), the
+tax codes (§8), screen FIN-CC-01 (§4), Henrik Weber (the header). The model proposed `topic-tax-codes`; the build's name
+check mapped it to `data-tax-codes`. Note: D names POL-SUP-003 (§6.3) but says nothing about it, so no page yet.
+[click] index.md for these six: this is all the reader sees first.
 
-### Links, index.md and log.md
-[click] index.md: one line per page, rebuilt after every ingest, read first by every query. Screens and people appear as one
-slug-rule line each.
-[click] log.md: one line per ingest, created and updated counts, and the slugs.
+### The Amendment Joins D's Wiki
+Now the amendment arrives in D's six-page wiki (4 Nov run).
+[click] Nine pages: 3 new (`amd-sup-2026-02`, `pol-sup-003`, `role-pur-senior-buyer`), 1 rewritten
+(`topic-un-38-3-certificates`), 5 unchanged. 5 calls, 25.0 s, $0.038. `pol-pur-001.md` was not touched: its §6 still has
+no link to the amendment. Ask: is that a problem? (It is the "stale" risk.)
+[click] The topic page's lead, before and after: the 12-month and 60-day rule is now written in. The before text says
+"blocking order creation": remember it for the failure slide.
+[click] log.md: one new line, `+3 ~1`.
+Note the names: ingested alone, the amendment's role page was `role-pur-sr`; inside D's wiki it is
+`role-pur-senior-buyer`. The name depends on what the registry and the model saw; the merge call keeps a wiki
+consistent with itself, not across separate builds.
 
-### A Second Source Arrives
-AMD-SUP-2026-02: from 1 September 2026 a UN 38.3 certificate must be under 12 months old and valid 60 days past the order.
-[click] The update reads it (1 call) and touches 4 pages: 1 updated, 3 created.
-[click] The diff, infobox and lead: the new rule enters the lead (12 months, 60 days).
-[click] New paragraphs and "Versions and conflicts": the 24-month rule is now the older rule.
-[click] Links and references to the amendment.
-[click] The log line. Note "Today's rule (superseded)" in the page: a label slip by the model, visible in the diff.
+### Query, Step by Step
+The animation plays by itself when the slide opens (about 21 s a loop). Click to step: six clicks.
+GIF for sharing and the notes: `v5/img/wiki/wiki_nav.gif` (892 × 478, about 60 frames, 21.5 s a loop, 0.75 MB), rendered by `experiments/v5_wiki_nav_gif_modal.py`.
+![One question through the wiki](img/wiki/wiki_nav.gif)
+A real run (6 Nov) on the nine-page wiki, question S-4: "How old may a UN 38.3 certificate be when we order lithium-cell
+parts, and who checks it?"
+[click] Read index.md. Turn 1: 946 tokens in, 2.2 s. The reply opens three pages at once: the UN 38.3 topic, the
+amendment, POL-SUP-003. Their index lines light up.
+[click] Open the page: `topic-un-38-3-certificates.md`. The 12-month, 60-day rule is in its lead. The two other pages are
+the cards behind it.
+[click] On that page, a link: `[[role-pur-senior-buyer|senior buyer]]`, next to the monthly expiry report. The question
+also asked who checks it. Turn 2 (3,598 tokens, 2.1 s): open that page (and `pol-pur-001`).
+[click] Follow the link: `role-pur-senior-buyer.md`, line 26, the monthly report with a 90-day window.
+Turn 3 (6,227 tokens, 2.6 s): done.
+[click] The answer call: five pages in, 4,226 tokens, 6.8 s. It cites [1] [2] [3] [5]. The orange line: "Ledgerline ERP
+automatically enforces order blocking", repeated from the topic page's infobox, which was wrong at ingest (failure 2).
+[click] The citation: [5] is the role page, its `[^r1]` is the amendment PDF, page 1, §3, and clause 3.2 says exactly
+that. Every hop can be checked.
+Total: 3 reader calls (10,771 tokens, 6.8 s of model time) plus the answer call. The other three runs are in the log:
+S-1 (18-month-old certificate) opened the amendment and its two linked pages and said no; S-3 (cheaper quote) found
+POL-PUR-001 §6.4; S-2 (Emma's Brightcell question) answered "NOT IN THE DOCUMENTS": D and the amendment never mention
+Brightcell, so on this small wiki that is the honest answer.
 
 ### The Same Change in RAG
 [click] RAG: parse 51 ms, 3 chunks (142, 247, 165 tokens), no model call; BM25 over all 28,953 chunks rebuilds in 4.86 s.
-[click] But RAG reconciles nothing: the POL-SUP-003 chunk with "24 months" stays next to the new one. The answer step must work
-out which rule wins, on every question. The wiki did that work once.
+[click] But RAG reconciles nothing: the POL-SUP-003 chunk with "24 months" stays next to the new one. The answer step must
+work out which rule wins, on every question. The wiki did that work once, at ingest.
 
-### The Rules It Followed: AGENTS.md
-Five lines of the schema, each next to what it produced. [click] per rule: slugs from codes (both sources landed on one page);
-page layout (lead, infobox, one `###` per clause); citations on every sentence; newer replaces older, recorded under
-Versions and conflicts; the log line format. [click] All together.
+### Where It Fails
+Three, each from our runs.
+[click] 1, never written down: Q-104, "the screen hangs after Save". The manual's page 13 has the answer; the ingest took
+89 facts from that manual and none from page 13. The wiki said NOT IN THE DOCUMENTS; RAG found the paragraph.
+[click] 2, written wrong once, read wrong every time: the UN 38.3 page's infobox says "Ledgerline order blocking", with no
+citation, so the quote check never saw it. The answer we just watched repeated it. Ledgerline does not block:
+RN-7.2.3-P4 says the check is "controlled by parameter PUR.CERT_CHK (default N)", and the change board kept it N.
+[click] 3, the reader stops early: Emma's question on the full 683-page wiki read index.md and three pages and stopped
+after 2 calls; its reason names AMD-SUP-2026-02, which it never opened. Six must-contain facts missing.
+[click] Lint finds broken citations, orphans and stale rules; it cannot see these three. Only the golden set does.
+Also true, if asked: the wiki is as new as its last ingest (stale); exact error codes get paraphrased (Q-726).
 
-### Query, Call by Call
-The full wiki, the race's recorded run (replayed). Click any bar segment to see the text.
-Call 1: system 449, index.md 7,987, question 16 tokens (9,716 billed). Reply: open three pages.
-[click] Call 2: the short index, its own reply, three whole pages (13,720). Reply: done.
-[click] The answer call: the three pages as sources [1] to [3] (5,002).
-[click] Missing from the answer: six must-contain facts. Keep this for two slides.
-
-### Chunks or Pages
-[click] RAG: 10 chunks, 2,368 tokens, one call. Six chunks come from the four files behind the Brightcell page.
-[click] The wiki: 28,438 tokens in three calls, drawn to the same scale.
-The multi-hop advantage: one page already joins a meeting and three e-mails (the coloured squares). The join was done once.
-
-### Where It Fails: Never Compiled
-Q-104, "the screen hangs after Save". The manual's §19.4 on page 13 has the answer.
-[click] The ingest took 89 facts from that manual, none from page 13. No page says "do not press Save again"; the wiki answered
-NOT IN THE DOCUMENTS. [click] RAG found the paragraph in the raw manual.
-
-### Where It Fails: Wrong at Compile Time
-Left, our one-source wiki: the UN 38.3 page says "System enforcement: Ledgerline order blocking". Ledgerline does not block
-(PUR.CERT_CHK default N; the change board kept it N). The quotes behind the lead passed the check; the infobox has no key.
-The full build, which read RN-7.2.3-P4 and the CAB minutes, wrote it correctly.
-[click] Right, the full wiki: the IT Security Policy page was filed HR-only because the HR folder's README also names
-POL-ITS-008 and the registry met it there first. A build-code error, not the model's. Staff never see "12 characters,
-60 days"; Q-609 failed; lint reported nothing on that page.
-
-### Where It Fails: Stale Until Re-ingested
-Before the update, the page had no 12-month window. [click] After, only touched pages changed: pol-pur-001 was not touched
-and still has no link to the amendment. [click] Staleness is a schedule: RAG re-chunks for free, the wiki pays per update.
-
-### Where It Fails: Cost and Time of Ingest
-D alone: 8 calls, 32,052 tokens in, 32.7 s, $0.055. The amendment: 5 calls, 25.0 s, $0.038. The full build: 1,752 calls,
-12.7 million tokens in, about 11 minutes on 40 workers, $22.61. [click] RAG: no model, 14.63 s chunking + 4.86 s BM25 for
-everything. [click] Cost grows with the documents, not with the questions.
-
-### Where It Fails: Stopped Early, Dropped Facts
-Index, three pages, done after 2 calls; its reason names AMD-SUP-2026-02, which it never opened.
-[click] The six missing facts, one by one: NBC-F-112, £119.00 and PUR.CERT_CHK were only on pages never opened.
-12 months, 60 days and £104.00 were in the answer call's context (pol-sup-003, sup-brightcell-energy) and the answer left
-them out. Two failures in one run.
-[click] Multi-hop, answer correct: RAG 71%, wiki navigation 67%, hybrid 71%, sections only 33%.
-
-### Where It Fails: Exact Codes
-Q-726, ERR-CRD-0207. The source says "CREDIT LIMIT EXCEEDED (<cust_cd>)"; the page rewrote it as "Customer Credit Limit
-Exceeded" and "credit ceiling". The answer missed the exact message. Also index.md lists the 98 error pages as one line.
-[click] Exact-code questions: recall@5 RAG 1.00, wiki 0.52; answer correct 93% vs 85%.
-
-### Lint: The Wiki Checks Itself
-1,073 findings in 59 s; 31 of the 40 planted problems found. On Emma's pages: the citation_not_found on the UN 38.3 page
-(r35 is a 62-word quote), the orphan Brightcell page, the superseded rule recorded.
-[click] Lint can fix citations, orphans, stale and contradictory claims. [click] It cannot see a fact that never reached a page,
-a page filed under the wrong audience, or a reader that stops early. For those we need the golden set.
-
-### The Wiki, Measured
-Per question on the race's 224: 2.54 navigation calls before the answer, retrieval 6.4 s p50 / 23.4 s p95, $0.0322 a question
-(RAG: 44 ms, $0.0046). [click] Quality on the same metrics: recall@5 0.86 vs 0.89, answer correct 89.3% for both, citation
-correct 85.9% vs 92.2%. [click] The same test as RAG, step by step; Emma's question through it is what we watched.
-
-### Where the Wiki Lives
-[click per card] Files: a git repository of markdown; for production, every ingest is a commit someone reviews. Search: 2,520
-sections with the same BM25 and bge-small, 1.2 ms p50, so "hybrid" can start from a search. Permissions: one audience per
-page; the page is the unit of permission, so one wrongly filed page hides all of it.
+### What It Costs, Measured
+Left: ingest, before any question. The amendment alone 7 calls, 25.0 s, $0.043; D alone 8 calls, $0.055; all 693 files
+1,752 calls, about 11 minutes on 40 workers, 12.7 million tokens in, $22.61. RAG: 0 calls, 19.5 s to chunk and index
+everything.
+[click] Right, at every question (the race's 224): the wiki makes 2.54 reader calls before the answer, 6.4 s median to
+find the text, $0.0322 a question; RAG 0 calls, 44 ms, $0.0046.
+[click] And the answers: 89.3% correct for both; right source in the top 5: 0.86 vs 0.89; citation correct 85.9% vs
+92.2%. Same quality on average, paid at a different time.
 
 ### Ask the class · An amendment lands at 9:00; Emma asks at 9:05
-Expected answer: 4, it depends on when each memory was refreshed. RAG knows if the file was re-chunked (free, seconds); the
-wiki knows if the update ran (model calls, a review). Neither knows by itself.
+Expected answer: 4, it depends on when each was refreshed. RAG's store knows if the file was re-chunked (free, seconds);
+the wiki knows if the ingest ran (model calls, and in production a review of the diff). Neither knows by itself.
 
 ### Check · Section 7
-[click] 1: Yes. The check tests quotes, not sentences; infobox lines have no key. "Ledgerline order blocking".
-[click] 2: Yes, the model saw them (pol-sup-003, source [2]) and the answer left them out; three other facts were never opened.
-[click] 3: The wiki rewrites pages (5 calls, 25 s, $0.038); RAG re-cuts the file (3 chunks, about 50 ms) and reconciles at
-question time.
+[click] 1: A page per thing it talks about: the amendment, the rule it replaces, the topic, the role, the item family.
+[click] 2: The question asked who checks; the topic page links the senior buyer next to the expiry report; the answer
+cites it as [5].
+[click] 3: The check tests quotes, not every line; the infobox line had no citation and was wrong at ingest.
 
 - **Film 2 (`wiki`)** sits between the class question and the check.
 

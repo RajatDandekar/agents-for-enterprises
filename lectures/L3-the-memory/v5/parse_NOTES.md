@@ -169,22 +169,3 @@ all six clean scans; spend the model on scans and on any page where Tesseract is
 low: on the poor copy, "Danlel" had confidence 14 and "PO/2026/00852" 33). Every page of every file (1) costs time and
 money for files that already have a text layer.
 
-## Check: Which Unit Answers?
-Q-436: reorder level of BAT-625-INT, and is it a lithium-cell part? Read both units aloud.
-[click] Only the structured one: reorder level 200, cell_safety 1, so yes. In plain, "1 1 200 20 42" could be any five
-columns.
-
-## Check: Keep, Decode or Drop?
-Before a parser indexes any text it decides one of three things: keep it (index it as it is, it is content), decode it (turn it
-back into what the writer typed, then index it), or drop it (remove it before indexing, it is not content). Read the legend.
-Three real snippets, each with what it is and where it comes from. Ask the class for each before clicking.
-[click] "Internal. Uncontrolled when printed. / Page 2 of 4", the last two lines of D's page 2 as the naive parser reads it:
-drop. It is the running footer, on every page; left in, it lands in the middle of a chunk. Our parser removes lines repeated at
-the top and bottom of every page, and "Page x of y".
-[click] "our price for the 36 V 500 Wh pack (your BAT-500) will be =C2=A3119.00 from=", one line of Voltway Cells' price e-mail of
-25 Sep 2026 as stored on disk: decode. Quoted-printable, as on the Brightcell e-mail: =C2=A3 is "£" and the final "=" is a soft
-break. Decoded: "£119.00 from 1 October 2026".
-[click] "Status | SUPERSEDED", one row of the box at the top of the 2024 Approval Matrix v2.0 (Word) as our parser reads it: keep.
-It is the one line that says this file is out of date (£200,000 is no longer the limit). Our parser keeps it and writes
-"SUPERSEDED / old copy" at the top of every chunk of the file.
-

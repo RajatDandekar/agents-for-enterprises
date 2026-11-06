@@ -53,32 +53,13 @@
   <div class="fig" data-fig="lexical_idf" style="left:760px;top:436px;width:740px;height:420px"></div>
 </section>
 
-<section class="slide" data-plate="Saturation: Repeats Inside One Chunk">
-  <div class="lec-top"><h2>Part 2: saturation, inside one chunk</h2><p class="sub">tf: how many times the word appears in this one chunk. The second mention adds less than the first.</p></div>
-  <div class="fig" data-fig="lexical_formula" data-on="s" style="left:100px;top:258px;width:1400px;height:130px"></div>
-  <div class="fig" data-fig="lexical_sat" style="left:100px;top:404px;width:860px;height:470px"></div>
+<section class="slide" data-plate="How BM25 Weighs a Word">
+  <div class="lec-top"><h2>Three plain rules set a word’s weight</h2><p class="sub">A chunk’s score adds up a weight for each of the question’s words it holds. Real counts from D.</p></div>
+  <div class="fig" data-fig="lexical_rules" style="left:100px;top:240px;width:1400px;height:432px"></div>
   <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
-  <div style="position:absolute;left:1010px;top:418px;width:490px">
-    <p class="lexical-note" style="font-size:20px;margin:0 0 12px">A real word: <b>supplier</b> is in <span data-lx="walk.sat.df_D"></span> of D’s 15 chunks (idf <span class="lexical-pi"><span data-lx="walk.sat.idf" data-f="2"></span></span>, across chunks). Inside §6, chunk 5, it appears <b class="lexical-ps"><span data-lx="walk.sat.tf"></span> times</b> (tf, inside this chunk).</p>
-    <p class="lexical-note" style="font-size:19px;margin:0 0 12px">k1 = 1.2 sets the ceiling: this part never passes k1 + 1 = 2.2.</p>
-    <p class="step lexical-note" id="lexical-sat-out" style="font-size:20px;margin:0 0 12px"></p>
-    <p class="step lexical-note" style="font-size:20px;margin:0">So §6’s ten “supplier”s weigh <span data-lx="walk.sat.idf" data-f="2"></span> × 1.96 = <b class="lexical-bm"><span data-lx="walk.sat.weight" data-f="2"></span></b>, not <span data-lx="walk.sat.idf" data-f="2"></span> × 10 = <span data-lx="walk.sat.weight_if_counted_plainly" data-f="2"></span>.</p>
-  </div>
-</section>
-
-<section class="slide" data-plate="Long Chunks Are Damped">
-  <div class="lec-top"><h2>Part 3: length, inside one chunk, against the average</h2><p class="sub">dl: the chunk’s length in words. avgdl: the average over D’s 15 chunks. It sits in the denominator, beside k1; b = 0.75 sets how much it counts.</p></div>
-  <div class="fig" data-fig="lexical_formula" data-on="l" style="left:100px;top:258px;width:1400px;height:130px"></div>
-  <div class="fig" data-fig="lexical_len" style="left:100px;top:408px;width:1400px;height:450px"></div>
-  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
-</section>
-
-<section class="slide" data-plate="BM25 for Emma’s Question, on D">
-  <div class="lec-top"><h2>All three parts, added up over Emma’s words</h2></div>
-  <div class="fig" data-fig="lexical_formula" data-on="isl" data-sum="1" style="left:100px;top:196px;width:1400px;height:170px"></div>
-  <div class="fig lexical-score" data-fig="lexical_score" style="left:100px;top:384px;width:1400px;height:340px"></div>
-  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
-  <div class="opens step" style="top:744px;background:var(--g3);padding:12px 22px;font-size:20px"><span class="k" style="color:var(--gold)">Read it</span>First, the FAQ that restates §6.2 and §6.4: it says “battery packs” twice. Second, a short version-history line: length lifts its two words. The rule itself, §6, is third. “they” adds 2.02 to §5 for “an order they raised”: noise.</div>
+  <div class="lexical-box lexical-fsm step" style="position:absolute;left:100px;right:100px;top:688px;padding:10px 22px">
+    <span class="lexical-k" style="display:inline;margin-right:14px">In one line · rag.BM25</span>weight = <span class="lexical-pi">idf</span> × <span class="lexical-ps">tf</span> · (k1 + 1) / (<span class="lexical-ps">tf</span> + k1 · <span class="lexical-pl">(1 − b + b · dl / avgdl)</span>) <span class="lexical-fnote">tf: mentions in this chunk · dl: its length in words · avgdl: the average length · k1 = 1.2, b = 0.75</span></div>
+  <div class="opens step" style="top:780px;background:var(--g3);padding:10px 22px;font-size:20px"><span class="k" style="color:var(--gold)">Emma, on D</span>The FAQ says “battery packs” twice: 1st, <span data-lx="chunks.12.bm25" data-f="2"></span>. The <span data-lx="chunks.1.dl"></span>-word version line: 2nd, <span data-lx="chunks.1.bm25" data-f="2"></span>. §6, the rule, longer and one mention each: 3rd, <span data-lx="chunks.5.bm25" data-f="2"></span>.</div>
 </section>
 
 <section class="slide" data-plate="When a Question Arrives">
@@ -169,10 +150,10 @@
 </section>
 
 <section class="slide" data-plate="What Reranking Costs">
-  <div class="lec-top"><h2>Reading every pair is why the reranker sees only 20</h2><p class="sub">Measured on Modal, median of repeated runs, Emma’s question. Log scale: each grid step is ten times slower.</p></div>
-  <div class="fig" data-fig="lexical_cost" style="left:100px;top:250px;width:1400px;height:420px"></div>
-  <span class="step" style="display:none"></span><span class="step" style="display:none"></span><span class="step" style="display:none"></span>
-  <div class="opens step" style="top:600px;background:#f4f5f7"><span class="k" style="color:var(--ink)">The costlier variant</span>Hosted rerank APIs run a reranking model for you, over the network. Or you prompt a generative LLM with the question and the 20 passages and ask for an order. We did that with gemini-3.8-flash: <span data-lx="llm.runs.0.tokens_in" data-f="n"></span> tokens in per call. It put D’s FAQ 3rd or 4th (the cross-encoder: 10th), but each of the three runs gave a different order, and each took over 20 seconds. The cross-encoder gave the same order in <span data-lx="key.rr_repeat_n"></span> of <span data-lx="key.rr_repeat_n"></span> runs.</div>
+  <div class="lec-top"><h2 style="font-size:54px">Every pair takes time, so the reranker reads only 20</h2><p class="sub">It reads the question with one chunk: one pair at a time. Timed on Modal, L4 GPU, median of <span data-lx="lat.gpu.rerank_20.n"></span> runs.</p></div>
+  <div class="fig" data-fig="lexical_cost" style="left:100px;top:290px;width:1400px;height:330px"></div>
+  <span class="step" style="display:none"></span><span class="step" style="display:none"></span>
+  <div class="opens step" style="top:650px;background:#f4f5f7"><span class="k" style="color:var(--ink)">So</span>Search narrows first; the reranker re-reads only its top 20. With no GPU, on 4 CPU cores, 20 pairs already take <span data-lx="lat.cpu.rerank_20.p50_ms" data-f="s"></span>.</div>
 </section>
 
 <section class="slide" data-plate="The Whole Pipeline, With Keywords">
@@ -185,8 +166,8 @@
   <span class="hero-num q-mark" aria-hidden="true">?</span>
   <div class="qbox">
     <p class="q-label">Ask the class · <span class="qnum"></span></p>
-    <h2 class="q-text">Over the whole dump, BM25 ranks D’s §6 <em>255th</em> for Emma, and the reranker sees only the top 20. <em>What would you change?</em></h2>
-    <div class="q-opts"><span class="q-opt"><b>1</b> Rerank the top 300</span><span class="q-opt"><b>2</b> Add dense search (hybrid)</span><span class="q-opt"><b>3</b> Change the RRF constant</span><span class="q-opt"><b>4</b> Search a second time, with the rule’s words</span></div>
+    <h2 class="q-text">Chunk 1 says “battery” <em>once</em> in 57 words. Chunk 12 says it <em>twice</em> in 129 words. <em>Which gets more weight for “battery”?</em></h2>
+    <div class="q-opts"><span class="q-opt"><b>1</b> Chunk 1, the short one</span><span class="q-opt"><b>2</b> Chunk 12, two mentions</span><span class="q-opt"><b>3</b> The same</span><span class="q-opt"><b>4</b> Cannot tell without idf</span></div>
     <p class="q-cue">Type 1 to 4 in the chat, with one reason</p>
   </div>
 </section>
@@ -197,7 +178,7 @@
     <p class="q-label">Check · BM25, RRF and the reranker</p>
     <ol class="chk-list">
       <li><span class="chk-q"><b>1</b>D is all about buying. Why does “buy” score nothing in it?</span><span class="chk-a step">D writes “bought”, “buys” and “purchase”, never “buy”, and BM25 matches exact words only.</span></li>
-      <li><span class="chk-q"><b>2</b>Which part of the weight is measured across all chunks?</span><span class="chk-a step">idf: how many chunks contain the word. Saturation and length are measured inside one chunk.</span></li>
+      <li><span class="chk-q"><b>2</b>Which part of the weight is measured across all chunks?</span><span class="chk-a step">idf: how many chunks contain the word. Repeats and length are counted inside one chunk.</span></li>
       <li><span class="chk-q"><b>3</b>RRF gave chunks 12 and 1 the same score. Why, and what breaks the tie?</span><span class="chk-a step">(1, 2) and (2, 1) both give 1/61 + 1/62 = 0.032522. The reranker reads them: FAQ 2nd, version line 4th.</span></li>
       <li><span class="chk-q"><b>4</b>Why not rerank all 28,953 chunks?</span><span class="chk-a step">20 pairs take <span data-lx="lat.gpu.rerank_20.p50_ms" data-f="ms"></span> on an L4 GPU, so all of them would take about <span data-lx="key.all_pairs_gpu_s"></span> s per question at that rate; on 4 CPU cores, 20 pairs already take <span data-lx="lat.cpu.rerank_20.p50_ms" data-f="ms"></span>.</span></li>
     </ol>

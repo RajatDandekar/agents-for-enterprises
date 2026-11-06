@@ -4323,6 +4323,37 @@ window.L3V5.store = {
 "11_training/New starter - Purchasing (2024) deck export.pdf": "£200,000",
 "11_training/intranet_export_2016/approval_limits.html": "£150,000 net"
 },
+"invindex": {
+"n_all": 28953,
+"chunking": "structured-structure-200-o15",
+"rows": [
+{
+"word": "brightcell",
+"n_all": 6,
+"in_D": []
+},
+{
+"word": "£104",
+"n_all": 2,
+"in_D": []
+},
+{
+"word": "quote",
+"n_all": 78,
+"in_D": []
+},
+{
+"word": "battery",
+"n_all": 873,
+"in_D": [
+1,
+5,
+12
+]
+}
+],
+"q_tokens": null
+},
 "q605_amounts": [
 "£250,000",
 "£200,000",

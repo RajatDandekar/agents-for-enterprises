@@ -76,7 +76,7 @@ Re-run `python3 gen_figdata.py` after any experiment or NB3 run.
 
 - **Metrics First.** Read the left column, `[click]` through the targets. We set them before we build.
 - **Why Latency Weighs Heavily.** p95, a budget per part, agents multiply it. `[click]` ×2.
-- **The Golden Set, One Record.** Q-0412 as stored: question, reference, must_contain, gold sources. `[click]` ×3.
+- **The Golden Set.** Say it plainly: 224 real staff questions, each with its true answer, written before any method was built. One record has four parts: the question, `[click]` the true answer (checked by script, `eval/check_gold.py`), `[click]` the gold sources (where the answer lives), `[click]` the facts it must contain. The real Q-0412 record on the right, highlighted part by part.
   Judge and fact check agree on 94.6% (κ 0.77): the judge is the same model as the answer model; we report both.
 - **Ask the class.** 93% in 13 s or 89% in 6 s. (These are close to the hybrid and RAG; we meet them in Section 8.)
 

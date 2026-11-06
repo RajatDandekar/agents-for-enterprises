@@ -21,6 +21,10 @@ for d in "$ROOT"/lectures/L*/; do
   # the 3D figures (code, trace, posters, audio; not their QA renders or scripts)
   # a static explorer page a deck embeds (Lecture 3's Wiki Explorer)
   [ -d "$d"wiki_explorer ] && rsync -a --exclude '*.py' "$d"wiki_explorer/ "$OUT/lectures/$n/wiki_explorer/"
+  # Lecture 3's v5 sections: their css, js, data and images (not previews, QA renders, notes or scripts)
+  [ -d "$d"v5 ] && rsync -a --exclude 'qa*/' --exclude 'preview_*' --exclude 'base_v4*' \
+    --include '*/' --include '*.css' --include '*.js' --include '*.jpg' --include '*.png' --include '*.gif' --include '*.svg' --include '*.webp' \
+    --exclude '*' --prune-empty-dirs "$d"v5/ "$OUT/lectures/$n/v5/"
   for fig3d in flow3d brain3d; do
     [ -d "$d$fig3d" ] && rsync -a --exclude qa --exclude '*.py' --exclude '*.md' --exclude 'envision_amaranth_cove.mp3' "$d$fig3d/" "$OUT/lectures/$n/$fig3d/"
   done

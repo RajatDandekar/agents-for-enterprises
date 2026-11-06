@@ -1,16 +1,27 @@
-# Section 7 · The LLM Wiki (v5) · speaker notes
+# Section 7 · The LLM Wiki (v5, reworked 6 Nov 2026) · speaker notes
 
-One document (D = `POL-PUR-001_Purchase_Policy_v4.1.pdf`) and one question (Emma's, `Q-EMMA`) all the way through, as in
-RAG. Every intermediate on the slides is real: `experiments/v5_wiki_modal.py` ran the course's own builder
-(`wiki_build.build(files=[D])`, then `wiki_build.update([AMD-SUP-2026-02])`) on Modal with gemini-3.8-flash and logged every
-prompt and reply (`experiments/logs/v5_wiki_ingest.json`, `v5_wiki_update.json`); the query replays the race's recorded calls
-on the full wiki (`v5_wiki_query.json`); tokens per part are Gemini's own count (`v5_wiki_counts.json`). The slides read
-`v5/wiki_data.js`, written by `experiments/v5_wiki_data.py` (failure evidence in `logs/v5_wiki_failures.json`).
-Film 2 is placed by the lead.
+Simpler and more visual, as asked on 6 Nov: start from one real page (the amendment AMD-SUP-2026-02), show the wiki as
+the files it is, walk ingest and query one step at a time, then step up to D's six pages. Every file, line and number on
+the slides is from a recorded run:
+- `experiments/v5_wiki_simple_modal.py` (6 Nov, Modal, gemini-3.8-flash, Google direct): the amendment ingested **alone**
+  into an empty wiki by the course's own builder (`wiki_build.build(files=[AMD])`), every call logged
+  (`logs/v5_wiki_simple_ingest.json`); and four staff questions read through the nine-page wiki (D, then the amendment)
+  by the course's own `wiki_query.Navigator` and the race's answer step (`logs/v5_wiki_simple_query.json`).
+- `experiments/v5_wiki_modal.py` (4 Nov): D ingested alone (six pages), then the amendment ingested into it
+  (`logs/v5_wiki_ingest.json`, `logs/v5_wiki_update.json`). The full-wiki numbers come from the race (`logs/race.json`)
+  and the build (`logs/wiki_build.json`).
+- `experiments/v5_wiki_simple_data.py` writes `window.L3V5.wiki.simple` into `v5/wiki_data.js` and checks that every
+  highlighted line is an exact substring of the real file. `experiments/v5_wiki_nav_gif_modal.py` renders the GIF.
+Film 2 is placed by the lead (between the class question and the check).
+
+What moved out of the slides (say it only if asked): the ingest prompt's five parts (D's READ call: 8,460 tokens in,
+about half the same for every source), the reply JSON, the quote check's normalising, AGENTS.md rule by rule, the query's
+token bars, lint's 1,073 findings, where the wiki lives (git, a section index, one audience per page). All are in the
+4 Nov notes and logs.
 
 ## Section 7 (part slide) · What if the model wrote Northbridge's wiki first?
-RAG searches the raw text every time a question arrives. Turn it around: let the model read each document once, now, and write
-down what it learned as pages. Then questions read the pages.
+RAG searches the raw text every time a question arrives. Turn it around: let the model read each document once, now, and
+write down what it learned as pages. Then questions read the pages.
 
 ## The Idea in One Picture
 Karpathy's gist, April 2026. Read it after class.
@@ -18,145 +29,134 @@ Karpathy's gist, April 2026. Read it after class.
 [click] People write one file, AGENTS.md: the rules every ingest follows.
 [click] Query: read index.md, open pages, answer; each sentence cites a raw source.
 [click] RAG, for contrast: nothing is written in advance; it searches the chunks on every question.
-The difference to keep: the wiki spends its model calls before the question, RAG at the question.
+The one thing to keep: the wiki spends its model calls before the question, RAG at the question.
 
 ## A Wikipedia Page, Read as a Design
-Kept from v4. Nine clicks, one part each: title, lead, infobox, contents, blue links, references, "needs citations", view
-history, search. Each one has a counterpart in our wiki.
+Kept. Nine clicks, one part each: title, lead, infobox, contents, blue links, references, "needs citations", view
+history, search. Each has a counterpart in our wiki; we will see most of them in a real file in two slides.
 
-## One Document, Read by Hand
-Before any model: what would a careful person write from D?
-[click] The policy itself: code, version 4.1, in force since 1 April 2026, its history. That is a page.
-[click] A rule with a number: §3.3, direct orders up to £50,000 gross. A fact on that page, with its clause.
-[click] §5 names another document, POL-APR-002. D only says what it is for.
-[click] Emma's two clauses: §6.2 (UN 38.3) and §6.4 (a cheaper quote is no reason). UN 38.3 is a topic many documents share.
-[click] Things it mentions: screen FIN-CC-01, tax codes, Henrik Weber. Each could be a page that links back.
-[click] What the model wrote: 6 pages, 29 facts (22 on pol-pur-001). Its proposed `topic-tax-codes` was mapped to
-`data-tax-codes` by the build's MERGE call. Ask: did it miss anything we found? D names POL-SUP-003 but says nothing about it.
+## Start Small: One Page In
+The smallest real source in the dump: AMD-SUP-2026-02, one PDF page. It changes one rule of the Supplier Policy: from
+1 September 2026 a UN 38.3 certificate counts only if issued in the last 12 months and valid 60 days past the order.
+Read it as a careful person first. Ask: what would you write down, and where?
+[click] The amendment itself: a page about what changes, from when, and why (§1, §2).
+[click] The rule it replaces lives in another document, POL-SUP-003 §4.4. Its page should hold the old rule and the new.
+[click] UN 38.3 certificates: many documents talk about them. One topic page that every source adds to.
+[click] The senior buyer runs the monthly expiry report (§3.2): a role page.
+[click] What the model wrote, reading only this page: 5 pages, 13 facts. Our four, plus `items-bat` for the BAT-* packs
+(§3.1, "lithium-cell part"). Every fact carries a quote copied from the page; code found all 13 quotes. That is the
+whole idea of ingest: one source, several pages, because a page is about a thing, not about a file.
 
-## Ingest, Step 1: The Prompt
-One call reads all of D: 8,460 tokens in, 3,687 out, 20.7 s (this READ call is the very one from the full build, replayed
-from its recording; the request was byte-identical).
-[click] Part 1, about 2,900 tokens: the instructions and the whole of AGENTS.md.
-[click] Part 2, about 2,100 tokens: the registry, the 100 slugs that exist, so every source names things the same way.
-[click] Part 3: the source header (file, version, effective date, status today, audience).
-[click] Part 4: D itself, pages 1 to 4, 2,211 tokens. Note §6.2.
-[click] Part 5: the rules and the JSON reply format. "quote is 5 to 25 words copied exactly … it is checked by code".
-Point: more than half of the prompt is the same for every source.
+## The Wiki Is a Folder of Files
+The same run, on disk. Nothing magic: plain text files.
+Point at the tree: `index.md`, `log.md`, `pages/` (one file per page), `lists/` (pages named by a code, listed),
+`restricted/` (the HR-only index, empty here), `facts.jsonl`, `sources.jsonl`, `manifest.json`. 12 files, 5 pages,
+1,485 words, 19 links, 13 references.
+[click] `index.md`: one line per page, `[[slug]] Title: summary`, grouped by type. Every question reads it first.
+[click] `log.md`: one line per ingest (`+5 ~0`: five created, none updated) and one for the index rebuild.
+[click] A page. Its first lines are the front matter. Next slide opens it properly.
+Students may click any file.
 
-## Ingest, Step 2: The Reply
-[click] The source note: what D is, its date and status.
-[click] The pages D touches, with how many facts each.
-[click] One fact, for §6.2: the fact in the model's words, the quote in D's words, page 2, section 6.
-[click] Conflicts it noticed: v4.0 superseded; AMD-PUR-2026-03 future-dated (1 December).
+## One Page, Opened
+`pages/amd-sup-2026-02.md`, the real file (67 lines). The line numbers are the file's own; a dashed line means lines
+were skipped to fit.
+[click] Front matter: title, type, slug, summary, audience, sources, dates. Code reads it: index.md is built from the
+summaries; audience decides who may open the page.
+[click] The lead: what it is, what matters today.
+[click] Sections: fixed by the page type in AGENTS.md. For a policy, one `###` per clause, then Versions and conflicts,
+See also, References. (The infobox appears twice in this file, once from the renderer and once from the model: a real
+slip, harmless.)
+[click] Links: `[[pol-sup-003|POL-SUP-003]]`, like a blue link. This is what the reader follows at query time.
+[click] Citations: `[^r2]` ends the sentence; References line 61 turns it into the PDF, page 1, §1. Every sentence can be
+checked by eye against the source.
 
-## Ingest, Step 3: The Quote Check
-No model: a string search in code.
-[click] Both sides normalised: lower case, no spaces, plain quotes.
-[click] Found on page 2. Verified.
-[click] A real miss on D: the quote for pol-apr-002 joins §5.1 and §5.2, but D prints "5.2" between them. Not found.
-[click] 27 of 29 verified on D; 12,018 of 12,095 in the full build. The check marks a fact; it does not delete it.
-pol-apr-002 was still written from its two unverified facts; lint lists such references later.
+## Ingest, Step by Step
+Four steps. Two are model calls, two are plain code.
+[click] 1, Read: one call gets the instructions with AGENTS.md, the list of page names that already exist, and the whole
+page. 6,552 tokens in, 2,443 out, 14.5 s. The list of names is why two sources about one thing land on one page.
+[click] 2, Decide: the same reply is JSON: the pages, and facts for each with a quote. Code checks every quote is in the
+page: 13 of 13. A small second call (1,143 tokens) checks new names against old ones: nothing merged.
+[click] 3, Write: one call per page, five calls side by side, 7.8 s. The writer sees that page's facts with keys, never
+the source: so every sentence it writes can cite.
+[click] 4, List and log: code rebuilds index.md from the summaries and appends one line to log.md.
+[click] In all: 7 calls, 25,846 tokens in, 5,315 out, $0.043, 25.0 s of model steps, for one page. (Parsing and loading
+the registry of names took another 38.5 s; not shown.)
 
-## Ingest, Step 4: The Written Page
-One more call per page (6 here). The writer sees the numbered facts, never D.
-[click] The lead's last sentence: keys r2, r16, r20 lead to the version history, §6.2 and §7.2.
-[click] §3.3 sentence → r6 → "£50,000 or less".
-[click] §6.2 sentence → r16 → the quote we just checked.
-[click] §6.4 sentence → r18 → "does not by itself justify a change of supplier". Emma's rule, traced by eye.
-Students may click any sentence.
+## Step Up: D Becomes Six Pages
+D, the Purchase Policy from the RAG sections: four pages, nine sections. Same ingest, 8 calls, $0.055.
+[click] The policy's own page, `pol-pur-001.md`, takes 22 of the 29 facts, from every section but §1.
+[click] The five things D names or mentions get their own pages: the approval matrix (§5), UN 38.3 certificates (§6), the
+tax codes (§8), screen FIN-CC-01 (§4), Henrik Weber (the header). The model proposed `topic-tax-codes`; the build's name
+check mapped it to `data-tax-codes`. Note: D names POL-SUP-003 (§6.3) but says nothing about it, so no page yet.
+[click] index.md for these six: this is all the reader sees first.
 
-## Links, index.md and log.md
-[click] index.md: one line per page, rebuilt after every ingest, read first by every query. Screens and people appear as one
-slug-rule line each.
-[click] log.md: one line per ingest, created and updated counts, and the slugs.
+## The Amendment Joins D's Wiki
+Now the amendment arrives in D's six-page wiki (4 Nov run).
+[click] Nine pages: 3 new (`amd-sup-2026-02`, `pol-sup-003`, `role-pur-senior-buyer`), 1 rewritten
+(`topic-un-38-3-certificates`), 5 unchanged. 5 calls, 25.0 s, $0.038. `pol-pur-001.md` was not touched: its §6 still has
+no link to the amendment. Ask: is that a problem? (It is the "stale" risk.)
+[click] The topic page's lead, before and after: the 12-month and 60-day rule is now written in. The before text says
+"blocking order creation": remember it for the failure slide.
+[click] log.md: one new line, `+3 ~1`.
+Note the names: ingested alone, the amendment's role page was `role-pur-sr`; inside D's wiki it is
+`role-pur-senior-buyer`. The name depends on what the registry and the model saw; the merge call keeps a wiki
+consistent with itself, not across separate builds.
 
-## A Second Source Arrives
-AMD-SUP-2026-02: from 1 September 2026 a UN 38.3 certificate must be under 12 months old and valid 60 days past the order.
-[click] The update reads it (1 call) and touches 4 pages: 1 updated, 3 created.
-[click] The diff, infobox and lead: the new rule enters the lead (12 months, 60 days).
-[click] New paragraphs and "Versions and conflicts": the 24-month rule is now the older rule.
-[click] Links and references to the amendment.
-[click] The log line. Note "Today's rule (superseded)" in the page: a label slip by the model, visible in the diff.
+## Query, Step by Step
+The animation plays by itself when the slide opens (about 21 s a loop). Click to step: six clicks.
+GIF for sharing and the notes: `v5/img/wiki/wiki_nav.gif` (892 × 478, about 60 frames, 21.5 s a loop, 0.75 MB), rendered by `experiments/v5_wiki_nav_gif_modal.py`.
+![One question through the wiki](img/wiki/wiki_nav.gif)
+A real run (6 Nov) on the nine-page wiki, question S-4: "How old may a UN 38.3 certificate be when we order lithium-cell
+parts, and who checks it?"
+[click] Read index.md. Turn 1: 946 tokens in, 2.2 s. The reply opens three pages at once: the UN 38.3 topic, the
+amendment, POL-SUP-003. Their index lines light up.
+[click] Open the page: `topic-un-38-3-certificates.md`. The 12-month, 60-day rule is in its lead. The two other pages are
+the cards behind it.
+[click] On that page, a link: `[[role-pur-senior-buyer|senior buyer]]`, next to the monthly expiry report. The question
+also asked who checks it. Turn 2 (3,598 tokens, 2.1 s): open that page (and `pol-pur-001`).
+[click] Follow the link: `role-pur-senior-buyer.md`, line 26, the monthly report with a 90-day window.
+Turn 3 (6,227 tokens, 2.6 s): done.
+[click] The answer call: five pages in, 4,226 tokens, 6.8 s. It cites [1] [2] [3] [5]. The orange line: "Ledgerline ERP
+automatically enforces order blocking", repeated from the topic page's infobox, which was wrong at ingest (failure 2).
+[click] The citation: [5] is the role page, its `[^r1]` is the amendment PDF, page 1, §3, and clause 3.2 says exactly
+that. Every hop can be checked.
+Total: 3 reader calls (10,771 tokens, 6.8 s of model time) plus the answer call. The other three runs are in the log:
+S-1 (18-month-old certificate) opened the amendment and its two linked pages and said no; S-3 (cheaper quote) found
+POL-PUR-001 §6.4; S-2 (Emma's Brightcell question) answered "NOT IN THE DOCUMENTS": D and the amendment never mention
+Brightcell, so on this small wiki that is the honest answer.
 
 ## The Same Change in RAG
 [click] RAG: parse 51 ms, 3 chunks (142, 247, 165 tokens), no model call; BM25 over all 28,953 chunks rebuilds in 4.86 s.
-[click] But RAG reconciles nothing: the POL-SUP-003 chunk with "24 months" stays next to the new one. The answer step must work
-out which rule wins, on every question. The wiki did that work once.
+[click] But RAG reconciles nothing: the POL-SUP-003 chunk with "24 months" stays next to the new one. The answer step must
+work out which rule wins, on every question. The wiki did that work once, at ingest.
 
-## The Rules It Followed: AGENTS.md
-Five lines of the schema, each next to what it produced. [click] per rule: slugs from codes (both sources landed on one page);
-page layout (lead, infobox, one `###` per clause); citations on every sentence; newer replaces older, recorded under
-Versions and conflicts; the log line format. [click] All together.
+## Where It Fails
+Three, each from our runs.
+[click] 1, never written down: Q-104, "the screen hangs after Save". The manual's page 13 has the answer; the ingest took
+89 facts from that manual and none from page 13. The wiki said NOT IN THE DOCUMENTS; RAG found the paragraph.
+[click] 2, written wrong once, read wrong every time: the UN 38.3 page's infobox says "Ledgerline order blocking", with no
+citation, so the quote check never saw it. The answer we just watched repeated it. Ledgerline does not block:
+RN-7.2.3-P4 says the check is "controlled by parameter PUR.CERT_CHK (default N)", and the change board kept it N.
+[click] 3, the reader stops early: Emma's question on the full 683-page wiki read index.md and three pages and stopped
+after 2 calls; its reason names AMD-SUP-2026-02, which it never opened. Six must-contain facts missing.
+[click] Lint finds broken citations, orphans and stale rules; it cannot see these three. Only the golden set does.
+Also true, if asked: the wiki is as new as its last ingest (stale); exact error codes get paraphrased (Q-726).
 
-## Query, Call by Call
-The full wiki, the race's recorded run (replayed). Click any bar segment to see the text.
-Call 1: system 449, index.md 7,987, question 16 tokens (9,716 billed). Reply: open three pages.
-[click] Call 2: the short index, its own reply, three whole pages (13,720). Reply: done.
-[click] The answer call: the three pages as sources [1] to [3] (5,002).
-[click] Missing from the answer: six must-contain facts. Keep this for two slides.
-
-## Chunks or Pages
-[click] RAG: 10 chunks, 2,368 tokens, one call. Six chunks come from the four files behind the Brightcell page.
-[click] The wiki: 28,438 tokens in three calls, drawn to the same scale.
-The multi-hop advantage: one page already joins a meeting and three e-mails (the coloured squares). The join was done once.
-
-## Where It Fails: Never Compiled
-Q-104, "the screen hangs after Save". The manual's §19.4 on page 13 has the answer.
-[click] The ingest took 89 facts from that manual, none from page 13. No page says "do not press Save again"; the wiki answered
-NOT IN THE DOCUMENTS. [click] RAG found the paragraph in the raw manual.
-
-## Where It Fails: Wrong at Compile Time
-Left, our one-source wiki: the UN 38.3 page says "System enforcement: Ledgerline order blocking". Ledgerline does not block
-(PUR.CERT_CHK default N; the change board kept it N). The quotes behind the lead passed the check; the infobox has no key.
-The full build, which read RN-7.2.3-P4 and the CAB minutes, wrote it correctly.
-[click] Right, the full wiki: the IT Security Policy page was filed HR-only because the HR folder's README also names
-POL-ITS-008 and the registry met it there first. A build-code error, not the model's. Staff never see "12 characters,
-60 days"; Q-609 failed; lint reported nothing on that page.
-
-## Where It Fails: Stale Until Re-ingested
-Before the update, the page had no 12-month window. [click] After, only touched pages changed: pol-pur-001 was not touched
-and still has no link to the amendment. [click] Staleness is a schedule: RAG re-chunks for free, the wiki pays per update.
-
-## Where It Fails: Cost and Time of Ingest
-D alone: 8 calls, 32,052 tokens in, 32.7 s, $0.055. The amendment: 5 calls, 25.0 s, $0.038. The full build: 1,752 calls,
-12.7 million tokens in, about 11 minutes on 40 workers, $22.61. [click] RAG: no model, 14.63 s chunking + 4.86 s BM25 for
-everything. [click] Cost grows with the documents, not with the questions.
-
-## Where It Fails: Stopped Early, Dropped Facts
-Index, three pages, done after 2 calls; its reason names AMD-SUP-2026-02, which it never opened.
-[click] The six missing facts, one by one: NBC-F-112, £119.00 and PUR.CERT_CHK were only on pages never opened.
-12 months, 60 days and £104.00 were in the answer call's context (pol-sup-003, sup-brightcell-energy) and the answer left
-them out. Two failures in one run.
-[click] Multi-hop, answer correct: RAG 71%, wiki navigation 67%, hybrid 71%, sections only 33%.
-
-## Where It Fails: Exact Codes
-Q-726, ERR-CRD-0207. The source says "CREDIT LIMIT EXCEEDED (<cust_cd>)"; the page rewrote it as "Customer Credit Limit
-Exceeded" and "credit ceiling". The answer missed the exact message. Also index.md lists the 98 error pages as one line.
-[click] Exact-code questions: recall@5 RAG 1.00, wiki 0.52; answer correct 93% vs 85%.
-
-## Lint: The Wiki Checks Itself
-1,073 findings in 59 s; 31 of the 40 planted problems found. On Emma's pages: the citation_not_found on the UN 38.3 page
-(r35 is a 62-word quote), the orphan Brightcell page, the superseded rule recorded.
-[click] Lint can fix citations, orphans, stale and contradictory claims. [click] It cannot see a fact that never reached a page,
-a page filed under the wrong audience, or a reader that stops early. For those we need the golden set.
-
-## The Wiki, Measured
-Per question on the race's 224: 2.54 navigation calls before the answer, retrieval 6.4 s p50 / 23.4 s p95, $0.0322 a question
-(RAG: 44 ms, $0.0046). [click] Quality on the same metrics: recall@5 0.86 vs 0.89, answer correct 89.3% for both, citation
-correct 85.9% vs 92.2%. [click] The same test as RAG, step by step; Emma's question through it is what we watched.
-
-## Where the Wiki Lives
-[click per card] Files: a git repository of markdown; for production, every ingest is a commit someone reviews. Search: 2,520
-sections with the same BM25 and bge-small, 1.2 ms p50, so "hybrid" can start from a search. Permissions: one audience per
-page; the page is the unit of permission, so one wrongly filed page hides all of it.
+## What It Costs, Measured
+Left: ingest, before any question. The amendment alone 7 calls, 25.0 s, $0.043; D alone 8 calls, $0.055; all 693 files
+1,752 calls, about 11 minutes on 40 workers, 12.7 million tokens in, $22.61. RAG: 0 calls, 19.5 s to chunk and index
+everything.
+[click] Right, at every question (the race's 224): the wiki makes 2.54 reader calls before the answer, 6.4 s median to
+find the text, $0.0322 a question; RAG 0 calls, 44 ms, $0.0046.
+[click] And the answers: 89.3% correct for both; right source in the top 5: 0.86 vs 0.89; citation correct 85.9% vs
+92.2%. Same quality on average, paid at a different time.
 
 ## Ask the class · An amendment lands at 9:00; Emma asks at 9:05
-Expected answer: 4, it depends on when each memory was refreshed. RAG knows if the file was re-chunked (free, seconds); the
-wiki knows if the update ran (model calls, a review). Neither knows by itself.
+Expected answer: 4, it depends on when each was refreshed. RAG's store knows if the file was re-chunked (free, seconds);
+the wiki knows if the ingest ran (model calls, and in production a review of the diff). Neither knows by itself.
 
 ## Check · Section 7
-[click] 1: Yes. The check tests quotes, not sentences; infobox lines have no key. "Ledgerline order blocking".
-[click] 2: Yes, the model saw them (pol-sup-003, source [2]) and the answer left them out; three other facts were never opened.
-[click] 3: The wiki rewrites pages (5 calls, 25 s, $0.038); RAG re-cuts the file (3 chunks, about 50 ms) and reconciles at
-question time.
+[click] 1: A page per thing it talks about: the amendment, the rule it replaces, the topic, the role, the item family.
+[click] 2: The question asked who checks; the topic page links the senior buyer next to the expiry report; the answer
+cites it as [5].
+[click] 3: The check tests quotes, not every line; the infobox line had no citation and was wrong at ingest.

@@ -6,7 +6,8 @@ Sources: logs/v5_store_local.json (Chroma, v5_store_local.py), logs/hnsw_check.j
 logs/v5_store_research.json (the 4 Nov 2026 survey), logs/v5_store_ingest.json + logs/v5_store_cloud.json (Qdrant Cloud,
 v5_store_cloud.py), logs/v5_store_selfhost.json (the same script against a self-hosted Qdrant on Modal), logs/v5_store_latency.json
 (v5_store_latency.py: latency parts, round-trip levers, payload facts, Q-605 filter demo), logs/v5_lexical_rerank_latency.json
-(the reranker's time), and the dump's eval/questions.jsonl + facts.jsonl (what each Q-605 source says).
+(the reranker's time), the dump's eval/questions.jsonl + facts.jsonl (what each Q-605 source says), and logs/v5_lexical.json
+(rag.tokenize word lists: how many chunks hold each of Emma's words, for the inverted-index line).
 """
 import json
 import pathlib
@@ -84,6 +85,21 @@ def slim_latency(r):
     return r
 
 
+def invindex():
+    """For a few of Emma's words: the chunks that contain each (an inverted index's lists), from logs/v5_lexical.json
+    (rag.tokenize over the whole dump, df_all; and over D's 15 chunks, tf_D). No number typed here."""
+    lx = load("v5_lexical.json")
+    if not lx:
+        return None
+    rows = []
+    for w in ("brightcell", "£104", "quote", "battery"):
+        d = lx["df"].get(w)
+        if d:
+            rows.append({"word": w, "n_all": d["df_all"], "in_D": [i for i, v in enumerate(lx["tf_D"].get(w, [])) if v]})
+    return {"n_all": lx["n_all"], "chunking": lx["chunking"], "rows": rows,
+            "q_tokens": lx["tok"]["Q"]["tokens"] if "tok" in lx else None}
+
+
 def main():
     local = load("v5_store_local.json")
     if local:  # derived views of the HNSW headers (no new numbers): D's one segment, the dump's main segment
@@ -106,6 +122,7 @@ def main():
         "latency": slim_latency(load("v5_store_latency.json")),
         "rerank": load("v5_lexical_rerank_latency.json"),
         "q605_says": q605_says(),
+        "invindex": invindex(),
         "q605_amounts": list(dict.fromkeys(v.split()[0] for v in (q605_says() or {}).values())),
         "shots": sorted(p.name for p in (V5 / "img" / "store").iterdir() if p.suffix in (".png", ".jpg")) if (V5 / "img" / "store").exists() else [],
     }

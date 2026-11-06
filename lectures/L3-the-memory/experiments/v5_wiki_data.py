@@ -404,6 +404,8 @@ def main(facts_path):
                       "   and the course's recorded logs. Do not edit by hand. */\nwindow.L3V5 = window.L3V5 || {};\nwindow.L3V5.wiki = "
                       + json.dumps(data, ensure_ascii=False) + ";\n")
     print("wrote", OUT_JS, OUT_JS.stat().st_size, "bytes;", LOGS / "v5_wiki_failures.json")
+    import v5_wiki_simple_data  # the 6 Nov rework's data (window.L3V5.wiki.simple), appended to the same file
+    v5_wiki_simple_data.main()
 
 
 if __name__ == "__main__":
