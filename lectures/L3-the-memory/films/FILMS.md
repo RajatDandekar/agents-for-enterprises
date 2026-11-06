@@ -1,6 +1,6 @@
-# Lecture 3 films (The Memory)
+# Lecture 3 films (The Knowledge)
 
-These are three narrated Blender Cycles films for Lecture 3, "The Memory: RAG and the LLM Wiki". They follow the same running example as the slides: Emma Clarke at Northbridge Cycles, on Ledgerline, with the real Northbridge documentation dump.
+These are three narrated Blender Cycles films for Lecture 3, "The Knowledge: RAG and the LLM Wiki". They follow the same running example as the slides: Emma Clarke at Northbridge Cycles, on Ledgerline, with the real Northbridge documentation dump.
 
 - **Where they play.** Each film plays at the **end** of its section, as the recap after the theory.
 - **Where the numbers come from.** Every number, cite and line of text on screen is read at build time from `build/data/l3_data.json`. `build/make_data.py` writes that file from these sources:

@@ -1,9 +1,9 @@
-# Lecture 3 · The Memory: retrieving from Northbridge's documents · speaker notes (v4, Northbridge)
+# Lecture 3 · The Knowledge: retrieving from Northbridge's documents · speaker notes (v4, Northbridge)
 
 Sat 7 Nov 2026, 7:00–9:00 AM IST. 101 slides. Plate titles are given below so you can find a slide in the deck.
 `[click]` = one step. Dr. Rajat Dandekar presents.
 
-**The one idea.** A model knows nothing about Northbridge. Its memory is what we let it find, in under a second, with
+**The one idea.** A model knows nothing about Northbridge. What it knows of Northbridge is what we let it find, in under a second, with
 the document named. Decide the metrics first, then measure both methods on the same golden set, and let the numbers pick.
 
 **The rhythm** (as L2 and L4): part slide → teach → the section's own question (30 s, one line in the chat) → the film,
@@ -83,7 +83,7 @@ Re-run `python3 gen_figdata.py` after any experiment or NB3 run.
 ## 5 · Paste everything? (about 5 minutes)
 
 - **The Whole Dump Against the Windows.** `[click]` the windows, `[click]` without transactions. Nothing fits.
-- **A Measured Sample.** 12 of 12 right, 44 s, 740k tokens, $0.61 a question. A big window is not a memory.
+- **A Measured Sample.** 12 of 12 right, 44 s, 740k tokens, $0.61 a question. A big window is not a library.
 - **Check.** $0.61 × 224 ≈ $138 a day.
 
 ## 6 · RAG from scratch (about 25 minutes)
@@ -152,7 +152,7 @@ Re-run `python3 gen_figdata.py` after any experiment or NB3 run.
 - **The Decision.** `[click]` through `race.json → decision`. The cascade is the measured next step, not shipped.
 - **Film 3 (`race`) → Check.** Back to the opening bet and the Section 4 question.
 
-## 9 · Ask Northbridge remembers (about 7 minutes)
+## 9 · Ask Northbridge looks it up (about 7 minutes)
 
 - **The Winner as a Tool.** `search_docs/tool.json`: description, input, output with `withheld`. Lecture 4 opens tools
   properly.

@@ -1,4 +1,4 @@
-"""Lecture 3, The Memory: giving Ask Northbridge knowledge. Helpers shared by the L3 deck experiments and NB3.
+"""Lecture 3, The Knowledge: giving Ask Northbridge knowledge. Helpers shared by the L3 deck experiments and NB3.
 
     from ledgerline.course import l3
     r = l3.retriever("ECLARKE")                     # Emma's index: BM25 + embeddings + reranker, L3's own caches

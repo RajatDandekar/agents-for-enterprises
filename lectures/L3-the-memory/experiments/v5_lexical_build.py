@@ -127,7 +127,7 @@ print("wrote", OUT, f"{OUT.stat().st_size / 1024:.0f} KB")
 V5 = HERE.parent / "v5"
 idx = (HERE.parent / "index.html").read_text()
 head = idx[: idx.index('<div class="deck" id="deck">')].replace('href="../../engine/', 'href="../../../engine/').replace('href="l3.css"', 'href="../l3.css"')
-head = head.replace("</head>", '<link rel="stylesheet" href="lexical.css">\n</head>').replace("<title>Lecture 3 · The Memory</title>", "<title>Lecture 3 · The Memory · lexical preview</title>")
+head = head.replace("</head>", '<link rel="stylesheet" href="lexical.css">\n</head>').replace("<title>Lecture 3 · The Knowledge</title>", "<title>Lecture 3 · The Knowledge · lexical preview</title>")
 tail = idx[idx.index('<script src="figdata.js">'):]
 tail = (tail.replace('src="figdata.js"', 'src="../figdata.js"').replace('src="figs.js"', 'src="../figs.js"').replace('src="figs2.js"', 'src="../figs2.js"')
         .replace('<script src="../../engine/plates.js">', '<script src="lexical_data.js"></script>\n<script src="lexical.js"></script>\n<script src="../../../engine/plates.js">'))

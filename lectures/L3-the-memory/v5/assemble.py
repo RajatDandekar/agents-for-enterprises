@@ -83,7 +83,7 @@ BLURB = {"The documents": "Henrik’s letter, then his repository", "The audit":
          "Where the vectors live": "Chroma on disk, Qdrant in production · film",
          "RAG from scratch": "Parse, chunk, BM25, embeddings, rerank · film",
          "The LLM Wiki": "Karpathy’s idea, built for Northbridge · film", "The race": "Same 224 questions, four methods · film",
-         "Ask Northbridge remembers": "The winner, live, as a tool", "Any domain": "Twelve rules; pharma, healthcare, banking, legal",
+         "Ask Northbridge looks it up": "The winner, live, as a tool", "Any domain": "Twelve rules; pharma, healthcare, banking, legal",
          "NB3 and A3": "Replicate the class, then your own domain"}
 WORD = {11: "Eleven", 12: "Twelve", 13: "Thirteen", 14: "Fourteen", 15: "Fifteen", 16: "Sixteen"}
 cards = "\n".join(f'    <div class="card{" fl" if "film" in BLURB.get(nm, "") else ""}"><b>{n} · {nm}</b>{BLURB.get(nm, "")}</div>'

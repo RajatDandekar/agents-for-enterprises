@@ -1,4 +1,4 @@
-# Lecture 3 v4: The Memory. The art of retrieving from Northbridge's documents
+# Lecture 3 v4: The Knowledge. The art of retrieving from Northbridge's documents
 
 Rajat's brief (3 Nov 2026), summarised:
 - The lecture is mostly about retrieving information from documents.
@@ -41,7 +41,7 @@ Rajat's brief (3 Nov 2026), summarised:
    - the three layers (raw sources, the wiki, the schema) and the three operations (ingest, query, lint);
    - building Northbridge's wiki and following the chain of one query.
 8. **The race** on the agreed metrics: RAG (best setting), LLM Wiki, hybrid (retrieval over wiki pages) and paste-everything.
-9. **Ask Northbridge gets its memory:** the winning method goes behind `?stage=knowledge`, live. Emma's question is answered with citations.
+9. **Ask Northbridge gets its knowledge:** the winning method goes behind `?stage=knowledge`, live. Emma's question is answered with citations.
 10. **Guidelines** for any domain (pharma, healthcare, banking, legal), then NB3, A3 and Lecture 4.
 
 **The running example:** Emma: *"Can I buy the battery packs from Brightcell Energy? They quote £104."* The answer needs several documents:

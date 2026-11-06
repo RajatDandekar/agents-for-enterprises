@@ -7,7 +7,7 @@
 (() => {
 const FIGS = (window.FIGS = window.FIGS || {});
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const LEC = { 1: 'The Before and the After', 2: 'The Brain', 3: 'The Memory', 4: 'The Hands', 5: 'The Loop', 6: 'The Studio', 7: 'Trust',
+const LEC = { 1: 'The Before and the After', 2: 'The Brain', 3: 'The Knowledge', 4: 'The Hands', 5: 'The Loop', 6: 'The Studio', 7: 'Trust',
   8: 'Agent Frameworks in Industry', 9: 'Protocols and Integration', 10: 'Observability and Evals', 11: 'Running Agents in Production', 12: 'Your Module' };
 /* box = [left, top, right, bottom] as fractions of the image */
 const LAYERS = {

@@ -1,4 +1,4 @@
-/* Live figures for Lecture 3 · The Memory (v4), part 2: the LLM Wiki and the race. Loaded after figs.js, before plates.js.
+/* Live figures for Lecture 3 · The Knowledge (v4), part 2: the LLM Wiki and the race. Loaded after figs.js, before plates.js.
    Same rule: every number and every line of text comes from window.L3 (figdata.js). */
 (() => {
 const FIGS = window.FIGS;

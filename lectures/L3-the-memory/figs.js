@@ -1,4 +1,4 @@
-/* Live figures for Lecture 3 · The Memory (v4, Northbridge), part 1: the opener, the dump, the questions, the metrics
+/* Live figures for Lecture 3 · The Knowledge (v4, Northbridge), part 1: the opener, the dump, the questions, the metrics
    and RAG. Loaded BEFORE plates.js. Every number, passage and line of code comes from window.L3 (figdata.js, written by
    gen_figdata.py from experiments/logs, the dump's golden set and the wiki). Nothing is typed in here by hand.
    Each FIGS.<name>(el) returns { step(k) }, k = the number of .step elements shown on the slide. */

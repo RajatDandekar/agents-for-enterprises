@@ -1,4 +1,4 @@
-"""Props for the Lecture 3 films ("The Memory"), on the shared series kit (l2kit) and the L4 props (props_l4: the model
+"""Props for the Lecture 3 films ("The Knowledge"), on the shared series kit (l2kit) and the L4 props (props_l4: the model
 machine, capsules, result slabs, rails, conduits, the padlock). All readable text stays 2D (overlay.py).
 
   vitrine       a glass display case on a machined base, holding a stack of sheets as tall as its real token count

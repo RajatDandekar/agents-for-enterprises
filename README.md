@@ -14,7 +14,7 @@ One story runs through the whole course:
 |---|---|---|
 | 1 | Sat 31 Oct | The Before and the After |
 | 2 | Sun 1 Nov | The Brain: how an LLM works |
-| 3 | Sat 7 Nov | The Memory: giving it knowledge |
+| 3 | Sat 7 Nov | The Knowledge: retrieving from the documents |
 | 4 | Sun 8 Nov | The Hands: tools and MCP |
 | 5 | Sat 14 Nov | The Loop: what makes it an agent |
 | 6 | Sun 15 Nov | The Studio: workflows and your own agents |

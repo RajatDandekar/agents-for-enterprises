@@ -1,5 +1,5 @@
 # %% [markdown]
-# # NB3 · The Memory: retrieving from Northbridge's documents
+# # NB3 · The Knowledge: retrieving from Northbridge's documents
 #
 # **Agentic Systems Engineering · Lecture 3 · Vizuara · Dr. Rajat Dandekar**
 #
