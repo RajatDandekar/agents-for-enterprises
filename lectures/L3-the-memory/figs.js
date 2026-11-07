@@ -98,9 +98,15 @@ FIGS.film = (el) => {
 
 /* ======================= a live page in a frame (the RAG Lab, the Wiki Explorer) ======================= */
 FIGS.frame = (el) => {
-  const url = el.dataset.url, label = el.dataset.label || url;
-  el.innerHTML = `<iframe src="${esc(url)}" title="${esc(label)}" loading="lazy" style="position:absolute;inset:0 0 58px 0;width:100%;height:calc(100% - 58px);border:0;border-radius:18px;background:#fff;box-shadow:var(--shadow)"></iframe>
+  const url = el.dataset.url, label = el.dataset.label || url, poster = el.dataset.poster;
+  // A live app that sleeps between classes takes a while to wake: show its still (or a note) until the page has loaded.
+  const box = 'position:absolute;inset:0 0 58px 0;width:100%;height:calc(100% - 58px);border:0;border-radius:18px;box-shadow:var(--shadow)';
+  el.innerHTML = `<div class="frame-wait" style="${box};background:#fff ${poster ? `url('${esc(poster)}') center/cover` : ''};overflow:hidden">
+      <span style="position:absolute;right:16px;bottom:14px;padding:8px 16px;border-radius:999px;background:rgba(255,255,255,.92);font-size:16px;color:var(--ink-2);box-shadow:var(--shadow)">Waking the live app… about a minute after it sleeps</span></div>
+    <iframe src="${esc(url)}" title="${esc(label)}" loading="lazy" style="${box};background:#fff;opacity:0;transition:opacity .5s"></iframe>
     <div class="ctl" style="position:absolute;left:0;bottom:0;margin:0"><a class="live" href="${esc(url)}" target="_blank" rel="noopener">Open in a new tab <code>${esc(label)}</code></a></div>`;
+  const fr = el.querySelector('iframe');
+  fr.addEventListener('load', () => { fr.style.opacity = 1; el.querySelector('.frame-wait span').remove(); });
   el.querySelector('a').addEventListener('click', stop);
   return { step() {} };
 };

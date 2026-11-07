@@ -149,7 +149,7 @@ Re-run `python3 gen_figdata.py` after any experiment or NB3 run.
 - **ERR-PO-0412, Four Answers.** RAG, navigation and hybrid give the -RC fix; sections-only misses VAT20-RC.
 - **Was It the Word Cap?** 150 → 250 words moved scores by under 1.5 points. Retrieval is the bottleneck.
 - **The Withheld Notice.** Permission questions 50% → 90% for RAG.
-- **The Decision.** `[click]` through `race.json → decision`. The cascade is the measured next step, not shipped.
+- **The Decision.** RAG against the wiki hybrid, row by row (`race.json → overall, update_cost`); `[click]` per row, then the verdict, then the cascade. RAG wins five of six rows (search, time, cost, update, citations 92.2% vs 91.7%); the hybrid wins answer correct (92.9% vs 89.3%, about 8 of 224) at 1.9× the p95 wait and 5.3× the cost. The cascade is measured, not shipped.
 - **Film 3 (`race`) → Check.** Back to the opening bet and the Section 4 question.
 
 ## 9 · Ask Northbridge looks it up (about 7 minutes)
@@ -161,16 +161,18 @@ Re-run `python3 gen_figdata.py` after any experiment or NB3 run.
 - **Try It Live.** Open the link; ask one question from the class. Expect 10–30 s on the first question.
 - **Check.**
 
-## 10 · Any domain (about 6 minutes)
+## 10 · Your assignment (about 6 minutes)
 
-- **Twelve Rules.** `[click]` ×10. Each is a step from today.
-- **Four Domains.** Pharma, healthcare, banking, legal: what you must never get wrong in each. `[click]` ×3.
-- **Ask the class.** Their domain's most common question type.
+(7 Nov review: "focus only on the assignment and explain it". The Twelve Rules became the capstone guidelines slide after
+the vector store; Four Domains, the NB3 overview and the two NB3 cell slides are gone. NB3 is introduced as A3's starting
+point.)
 
-## 11 · NB3 and A3 (about 5 minutes)
-
-- **NB3.** Ten sections; runs on Colab with no key; clones `northbridge-docs`.
-- **NB3 · Section 6** and **NB3 · Section 8.** The exact cells, then their output from our run (CPU machine, fresh
-  clone). `[click]` shows the output.
-- **A3.** Four graded parts (2 + 3 + 3 + 2) and the domain transfer. Due before Lecture 5.
+- **A3 at a Glance.** The five parts as one bar (2 + 3 + 3 + 2 points, Part 5 feedback only). `[click]` Start from NB3:
+  Colab, no key, every call replays. `[click]` Spend under US$3, only for new calls (wiki ingest, answers, judge), printed
+  at the top of RAG.md. `[click]` One folder. `[click]` We grade measured numbers, replayed or live, said which.
+- **A3 · Parts 1 and 2.** Each card: what to do, which NB3 sections help, and "done when". `[click]` for Part 2.
+  Everything is from A3.md.
+- **A3 · Parts 3 and 4.** The same layout. Part 3's update question ties back to The Same Change in RAG.
+- **A3 · Part 5, Your Domain.** 20 questions, 10 reference answers, 1 run of their winner. This is where the capstone
+  starts; point back to the six capstone steps.
 - **Next time: The Hands.**

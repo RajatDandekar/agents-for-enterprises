@@ -1,6 +1,6 @@
 # Lecture 3 · The Knowledge: retrieving from Northbridge's documents · speaker notes (v4, Northbridge)
 
-Sat 7 Nov 2026, 7:00–9:00 AM IST. 182 slides. Plate titles are given below so you can find a slide in the deck.
+Sat 7 Nov 2026, 7:00–9:00 AM IST. 179 slides. Plate titles are given below so you can find a slide in the deck.
 `[click]` = one step. Dr. Rajat Dandekar presents.
 
 **The one idea.** A model knows nothing about Northbridge. What it knows of Northbridge is what we let it find, in under a second, with
@@ -1048,6 +1048,13 @@ Sources: `logs/v5_store_latency.json` (`default_region`, `eu`: first pass; `suit
 pass with the same payload on every call). Note: server-side RRF and our `rag.rrf` gave the same top 10 for 13 of 30
 questions (ties and pool order differ); recall on the golden set is what we compared, not identical lists.
 
+
+### Your Capstone: The Guidelines
+Added on the 7 Nov review: what students should do in their capstone. `[click]` per step. Every number is from this
+lecture: the winner (structured parser, structure-aware 200-token chunks, BM25 + reranker) recall@5 0.893, search p95
+48 ms (race.json, A3.md); region 93.9 → 14.0 ms (v5_store_latency.json). It replaces the old "Twelve Rules" slide, which
+is gone from the closing section; the six steps are the same rules, grouped.
+
 ### Ask the class · Who should add Emma’s filter?
 Answer: 3, the search service, from the signed-in user’s role. Never the model (a prompt can be talked out of it), and not a
 parameter the agent chooses.
@@ -1194,7 +1201,8 @@ Brightcell, so on this small wiki that is the honest answer.
 work out which rule wins, on every question. The wiki did that work once, at ingest.
 
 ### Where It Fails
-Three, each from our runs.
+Three failures we caught, each checked against experiments/logs/v5_wiki_failures.json (never_compiled, wrong_compile,
+stops_early). Not the only ones: the footer names stale pages and paraphrased codes (exact_codes: recall@5 0.52 vs 1.0, n = 27).
 [click] 1, never written down: Q-104, "the screen hangs after Save". The manual's page 13 has the answer; the ingest took
 89 facts from that manual and none from page 13. The wiki said NOT IN THE DOCUMENTS; RAG found the paragraph.
 [click] 2, written wrong once, read wrong every time: the UN 38.3 page's infobox says "Ledgerline order blocking", with no
@@ -1240,7 +1248,7 @@ cites it as [5].
 - **ERR-PO-0412, Four Answers.** RAG, navigation and hybrid give the -RC fix; sections-only misses VAT20-RC.
 - **Was It the Word Cap?** 150 → 250 words moved scores by under 1.5 points. Retrieval is the bottleneck.
 - **The Withheld Notice.** Permission questions 50% → 90% for RAG.
-- **The Decision.** `[click]` through `race.json → decision`. The cascade is the measured next step, not shipped.
+- **The Decision.** RAG against the wiki hybrid, row by row (`race.json → overall, update_cost`); `[click]` per row, then the verdict, then the cascade. RAG wins five of six rows (search, time, cost, update, citations 92.2% vs 91.7%); the hybrid wins answer correct (92.9% vs 89.3%, about 8 of 224) at 1.9× the p95 wait and 5.3× the cost. The cascade is measured, not shipped.
 - **Film 3 (`race`) → Check.** Back to the opening bet and the Section 4 question.
 
 ## 13 · Ask Northbridge looks it up (about 7 minutes)
@@ -1252,16 +1260,18 @@ cites it as [5].
 - **Try It Live.** Open the link; ask one question from the class. Expect 10–30 s on the first question.
 - **Check.**
 
-## 14 · Any domain (about 6 minutes)
+## 14 · Your assignment (about 6 minutes)
 
-- **Twelve Rules.** `[click]` ×10. Each is a step from today.
-- **Four Domains.** Pharma, healthcare, banking, legal: what you must never get wrong in each. `[click]` ×3.
-- **Ask the class.** Their domain's most common question type.
+(7 Nov review: "focus only on the assignment and explain it". The Twelve Rules became the capstone guidelines slide after
+the vector store; Four Domains, the NB3 overview and the two NB3 cell slides are gone. NB3 is introduced as A3's starting
+point.)
 
-## 15 · NB3 and A3 (about 5 minutes)
-
-- **NB3.** Ten sections; runs on Colab with no key; clones `northbridge-docs`.
-- **NB3 · Section 6** and **NB3 · Section 8.** The exact cells, then their output from our run (CPU machine, fresh
-  clone). `[click]` shows the output.
-- **A3.** Four graded parts (2 + 3 + 3 + 2) and the domain transfer. Due before Lecture 5.
+- **A3 at a Glance.** The five parts as one bar (2 + 3 + 3 + 2 points, Part 5 feedback only). `[click]` Start from NB3:
+  Colab, no key, every call replays. `[click]` Spend under US$3, only for new calls (wiki ingest, answers, judge), printed
+  at the top of RAG.md. `[click]` One folder. `[click]` We grade measured numbers, replayed or live, said which.
+- **A3 · Parts 1 and 2.** Each card: what to do, which NB3 sections help, and "done when". `[click]` for Part 2.
+  Everything is from A3.md.
+- **A3 · Parts 3 and 4.** The same layout. Part 3's update question ties back to The Same Change in RAG.
+- **A3 · Part 5, Your Domain.** 20 questions, 10 reference answers, 1 run of their winner. This is where the capstone
+  starts; point back to the six capstone steps.
 - **Next time: The Hands.**

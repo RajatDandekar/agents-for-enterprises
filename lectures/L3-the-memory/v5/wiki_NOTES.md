@@ -131,7 +131,8 @@ Brightcell, so on this small wiki that is the honest answer.
 work out which rule wins, on every question. The wiki did that work once, at ingest.
 
 ## Where It Fails
-Three, each from our runs.
+Three failures we caught, each checked against experiments/logs/v5_wiki_failures.json (never_compiled, wrong_compile,
+stops_early). Not the only ones: the footer names stale pages and paraphrased codes (exact_codes: recall@5 0.52 vs 1.0, n = 27).
 [click] 1, never written down: Q-104, "the screen hangs after Save". The manual's page 13 has the answer; the ingest took
 89 facts from that manual and none from page 13. The wiki said NOT IN THE DOCUMENTS; RAG found the paragraph.
 [click] 2, written wrong once, read wrong every time: the UN 38.3 page's infobox says "Ledgerline order blocking", with no

@@ -225,6 +225,13 @@ Sources: `logs/v5_store_latency.json` (`default_region`, `eu`: first pass; `suit
 pass with the same payload on every call). Note: server-side RRF and our `rag.rrf` gave the same top 10 for 13 of 30
 questions (ties and pool order differ); recall on the golden set is what we compared, not identical lists.
 
+
+## Your Capstone: The Guidelines
+Added on the 7 Nov review: what students should do in their capstone. `[click]` per step. Every number is from this
+lecture: the winner (structured parser, structure-aware 200-token chunks, BM25 + reranker) recall@5 0.893, search p95
+48 ms (race.json, A3.md); region 93.9 → 14.0 ms (v5_store_latency.json). It replaces the old "Twelve Rules" slide, which
+is gone from the closing section; the six steps are the same rules, grouped.
+
 ## Ask the class · Who should add Emma’s filter?
 Answer: 3, the search service, from the signed-in user’s role. Never the model (a prompt can be talked out of it), and not a
 parameter the agent chooses.

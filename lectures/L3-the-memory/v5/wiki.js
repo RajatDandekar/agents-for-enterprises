@@ -456,7 +456,7 @@ FIGS.wiki_fail3 = (el) => {
       <div>Emma’s question on the full ${fmt(d.eng.wiki_store.pages)}-page wiki: index.md, then <code>${E.chain.filter((c) => c.step === 'page').map((c) => esc(c.what)).join('</code>, <code>')}</code>, then done after ${E.nav_calls} calls.</div>
       <div style="margin-top:6px">Its reason for stopping names AMD-SUP-2026-02, a page it never opened.</div>
       <div style="margin-top:6px">Missing from the answer: ${E.missing.map((m) => `<code>${esc(m)}</code>`).join(' ')}</div>`) +
-    `<div class="wiki-card cb" data-k="4" style="left:0;top:520px;width:1400px;height:86px;font-size:19px">Lint (code checks plus a model review) finds broken citations, orphan pages and stale rules. It cannot see these three. Only questions with known answers, the golden set, catch them.</div>`;
+    `<div class="wiki-card cb" data-k="4" style="left:0;top:520px;width:1400px;height:86px;font-size:19px">Lint (code checks plus a model review) cannot see these three; only the golden set catches them. We also measured two more: the wiki is only as new as its last ingest, and it paraphrases exact codes (right page in the top 5 for 52% of 27 error-code questions, RAG 100%).</div>`;
   return { step(k) { at(el, k); } };
 };
 
