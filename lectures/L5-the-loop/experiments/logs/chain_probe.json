@@ -1,0 +1,799 @@
+{
+ "stock": {
+  "tool": "check_stock",
+  "args": {
+   "item_code": "BAT-500"
+  },
+  "result": {
+   "ok": true,
+   "item_code": "BAT-500",
+   "description": "Battery pack, 36 V 500 Wh",
+   "unit": "NOS",
+   "warehouses": [
+    {
+     "warehouse": "WH-MAN-STR",
+     "name": "Manchester main stores",
+     "on_hand": 5400,
+     "allocated": 0,
+     "on_order": 0,
+     "free": 5400
+    },
+    {
+     "warehouse": "WH-LDS-STR",
+     "name": "Leeds stores",
+     "on_hand": 1200,
+     "allocated": 0,
+     "on_order": 0,
+     "free": 1200
+    }
+   ],
+   "free_total": 6600,
+   "on_order_total": 0,
+   "reorder_level": 3000,
+   "cover_days": 11,
+   "below_reorder": false
+  }
+ },
+ "find_sup_voltway": {
+  "tool": "find_supplier",
+  "args": {
+   "name": "Voltway"
+  },
+  "result": {
+   "ok": true,
+   "matches": [
+    {
+     "supplier_code": "VC-EIN-0042",
+     "name": "Voltway Cells",
+     "city": "Eindhoven",
+     "state": "NL",
+     "status": "ACTIVE",
+     "match": 0.74,
+     "cell_safety_certificate": "valid"
+    },
+    {
+     "supplier_code": "VPC-ROT-0107",
+     "name": "Voltway Paints & Coatings",
+     "city": "Rotterdam",
+     "state": "NL",
+     "status": "ACTIVE",
+     "match": 0.5,
+     "cell_safety_certificate": "none"
+    },
+    {
+     "supplier_code": "VC-EIN-0009",
+     "name": "Voltway Cells (old code, do not use)",
+     "city": "Eindhoven",
+     "state": "NL",
+     "status": "BLOCKED",
+     "match": 0.74,
+     "cell_safety_certificate": "none"
+    }
+   ],
+   "hint": "Only partial matches. Show them to the user and ask which one they mean. Blocked codes, never use: VC-EIN-0009."
+  }
+ },
+ "certs_voltway": {
+  "tool": "supplier_certificates",
+  "args": {
+   "supplier_code": "VC-EIN-0042",
+   "item_code": "BAT-500"
+  },
+  "result": {
+   "ok": true,
+   "supplier_code": "VC-EIN-0042",
+   "supplier_name": "Voltway Cells",
+   "supplier_status": "ACTIVE",
+   "as_of": "2026-10-26",
+   "certificates": [
+    {
+     "cert_type": "UN38.3",
+     "doc_ref": "UN38.3-TR/VC/2026/118",
+     "valid_to": "2027-03-31",
+     "valid": true,
+     "days_left": 156
+    }
+   ],
+   "un38_3": "valid",
+   "item": {
+    "item_code": "BAT-500",
+    "needs_un38_3": true,
+    "supplier_qualifies": true
+   },
+   "total": 1,
+   "next_cursor": null
+  }
+ },
+ "certs_nordic": {
+  "tool": "supplier_certificates",
+  "args": {
+   "supplier_code": "NC-GDA-0063",
+   "item_code": "BAT-500"
+  },
+  "result": {
+   "ok": true,
+   "supplier_code": "NC-GDA-0063",
+   "supplier_name": "Nordic Cell Co.",
+   "supplier_status": "ACTIVE",
+   "as_of": "2026-10-26",
+   "certificates": [
+    {
+     "cert_type": "UN38.3",
+     "doc_ref": "UN38.3-TR/NC/2025/090",
+     "valid_to": "2026-09-30",
+     "valid": false,
+     "days_left": -26
+    }
+   ],
+   "un38_3": "expired",
+   "item": {
+    "item_code": "BAT-500",
+    "needs_un38_3": true,
+    "supplier_qualifies": false
+   },
+   "total": 1,
+   "next_cursor": null,
+   "next_step": "BAT-500 contains lithium cells: Purchase Policy §6.2 needs a valid UN 38.3 certificate, and Nordic Cell Co. has an expired one. Do not order from them; use find_supplier for a certified supplier."
+  }
+ },
+ "budget_prd07": {
+  "tool": "check_budget",
+  "args": {
+   "cost_centre": "PRD-07"
+  },
+  "result": {
+   "ok": true,
+   "code": "PRD-07",
+   "name": "Spring launch run",
+   "open": true,
+   "closed_on": null,
+   "budget_left": 1190000.0
+  }
+ },
+ "budget_prd05": {
+  "tool": "check_budget",
+  "args": {
+   "cost_centre": "PRD-05"
+  },
+  "result": {
+   "ok": true,
+   "code": "PRD-05",
+   "name": "City e-bike line, regular production",
+   "open": false,
+   "closed_on": "2026-10-15",
+   "budget_left": 190000.0,
+   "note": "PRD-05 is CLOSED. Ledgerline will silently save any order on it as a DRAFT that never reaches the supplier. Ask the user for an open cost centre."
+  }
+ },
+ "pr_preview": {
+  "tool": "create_purchase_request",
+  "args": {
+   "item_code": "BAT-500",
+   "quantity": 2000,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-09"
+  },
+  "result": {
+   "ok": true,
+   "preview": {
+    "item_code": "BAT-500",
+    "quantity": 2000,
+    "estimated_rate": 114.0,
+    "estimated_value": 273600.0,
+    "cost_centre": "PRD-07",
+    "cost_centre_state": "OK",
+    "need_by": "2026-11-09",
+    "needs_approval": true,
+    "your_limit": 250000.0,
+    "approver": "DOKAFOR"
+   },
+   "warnings": [],
+   "note": "Nothing has been saved. Show this to the user and ask to confirm."
+  }
+ },
+ "pr_commit": {
+  "tool": "create_purchase_request",
+  "args": {
+   "item_code": "BAT-500",
+   "quantity": 2000,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-09",
+   "confirm": true
+  },
+  "result": {
+   "ok": true,
+   "request_no": "PR/2026/04417",
+   "status": "WAITING FOR APPROVAL",
+   "status_code": "PA",
+   "item_code": "BAT-500",
+   "quantity": 2000,
+   "estimated_value": 273600.0,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-09",
+   "approver": "DOKAFOR",
+   "approved_by": null,
+   "next_step": "Waiting for DOKAFOR. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+  }
+ },
+ "pr_commit_again": {
+  "tool": "create_purchase_request",
+  "args": {
+   "item_code": "BAT-500",
+   "quantity": 2000,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-09",
+   "confirm": true
+  },
+  "result": {
+   "ok": true,
+   "already_done": true,
+   "request_no": "PR/2026/04417",
+   "status": "WAITING FOR APPROVAL",
+   "status_code": "PA",
+   "item_code": "BAT-500",
+   "quantity": 2000,
+   "estimated_value": 273600.0,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-09",
+   "approver": "DOKAFOR",
+   "approved_by": null,
+   "next_step": "Waiting for DOKAFOR. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+  }
+ },
+ "po_before_approval": {
+  "tool": "create_purchase_order",
+  "args": {
+   "supplier_code": "VC-EIN-0042",
+   "request_no": "PR/2026/04417",
+   "confirm": true
+  },
+  "result": {
+   "ok": false,
+   "error": "Request PR/2026/04417 is not approved (status PA).",
+   "next_step": "Wait for the approver, or check order_status.",
+   "ledgerline_code": ""
+  }
+ },
+ "status_waiting": {
+  "tool": "order_status",
+  "args": {
+   "request_no": "PR/2026/04417"
+  },
+  "result": {
+   "ok": true,
+   "request_no": "PR/2026/04417",
+   "status": "WAITING FOR APPROVAL",
+   "status_code": "PA",
+   "item_code": "BAT-500",
+   "quantity": 2000,
+   "estimated_value": 273600.0,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-09",
+   "approver": "DOKAFOR",
+   "approved_by": null,
+   "next_step": "Waiting for DOKAFOR. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+  }
+ },
+ "dan_inbox": {
+  "tool": "list_my_approvals",
+  "args": {},
+  "result": {
+   "ok": true,
+   "waiting": [
+    {
+     "doc_type": "PO",
+     "doc_no": "PO/2026/01179",
+     "requested_by": "ECLARKE",
+     "requested_on": "2026-10-23",
+     "value": 460800.0,
+     "item_code": "CHG-4A-01",
+     "quantity": 4000
+    },
+    {
+     "doc_type": "PR",
+     "doc_no": "PR/2026/04417",
+     "requested_by": "ECLARKE",
+     "requested_on": "2026-10-26T09:03:37+00:00",
+     "value": 273600.0,
+     "item_code": "BAT-500",
+     "quantity": 2000
+    }
+   ],
+   "count": 2
+  }
+ },
+ "emma_approves_own": {
+  "tool": "approve_purchase_request",
+  "args": {
+   "request_no": "PR/2026/04417",
+   "decision": "approve"
+  },
+  "result": {
+   "ok": false,
+   "error": "Ledgerline refused pr_approve: Access denied (ERR-SEC-0001).",
+   "next_step": "The user is not allowed to do this in Ledgerline. Tell the user; do not try another way round.",
+   "ledgerline_code": "ERR-SEC-0001"
+  }
+ },
+ "dan_approves": {
+  "tool": "approve_purchase_request",
+  "args": {
+   "request_no": "PR/2026/04417",
+   "decision": "approve"
+  },
+  "result": {
+   "ok": true,
+   "request_no": "PR/2026/04417",
+   "status": "APPROVED",
+   "status_code": "AP",
+   "decided_by": "DOKAFOR",
+   "next_step": "The requester can now create_purchase_order with request_no=PR/2026/04417."
+  }
+ },
+ "status_approved": {
+  "tool": "order_status",
+  "args": {
+   "request_no": "PR/2026/04417"
+  },
+  "result": {
+   "ok": true,
+   "request_no": "PR/2026/04417",
+   "status": "APPROVED",
+   "status_code": "AP",
+   "item_code": "BAT-500",
+   "quantity": 2000,
+   "estimated_value": 273600.0,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-09",
+   "approver": null,
+   "approved_by": "DOKAFOR",
+   "next_step": "Approved. Next: create_purchase_order with request_no=PR/2026/04417 and a supplier."
+  }
+ },
+ "po_preview": {
+  "tool": "create_purchase_order",
+  "args": {
+   "supplier_code": "VC-EIN-0042",
+   "request_no": "PR/2026/04417"
+  },
+  "result": {
+   "ok": true,
+   "preview": {
+    "supplier": "Voltway Cells (VC-EIN-0042)",
+    "item_code": "BAT-500",
+    "quantity": 2000,
+    "rate": 119.0,
+    "tax_code": "VAT20-RC",
+    "basic_value": 238000.0,
+    "gross_value": 285600.0,
+    "cost_centre": "PRD-07",
+    "cost_centre_state": "OK",
+    "need_by": "2026-11-09",
+    "request_no": "PR/2026/04417"
+   },
+   "warnings": [],
+   "note": "Nothing has been saved. Show this to the user and ask to confirm."
+  }
+ },
+ "po_commit": {
+  "tool": "create_purchase_order",
+  "args": {
+   "supplier_code": "VC-EIN-0042",
+   "request_no": "PR/2026/04417",
+   "confirm": true
+  },
+  "result": {
+   "ok": true,
+   "po_no": "PO/2026/01182",
+   "status": "APPROVED, NOT YET RELEASED",
+   "status_code": "AP",
+   "supplier_code": "VC-EIN-0042",
+   "item_code": "BAT-500",
+   "quantity": 2000,
+   "rate": 119.0,
+   "gross_value": 285600.0,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-09",
+   "request_no": "PR/2026/04417",
+   "created_by": "ECLARKE",
+   "approved_by": "DOKAFOR",
+   "approval": {
+    "doc_no": "PR/2026/04417",
+    "approver": "DOKAFOR",
+    "status": "APPROVED"
+   },
+   "warning": null,
+   "idempotency_key": "K089EA6157478",
+   "sent_to_supplier": false,
+   "tool": "create_purchase_order",
+   "tool_version": "1.0",
+   "next_step": "Approved but NOT sent to the supplier yet. Next: release_purchase_order PO/2026/01182."
+  }
+ },
+ "po_release": {
+  "tool": "release_purchase_order",
+  "args": {
+   "po_no": "PO/2026/01182"
+  },
+  "result": {
+   "ok": true,
+   "po_no": "PO/2026/01182",
+   "status": "RELEASED to the supplier",
+   "status_code": "RL",
+   "supplier_code": "VC-EIN-0042",
+   "item_code": "BAT-500",
+   "quantity": 2000,
+   "rate": 119.0,
+   "gross_value": 285600.0,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-09",
+   "request_no": "PR/2026/04417",
+   "created_by": "ECLARKE",
+   "approved_by": "DOKAFOR",
+   "approval": {
+    "doc_no": "PR/2026/04417",
+    "approver": "DOKAFOR",
+    "status": "APPROVED"
+   },
+   "warning": null,
+   "idempotency_key": "K089EA6157478",
+   "sent_to_supplier": true,
+   "tool": "release_purchase_order",
+   "tool_version": "1.0"
+  }
+ },
+ "po_status": {
+  "tool": "order_status",
+  "args": {
+   "po_no": "PO/2026/01182"
+  },
+  "result": {
+   "ok": true,
+   "po_no": "PO/2026/01182",
+   "status": "RELEASED to the supplier",
+   "status_code": "RL",
+   "supplier_code": "VC-EIN-0042",
+   "item_code": "BAT-500",
+   "quantity": 2000,
+   "rate": 119.0,
+   "gross_value": 285600.0,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-09",
+   "request_no": "PR/2026/04417",
+   "created_by": "ECLARKE",
+   "approved_by": "DOKAFOR",
+   "approval": {
+    "doc_no": "PR/2026/04417",
+    "approver": "DOKAFOR",
+    "status": "APPROVED"
+   },
+   "warning": null,
+   "idempotency_key": "K089EA6157478",
+   "sent_to_supplier": true,
+   "tool": "order_status",
+   "tool_version": "1.0",
+   "received": 0,
+   "goods_receipts": []
+  }
+ },
+ "receive_preview": {
+  "tool": "receive_goods",
+  "args": {
+   "po_no": "PO/2026/01182",
+   "quantity": 1200
+  },
+  "result": {
+   "ok": true,
+   "preview": {
+    "po_no": "PO/2026/01182",
+    "supplier_code": "VC-EIN-0042",
+    "item_code": "BAT-500",
+    "ordered": 2000,
+    "received_before": 0,
+    "receiving_now": 1200,
+    "balance_after": 800,
+    "warehouse": "WH-MAN-STR"
+   },
+   "note": "Nothing has been saved. Confirm the count with the user."
+  }
+ },
+ "bells_pr": {
+  "tool": "create_purchase_request",
+  "args": {
+   "item_code": "BEL-STD-01",
+   "quantity": 10000,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-16",
+   "confirm": true
+  },
+  "result": {
+   "ok": true,
+   "request_no": "PR/2026/04418",
+   "status": "APPROVED",
+   "status_code": "AP",
+   "item_code": "BEL-STD-01",
+   "quantity": 10000,
+   "estimated_value": 81600.0,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-16",
+   "approver": null,
+   "approved_by": "ECLARKE",
+   "next_step": "Approved. Next: create_purchase_order with request_no=PR/2026/04418 and a supplier."
+  }
+ },
+ "bells_po": {
+  "tool": "create_purchase_order",
+  "args": {
+   "supplier_code": "PB-MAN-0017",
+   "request_no": "PR/2026/04418",
+   "confirm": true
+  },
+  "result": {
+   "ok": true,
+   "po_no": "PO/2026/01183",
+   "status": "APPROVED, NOT YET RELEASED",
+   "status_code": "AP",
+   "supplier_code": "PB-MAN-0017",
+   "item_code": "BEL-STD-01",
+   "quantity": 10000,
+   "rate": 6.8,
+   "gross_value": 81600.0,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-16",
+   "request_no": "PR/2026/04418",
+   "created_by": "ECLARKE",
+   "approved_by": "ECLARKE",
+   "approval": null,
+   "warning": null,
+   "idempotency_key": "K7B3FE3CB67F2",
+   "sent_to_supplier": false,
+   "tool": "create_purchase_order",
+   "tool_version": "1.0",
+   "next_step": "Approved but NOT sent to the supplier yet. Next: release_purchase_order PO/2026/01183."
+  }
+ },
+ "bells_release": {
+  "tool": "release_purchase_order",
+  "args": {
+   "po_no": "PO/2026/01183"
+  },
+  "result": {
+   "ok": true,
+   "po_no": "PO/2026/01183",
+   "status": "RELEASED to the supplier",
+   "status_code": "RL",
+   "supplier_code": "PB-MAN-0017",
+   "item_code": "BEL-STD-01",
+   "quantity": 10000,
+   "rate": 6.8,
+   "gross_value": 81600.0,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-16",
+   "request_no": "PR/2026/04418",
+   "created_by": "ECLARKE",
+   "approved_by": "ECLARKE",
+   "approval": null,
+   "warning": null,
+   "idempotency_key": "K7B3FE3CB67F2",
+   "sent_to_supplier": true,
+   "tool": "release_purchase_order",
+   "tool_version": "1.0"
+  }
+ },
+ "cartons_pr": {
+  "tool": "create_purchase_request",
+  "args": {
+   "item_code": "BOX-BIKE-01",
+   "quantity": 5000,
+   "cost_centre": "PRD-03",
+   "need_by": "2026-11-20",
+   "confirm": true
+  },
+  "result": {
+   "ok": true,
+   "request_no": "PR/2026/04419",
+   "status": "APPROVED",
+   "status_code": "AP",
+   "item_code": "BOX-BIKE-01",
+   "quantity": 5000,
+   "estimated_value": 129000.0,
+   "cost_centre": "PRD-03",
+   "need_by": "2026-11-20",
+   "approver": null,
+   "approved_by": "ECLARKE",
+   "next_step": "Approved. Next: create_purchase_order with request_no=PR/2026/04419 and a supplier."
+  }
+ },
+ "nordic_pr": {
+  "tool": "create_purchase_request",
+  "args": {
+   "item_code": "BAT-500",
+   "quantity": 2000,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-09",
+   "confirm": true
+  },
+  "result": {
+   "ok": true,
+   "request_no": "PR/2026/04417",
+   "status": "WAITING FOR APPROVAL",
+   "status_code": "PA",
+   "item_code": "BAT-500",
+   "quantity": 2000,
+   "estimated_value": 273600.0,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-09",
+   "approver": "DOKAFOR",
+   "approved_by": null,
+   "next_step": "Waiting for DOKAFOR. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+  }
+ },
+ "nordic_dan": {
+  "tool": "approve_purchase_request",
+  "args": {
+   "request_no": "PR/2026/04417",
+   "decision": "approve"
+  },
+  "result": {
+   "ok": true,
+   "request_no": "PR/2026/04417",
+   "status": "APPROVED",
+   "status_code": "AP",
+   "decided_by": "DOKAFOR",
+   "next_step": "The requester can now create_purchase_order with request_no=PR/2026/04417."
+  }
+ },
+ "nordic_po": {
+  "tool": "create_purchase_order",
+  "args": {
+   "supplier_code": "NC-GDA-0063",
+   "request_no": "PR/2026/04417",
+   "confirm": true
+  },
+  "result": {
+   "ok": true,
+   "po_no": "PO/2026/01182",
+   "status": "APPROVED, NOT YET RELEASED",
+   "status_code": "AP",
+   "supplier_code": "NC-GDA-0063",
+   "item_code": "BAT-500",
+   "quantity": 2000,
+   "rate": 111.0,
+   "gross_value": 266400.0,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-09",
+   "request_no": "PR/2026/04417",
+   "created_by": "ECLARKE",
+   "approved_by": "DOKAFOR",
+   "approval": {
+    "doc_no": "PR/2026/04417",
+    "approver": "DOKAFOR",
+    "status": "APPROVED"
+   },
+   "warning": null,
+   "idempotency_key": "K9BBDA115F0B2",
+   "sent_to_supplier": false,
+   "tool": "create_purchase_order",
+   "tool_version": "1.0",
+   "next_step": "Approved but NOT sent to the supplier yet. Next: release_purchase_order PO/2026/01182."
+  }
+ },
+ "nordic_release": {
+  "tool": "release_purchase_order",
+  "args": {
+   "po_no": "PO/2026/01182"
+  },
+  "result": {
+   "ok": true,
+   "po_no": "PO/2026/01182",
+   "status": "RELEASED to the supplier",
+   "status_code": "RL",
+   "supplier_code": "NC-GDA-0063",
+   "item_code": "BAT-500",
+   "quantity": 2000,
+   "rate": 111.0,
+   "gross_value": 266400.0,
+   "cost_centre": "PRD-07",
+   "need_by": "2026-11-09",
+   "request_no": "PR/2026/04417",
+   "created_by": "ECLARKE",
+   "approved_by": "DOKAFOR",
+   "approval": {
+    "doc_no": "PR/2026/04417",
+    "approver": "DOKAFOR",
+    "status": "APPROVED"
+   },
+   "warning": null,
+   "idempotency_key": "K9BBDA115F0B2",
+   "sent_to_supplier": true,
+   "tool": "release_purchase_order",
+   "tool_version": "1.0"
+  }
+ },
+ "closed_pr": {
+  "tool": "create_purchase_request",
+  "args": {
+   "item_code": "BAT-500",
+   "quantity": 1000,
+   "cost_centre": "PRD-05",
+   "need_by": "2026-11-09",
+   "confirm": true
+  },
+  "result": {
+   "ok": false,
+   "error": "Cost centre PRD-05 is closed.",
+   "next_step": "Ask the user for an open cost centre.",
+   "ledgerline_code": ""
+  }
+ },
+ "closed_pr_preview": {
+  "tool": "create_purchase_request",
+  "args": {
+   "item_code": "BAT-500",
+   "quantity": 1000,
+   "cost_centre": "PRD-05",
+   "need_by": "2026-11-09"
+  },
+  "result": {
+   "ok": true,
+   "preview": {
+    "item_code": "BAT-500",
+    "quantity": 1000,
+    "estimated_rate": 111.0,
+    "estimated_value": 133200.0,
+    "cost_centre": "PRD-05",
+    "cost_centre_state": "CLOSED",
+    "need_by": "2026-11-09",
+    "needs_approval": false,
+    "your_limit": 250000.0,
+    "approver": null
+   },
+   "warnings": [
+    "Cost centre PRD-05 is CLOSED. Ask the user for an open one (check_budget lists them)."
+   ],
+   "note": "Nothing has been saved. Show this to the user and ask to confirm."
+  }
+ },
+ "services_seen_in_pr": [
+  "bud_check",
+  "cc_get",
+  "grn_search",
+  "itm_get",
+  "po_fetch",
+  "po_get",
+  "po_pending_appr",
+  "po_release",
+  "po_save",
+  "po_search",
+  "pr_approve",
+  "pr_fetch",
+  "pr_get",
+  "pr_save",
+  "pr_search",
+  "pr_submit",
+  "stk_query",
+  "sup_cert_get",
+  "sup_get",
+  "sup_rate_get",
+  "sup_search",
+  "tax_compute",
+  "usr_get",
+  "whs_list"
+ ],
+ "calls_attrs": [
+  "data",
+  "err_cd",
+  "ms",
+  "msg",
+  "payload",
+  "rc",
+  "screen",
+  "seq",
+  "sps",
+  "svc",
+  "task",
+  "timed_out",
+  "ts",
+  "user"
+ ]
+}

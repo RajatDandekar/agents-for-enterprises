@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daedalus · the workshop · Northbridge Cycles</title>
+<meta name="description" content="Lecture 5, Agentic Systems Engineering: watch the agent loop step by step on a sandboxed ERP, turn the harness knobs, build a workflow and an agent for the same job, and race them. All names are fictional.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&display=swap">
+<link rel="stylesheet" href="/sky/sky.css">
+<link rel="stylesheet" href="/static/daedalus.css">
+</head>
+<body>
+<nav class="nav hide" id="nav">
+  <span class="mark">Daedalus</span>
+  <a href="#loop" data-tab="loop"><span class="n">1</span>The Loop</a>
+  <a href="#agent" data-tab="agent"><span class="n">2</span>Your agent</a>
+  <a href="#workflow" data-tab="workflow"><span class="n">3</span>Your workflow</a>
+  <a href="#race" data-tab="race"><span class="n">4</span>The race</a>
+  <a href="/wall" target="_blank" rel="noopener">Wall</a>
+  <button class="inboxbtn" id="inboxbtn" type="button">Daniel's inbox <span class="badge hide" id="inboxn">0</span></button>
+  <span class="who" id="navname"></span>
+</nav>
+
+<header class="hero" id="top">
+  <div class="glassword">Workshop</div>
+  <div class="in">
+    <span class="kicker">Northbridge Cycles · Lecture 5 · The Loop</span>
+    <h1>Daedalus.</h1>
+    <p class="lede">The craftsman built a labyrinth, where every path is fixed, and wings, which fly wherever you steer. Today you build both for Emma's order: a workflow and an agent. Watch the loop, set its limits, and race them.</p>
+    <form class="join" id="joinform" autocomplete="off">
+      <input class="big" id="name" placeholder="Your name" maxlength="40" aria-label="Your name" required>
+      <button class="btn sky" type="submit" id="joinbtn">Open my workshop</button>
+    </form>
+    <p class="muted small" id="keyline">Have a workshop key from another device? <a href="#" id="usekey">Use it</a></p>
+    <div class="welcome hide" id="welcome">
+      <a class="btn sky" href="#loop" id="enter">Enter your workshop</a>
+      <span class="muted small">Not <span id="wname"></span>? <a href="#" id="notme">Start as someone else</a></span>
+    </div>
+  </div>
+</header>
+
+<main id="app" class="hide">
+
+<!-- 1 · THE LOOP -->
+<section class="tab" id="tab-loop" data-tab="loop">
+  <div class="wrap">
+    <div class="sec-title"><span class="kicker">1 · The Loop</span>
+      <h2>Watch the loop, one step at a time.</h2>
+      <p class="learn"><b>What you will learn:</b> an agent is a model in a loop. Each step is one model call, then the tools it asked for. The harness decides when it stops.</p></div>
+    <div class="say card white">
+      <div class="say-row"><span class="who-e">Emma</span><textarea id="saytext" rows="2" aria-label="Emma's message"></textarea></div>
+      <div class="chips" id="saychips"></div>
+      <div class="row">
+        <button class="btn sky" id="saybtn">Send</button>
+        <button class="btn" id="stepbtn" disabled>Next step</button>
+        <button class="btn" id="runbtn" disabled>Run to the end</button>
+        <span class="sp"></span>
+        <button class="btn ghost sm" id="nightbtn">Next morning</button>
+        <button class="btn ghost sm" id="newbtn">New conversation</button>
+        <button class="btn ghost sm" id="resetbtn">Fresh sandbox</button>
+      </div>
+      <p class="hint" id="harnessline"></p>
+    </div>
+    <div class="night hide" id="nightbox"></div>
+    <div class="trace" id="trace"></div>
+    <div class="card gr takeaway hide" id="tk-loop"></div>
+  </div>
+</section>
+
+<!-- 2 · YOUR AGENT -->
+<section class="tab hide" id="tab-agent" data-tab="agent">
+  <div class="wrap">
+    <div class="sec-title"><span class="kicker">2 · Your agent</span>
+      <h2>Set the harness. Measure what it does.</h2>
+      <p class="learn"><b>What you will learn:</b> the same model behaves differently inside a different harness. Change one setting, run the six jobs, compare.</p></div>
+    <div class="knobs" id="knobs"></div>
+    <div class="row center"><button class="btn sky" id="sixbtn">Run the six jobs</button><button class="btn ghost sm" id="shipbtn">Back to shipped</button><span class="muted small" id="sixline"></span></div>
+    <div class="progress6" id="sixprog"></div>
+    <div id="sixout"></div>
+    <h3 class="sub-h">Your runs <span class="muted small">settings beside results, every run kept</span></h3>
+    <div class="tablewrap"><table id="sixruns"></table></div>
+  </div>
+</section>
+
+<!-- 3 · YOUR WORKFLOW -->
+<section class="tab hide" id="tab-workflow" data-tab="workflow">
+  <div class="wrap">
+    <div class="sec-title"><span class="kicker">3 · Your workflow</span>
+      <h2>Write the steps down. The code follows them.</h2>
+      <p class="learn"><b>What you will learn:</b> a workflow does exactly what is written, the same way every time. A gate stops it; an approval step saves the run and waits.</p></div>
+    <div class="wfgrid">
+      <div>
+        <div class="toolbar card white"><span class="lbl">Your workflow</span><span class="muted small" id="wfchanged"></span><span class="sp"></span><button class="btn ghost sm" id="wfship">Back to shipped</button></div>
+        <ol class="blocks" id="blocks"></ol>
+        <div class="palette" id="palette"></div>
+      </div>
+      <div>
+        <div class="card white runbox">
+          <span class="lbl">Run it on</span>
+          <select id="wfjob"></select>
+          <textarea id="wftext" rows="2" class="hide" placeholder="Emma's request, in her own words"></textarea>
+          <label class="switch"><input type="checkbox" id="wfflaky"><span>Flaky Ledgerline: the next save loses its reply once</span></label>
+          <div class="row"><button class="btn sky" id="wfrun">Run</button><button class="btn" id="wfstep">Run step by step</button><button class="btn hide" id="wfnext">Next step</button><button class="btn hide" id="wfresume">Resume</button></div>
+        </div>
+        <div id="wfrunview"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · THE RACE -->
+<section class="tab hide" id="tab-race" data-tab="race">
+  <div class="wrap">
+    <div class="sec-title"><span class="kicker">4 · The race</span>
+      <h2>Your workflow against your agent, on the same six jobs.</h2>
+      <p class="learn"><b>What you will learn:</b> when the order is known, write it down; when it is not, let the model choose. Each job runs in a fresh Ledgerline, and Daniel signs whatever waits for him.</p></div>
+    <div class="row center"><button class="btn sky" id="racebtn">Start the race</button><label class="switch"><input type="checkbox" id="race3"><span>Run the agent three times on each job</span></label><span class="muted small" id="raceline"></span></div>
+    <div class="progress6" id="raceprog"></div>
+    <div id="raceout"></div>
+    <h3 class="sub-h">Your races</h3>
+    <div class="tablewrap"><table id="races"></table></div>
+  </div>
+</section>
+</main>
+
+<aside class="drawer hide" id="drawer" aria-label="Daniel's inbox">
+  <div class="dr-h"><div><span class="kicker">Daniel's inbox</span><h3>Daniel Okafor, purchase manager</h3><p class="muted small">Signed as DOKAFOR, with his own permissions in your sandbox. Emma cannot sign her own requests.</p></div><button class="btn ghost sm" id="drclose">Close</button></div>
+  <div id="drbody"></div>
+  <h4 class="lbl" style="margin-top:20px">Ledgerline now · your sandbox</h4>
+  <div id="drdocs"></div>
+</aside>
+
+<footer class="foot"><span>Daedalus · Agentic Systems Engineering · Lecture 5 · Vizuara · every name and number here is fictional, and every run is real (gemini-3.8-flash).</span> <span id="spend"></span></footer>
+<script src="/static/dx.js"></script>
+<script src="/static/daedalus.js"></script>
+</body>
+</html>

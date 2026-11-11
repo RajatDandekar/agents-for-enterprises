@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daedalus · the class wall</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&display=swap">
+<link rel="stylesheet" href="/sky/sky.css">
+<link rel="stylesheet" href="/static/daedalus.css">
+<style>
+.wallhero{background:var(--hero);padding:70px 24px 40px;text-align:center}
+.agg{display:flex;justify-content:center;gap:36px;flex-wrap:wrap;margin-top:24px}
+.wallgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;padding:30px 0 60px}
+.fc{background:#fff;border:1px solid var(--rule);border-radius:22px;padding:16px 18px;box-shadow:var(--shadow)}
+.fc .nm{font:500 22px/1.15 var(--font);letter-spacing:-.01em;margin-bottom:10px}
+.fc dl{display:grid;grid-template-columns:1fr auto;gap:6px 10px;margin:0;font-size:14.5px}
+.fc dt{color:var(--ink-3)}.fc dd{margin:0;font-weight:600;text-align:right}
+.fc .ch{margin-top:10px;display:flex;flex-wrap:wrap;gap:5px}
+.fc .ch .chip{font-size:11.5px}
+.vsbar{display:flex;gap:6px;align-items:center;margin-top:10px;font-size:13px}
+.vsbar b{font-size:20px}
+</style>
+</head>
+<body>
+<header class="wallhero"><span class="kicker">Daedalus · Lecture 5 · the class wall</span>
+  <h2 style="margin-top:14px">Every workshop in the room: workflow against agent.</h2>
+  <div class="agg" id="agg"></div></header>
+<main class="wrap"><div class="wallgrid" id="grid"><p class="muted">Loading…</p></div></main>
+<script src="/static/dx.js"></script>
+<script>
+async function draw() {
+  try {
+    const w = await DX.api('/api/wall'), a = w.agg;
+    document.getElementById('agg').innerHTML = [['workshops open', a.workshops], ['raced', a.raced], ['workflow, average', a.wf_avg == null ? '–' : a.wf_avg + ' / 6'], ['agent, average', a.ag_avg == null ? '–' : a.ag_avg + ' / 6'], ['resumed a waiting run', a.resumed]]
+      .map(([l, v]) => `<div class="stat"><span class="v">${DX.esc(v)}</span><span class="l">${l}</span></div>`).join('');
+    document.getElementById('grid').innerHTML = w.rows.map((r) => `<div class="fc"><div class="nm">${DX.esc(r.name)}</div><dl>
+      <dt>Loop steps watched</dt><dd>${r.steps}</dd>
+      <dt>Agent, six jobs (best)</dt><dd>${r.agent_best == null ? '–' : r.agent_best + ' / 6'}</dd>
+      <dt>Workflow blocks</dt><dd>${r.blocks}</dd>
+      <dt>Waiting runs resumed</dt><dd>${r.resumed}</dd>
+      <dt>Nights (state saved)</dt><dd>${r.nights}</dd></dl>
+      ${r.race_ag == null ? '<div class="vsbar muted">No race yet</div>' : `<div class="vsbar">Race: workflow <b>${r.race_wf}</b> · agent <b>${r.race_ag}</b> <span class="muted">of ${r.race_of} · tokens ${DX.num(r.race_tok_wf)} vs ${DX.num(r.race_tok_ag)}</span></div>`}
+      ${(r.changed.length || r.blocks_changed.length) ? `<div class="ch">${r.changed.map((c) => `<span class="chip info">${DX.esc(c)}</span>`).join('')}${r.blocks_changed.map((c) => `<span class="chip wait">${DX.esc(c)}</span>`).join('')}</div>` : ''}</div>`).join('') || '<p class="muted">No workshops yet. Open the link and type your name.</p>';
+  } catch (e) { /* keep the last wall */ }
+}
+draw(); setInterval(draw, 5000);
+</script>
+</body>
+</html>

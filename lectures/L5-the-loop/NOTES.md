@@ -1,85 +1,198 @@
-# Lecture 5 · The Loop: speaker notes
+# Lecture 5 · The Loop: agents, harnesses and workflows · speaker notes (v5, Northbridge)
 
-Sat 14 Nov 2026, 7–9 AM IST. 59 slides (51 plates). Timings are targets for a 120-minute session.
-Numbers: `experiments/logs/tasks_<agent>_or[_lite].json` (run B, 28 Oct 2026), turned into `figdata.js` by
-`experiments/export_figdata.py`. v2 numbers: `logs/v2_L4_forty_summary.json`.
+Sat 14 Nov 2026, 7:00–9:00 AM IST. 103 slides. Lectures 5 (The Loop) and 6 (The Studio) of the old plan, merged at
+Dr. Rajat Dandekar's request (11 Nov 2026); the LangGraph "control graph" is cut (it returns in Lecture 8). Slide
+numbers are the deck's counter (bottom right). `[click]` = one step. Story and spec: `STORY_V5.md`, `DAEDALUS_SPEC.md`.
 
-## Opening (0:00–0:12)
-1. **Title.** "Last week Ask Rasoi got hands. A model with hands is still not an agent. Today: the loop."
-2. **Last time, this time.** Recap the toolbox in one breath: 15 tools, tool.json + tool.py, preview, next_step. "But it ran one tool round per message."
-3. **Cold open, Kavita drives.** Step 1 shows the left chat: count the numbered messages out loud. Point at the two empty replies: the model was stopped mid-job and had nothing to say. Step 2: the right chat, 2 messages. "Same model. Same tools. What changed is today's lecture."
-4. **The whole job.** Build the map: check stock, request, wait for Rohit, then the rest. Stress the dashed box: a wait of unknown length. "No single message can do this."
-5. **The question.** Read it. Pause.
+## Before class (not on any slide; the title slide's yellow note repeats it and hides on the first click)
+1. **30 minutes before: warm Daedalus.** `/Users/raj/.venv/bin/modal run deploy/daedalus_modal.py::admin --cmd warm`,
+   then `--cmd status`: one container, spend 0, not paused. It runs in one container that sleeps after ~30 idle minutes;
+   every sandbox and conversation is lost when it does.
+2. **Clean the wall:** `--cmd purge-tests` (removes the build's Probe/Load/Test/Film/Shot/Knob workshops), or
+   `--cmd purge-all` for an empty wall.
+3. **Join once yourself** ("Rajat demo"), press Send and Next step once on Emma's order; put `/wall` on the projector.
+4. **Never redeploy during class**: it restarts the container (every sandbox and running race is lost) and sets
+   min_containers back to 0.
+5. **After class:** `--cmd cool` (a cron also does it at 04:00 UTC). If a student's waiting workflow run "forgets" its
+   request, the container restarted: press Fresh sandbox and run again.
+Caps: US$40 a day for the class, US$1.5 per student (`--cmd cap`, `--cmd student-cap`). One race costs about US$0.07.
+All commands: `ledgerline/ledgerline/daedalus/README.md`, "Running it in class".
 
-## Part One · What an agent is (0:12–0:24)
-6. Part slide.
-7. **Agent, in one sentence.** Read the definition. Walk the three panels of Fig. 1 left to right.
-8. **Who picks the next step.** Chatbot (L2's invented stock figure), workflow (preview of L6), agent. Plant the seed: Rasoi will want a mix (Part Six).
-9. **The smallest loop.** Read the nine lines slowly, one comment at a time. "Lecture 4 stopped after the first for-loop."
-10. **The loop, turning.** Demo moment: drag the slider through Kavita's first message. Three look-ups in one model call. Ask the room: "Which step ends the loop?"
-11. **Check yourself.** Ask, wait, reveal.
+**The one idea.** An agent is a model in a loop: think, call, observe, repeat. The harness is the code that runs the
+loop and decides what it may do, for how long, and when it must wait. A workflow is the other way: the steps written
+down. When you know the order, write it down; when you do not, let the model choose, inside a harness.
 
-## Part Two · ReAct, written out (0:24–0:44)
-12. Part slide. "We write it in text first, so there is no magic."
-13. **ReAct.** Definition; Thought, Action, Observation. Emphasise: the Observation is written by our code, never by the model.
-14. **The prompt is the program.** Read the profile line (from Bahi), the tool lines, the format, the rules.
-15. **Parsing one step.** Three clicks: thought highlighted, action line, input JSON decoded. This is the real third step of our run.
-16. **The parser.** The trap: models write their own Observation. Two defences: `stop=`, and cut the text.
-17. **The text loop.** Same nine lines, plus the parsing. The Observation goes back as a user message.
-18. **The whole transcript.** Demo moment: scrub all 12 steps. Stop at step 4 (Action "none", no input: the parser sends a format error) and step 9 ("APPROVED, NOT YET RELEASED", so it releases).
-19. **What goes wrong in text.** The honest story: our first parser treated an empty reply as the answer and lite scored 1/12; one rule made it 11/12. "In the text loop, you own the format."
-20. **Check yourself.**
+**The rhythm.** Part slide → teach from the extremes → the section's question (30 s, one line in the chat) → film slot
+(three are planned, not rendered: the slot shows a labelled card; `films/FILMS.md`) → 1–3 checks, answers on click.
+Two live practicals in **Daedalus**: part 1 (Section 4: the loop and the knobs) and part 2 (Section 6: a workflow, an
+agent, the race). Each student needs only a browser.
 
-## Part Three · Native tool calling (0:44–0:54)
-21. Part slide. "The tool result message *is* the observation."
-22. **One-to-one.** Fig. 3, row by row.
-23. **The real messages.** Read the tool message's `next_step` aloud. This is Lecture 4's design doing Lecture 5's work.
-24. **Side by side.** Same task, both agents. Native asked for three look-ups at once.
-25. **Same loop, measured.** Flash: about the same cost. Lite: native used under half the tokens, but passed fewer tasks: because the bare loop does not send empty replies back. Segue to Part Four.
+**Where every number comes from.** `figdata.js` (window.L5), generated by `gen_figdata.py` from `experiments/logs/`.
+Nothing is typed twice: the numbers on the slides are `data-l5` spans or figures reading that file. Re-run
+`python3 lectures/L5-the-loop/gen_figdata.py` whenever a log changes.
 
-## Part Four · The anatomy of a harness (0:54–1:16)
-26. Part slide.
-27. **Harness.** Definition. "The model is the same in every row today. Only the harness changes." Fig. 4.
-28. **Part 1, the system prompt.** Bare vs full. "Hold on to the last rule (§6.2)."
-29. **Part 2, history.** Drag: 2 messages at the first model call, 22 at Kavita's tenth. Every call resends everything.
-30. **Part 3, the tool registry.** One schema. The toolbox is bound to Kavita's session. Narrow lists per job.
-31. **Part 4, stops.** Four exits; the graceful stop at the step limit.
-32. **Part 5, max steps and budget.** Demo moment: slide the cap down to 3 or 4 and read how many messages it would cut. Longest: 7 (harness), 9 (bare). "Seat belts."
-33. **Part 6, error recovery.** The ₹50,000 direct-order refusal and its next_step. Then empty replies: real, 5 of 12 harness tasks on lite in run A; with the rule, 12/12 in run B.
-34. **Part 7, state across days.** The real state file after day 1. "In production this is a database row."
-35. **Part 8, where the person comes in.** Kavita confirms, Rohit approves in his inbox, Neha in her own session. The rule: decisions are read from Bahi.
-36. **An approval is a pause.** Fig. 6 timeline; the five lines of `_check_waiting`.
-37. **The pause, in our run.** T10: Rohit silent. Day 2, the harness reads Bahi first. No second request, no order.
-38. **Check yourself.**
+| Log | Made by | What it holds |
+|---|---|---|
+| `chain_probe.json` | `experiments/chain_probe.py` (no model) | the purchasing chain tool by tool: PR waits for DOKAFOR; PO before approval refused; ERR-SEC-0001 for Emma's own approval; a second commit finds the same PR; **Ledgerline accepts and releases an order from Nordic Cell Co.**; PRD-05 refused |
+| `story.json` | `l5_runs.py story` (cassette `L5v4_story`) | Emma's order over two days on the shipped harness, every step; the night state (6,917 bytes); "not signed yet" (0 model calls) |
+| `hands.json` | `l5_runs.py hands` | the same order with max steps 2 (one round a message) vs the loop |
+| `react.json` | `l5_runs.py react` | ReAct as text: the stock question, the order, and the stock question without the stop sequence |
+| `parts.json` | `l5_runs.py parts` | harness variants on 3 jobs × 2 runs (recorded), and the false "Daniel approved" claim, pause on/off |
+| `recover_before.json`, `recover.json` | `l5_runs.py recover` | the lost reply and the blocked supplier, recovery on/off; before and after the fix |
+| `race.json` | `l5_runs.py race --repeats 3` | the shipped workflow once and the shipped agent three times on the six jobs; run twice; flaky retries 0/1 |
+| `daedalus_knobs.json` | `deploy/daedalus_modal.py::knobs` (the live app) | each agent knob (2 runs of the six) and four workflow changes |
+| `daedalus_api_test.json` | `::test` | 24 / 24 checks on the live URL |
+| `daedalus_load_40.json` | `::load --n 40` | 40 students at once (see slide 93 notes) |
+All runs: gemini-3.8-flash direct (Gemini API), reasoning effort low, temperature 0, recorded 11 Nov 2026. Costs are
+list-price estimates from tokens (US$0.50 / 3.00 per million in/out). Cassettes `ledgerline/ledgerline/cassettes/L5v4_*`.
 
-## Part Five · Failure modes, measured (1:16–1:32)
-39. Part slide.
-40. **What can go wrong.** Six rows; the last one ("only a gate in code") is the cliff-hanger.
-41. **What we measured.** Demo moment: toggle flash/lite and the measures. Say clearly: one run each, twelve tasks.
-42. **Every task.** Click the two dark dots on flash (T06, T12, full harness). Click T05 for the closed cost centre.
-43. **The never-event.** Read Kavita's three messages and the harness's answers; then the graph's hold. The model quoted §6.2 and then broke it when she said yes.
-44. **Reading it honestly.** Four cards. Do not skip the false alarms of our own `verify` check: 5 fired, 5 were false.
+**Screen recordings and screenshots** (Playwright on Modal against the live URL; `experiments/daedalus_record.py`):
+`films/daedalus_{loop,night,knob,workflow,wfwait,race}.mp4` (slides 54, 55, 58, 86, 88, 92; gitignored, served by the
+site) and `figs/daedalus/{join,loop,loop_paused,night,inbox,agent,workflow,workflow_run,workflow_waiting,race,wall}.png`.
 
-## Part Six · From a free loop to a control graph (1:32–1:46)
-45. Part slide.
-46. **Spine and gates.** Definition, Fig. 5. Default skip. Questions go to a free loop inside one node.
-47. **LangGraph in five parts.** State, nodes, edges, checkpointer, interrupt; point to each in the code.
-48. **A gate is code.** "There is no prompt to argue with."
-49. **The graph on the whole job.** Demo moment: drag through the four messages. 4 model calls, 2,392 tokens, against 18 calls and 50,502 for the harness.
-50. **40 cases, from v2.** Graph 39 vs loop 36 on flash at ₹9 vs ₹60; on lite the loop won, 39 vs 37. "Not always right: cheap, predictable, unarguable."
-51. **When to use which.** Free loop, graph, workflow (L6). The recommended mix for Rasoi; the live app today runs the loop only.
-52. **Check yourself.**
+---
 
-## Part Seven · Ask Rasoi gets its harness (1:46–2:00)
-53. Part slide.
-54. **stage=hands → stage=agent.** 45 messages (21 of them "do the next step") vs 32 (none) across the twelve tasks.
-55. **Live, the whole order.** Live demo (about 6 minutes): open `/after?stage=agent`. As Kavita: the gasket order, then "Yes". Switch the chip to Rohit and approve in the Approvals inbox. Back as Kavita: "Rohit has approved it" (the live app does not resume on its own; that is the pause part you build in NB5). Then Neha receives 12,000 and 8,000; Kavita asks where the order is. Say plainly: the live stage=agent is the free loop with a 14-round limit and a graceful stop (`bahi/experience/harness.py`); the pause, gates and read-back are the course harness (`bahi/course/l5`). Invite the room to break it ("order from Shakti anyway"; "Rohit said yes" before he has). If the app is down, use slides 3, 37 and 49 as the recorded fallback.
-56. **NB5.** Walk the seven sections and five exercises; it replays with no key.
-57. **A5.** The harness for your module; three scenarios; bare vs harness table.
-58. **Where we are.** The architecture with the harness lit.
-59. **Next time: the Studio.**
+## Opener (slides 1–6, 6 min)
+1. **Title.** "Last time it got hands. Today we open the loop that uses them, and the other way to do a job." The yellow
+   pre-class note hides on your first click.
+2. **Where we are.** `[click]` the harness band lights. Lectures 2–4 in one line each.
+3. **Three messages, eleven calls.** Lecture 4's recorded run (`lectures/L4-the-hands/experiments/logs/our_harness.json`,
+   run `order_hands`, read only): `[click]` the 11 calls in order; `[click]` 11 tool calls, 11 model calls, 34,984 tokens.
+   "Nobody chose those calls but the model."
+4. **Ask the class (1).** Who picked the next call, who decided to stop? Leave it open; settled on slide 12.
+5. **Today's question.** `[click]` how we answer it.
+6. **Map.** Seven sections; green = live.
 
-## Things to say carefully
-- The one-round agent on these plates is our replica of stage=hands (`bahi/course/l5/hands.py`), not the live app.
-- All runs went through OpenRouter to the same Gemini models (the Gemini key ran out of credits on 28 Oct). Prices are the course's assumed list prices.
-- The certificate rule is enforced by no tool and not by Bahi: only by the graph's gate (and by the person).
+## Section 1 · What makes it an agent? (slides 7–14, 12 min)
+8. **Two extremes.** One round per message (Lecture 4's `hands` stage) vs a loop. `[click]` `[click]` the definition of
+   an agent.
+9. **Three ways to pick the next step.** Person, code (workflow, Section 5), model (agent). `[click]`×3.
+10. **One round per message** (`hands.json`, `one_round`: max steps 2). `[click]` per message: its calls and "one round
+    used up"; final `[click]`: not released, 6 model calls, 13,418 tokens. The callout reads the order's status from the
+    log ("AP": approved, not yet released): the supplier never got it after three messages.
+11. **In a loop** (`hands.json`, `loop`): same three messages; released; 8 model calls, 7 tool calls, 25,573 tokens.
+    Point at message 1: the model tried a direct order, was refused, and raised a request (slide 40 returns to this).
+12. **The loop removes the clicking, not the people.** The order, the yes and Daniel's approval are decisions.
+    `[click]` answers slide 4: the model picked every call; our code ran them; Emma and Daniel decided.
+13. **Ask the class (2).** 14. **Check.**
+
+## Section 2 · The loop (slides 15–30, 20 min)
+16. **The smallest loop** (`ledgerline/daedalus/smallest.py`, fifteen lines). `[click]` per part highlights think (8–9),
+    done? (10–11), act (12–13), observe (14–15). Last `[click]`: line 7, `while True`: nothing stops it.
+17. **ReAct** (Yao et al., 2022, arXiv:2210.03629). Thought, Action, Observation; the definition.
+18. **The ReAct prompt** (`daedalus/react.py`). `[click]` the format; `[click]` "then stop; our code writes the Observation".
+19. **The text loop, recorded** (`react.json`, `stock`): two steps; the observation written by our code; the final answer
+    (11 days of cover, 6,600 free).
+20. **The text loop on Emma's order** (`react.json`, `order`): six turns. Honest: this model wrote **no Thought line** at
+    all, and at turn 5 it guessed a need-by date (2026-11-26: the ReAct prompt, unlike the app's, gives no default).
+21. **Parsing one step.** The raw text and what `parse_step` returns. The callout: 0 format errors and 0 invented
+    observations in our three text runs on this model, even without the stop sequence; older models broke often, so the
+    parser still checks (NB5 exercise 2 feeds it broken replies).
+22. **Native tool calls.** The mapping, `[click]` per row.
+23. **Emma's order, step by step** (`story.json` day 1, message 1). `[click]` per turn: step 1, three calls at once
+    (budget, certificate, preview); step 2, words: the preview.
+24. **Three calls in one step.** Why they could run together; when they cannot.
+25. **The yes, step by step.** One call saves PR/2026/04417; the harness line "paused: waits for DOKAFOR"; the loop ends
+    "paused".
+26. **Every step reads it all again.** The seven model calls of the two days: 2,198 → 3,948 tokens; 21,799 in all.
+27. **When does the loop end?** One way in the smallest loop; five in ours.
+28. **Ask the class (3).** Step 2 read 548 more tokens than step 1: the three calls and their results.
+29. **Film slot · `loop`** (planned). 30. **Check.**
+
+## Section 3 · The harness (slides 31–50, 25 min)
+32. **The harness** (definition) and the eight parts around the loop, `[click]` each.
+33. **How we measured.** The six jobs, the scripted people, the score from Ledgerline's tables. `[click]` the shipped row:
+    6, 6 of 6; ~38.5 model calls; ~124,000 tokens; ~96 s per run of six (`daedalus_knobs.json`).
+34. **Part 1 · The system prompt.** Ask Northbridge's prompt (the live app's, `experience/harness.py`), lines 5–16.
+    Measured: the one-line prompt was still right 6, 5 times, but searched the policy 13 times per run (shipped 4) and
+    looked suppliers up 16 times (shipped 5.5): 81 tool calls and ~224,000 tokens vs 36.5 and ~124,000.
+35. **Part 2 · The history.** Plain data, sent every step; trimmed by whole turns.
+36. **Part 3 · The tool list.** 2 tools: 2, 3 of 6 (it cannot raise a request, and says so); all 16: 6, 6 at +35% tokens.
+37. **Part 4 · Stop rules** (our `loop.py`). `[click]` per rule.
+38. **Part 5 · The step limit.** Max steps 4: 6, 5 (bells ran out of steps once); max steps 2: 2, 2. The job table:
+    every order ended on the step limit; the two traps were still refused (refusing needs few steps).
+39. **Part 5 · The budget.** 6,000 tokens: 3, 4 of 6; stopped bells and the question mid-way. Set it from a measurement:
+    the morning message in the story read 10,851 tokens; the shipped 60,000 leaves room.
+40. **When a tool says no.** The refused direct order in `hands.json` (loop, message 1) and the model's reply.
+41. **Part 6 · Error recovery.** Three rules. Honest: on the six jobs recovery on/off made no difference (6, 6), because
+    no call failed twice. So we broke Ledgerline on purpose:
+42. **Find and fix · the lost reply** (`recover_before.json` → `recover.json`, bells job, `pr_submit` times out once
+    after saving). First version: the retry was refused, 0 / 2 finished, the request sat with no order; recovery off:
+    2 / 2. Fix: remember refusals, not timeouts (safe only because the tools look themselves up before saving). After:
+    2 / 2. The blocked supplier case: no difference, the tool's words did the work.
+43. **Part 7 · The approval is a pause** (definition).
+44. **The pause, tested** (`parts.json` claims, 2 runs each). Pause on: the harness read Ledgerline first, 0 model calls,
+    0 orders. Pause off: this model called `order_status` itself and told the truth (2 model calls, 1 tool call, 0
+    orders). Say it honestly: the pause turns a good habit into a rule, and saves the calls.
+45. **Part 8 · State across days.** 6,917 bytes of JSON, 11 messages, keys `user config messages waiting docs failed`.
+46. **Two days, one job.** `[click]`×6 along the timeline; totals: 7 model calls, 6 tool calls, 21,799 tokens, ~US$0.013.
+47. **Who owns what.** 48. **Ask the class (4):** "in a JSON document (and in Ledgerline), not in memory".
+49. **Film slot · `harness`** (planned). 50. **Check.**
+
+## Section 4 · Daedalus, part 1 (slides 51–62, 20 min, live)
+Put the wall on the projector. Walk the room (or the chat) while they work. Expect the first steps after ~5 s.
+52. **The workshop.** The myth in one breath: the labyrinth (fixed paths), the wings (free flight), Icarus (no limits).
+53. **Step 1 · Join** (screenshot). 54. **Step 2 · Watch the loop** (recording `daedalus_loop.mp4`): Send, Next step,
+    open a call, "Yes, go ahead.", the pause line. 55. **Step 3 · The night and the morning** (`daedalus_night.mp4`):
+    Next morning; the morning message before Daniel signs ("still waiting (no model call)"); sign; again; released.
+56. **Daniel's inbox** (screenshot): signing as DOKAFOR; Emma cannot (ERR-SEC-0001 in `chain_probe.json`).
+57. **Step 4 · One knob at a time** (screenshot of Your agent). Running the six jobs takes ~1.5 minutes.
+58. **The knobs, live** (`daedalus_knob.mp4`): max steps 2, then 2 tools, on the loop itself.
+59. **What the knobs did** (all rows of `daedalus_knobs.json`). 60. **Reading the table:** too tight breaks the job; looser
+    grows the bill; the guarantees (pause, recovery) are quiet until the bad day (slides 42, 44).
+61. **Ask the class (5).** 62. **Check.**
+
+## Section 5 · Workflows and agents (slides 63–83, 22 min)
+64. **Two extremes, again.** Written down vs chosen as it goes; the definition of a workflow.
+65. **Emma's order as a workflow** (Daedalus's shipped blocks). `[click]` the model step, the gates, the approval step.
+66. **The parts of a workflow** (trigger, step, branch/gate, approval, error path). 67. **Triggers** (person, schedule,
+    event, webhook; the examples are illustrations of the idea, not runs).
+68. **The model step** (`workflow.py` READ_PROMPT and the recorded reply on the spring order: 208 tokens in, 63 out).
+69. **The spring order, run by the workflow** (`race.json`, workflow, spring): one model call; tools in order; it waited
+    at step 8 until Daniel signed (the race's scripted Daniel), then finished.
+70. **A gate is code** (`workflow.py`, `_b_cert`). Ledgerline with no gate accepted and released the Nordic order
+    (`chain_probe.json`: `nordic_release`).
+71. **A waiting run is a document** (`_b_approval`; the Daedalus screenshot shows the saved run's size in bytes).
+72. **Retries and the lost reply** (`race.json` flaky): 0 retries → the run failed and the request existed with no
+    order; 1 retry → the second attempt found the saved request; released.
+73. **Run it twice** (`race.json` twice): done, done; 1 request, 1 order. Definition of idempotent.
+74. **The race** (`race.json`): workflow 4 / 6 at 1,241 tokens; agent 18 / 18 (three runs) at 365,157 tokens.
+75. **What choosing costs** (live app, one run each): workflow 1,241 tokens, 6 model calls, ~US$0.002, ~12 s; agent
+    ~124,000 tokens, ~38.5 model calls, ~US$0.07, ~96 s. "About a hundred times the tokens."
+76. **Where the workflow lost:** the fallback and the question; both safe stops, with the workflow's own words.
+77. **Where the agent varied** (`race.json` paths, spring): on all 6 jobs the three runs did not all match; 15
+    different paths in 18 runs; a direct order tried and refused in some runs, not others.
+78. **"Cheapest, if allowed": two ways** (`race.json` paths, fallback).
+79. **When to use which.** 80. **The middle:** a workflow with a model step (ours); a workflow as one tool for an agent;
+    hand over what the workflow stops on.
+81. **Ask the class (6):** Aiko's daily goods receipt: a workflow (same steps every day, a person's count, cheap).
+82. **Film slot · `workflow`** (planned). 83. **Check.**
+
+## Section 6 · Daedalus, part 2 (slides 84–97, 25 min, live)
+85. **Step 1 · Your workflow** (screenshot). 86. **Step 2 · Run it step by step** (`daedalus_workflow.mp4`).
+87. **A finished run** (bells; screenshot). 88. **Step 3 · Sign and resume** (`daedalus_wfwait.mp4`; it also shows the
+    certificate gate removed and the Nordic order going through).
+89. **Step 4 · Break it on purpose** (live app, `daedalus_knobs.json` workflow): no certificate gate 3 / 6 (ordered from
+    Nordic, twice: the cheap-supplier and the fallback jobs); no approval step 3 / 6 (Ledgerline refused the order); no
+    budget gate 4 / 6 (Ledgerline's own refusal held); removing "Find the item" breaks every run at "Check stock" and
+    names the block to put back (API test check).
+90. **Step 5 · One more branch:** certificate gate "use the preferred supplier": 5 / 6, at the same tokens. Ask: is a
+    silent switch from Nordic to Voltway what Emma wants?
+91. **Step 6 · Your agent.** 92. **Step 7 · The race** (`daedalus_race.mp4`; ~70–90 s).
+93. **The class wall** (screenshot from the build: the test workshops; in class it shows the students). Load test before
+    class (`daedalus_load_40.json`): 40 students at once: join median 0.56 s, a loop step 4.4 s (p90 5.9), a workflow run
+    2.2 s, and all 40 races at the same second: 40 / 40 finished, median 70 s, max 88 s; every agent 6 / 6, every
+    workflow 4 / 6; 0 failed model calls.
+94. **What the room should find** (our race). 95. **Honest failure modes** (all from the logs above).
+96. **Ask the class (7).** 97. **Check.**
+
+## Section 7 · NB5 and A5 (slides 98–103, 8 min)
+99. **NB5** (`NB5_the_loop.ipynb`, 18 code cells; replays with no key: 0 errors on Modal, `--mode replay`, 11 Nov).
+    Five exercises with guarded solutions. 100–101. **A5** (`A5.md`): their own module's job as a workflow and an agent,
+    raced on six jobs of their own, plus one honest failure found and fixed. 102. **What we learnt.** 103. **Next: Trust.**
+
+## If something goes wrong in class
+- **"The model did not answer just now"**: one retry; if many students see it, `--cmd status` (cap reached? paused?).
+- **Everyone's step is slow**: 48 model calls are allowed in flight; a race uses many. Ask half the room to watch the
+  wall while the other half races.
+- **The app is down**: the recordings on slides 54–58 and 86–92 show every step; carry on from them.

@@ -1,0 +1,375 @@
+{
+ "stock": {
+  "question": "How many days of BAT-500 battery packs do we have in stock?",
+  "reply": "We currently have 11 days of cover for the BAT-500 battery packs across all warehouses. \nThere are 6,600 units available in free stock (5,400 at Manchester main stores and 1,200 at Leeds stores), with none currently on order.",
+  "steps": [
+   {
+    "thought": "",
+    "action": "check_stock",
+    "action_input": {
+     "item_code": "BAT-500"
+    },
+    "final": null,
+    "invented_observation": false,
+    "error": null,
+    "turn": 1,
+    "step": 1,
+    "raw": "Action: check_stock\nAction Input: {\"item_code\":\"BAT-500\"}\n",
+    "tokens_in": 1192,
+    "tokens_out": 21,
+    "seconds": 1.63,
+    "observation": {
+     "ok": true,
+     "item_code": "BAT-500",
+     "description": "Battery pack, 36 V 500 Wh",
+     "unit": "NOS",
+     "warehouses": [
+      {
+       "warehouse": "WH-MAN-STR",
+       "name": "Manchester main stores",
+       "on_hand": 5400,
+       "allocated": 0,
+       "on_order": 0,
+       "free": 5400
+      },
+      {
+       "warehouse": "WH-LDS-STR",
+       "name": "Leeds stores",
+       "on_hand": 1200,
+       "allocated": 0,
+       "on_order": 0,
+       "free": 1200
+      }
+     ],
+     "free_total": 6600,
+     "on_order_total": 0,
+     "reorder_level": 3000,
+     "cover_days": 11,
+     "below_reorder": false
+    }
+   },
+   {
+    "thought": "I can reply now.",
+    "action": null,
+    "action_input": null,
+    "final": "We currently have 11 days of cover for the BAT-500 battery packs across all warehouses. \nThere are 6,600 units available in free stock (5,400 at Manchester main stores and 1,200 at Leeds stores), with none currently on order.",
+    "invented_observation": false,
+    "error": null,
+    "turn": 1,
+    "step": 2,
+    "raw": "Thought: I can reply now.\nFinal Answer: We currently have 11 days of cover for the BAT-500 battery packs across all warehouses. \nThere are 6,600 units available in free stock (5,400 at Manchester main stores and 1,200 at Leeds stores), with none currently on order.",
+    "tokens_in": 1414,
+    "tokens_out": 75,
+    "seconds": 1.901
+   }
+  ],
+  "prompt": "You are Ask Northbridge, working inside Northbridge Cycles' Ledgerline ERP for Emma Clarke (ECLARKE), purchase\nexecutive. Today is Monday 26 October 2026. Every fact comes from a tool; never guess a number.\n\nYou can use these tools:\n- find_item(query: string): Find stock items by description or code (e.g. '500 Wh battery pack'). Returns active items, best match first, with code, unit and whether they are lithium-cell parts.\n- check_stock(item_code: string): Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.\n- find_supplier(name: string, city?: string): Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid UN 38.3 certificate. Use it before registering anyone new.\n- check_budget(cost_centre?: string): Is a cost centre open, and how much budget is left this quarter? Without a code, lists every open cost centre.\n- search_policy(question: string): Search Northbridge's purchasing policy and the Ledgerline manual. Returns the relevant clauses with their citations, or says the documents do not cover it.\n- create_purchase_request(item_code: string, quantity: integer, cost_centre: string, need_by: string, confirm?: boolean): Raise a purchase request (PR): the internal ask to buy something. With confirm=false it previews the estimated value and who must approve; with confirm=true it saves and submits it. Within your limit it is approved at once; above it, it waits for your manager.\n- list_my_approvals(): What is waiting for the signed-in user's signature: purchase requests and orders, with value and who raised them.\n- approve_purchase_request(request_no: string, decision: string, comment?: string): Approve or reject a purchase request that waits for the signed-in user. Only the named approver can do this, never the person who raised it.\n- create_purchase_order(supplier_code: string, request_no?: string, item_code?: string, quantity?: integer, cost_centre?: string, need_by?: string, rate?: number, confirm?: boolean): Create a purchase order (PO) with a supplier. Give request_no for an approved purchase request (it supplies item, quantity, cost centre and date), or item_code, quantity, cost_centre and need_by for a small direct order up to £50,000. confirm=false previews price, tax and value; confirm=true saves it. Returns a receipt with the order's real status: an APPROVED order still has to be released.\n- approve_purchase_order(po_no: string, comment?: string): Approve a purchase order that waits for the signed-in user's signature.\n- release_purchase_order(po_no: string): Release an APPROVED purchase order to the supplier; only then does the supplier get it. Returns a receipt with the real status.\n- order_status(po_no?: string, request_no?: string): The real status of a purchase order or a purchase request, read from Ledgerline, with approval, goods received and any warning.\n- receive_goods(po_no: string, quantity: integer, warehouse?: string, remarks?: string, confirm?: boolean): Record goods received (GRN) against a RELEASED purchase order: stock goes up, and the order closes once everything has arrived. Cannot receive more than was ordered.\n- register_supplier(name: string, city: string, state: string, vat_no: string, confirm?: boolean): Register a NEW supplier. Only after find_supplier shows no existing match. confirm=false previews and checks for duplicates; confirm=true creates it.\n- send_message(to: string, text: string): Send a short message to a colleague or supplier (Slack handle like @daniel, or an email address). Goes through Ledgerline's notification queue.\n- supplier_certificates(supplier_code: string, item_code?: string, cert_type?: string, limit?: integer, cursor?: string): A supplier's certificates on file in Ledgerline (UN 38.3 cell-safety and others): type, document reference, valid-to date, whether each is valid today and how many days are left. Give item_code to also learn whether that item needs a valid UN 38.3 certificate (Purchase Policy §6.2) and whether this supplier has one.\n\nWork one step at a time, in exactly this format:\nThought: what you know so far and what to do next\nAction: the name of one tool from the list\nAction Input: the arguments, as one JSON object on one line\nThen stop writing. The system runs the tool and replies with:\nObservation: the tool's result\n\nRepeat Thought / Action / Action Input / Observation as often as you need.\nWhen you are ready to reply to Emma, write:\nThought: I can reply now.\nFinal Answer: your reply to Emma, in two to five plain lines.\n\nRules: anything that saves (confirm=true) needs Emma's yes to a preview first (confirm=false). A request above Emma's\nlimit waits for Daniel Okafor: say so and order nothing until it is approved.",
+  "tokens_in": 2606,
+  "format_errors": 0,
+  "invented_observations": 0
+ },
+ "order": {
+  "question": "Order 2,000 BAT-500 packs from Voltway for the spring launch run.",
+  "reply": "I have prepared a preview for 2,000 units of BAT-500 from Voltway Cells (VC-EIN-0042) for the Spring launch run (PRD-07).\nThe estimated value is £273,600.00 (at £114.00/unit, plus VAT), which exceeds your approval limit of £250,000.00.\nBecause it exceeds your limit, raising this purchase request requires Daniel Okafor's approval before a purchase order can be placed.\nPlease confirm if you would like me to submit this purchase request for Daniel's approval (and let me know if you have a specific need-by date other than 26 November 2026).",
+  "steps": [
+   {
+    "thought": "",
+    "action": "find_supplier",
+    "action_input": {
+     "name": "Voltway"
+    },
+    "final": null,
+    "invented_observation": false,
+    "error": null,
+    "turn": 1,
+    "step": 1,
+    "raw": "Action: find_supplier\nAction Input: {\"name\":\"Voltway\"}\n",
+    "tokens_in": 1197,
+    "tokens_out": 16,
+    "seconds": 1.855,
+    "observation": {
+     "ok": true,
+     "matches": [
+      {
+       "supplier_code": "VC-EIN-0042",
+       "name": "Voltway Cells",
+       "city": "Eindhoven",
+       "state": "NL",
+       "status": "ACTIVE",
+       "match": 0.74,
+       "cell_safety_certificate": "valid"
+      },
+      {
+       "supplier_code": "VPC-ROT-0107",
+       "name": "Voltway Paints & Coatings",
+       "city": "Rotterdam",
+       "state": "NL",
+       "status": "ACTIVE",
+       "match": 0.5,
+       "cell_safety_certificate": "none"
+      },
+      {
+       "supplier_code": "VC-EIN-0009",
+       "name": "Voltway Cells (old code, do not use)",
+       "city": "Eindhoven",
+       "state": "NL",
+       "status": "BLOCKED",
+       "match": 0.74,
+       "cell_safety_certificate": "none"
+      }
+     ],
+     "hint": "Only partial matches. Show them to the user and ask which one they mean. Blocked codes, never use: VC-EIN-0009."
+    }
+   },
+   {
+    "thought": "",
+    "action": "find_item",
+    "action_input": {
+     "query": "BAT-500"
+    },
+    "final": null,
+    "invented_observation": false,
+    "error": null,
+    "turn": 1,
+    "step": 2,
+    "raw": "Action: find_item\nAction Input: {\"query\":\"BAT-500\"}",
+    "tokens_in": 1457,
+    "tokens_out": 18,
+    "seconds": 1.307,
+    "observation": {
+     "ok": true,
+     "items": [
+      {
+       "item_code": "BAT-500",
+       "description": "Battery pack, 36 V 500 Wh",
+       "unit": "NOS",
+       "cell_safety": true
+      },
+      {
+       "item_code": "BAT-500-R",
+       "description": "Battery pack, 36 V 500 Wh (refurbished)",
+       "unit": "NOS",
+       "cell_safety": true
+      }
+     ],
+     "note": ""
+    }
+   },
+   {
+    "thought": "",
+    "action": "check_budget",
+    "action_input": {},
+    "final": null,
+    "invented_observation": false,
+    "error": null,
+    "turn": 1,
+    "step": 3,
+    "raw": "Action: check_budget\nAction Input: {}",
+    "tokens_in": 1581,
+    "tokens_out": 10,
+    "seconds": 2.162,
+    "observation": {
+     "ok": true,
+     "open": [
+      {
+       "code": "PRD-07",
+       "name": "Spring launch run"
+      },
+      {
+       "code": "PRD-03",
+       "name": "Cargo e-bike line"
+      },
+      {
+       "code": "MNT-01",
+       "name": "Plant maintenance"
+      },
+      {
+       "code": "ADM-01",
+       "name": "Administration"
+      }
+     ]
+    }
+   },
+   {
+    "thought": "",
+    "action": "search_policy",
+    "action_input": {
+     "question": "approval limits and direct orders threshold purchase request"
+    },
+    "final": null,
+    "invented_observation": false,
+    "error": null,
+    "turn": 1,
+    "step": 4,
+    "raw": "Action: search_policy\nAction Input: {\"question\":\"approval limits and direct orders threshold purchase request\"}",
+    "tokens_in": 1674,
+    "tokens_out": 21,
+    "seconds": 2.265,
+    "observation": {
+     "ok": true,
+     "answer_in_documents": true,
+     "clauses": [
+      {
+       "cite": "POL-PUR-001 §5.4",
+       "document": "Purchase Policy v4.1",
+       "effective": "2026-04-01",
+       "status": "in force",
+       "heading": "5. Approval limits",
+       "text": "5.4 Approval of a purchase request covers the purchase order raised against it, provided the approver's limit covers the order's gross value.",
+       "score": 6.04
+      },
+      {
+       "cite": "POL-PUR-001 §5.2",
+       "document": "Purchase Policy v4.1",
+       "effective": "2026-04-01",
+       "status": "in force",
+       "heading": "5. Approval limits",
+       "text": "5.2 The approval matrix (POL-APR-002) sets each role's limit. An order above the raiser's own limit must be approved by the next person up the line whose limit covers it.",
+       "score": 3.63
+      },
+      {
+       "cite": "MAN-PUR-72 §23.4",
+       "document": "Ledgerline ERP 7.2 User Manual, Purchasing and Inventory Enquiry v7.2.3",
+       "effective": "2025-01-15",
+       "status": "in force",
+       "heading": "23. Notes for key users and administrators › 23.4 Configurable limits",
+       "text": "The direct-order limit (§11.7) is a company setting, maintained by IT on the purchasing parameters screen. Changing it takes effect at the next sign-in of each user.",
+       "score": 3.2
+      },
+      {
+       "cite": "POL-PUR-001 §5.3",
+       "document": "Purchase Policy v4.1",
+       "effective": "2026-04-01",
+       "status": "in force",
+       "heading": "5. Approval limits",
+       "text": "5.3 Nobody may approve an order they raised.",
+       "score": 2.67
+      }
+     ],
+     "note": "Quote the rule with its citation, e.g. (POL-PUR-001 §6.2). If a clause's status says it is replaced or not yet in force, follow the status. Stock, budgets and statuses come from Ledgerline."
+    }
+   },
+   {
+    "thought": "",
+    "action": "create_purchase_request",
+    "action_input": {
+     "confirm": false,
+     "cost_centre": "PRD-07",
+     "item_code": "BAT-500",
+     "need_by": "2026-11-26",
+     "quantity": 2000
+    },
+    "final": null,
+    "invented_observation": false,
+    "error": null,
+    "turn": 1,
+    "step": 5,
+    "raw": "Action: create_purchase_request\nAction Input: {\"confirm\":false,\"cost_centre\":\"PRD-07\",\"item_code\":\"BAT-500\",\"need_by\":\"2026-11-26\",\"quantity\":2000}",
+    "tokens_in": 2251,
+    "tokens_out": 58,
+    "seconds": 1.977,
+    "observation": {
+     "ok": true,
+     "preview": {
+      "item_code": "BAT-500",
+      "quantity": 2000,
+      "estimated_rate": 114.0,
+      "estimated_value": 273600.0,
+      "cost_centre": "PRD-07",
+      "cost_centre_state": "OK",
+      "need_by": "2026-11-26",
+      "needs_approval": true,
+      "your_limit": 250000.0,
+      "approver": "DOKAFOR"
+     },
+     "warnings": [],
+     "note": "Nothing has been saved. Show this to the user and ask to confirm."
+    }
+   },
+   {
+    "thought": "",
+    "action": null,
+    "action_input": null,
+    "final": "I have prepared a preview for 2,000 units of BAT-500 from Voltway Cells (VC-EIN-0042) for the Spring launch run (PRD-07).\nThe estimated value is £273,600.00 (at £114.00/unit, plus VAT), which exceeds your approval limit of £250,000.00.\nBecause it exceeds your limit, raising this purchase request requires Daniel Okafor's approval before a purchase order can be placed.\nPlease confirm if you would like me to submit this purchase request for Daniel's approval (and let me know if you have a specific need-by date other than 26 November 2026).",
+    "invented_observation": false,
+    "error": null,
+    "plain": true,
+    "turn": 1,
+    "step": 6,
+    "raw": "I have prepared a preview for 2,000 units of BAT-500 from Voltway Cells (VC-EIN-0042) for the Spring launch run (PRD-07).\nThe estimated value is £273,600.00 (at £114.00/unit, plus VAT), which exceeds your approval limit of £250,000.00.\nBecause it exceeds your limit, raising this purchase request requires Daniel Okafor's approval before a purchase order can be placed.\nPlease confirm if you would like me to submit this purchase request for Daniel's approval (and let me know if you have a specific need-by date other than 26 November 2026).",
+    "tokens_in": 2464,
+    "tokens_out": 164,
+    "seconds": 2.825
+   }
+  ],
+  "prompt": "You are Ask Northbridge, working inside Northbridge Cycles' Ledgerline ERP for Emma Clarke (ECLARKE), purchase\nexecutive. Today is Monday 26 October 2026. Every fact comes from a tool; never guess a number.\n\nYou can use these tools:\n- find_item(query: string): Find stock items by description or code (e.g. '500 Wh battery pack'). Returns active items, best match first, with code, unit and whether they are lithium-cell parts.\n- check_stock(item_code: string): Stock of an item in every warehouse: on hand, allocated, on order, reorder level and days of cover.\n- find_supplier(name: string, city?: string): Look a supplier up by name, tolerating different spellings. Returns the closest matches with code, city, status and whether they hold a valid UN 38.3 certificate. Use it before registering anyone new.\n- check_budget(cost_centre?: string): Is a cost centre open, and how much budget is left this quarter? Without a code, lists every open cost centre.\n- search_policy(question: string): Search Northbridge's purchasing policy and the Ledgerline manual. Returns the relevant clauses with their citations, or says the documents do not cover it.\n- create_purchase_request(item_code: string, quantity: integer, cost_centre: string, need_by: string, confirm?: boolean): Raise a purchase request (PR): the internal ask to buy something. With confirm=false it previews the estimated value and who must approve; with confirm=true it saves and submits it. Within your limit it is approved at once; above it, it waits for your manager.\n- list_my_approvals(): What is waiting for the signed-in user's signature: purchase requests and orders, with value and who raised them.\n- approve_purchase_request(request_no: string, decision: string, comment?: string): Approve or reject a purchase request that waits for the signed-in user. Only the named approver can do this, never the person who raised it.\n- create_purchase_order(supplier_code: string, request_no?: string, item_code?: string, quantity?: integer, cost_centre?: string, need_by?: string, rate?: number, confirm?: boolean): Create a purchase order (PO) with a supplier. Give request_no for an approved purchase request (it supplies item, quantity, cost centre and date), or item_code, quantity, cost_centre and need_by for a small direct order up to £50,000. confirm=false previews price, tax and value; confirm=true saves it. Returns a receipt with the order's real status: an APPROVED order still has to be released.\n- approve_purchase_order(po_no: string, comment?: string): Approve a purchase order that waits for the signed-in user's signature.\n- release_purchase_order(po_no: string): Release an APPROVED purchase order to the supplier; only then does the supplier get it. Returns a receipt with the real status.\n- order_status(po_no?: string, request_no?: string): The real status of a purchase order or a purchase request, read from Ledgerline, with approval, goods received and any warning.\n- receive_goods(po_no: string, quantity: integer, warehouse?: string, remarks?: string, confirm?: boolean): Record goods received (GRN) against a RELEASED purchase order: stock goes up, and the order closes once everything has arrived. Cannot receive more than was ordered.\n- register_supplier(name: string, city: string, state: string, vat_no: string, confirm?: boolean): Register a NEW supplier. Only after find_supplier shows no existing match. confirm=false previews and checks for duplicates; confirm=true creates it.\n- send_message(to: string, text: string): Send a short message to a colleague or supplier (Slack handle like @daniel, or an email address). Goes through Ledgerline's notification queue.\n- supplier_certificates(supplier_code: string, item_code?: string, cert_type?: string, limit?: integer, cursor?: string): A supplier's certificates on file in Ledgerline (UN 38.3 cell-safety and others): type, document reference, valid-to date, whether each is valid today and how many days are left. Give item_code to also learn whether that item needs a valid UN 38.3 certificate (Purchase Policy §6.2) and whether this supplier has one.\n\nWork one step at a time, in exactly this format:\nThought: what you know so far and what to do next\nAction: the name of one tool from the list\nAction Input: the arguments, as one JSON object on one line\nThen stop writing. The system runs the tool and replies with:\nObservation: the tool's result\n\nRepeat Thought / Action / Action Input / Observation as often as you need.\nWhen you are ready to reply to Emma, write:\nThought: I can reply now.\nFinal Answer: your reply to Emma, in two to five plain lines.\n\nRules: anything that saves (confirm=true) needs Emma's yes to a preview first (confirm=false). A request above Emma's\nlimit waits for Daniel Okafor: say so and order nothing until it is approved.",
+  "tokens_in": 10624,
+  "format_errors": 0,
+  "invented_observations": 0
+ },
+ "stock_no_stop": {
+  "reply": "We currently have 11 days of cover for the BAT-500 battery packs. Across our warehouses, there are 6,600 units in free stock (5,400 at Manchester main stores and 1,200 at Leeds stores), with none currently on order. Stock remains above the reorder level of 3,000 units.",
+  "steps": [
+   {
+    "thought": "",
+    "action": "check_stock",
+    "action_input": {
+     "item_code": "BAT-500"
+    },
+    "final": null,
+    "invented_observation": false,
+    "error": null,
+    "turn": 1,
+    "step": 1,
+    "raw": "Action: check_stock\nAction Input: {\"item_code\":\"BAT-500\"}\n",
+    "tokens_in": 1192,
+    "tokens_out": 21,
+    "seconds": 1.926,
+    "observation": {
+     "ok": true,
+     "item_code": "BAT-500",
+     "description": "Battery pack, 36 V 500 Wh",
+     "unit": "NOS",
+     "warehouses": [
+      {
+       "warehouse": "WH-MAN-STR",
+       "name": "Manchester main stores",
+       "on_hand": 5400,
+       "allocated": 0,
+       "on_order": 0,
+       "free": 5400
+      },
+      {
+       "warehouse": "WH-LDS-STR",
+       "name": "Leeds stores",
+       "on_hand": 1200,
+       "allocated": 0,
+       "on_order": 0,
+       "free": 1200
+      }
+     ],
+     "free_total": 6600,
+     "on_order_total": 0,
+     "reorder_level": 3000,
+     "cover_days": 11,
+     "below_reorder": false
+    }
+   },
+   {
+    "thought": "I can reply now.",
+    "action": null,
+    "action_input": null,
+    "final": "We currently have 11 days of cover for the BAT-500 battery packs. Across our warehouses, there are 6,600 units in free stock (5,400 at Manchester main stores and 1,200 at Leeds stores), with none currently on order. Stock remains above the reorder level of 3,000 units.",
+    "invented_observation": false,
+    "error": null,
+    "turn": 1,
+    "step": 2,
+    "raw": "Thought: I can reply now.\nFinal Answer: We currently have 11 days of cover for the BAT-500 battery packs. Across our warehouses, there are 6,600 units in free stock (5,400 at Manchester main stores and 1,200 at Leeds stores), with none currently on order. Stock remains above the reorder level of 3,000 units.",
+    "tokens_in": 1414,
+    "tokens_out": 89,
+    "seconds": 1.82
+   }
+  ],
+  "invented_observations": 0
+ }
+}
