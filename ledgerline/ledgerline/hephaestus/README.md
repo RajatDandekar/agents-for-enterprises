@@ -130,6 +130,25 @@ at most 48 model calls in flight; the pause also has an MCP switch (admin page).
 sandboxes, conversations and running jobs live in the one container (names, knobs, runs, results survive in the modal.Dict
 `northbridge-hephaestus-state`). Cost (the guard's estimate from tokens): one run of the six about US$0.03 (0.027 in the test run); everything on 5 Nov (all measurements, films, the 40-student load test, tests) US$5.52 over 4,323 model calls.
 
+## Staging, and the 11 Nov build (not yet on the live app)
+A separate copy for testing, never shared with the live app (its own app, URL, state Dict and Volume; min_containers 0):
+```
+HEPH_STAGING=1 MODAL_PROFILE=rajatworkspace /Users/raj/.venv/bin/modal deploy deploy/hephaestus_modal.py
+# -> https://rajatworkspace--northbridge-hephaestus-staging.us-east.modal.run
+```
+The 11 Nov build (review of 8 Nov) changes only `static/forge.html`, `static/forge.js`, `static/forge.css` and the
+`measured` notes in `knobs.json` (no Python, no API change): the Experiments tab shows four steps; each "Change one thing"
+starts from the shipped toolbox (and there are two new ones for the rules); after a rerun a **Before and after** box
+compares it with the shipped run of the same questions (a sentence on what to notice, score / tool calls / tokens / cost
+old → new, the questions that flipped, the tools chosen, and Next: another knob, then The Shield); the scorecard opens a
+question's trace in a full-width row; "undefined model calls" in the trace header is fixed. To put it on the live app,
+**outside class** (a deploy restarts the container: sandboxes and conversations start again; names, knobs and runs stay in
+the Dict):
+```
+MODAL_PROFILE=rajatworkspace /Users/raj/.venv/bin/modal deploy deploy/hephaestus_modal.py
+MODAL_PROFILE=rajatworkspace /Users/raj/.venv/bin/modal run deploy/hephaestus_modal.py::admin --cmd warm   # if before a class
+```
+
 ## Tests and jobs
 ```
 /Users/raj/.venv/bin/modal run deploy/hephaestus_modal.py::test [--quick]   # in-process API test, live model (32 checks)
@@ -142,7 +161,8 @@ sandboxes, conversations and running jobs live in the one container (names, knob
 Long jobs run detached on the deployed app and write to the Volume `northbridge-hephaestus-out`, so a dropped laptop
 connection loses nothing.
 
-## Films and figures (`lectures/L4-the-hands/`, Playwright on Modal against the live URL, h264 1600×900)
+## Films and figures (`lectures/L4-the-hands/`, Playwright on Modal)
+The knob films and `hephaestus_q6` were re-recorded on staging on 11 Nov with narration (`lectures/L4-the-hands/films/forge/`, see `films/FILMS.md`); `join.png`, `anvil_card.png` and `experiments_compare.png` too. The rest are from the live URL on 5 Nov (h264 1600×900):
 `films/hephaestus_ask.mp4` (q1–q5), `hephaestus_q6.mp4` (+ `experiments/logs/hephaestus_q6.json`),
 `hephaestus_knob_{description,input,output,errors,tools,rules}.mp4`, `hephaestus_shield.mp4` (gitignored: `films/*.mp4`).
 `figs/hephaestus/{join,anvil,anvil_card,experiments,experiments_runs,connect}.png` and `prod_<criterion>.png` (3200×1800 or

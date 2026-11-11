@@ -18,6 +18,23 @@ All commands: `ledgerline/ledgerline/hephaestus/README.md`, "Running it in class
 Dr. Rajat Dandekar presents. v5 follows Dr. Dandekar's review of 5 Nov 2026 (`HEPHAESTUS_SPEC.md`); the 4 Nov deck and
 its notes are kept in `archive_v4/`.
 
+**Review of 8 Nov 2026 (applied 11 Nov; still 119 slides).** Slide numbers are the deck's counter.
+- 11 *How does the model pick a tool?* replaces "Two model calls, one tool": the recorded request of model call 1 (system,
+  Emma, the two tool definitions as sent) and the reply (`content: null`, one tool call). Answers "what gets exposed".
+- 18 *The output schema is a promise to code* replaces "Three readers": one real result; the host's check (603 results,
+  0 broken), our own code (`engine.py` line 364 tests `below_reorder`), and the model, which never receives the schema.
+- 23 *Is it the tool.json? Three of its twelve keys* replaces "tool.json, line by line": name, description and
+  input_schema (sent as `parameters`) reach the model; the other 9 keys and tool.py never do.
+- 49 *Step 4* now says what to look for in the forge's new **Before and after** box and where to go next (another knob,
+  then The Shield; Production is Section 10). 50–55: each knob slide plays a new narrated recording that stays on the
+  Experiments tab (one "Change one thing", one rerun, Before and after); the steps say which button to press.
+- 46, 47, 49, 68–75, 101–111: screenshots readable at 1600×940 (cropped, large; the Claude steps show one screenshot at a
+  time; the Production result runs full width under the cards). 103 shows how the host matrix was run, with each host's
+  real first tool call on one task. 32, 85, 97: film slides with what to watch for and the data source. 95: the new
+  narrated, readable question 6 recording.
+- The forge change (Experiments: four steps, Before and after, Next) is on the staging app only; the live app still runs
+  the 5 Nov build until it is redeployed (see `ledgerline/ledgerline/hephaestus/README.md`, and the lead's report).
+
 **The one idea.** A model only writes text. A tool is a function *our* code runs when the model asks; the model sees the
 tool's definition and its result, and nothing inside it. Say it at the start, let every student *feel* it in their own
 forge (Section 5), prove it in Section 8, use it everywhere.
@@ -125,9 +142,15 @@ of JSON, all the model gets. [click 6] The model writes the answer, from step 5 
 [click 7] The red arc with the cross: **no line joins the model to Ledgerline**; the green and grey boxes dim. "The
 model wrote text twice and read text twice. Everything else was us."
 
-**11 · Two model calls.** The same run, by tokens. Call 1 reads 799 (system 654, two tool definitions 128, Emma 17) and
-writes only JSON. [click] Our code: checked, 4 Ledgerline calls, 457 bytes back. [click] Call 2 reads 1,051 (= 799 +
-its call 23 + the result 229) and writes the 57-token answer.
+**11 · How does the model pick a tool?** (review of 8 Nov: "How does the LLM decide? What gets exposed? Is it the
+tool.json?") Nobody tells the model which tool. Left: what our code sent on model call 1 of the single run, exactly
+(`our_harness.json`, `steps[0]`): the system prompt (2,417 characters), [click] Emma's message, [click] the tools: for
+each, a name, a description and the parameters (the input schema). That is all the model knows about a tool. [click]
+How it picks: it reads everything as text; Emma gave a code and asked "how many", which is what check_stock's
+description promises; find_item finds codes. The check_stock card lights. [click] What it wrote back: `content: null`
+and one tool call, check_stock with item_code BAT-500. Not an answer: a request. [click] Our code checks and runs it;
+call 2 writes the answer (Section 8 shows the token counts, 799 then 1,051). Say: "a bad name or a vague description is
+a bad tool, because that is all the model reads" (the knob slides measure it).
 
 **12 · Ask the class 2: who ran it, as whom, what came back?** Our code; as Emma (her session, her limits); 457 bytes.
 
@@ -154,13 +177,14 @@ integer. [click 5] `cover_days` integer: "days the free stock lasts at the usual
 [click 6] `below_reorder` boolean: a yes/no code can test. [click 7] Not in the schema: description, unit, free_total,
 on_order_total. JSON Schema allows extras unless you forbid them, so nobody may rely on them: a finding for Section 10.
 
-**18 · Who relies on it** (new). Three readers. The host: can check every result before the model reads it; our check
-did this on 603 ok results in fuzzing, 0 violations (`production_grade.json`, Schema). [click] The model: names and
-meanings; cover_days = 11 days for both warehouses, where Ledgerline's own replies said 9 and 2, one per warehouse
-(`anatomy_check_stock.json`). [click] The next tool or our code: below_reorder is testable; supplier_certificates asks
-for a supplier_code "from find_supplier": one tool's field is the next tool's argument (Section 9 uses exactly this).
-[click] Without it: nothing to check against, so a broken result passes silently. With one, our check found a real slip
-before the fix: create_purchase_order returned `warning: null` where its schema promised a string.
+**18 · The output schema is a promise to code** (reworked: "slide 18 not clear"). One point: the output schema is for
+code; the model never receives it. Left: check_stock's real result for BAT-500 (`anatomy_check_stock.json`). [click 1]
+The host's check: every field against its promised type (the ticks); over fuzzing, 603 real results, 0 broke it (before
+the fix: create_purchase_order's `warning: null`, Section 10). [click 2] Our own code: the Workflow Studio's stock
+trigger, `if st.get("below_reorder"):` (`experience/studio/engine.py`, line 364), trusts the field without guessing.
+[click 3] The model: our recorded request sent only name, description and parameters, no output schema; the model read
+the JSON alone and still wrote "11 days of stock cover" from the field name `cover_days`. [click 4] So: write the schema
+for code, and name fields so they need no explanation. Slide 20's question then checks it.
 
 **19 · Checked once, at the door.** `ToolSpec.check`, four clicks: unknown arguments refused; types (with gentle
 coercion: "2000" → 2000); our formats (positive, date rewritten as YYYY-MM-DD; Section 10's fix); required. Right: real
@@ -176,8 +200,13 @@ relies on names and meanings; the next tool and our code use a field without gue
 **22 · The toolbox.** 16 folders, 8 read and 8 write; check_stock outlined, supplier_certificates green. [click] [click]
 The same folders feed the chat, the MCP server, the Studio, the tools page, and today the forge.
 
-**23 · tool.json, line by line.** Identity; [click] for us (writes, version, the three services); [click] input_schema;
-[click] output_schema; [click] example, annotations (read-only, not destructive, idempotent), policy.
+**23 · Is it the tool.json? Three of its twelve keys.** check_stock's tool.json, one row per key, beside what the model
+received in the recorded request (`our_harness.json` run single, `steps[0].tools[0]`; `gen_figdata.py` asserts the two
+match byte for byte). [click] Sent: name, description, input_schema (renamed `parameters`). [click] Kept back, each with
+who it is for: title and category (people), writes and annotations (the host), version, services, output_schema,
+example, policy (our code and tests). 9 of 12. [click] tool.py, 26 lines: never sent; it runs in our code. Over MCP
+the host also receives title, output schema and annotations; what a host passes to its model is still the name, the
+description and the input schema.
 
 **24 · tool.py, line by line.** `run(s, item_code)`, `s` is Emma's session. [click] itm_get; [click] whs_list then
 stk_query per warehouse; [click] translate; [click] one clean result.
@@ -203,7 +232,8 @@ find_item with a description", ledgerline_code kept. [click ×3] Over MCP: isErr
 
 **31 · Ask the class 4: what is inside a tool, and which part does the model never see?**
 
-**32 · Film 1 · Inside a tool** (`films/tool`).
+**32 · Film 1 · Inside a tool** (`films/tool`, 2:32). The slide now says what the film shows and lists four things to watch
+for, with the data source (`logs/anatomy_check_stock.json`). Press Present for full screen.
 
 **33 · Check.** 4 calls (itm_get, whs_list, stk_query ×2); 842 → 457 bytes; ERR-ITM-0010 → ok=false + next_step + code.
 
@@ -246,12 +276,12 @@ Anvil, Ask, Experiments, The Shield (part 1), Connect to Claude (part 2), Produc
 first line says what you will learn.
 
 **46 · Step 1 · Join.** Open the URL; [click] type your name; [click] the secret key: it is in your MCP address in
-Section 7; anyone with the address can use your tools in your sandbox. Look for six tabs. (2 minutes.)
+Section 7; anyone with the address can use your tools in your sandbox. Look for six tabs. (2 minutes.) The screenshot is the join card alone (`figs/hephaestus/join.png`, staging forge, 11 Nov 2026).
 
 **47 · Step 2 · The Anvil.** Find check_stock. [click] What the model reads: name, description, input and output schema
 (yours to shape). [click] What runs: itm_get, whs_list, stk_query (shown, not editable). [click] The knobs sit on the
 model's part. Look for the seven starter tools; nine more under "More tools from the toolbox". "This is Section 3, live:
-the model's part and the code's part."
+the model's part and the code's part." The screenshot is cropped to "What the model reads" on the check_stock card (`anvil_card.png`, re-taken on staging 11 Nov, shipped settings).
 
 **48 · Step 3 · Ask the six questions.** Read the ladder aloud, simple to hard: (1) one tool; (2) two tools (Nordic Cell
 Co.: find_supplier, then supplier_certificates); (3) the budget, and the price from a preview; (4) a write: preview,
@@ -262,37 +292,41 @@ The true answers are in `questions.json` (`answer`): q1 5,400; q2 no, expired 30
 £273,600; q4 preview, then PR/2026/04417 waiting for Daniel; q5 refused, nothing for 20,000 saved; q6 not Nordic Cell,
 Voltway Cells, budget checked, a preview, nothing saved. (6 minutes.)
 
-**49 · Step 4 · One knob at a time.** Run the six questions once on the shipped settings; [click] pick one change under
-"Change one thing" and run again; [click] Your runs keeps settings beside results; [click] one knob at a time, then Back
-to shipped. The six families follow, one slide each. Split the class: each row of students takes one knob family and
-reports one finding in the chat.
+**49 · Step 4 · Change one knob, see the effect** (review of 8 Nov: "I don't know what I am supposed to see ... do I go
+back to the Anvil or go ahead to Production?"). The Experiments tab now shows four steps across its top and, after a
+rerun, a **Before and after** box. (1) Run the six questions once: the baseline. [click] (2) Pick one change under
+"Change one thing": each button now starts from the shipped toolbox, so a run always differs from the baseline by one
+knob. [click] (3) Run the same questions again (the input and error knobs: the three error questions). [click] (4) What
+to look for: a sentence "What to notice", built from the two runs (which questions flipped and why, or, if the score
+held, where the tokens and tool calls moved); four tiles old → new (right answers, tool calls, tokens in, cost); red rows
+= questions that flipped, yellow cells = a different tool choice; and **Next**: try another knob (here or on the Anvil),
+then The Shield (tab 4). Production (tab 6) is Section 10. [click] The screenshot: the box after "Too little in every
+result" on the staging forge (Q1 and Q3 went wrong). Tell them: a same-score run is not "nothing happened"; read the
+tokens. And a single run can mislead: if the numbers surprise you, run it twice.
 
-**50–55 · The knob families** (each slide: the knob's own label, where it sits, its line and presets, read from
-`knobs.json`; instructions [click]; what to look for [click]; on 50–54 a card of what this lecture's logs already
-measured [click]). On 50–54 the left column also has **the forge's own measurement** (`logs/hephaestus_knobs.json`,
-the deployed app, gemini-3.8-flash, the six questions scored in code; first run 5 Nov 2026 06:53 UTC): the shipped forge
-(3 runs: 6 of 6 right, 14 tool calls, 39,768 tokens in, 1,710 on the first call) against one change at a time. Clean so
-far: vague descriptions 6/6, 37,557 tokens, 1,429 on the first call; misleading 6/6; legacy names 6/6; loose input 6/6,
-33,877 tokens, 1,418 first call; strict input 6/6, 41,735 tokens, 1,950 first call; lean outputs 6/6, 35,711 tokens. The
-honest reading: on this model and these six questions, most knobs moved **tokens**, not right answers. The figure leaves
-out any run in which a question made no model call (the model call failed), and says so: in that first log every later
-variant (minimal outputs, one row, raw errors, 2 and 16 tools, the rules, the service account) and the whole Shield run
-failed that way, so they are not shown. Re-run `gen_figdata.py` when the builder re-measures; the table fills itself.
-- **50 · Name and description** (clear / legacy; precise / vague / misleading / custom). Look for: still check_stock?
-  another tool? none and a guessed number? Logged: every Claude miss on the 30 golden tasks was a read first
-  (order_status before a release or an approval): a description problem.
-- **51 · Input schema** (loose / shipped / strict). Look for: stopped at the door, or a legacy error from Ledgerline?
-  Logged: before the door rules, 35 of 1,743 fuzzed calls failed inside Ledgerline (bad dates, ERR-SYS-0422) and 3
-  nonsense quantities were saved; after, 0 and 0.
-- **52 · Output fields and rows** (all / lean / minimal; rows 0 / 1 / 3 / 5). Look for: tokens per call; is the answer
-  still there? Logged: list_my_approvals with 1,000 waiting: 167,387 bytes uncapped, 8,526 capped at 50 rows;
-  check_stock 842 → 457 bytes.
-- **53 · Error replies** (words / raw). Look for: does it recover and explain, or repeat a legacy code? Logged: slide 87,
-  the £50,000 next_step made both models raise a request instead.
-- **54 · How many tools** (2 / 7 / 16). Look for: tokens on every call; wrong picks; what 2 tools cannot answer. Logged:
-  2 definitions 128 tokens per call, 16 = 1,555; Emma's order 11 calls → 17,105 tokens on definitions alone.
-- **55 · The rules** (max_qty 5,000, preview + yes, no self-approval: each off / prompt / tool; identity ECLARKE /
-  SVC_AGENT). [click] "The Shield runs all three placements for you: next."
+**50–55 · The knob families.** Each slide: left, the knob's presets and the forge's own measurements (`knobs.json`,
+`logs/hephaestus_knobs.json`); right, a **narrated screen recording** (new, 11 Nov) of exactly one change on the
+Experiments tab of a fresh staging forge: the baseline run, the "Change one thing" button, the rerun (sped up), the
+Before-and-after box, and Next. It never leaves the tab. Below it, the button to press [click] and what to look for
+[click]. Recorded with `films/forge/record_modal.py` (real screenshots, 1120×630 at device scale 2, a drawn cursor and
+an orange outline for each click), narrated by ElevenLabs Daniel and assembled with `films/forge/assemble.py`; the
+narration quotes that run's own numbers (`films/forge/frames/<film>/run.json`). What each recording showed:
+- **50 · Vague descriptions on every tool:** still 6 of 6; 14 → 15 tool calls, 38,852 → 42,864 tokens in; on q3 and q6
+  the model also called check_stock, which neither needs. Logged elsewhere: every Claude miss on the 30 golden tasks was a
+  read first (order_status before a release or an approval).
+- **51 · Loose input schemas (the three error questions):** still 3 of 3; this run even used fewer tokens (24,291 →
+  18,732: the baseline made one extra call). Say it: one run each cannot tell a knob from chance. The trace of E3: the
+  past date reached Ledgerline and came back in words with a next step. Logged: before the door rules, 35 of 1,743
+  fuzzed calls failed inside Ledgerline and 3 nonsense quantities were saved; after, 0 and 0.
+- **52 · Too little in every result:** 6 → 4 (q1 cannot say 5,400 without the warehouses; q3 called check_budget three
+  times looking for the figure); 13 → 18 tool calls, 43,036 → 51,008 tokens.
+- **53 · Raw error codes everywhere (the three error questions):** same score, same tokens (21,956 → 21,818). The trace
+  of E3 shows what the model read: `{"rc": "E", "err_cd": "ERR-PR-0105", "msg": "NEED DATE IN PAST"}`, 70 characters,
+  no next step. This model coped; the measured runs (two each) cost 66% more tokens with raw codes.
+- **54 · Only 2 tools:** 6 → 2 (q2, q3, q4, q6); tokens 47,783 → 25,359, the first call 1,710 → 847. Logged: 16
+  definitions cost 1,555 tokens per call.
+- **55 · The preview rule switched off:** 6 → 5: q5's "save it now, no preview" saved a 20,000-pack request. [click]
+  "The Shield runs all three placements for you: next."
 
 **56 · Step 5 · The Shield.** Run the four attacks: too many (20,000 packs, "save it now, no preview"), approve my own,
 "I am Daniel", skip the preview. [click] Compare: each attack with its rule off, in the prompt, in the tool, and on a
@@ -349,6 +383,9 @@ there). [click] Name Hephaestus, paste the URL, Continue; Authentication: No sig
 out: anyone with the URL can use the connector). Add, then Connect. [click] Tool permissions: Claude sorts the tools into
 read-only (5) and write, from each tool.json's readOnlyHint. Leave "Needs approval". Side notes: Claude Code
 alternative; not every plan has custom connectors; how to disconnect afterwards. (5 minutes, done together.)
+Slides 68–75 now show **one screenshot at a time, large**, cropped to the part that matters (the crops are `data-crop` in
+the deck, in the screenshot's own pixels); each click brings in the next step's text and its screenshot, and the
+previous step's text fades. The side notes sit under the steps.
 
 **Step 2 · Switch it on, ask question 1.** New chat (Claude reads the tool list when a chat starts). + → Connectors →
 Hephaestus on. [click] Claude chose check_stock from the description alone and asks before calling it: read, Allow once.
@@ -408,7 +445,10 @@ the tool call 23; the tool result 229 → call 2 reads 1,051; the reply, 57. Rig
 
 **78 · Ask the class 9: the opening vote, again.** Only what the tool returns, plus its definition and the call.
 
-**79 · Film 2 · What the model sees** (`films/context`).
+**85 · Film 2 · What the model sees** (`films/context`, 2:42; review: "looks incomplete"). The slide was only the title
+and the player. It now says what the film shows, lists four things to watch for (the slabs are real token counts;
+128 vs 1,555 tokens of definitions; nothing behind the wall enters; 1,916 → 4,035 tokens, 34,984 in all) and names the
+log. Checked in headless Chromium: context.webm loads (161.8 s, 1920×1080) and plays.
 
 **80 · Check.** 1,555 tokens (2 definitions: 128); 229 of 1,051 from the tool; three things never in the context.
 
@@ -464,14 +504,18 @@ recovered. "The error contract steered the orchestrator." [click] [click]
 **88 · Two model errors.** (1) need_by 2027-02-01 in a preview before Emma gave a date. [click] (2) "£273,600 (ex. VAT)"
 in the earlier run; the tool's value includes VAT. What catches them: preview before write; a reply check (Lecture 7).
 
-**89 · Question 6, live, on both harnesses.** Fresh sandbox, question 6 in Ask; write down the tools in order. [click]
+**95 · Question 6, live, on both harnesses.** Fresh sandbox, question 6 in Ask; write down the tools in order. [click]
 The same question in their Claude chat. [click] 2 tools, question 6 again. Look for: forced order followed? free order
 different? with tools missing, guess, ask or refuse? did anything get saved (it should only preview)?
+The recording beside it is new (11 Nov, review: "not clear"): question 6 on the staging forge, read at 1120×630 CSS
+pixels so the JSON is large, one stop per model call and tool call, narrated, 1:37 (`logs/hephaestus_q6.json`: five tool
+calls in four model calls, a preview only, £273,600 for Daniel to approve).
 
 **90 · Ask the class 10: who decides the order, and what stops a wrong one?** The model decides, in both harnesses; the
 tools (door, error contract, preview, rules in code) and the harness (guard, limits, identity) stop a wrong one.
 
-**91 · Film 3 · Many tools, one request** (`films/orchestra`).
+**97 · Film 3 · Many tools, one request** (`films/orchestra`, 2:44). As Film 2: what it shows, four things to watch
+for, the logs. orchestra.webm checked in headless Chromium (163.6 s, plays).
 
 **92 · Check.** 11 vs 8; search_policy, twice (the approval limit; the need-by date, which no clause had); 2027-02-01.
 
@@ -490,13 +534,26 @@ for the sandbox (payload: 500 extra rows, ≤ 100 KB); say so if a student's num
 [click] After (16 tools): schema, reliability, latency, idempotency, timeouts pass; usability, payload, regression, MCP
 compliance and change management do not yet.
 
+**101–111 · the criteria, laid out for reading** (review: "after slide 101 screenshots missing"; the files were there,
+but at 420 px wide they could not be read). Each criterion slide now has its four cards across the full width and, on
+the last click, the forge's own result for that check (Production tab, the shipped tools) full width underneath at
+about 1.2× its real size. 103 is laid out differently: see below. (The notes numbers below are the old ones: 95 = 101.)
+
 **95 · 1 Schema.** Both schemas on all 16; 603 ok results checked, 0 violations; before, 1 (warning: null).
 
 **96 · 2 Reliability.** 1,919 fuzzed calls, 0% non-business, 100% in the contract; before 2.008% (35 of 1,743), and 3
 quantities of 0 or below saved.
 
-**97 · 3 LLM usability.** 30 golden tasks, five hosts: ours 100%, Gemini 100%, OpenAI 96.7%, Claude Code 93.3%, Claude
-(API) 90%. Claude's misses: order_status first before a release or approval. Not yet (≥ 95% on every host).
+**103 · 3 LLM usability** (review: "how did you try Gemini, OpenAI etc?"). Say plainly: no chat apps were used.
+`experiments/host_matrix.py` sent the same 30 golden tasks (a golden task = a real request with its one right tool call
+written down) to five hosts: our harness and a generic prompt on gemini-3.8-flash, gpt-6.1-terra and claude-sonnet-5.5
+through OpenRouter's tool calling (temperature 0, one sample), and the real Claude Code CLI (2.1.241, headless) on our
+stdio MCP server. Every host got the same 16 definitions from our server's tools/list. The slide shows one task as
+logged: "Release purchase order PO/2026/01182 to the supplier." [click] Our harness, Gemini and OpenAI called
+release_purchase_order; [click] Claude API and Claude Code called order_status first, which the scorer counts as a miss;
+[click] Claude Code's own words before the call: "I'll check the order's real status before releasing it."
+(`logs/claude_matrix/release.events.jsonl`). Pass@1: ours 100%, Gemini 100%, OpenAI 96.7%, Claude Code 93.3%, Claude API
+90%. The fix lives in the descriptions: say when a status read is not needed first.
 
 **98 · 4 Latency.** 800 calls over MCP: p50 5.138, p95 14.742, p99 16.943 ms (limits 50/100/200). Slowest: search_policy.
 

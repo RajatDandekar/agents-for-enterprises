@@ -139,6 +139,28 @@ for label in ("single", "order", "order_hands"):
         "only_tool_returns": r["check_only_tool_returns_in_context"], "after": r["ledgerline_after"],
         "service_calls": r["ledgerline_service_calls"]}
 out["ours"] = ours
+
+# ---------------------------------------------------------------- 1 and 3 · exactly what the model receives (the recorded request of call 1, run single)
+s0 = oh["single"]["steps"][0]
+tj = json.loads((TOOLBOX / "check_stock" / "tool.json").read_text())
+sent = s0["tools"][0]["function"]
+assert sent["parameters"] == tj["input_schema"] and sent["description"] == tj["description"] and sent["name"] == tj["name"]
+out["exposed"] = {
+    "model": s0["model"], "call": s0["call"], "prompt_tokens": s0["prompt_tokens"],
+    "messages": [{"role": m["role"], "content": m["content"]} for m in s0["messages"]],
+    "tools": s0["tools"],                      # exactly as sent: OpenAI format, function = {name, description, parameters}
+    "reply": s0["reply"],                      # content null, one tool call
+    "tool_json": tj, "tool_json_keys": list(tj),
+    "sent_keys": {"name": "name", "description": "description", "input_schema": "parameters"},
+    "not_sent": [k for k in tj if k not in ("name", "description", "input_schema")],
+    "tool_py_lines": len((TOOLBOX / "check_stock" / "tool.py").read_text().splitlines()),
+}
+
+# ---------------------------------------------------------------- 2 · who reads the output schema: one real use of a field in our own code
+eng = (ROOT / "ledgerline" / "ledgerline" / "experience" / "studio" / "engine.py").read_text().split("\n")
+li = next(i for i, l in enumerate(eng) if 'if st.get("below_reorder")' in l)
+out["readers"] = {"studio_path": "ledgerline/experience/studio/engine.py", "studio_line_no": li + 1,
+                  "studio_lines": [l.strip() for l in eng[li - 5:li + 2]], "studio_first_no": li - 4}
 out["prompt_codes"] = oh["order_hands"].get("prompt_codes_compared")
 out["price_note"] = oh["note"]
 
@@ -201,6 +223,32 @@ out["hosts"] = {"tasks": len(hm["tasks"]), "tool_definitions": hm["tool_definiti
                           for h, v in hm["hosts"].items()},
                 "per_tool": hm["per_tool"], "all_hosts": hm["tools_passing_on_all_hosts"],
                 "task_examples": [{k: t[k] for k in ("id", "user", "message")} for t in hm["tasks"][:30]]}
+# one task on every host, as recorded: the first response of each (experiments/host_matrix.py; Claude Code's stream-json events)
+def _task_on_hosts(tid):
+    t = next(x for x in hm["tasks"] if x["id"] == tid)
+    rows = []
+    for h, v in hm["hosts"].items():
+        r = next(x for x in v["results"] if x["id"] == tid)
+        rows.append({"host": h, "model": v["model"], "prompt": v["prompt"], "pass": r["pass"], "reason": r["reason"],
+                     "calls": r.get("calls") or [], "text": (r.get("text") or "")[:300], "pass_at_1": v["pass_at_1"], "passed": v["passed"]})
+    ev = [json.loads(l) for l in (LOGS / "claude_matrix" / f"{tid}.events.jsonl").read_text().splitlines() if l.strip()]
+    init = next(e for e in ev if e.get("type") == "system" and e.get("subtype") == "init")
+    first = []
+    for e in ev:
+        if e.get("type") == "assistant":
+            for c in e["message"]["content"]:
+                if c["type"] == "text":
+                    first.append({"text": c["text"]})
+                elif c["type"] == "tool_use":
+                    first.append({"tool_use": c["name"], "input": c["input"]})
+            if any("tool_use" in f for f in first):
+                break
+    return {"id": tid, "message": t["message"], "accepted": t["accepted"], "hosts": rows,
+            "claude_code": {"version": init.get("claude_code_version"), "model": init.get("model"), "tools": init.get("tools"),
+                            "first": first, "source": f"experiments/logs/claude_matrix/{tid}.events.jsonl"}}
+
+
+out["hosts"]["release"] = _task_on_hosts("release")
 pg = J("production_grade.json")
 out["prod"] = {"before_commit": pg["before_commit"], "after": pg["after"], "criteria": pg["criteria"], "summary": pg["summary"],
                "fix": pg["the_fix_for_the_lecture"]}

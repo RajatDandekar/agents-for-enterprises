@@ -33,8 +33,12 @@ import time
 import modal
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-APP = "northbridge-hephaestus"
-URL = "https://rajatworkspace--northbridge-hephaestus.us-east.modal.run"
+# HEPH_STAGING=1 deploys a separate copy (its own app, URL, state Dict and Volume; nothing shared with the live app):
+#   HEPH_STAGING=1 /Users/raj/.venv/bin/modal deploy deploy/hephaestus_modal.py      # then ::record etc. with HEPH_STAGING=1
+STAGING = os.environ.get("HEPH_STAGING") == "1"
+APP = "northbridge-hephaestus-staging" if STAGING else "northbridge-hephaestus"
+URL = f"https://rajatworkspace--{APP}.us-east.modal.run"
+STAGE_ENV = {"HEPH_STAGING": "1"} if STAGING else {}
 SKIP = {"__pycache__", ".ipynb_checkpoints", "shots", "logs", "qa", "node_modules", "cassettes", "legacy_ui", "tests_logs"}
 L4 = ROOT / "lectures" / "L4-the-hands"
 
@@ -56,7 +60,7 @@ image = (
                  "rank_bm25", "fastembed", "fastmcp", "mcp")
     .env({"FASTEMBED_CACHE_PATH": "/models/fastembed"})
     .run_commands("python -c \"from fastembed import TextEmbedding; TextEmbedding('BAAI/bge-small-en-v1.5')\"")
-    .env({"PYTHONPATH": "/app/ledgerline", "PYTHONUNBUFFERED": "1", "HEPH_DICT": "northbridge-hephaestus-state",
+    .env({"PYTHONPATH": "/app/ledgerline", "PYTHONUNBUFFERED": "1", "HEPH_DICT": f"{APP}-state", **STAGE_ENV,
           "HEPH_APP": APP, "HEPH_URL": URL, "NORTHBRIDGE_MODEL": "gemini:gemini-3.8-flash",
           "NORTHBRIDGE_FALLBACKS": "gemini:gemini-3.5-flash-lite", "NORTHBRIDGE_LLM_MODE": "live",
           "NORTHBRIDGE_REASONING": "low", "LEDGER_LLM_MODE": "live"})
@@ -66,13 +70,13 @@ app = modal.App(APP, image=image)
 secret = modal.Secret.from_name("rasoi-experience")
 # Results of long jobs (knob runs, films) land here too, so a dropped laptop connection loses nothing:
 #   /Users/raj/.venv/bin/modal volume get northbridge-hephaestus-out <path> <local>
-outvol = modal.Volume.from_name("northbridge-hephaestus-out", create_if_missing=True)
+outvol = modal.Volume.from_name(f"{APP}-out", create_if_missing=True)
 
 
 @app.function(secrets=[secret], max_containers=1, min_containers=0, scaledown_window=1800, cpu=4, memory=8192,
               timeout=900)
 @modal.concurrent(max_inputs=400)
-@modal.asgi_app(label="northbridge-hephaestus")
+@modal.asgi_app(label=APP)
 def web():
     sys.path.insert(0, "/app/ledgerline")
     from ledgerline.hephaestus.app import create_app
@@ -229,7 +233,7 @@ def admin(cmd: str = "status", reason: str = "", cap: float = 0):
 pw_image = (modal.Image.debian_slim(python_version="3.11")
             .apt_install("ffmpeg")
             .pip_install("playwright==1.47.0", "httpx")
-            .run_commands("playwright install --with-deps chromium"))
+            .run_commands("playwright install --with-deps chromium").env(STAGE_ENV))
 
 
 @app.function(image=pw_image, timeout=1800, cpu=4, memory=8192)
@@ -288,7 +292,7 @@ def ui(tabs: str = "anvil,ask,exp,shield,connect,prod", ask: bool = True, tag: s
 
 
 # ---------------------------------------------------------------------------------------------------- the knob measurements
-knob_image = (modal.Image.debian_slim(python_version="3.11").pip_install("httpx")
+knob_image = (modal.Image.debian_slim(python_version="3.11").pip_install("httpx").env(STAGE_ENV)
               .add_local_file(L4 / "experiments" / "hephaestus_knobs.py", "/job/hephaestus_knobs.py"))
 
 

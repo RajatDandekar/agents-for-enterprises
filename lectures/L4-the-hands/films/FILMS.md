@@ -127,3 +127,38 @@ The build is a copy of L2's (`narrate.py`, `overlay.py`, `modal_films.py`, `fetc
 - In `tool` the envelopes return during the narration of the replies (b5), a little after the calls go out (b4), so the replies are seen arriving together rather than one by one as each call ends.
 - In `orchestra` the capsules are small and quick; the trace panel carries the detail. Tool names are not labelled on the rack.
 - `orchestra.webm` is 24.8 MB (just under the 25 MB mark); the mp4s are 24.2 MB.
+
+## The forge recordings (`hephaestus_knob_*`, `hephaestus_q6`): re-recorded 11 Nov 2026
+
+The review of 8 Nov said the knob recordings wandered between tabs (Experiments, The Anvil, Production, The Shield) and
+had no narration, and that question 6 was hard to read. All seven were recorded again on the **staging** forge
+(`northbridge-hephaestus-staging`, the 11 Nov build with the Before-and-after box), never on the live app.
+
+- **How:** `films/forge/record_modal.py` (Modal + Playwright). A fresh forge is joined through the API and its shipped
+  baseline run is made off camera; then every frame is a real screenshot of the page at 1120×630 CSS pixels, device scale
+  2 (crisp text, unlike Playwright's low-bitrate screencast), taken after each scroll step, cursor step, click or progress
+  tick. A drawn cursor and an orange outline show each click; nothing on the page is changed. Each knob film stays on the
+  Experiments tab: intro, baseline, "Change one thing", the rerun (time-lapse), Before and after, the question table, (the
+  error knobs: one trace), Next. Frames, the shot list and the run's own numbers land in `films/forge/frames/<film>/`
+  (`shots.json`, `run.json`).
+- **Narration:** `films/forge/scripts/<film>.json`, one plain line per shot, written after the run so every number is
+  that run's own. ElevenLabs Daniel (`onwK4e9ZLuTAKqWW03F9`), eleven_multilingual_v2, speed 1.08, the key read from
+  `/Users/raj/Claude_Brain/cobol-mainframes/.env`, never printed. No music.
+- **Assembly:** `films/forge/assemble.py <film>`: each shot lasts as long as its line plus a breath; motion at 30 fps;
+  the run is a time-lapse; H.264 1920×1080 + AAC, loudness-normalised to -16 LUFS, faststart; plus a VP9/Opus `.webm`
+  (the deck plays the webm first, so headless Chromium can play it too).
+
+| Film | Change | Questions | What the run showed | Length |
+|---|---|---|---|---|
+| `hephaestus_knob_description` | Vague descriptions on every tool | six | 6/6 → 6/6; +1 tool call, +4,012 tokens; check_stock on q3, q6 | 1:42 |
+| `hephaestus_knob_input` | Loose input schemas | three error | 3/3 → 3/3; fewer tokens (baseline's extra call); E3 trace | 1:44 |
+| `hephaestus_knob_output` | Too little in every result | six | 6/6 → 4/6 (q1, q3); +5 tool calls, +7,972 tokens | 1:31 |
+| `hephaestus_knob_errors` | Raw error codes everywhere | three error | 3/3 → 3/3, same tokens; E3's raw ERR-PR-0105 shown | 1:44 |
+| `hephaestus_knob_tools` | Only 2 tools | six | 6/6 → 2/6; tokens −47%, first call 1,710 → 847 | 1:23 |
+| `hephaestus_knob_rules` | The preview rule switched off | six | 6/6 → 5/6: q5 saved 20,000 packs | 1:31 |
+| `hephaestus_q6` | (Ask tab) question 6 | — | 5 tool calls in 4 model calls, a preview only | 1:37 |
+
+```sh
+MODAL_PROFILE=rajatworkspace /Users/raj/.venv/bin/modal run lectures/L4-the-hands/films/forge/record_modal.py --films knob_output,q6   # against staging
+python3 lectures/L4-the-hands/films/forge/assemble.py knob_output
+```

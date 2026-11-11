@@ -233,7 +233,7 @@ function turnHTML(t) {
       + mine.map(cardHTML).join('');
   }).join('') + cards.slice(ci).map(cardHTML).join('');
   return `<div class="ma"><div class="bub">${E(t.reply)}</div>
-    <div class="meta">${E(t.model || '')} · ${t.model_calls} model calls · ${HX.num(t.tokens_in)} tokens in, ${HX.num(t.tokens_out)} out · ${t.seconds} s · ${HX.usd(t.usd)}</div>
+    <div class="meta">${E(t.model || '')} · ${t.model_calls ?? steps.length} model calls · ${HX.num(t.tokens_in)} tokens in, ${HX.num(t.tokens_out)} out · ${t.seconds ?? "–"} s · ${HX.usd(t.usd)}</div>
     ${tr ? `<div class="trace">${tr}</div>` : ''}</div>`;
 }
 function cardHTML(c) {
@@ -263,36 +263,67 @@ $('#newconv').addEventListener('click', async () => { await HX.api('/api/ask/new
 $('#resetsb').addEventListener('click', async () => { await HX.api('/api/sandbox/reset', {}); chatHistory = []; drawChat(); HX.toast('Fresh Ledgerline sandbox: Monday 26 October, 09:00'); });
 
 /* ------------------------------------------------------------------ 3 · experiments */
+/* Each change starts from the shipped toolbox and turns one knob, so a run always differs from the baseline by one
+   thing. k = the knob family (for the line on what to look at); set = which questions show it best. */
 const SUGS = [
-  { t: 'Vague descriptions on every tool', m: 'e.g. check_stock: “Gets item data.”', f: (c) => on(c).forEach((n) => { c.tools[n].description = 'vague'; }) },
-  { t: 'Legacy names and vague descriptions', m: 'stk_qry, sup_srch, bud_chk … with one-word descriptions', f: (c) => on(c).forEach((n) => { c.tools[n].name = 'legacy'; c.tools[n].description = 'vague'; }) },
-  { t: 'Legacy names, precise descriptions', m: 'does a good description rescue a bad name?', f: (c) => on(c).forEach((n) => { c.tools[n].name = 'legacy'; }) },
-  { t: 'Misleading descriptions', m: 'each tool carries a neighbour’s description', f: (c) => on(c).forEach((n) => { c.tools[n].description = 'misleading'; }) },
-  { t: 'Only what is needed in every result', m: 'lean outputs: fewer tokens?', f: (c) => on(c).forEach((n) => { if (CAT.output_tools.includes(n)) c.tools[n].output = 'lean'; }) },
-  { t: 'Too little in every result', m: 'check_stock: the total only, no warehouses', f: (c) => on(c).forEach((n) => { if (CAT.output_tools.includes(n)) c.tools[n].output = 'minimal'; }) },
-  { t: 'Raw error codes everywhere', m: 'ERR-SEC-0001 ACCESS DENIED, no next step', f: (c) => on(c).forEach((n) => { c.tools[n].errors = 'raw'; }) },
-  { t: 'Loose input schemas', m: 'nothing required, no format hints, nothing checked at the door', f: (c) => on(c).forEach((n) => { c.tools[n].input = 'loose'; }) },
-  { t: 'All 16 tools switched on', m: 'tokens on every call, wrong picks?', f: (c) => CAT.tools.forEach((t) => { c.tools[t.name].on = true; }) },
-  { t: 'Only 2 tools', m: 'find_item and check_stock', f: (c) => CAT.tools.forEach((t) => { c.tools[t.name].on = ['find_item', 'check_stock'].includes(t.name); }) },
-  { t: 'Tools act as the service account', m: 'SVC_AGENT: every permission, no limit', f: (c) => { c.identity = 'SVC_AGENT'; } },
+  { k: 'desc', t: 'Vague descriptions on every tool', m: 'e.g. check_stock: “Gets item data.”', f: (c) => on(c).forEach((n) => { c.tools[n].description = 'vague'; }) },
+  { k: 'desc', t: 'Legacy names and vague descriptions', m: 'stk_qry, sup_srch, bud_chk … with one-word descriptions', f: (c) => on(c).forEach((n) => { c.tools[n].name = 'legacy'; c.tools[n].description = 'vague'; }) },
+  { k: 'desc', t: 'Legacy names, precise descriptions', m: 'does a good description rescue a bad name?', f: (c) => on(c).forEach((n) => { c.tools[n].name = 'legacy'; }) },
+  { k: 'desc', t: 'Misleading descriptions', m: 'each tool carries a neighbour’s description', f: (c) => on(c).forEach((n) => { c.tools[n].description = 'misleading'; }) },
+  { k: 'input', set: 'errors', t: 'Loose input schemas', m: 'nothing required, no format hints, nothing checked at the door · run the three error questions', f: (c) => on(c).forEach((n) => { c.tools[n].input = 'loose'; }) },
+  { k: 'output', t: 'Only what is needed in every result', m: 'lean outputs: fewer tokens?', f: (c) => on(c).forEach((n) => { if (CAT.output_tools.includes(n)) c.tools[n].output = 'lean'; }) },
+  { k: 'output', t: 'Too little in every result', m: 'check_stock: the total only, no warehouses', f: (c) => on(c).forEach((n) => { if (CAT.output_tools.includes(n)) c.tools[n].output = 'minimal'; }) },
+  { k: 'errors', set: 'errors', t: 'Raw error codes everywhere', m: 'ERR-SEC-0001 ACCESS DENIED, no next step · run the three error questions', f: (c) => on(c).forEach((n) => { c.tools[n].errors = 'raw'; }) },
+  { k: 'tools', t: 'All 16 tools switched on', m: 'tokens on every call, wrong picks?', f: (c) => CAT.tools.forEach((t) => { c.tools[t.name].on = true; }) },
+  { k: 'tools', t: 'Only 2 tools', m: 'find_item and check_stock', f: (c) => CAT.tools.forEach((t) => { c.tools[t.name].on = ['find_item', 'check_stock'].includes(t.name); }) },
+  { k: 'rules', t: 'The preview rule switched off', m: 'a write may be saved without a preview and a yes', f: (c) => { c.rules.preview = 'off'; } },
+  { k: 'rules', t: 'The 5,000-pack limit, in the tool', m: 'code refuses any request above 5,000 units', f: (c) => { c.rules.max_qty = 'tool'; } },
+  { k: 'identity', t: 'Tools act as the service account', m: 'SVC_AGENT: every permission, no limit', f: (c) => { c.identity = 'SVC_AGENT'; } },
 ];
+const LOOK = {
+  desc: 'The model chooses a tool from its name and description only. Look at the tools column: did it still pick the right one?',
+  input: 'The input schema matters when an argument is wrong. Look at the door refusals and the Ledgerline errors.',
+  output: 'Every field returned is read again on every later call. Look at the tokens, and at whether the answer is still there.',
+  errors: 'Error replies only matter when a call fails. Look at the tool calls: does the model recover, or wander?',
+  tools: 'Every switched-on definition is sent on every model call. Look at the tokens, and at the questions it can no longer answer.',
+  rules: 'A rule protects one question. Look at questions 4 and 5: was anything saved that should not have been?',
+  identity: 'The tool now acts as an admin account. Look at question 5: does anything stop the attack?',
+};
 const on = (c) => Object.keys(c.tools).filter((n) => c.tools[n].on);
+function shipped() {
+  const c = clone(ME.config);
+  CAT.tools.forEach((t) => Object.assign(c.tools[t.name], { on: CAT.starter.includes(t.name), name: 'clear', description: 'precise', custom: '', input: 'shipped', output: 'all', rows: 0, errors: 'words' }));
+  c.rules = { max_qty: 'off', max_qty_n: CAT.limit_default, preview: 'prompt', self_approval: 'off' }; c.identity = 'ECLARKE';
+  return c;
+}
 function renderExp() {
   $('#nowsettings').innerHTML = ME.changed.length ? `<div class="settings">${ME.changed.map((d) => `<span>• ${E(d)}</span>`).join('')}</div>` : '<p class="ink2">The shipped toolbox: seven tools, precise descriptions, as-shipped schemas, errors in words, the preview rule in the prompt, acting as Emma. Run it first: that is your baseline.</p>';
   $('#sugs').innerHTML = SUGS.map((s, i) => `<button class="sug" data-i="${i}"><b>${E(s.t)}</b><span class="muted">${E(s.m)}</span></button>`).join('');
   $$('#sugs .sug').forEach((b) => b.addEventListener('click', async () => {
-    const c = clone(ME.config); SUGS[+b.dataset.i].f(c);
-    await saveConfig(c, 'Changed: ' + SUGS[+b.dataset.i].t + '. Now run the six questions.'); renderExp();
+    const s = SUGS[+b.dataset.i], c = shipped(); s.f(c);
+    await saveConfig(c, `Changed: ${s.t}. Now run the ${s.set === 'errors' ? 'three error questions' : 'six questions'}.`); renderExp();
+    const btn = s.set === 'errors' ? $('#runerr') : $('#runsix');
+    btn.classList.add('nudge'); btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }));
   drawRuns();
   if (ME.last_run && !$('#scorecard').innerHTML) drawScore(ME.last_run);
+  if (ME.runs && ME.runs.length && !$('#compare').innerHTML) drawCompare(ME.runs[ME.runs.length - 1]);
+  expSteps();
   takeExp();
+}
+/* Where the student is in the four steps: from their runs and their settings, nothing else. */
+function expSteps() {
+  const rs = ME.runs || [], last = rs[rs.length - 1];
+  const base = rs.some((r) => !r.settings.length);
+  let s = 1;
+  if (base) s = ME.changed.length ? (last && last.settings.join('|') === ME.changed.join('|') ? 4 : 3) : (last && last.settings.length ? 4 : 2);
+  $$('#expsteps li').forEach((li) => { const n = +li.dataset.s; li.classList.toggle('done', n < s); li.classList.toggle('now', n === s); });
 }
 $('#backshipped').addEventListener('click', () => $('#resetall').click());
 $('#runsix').addEventListener('click', () => runSet('six', $('#runsix')));
 $('#runerr').addEventListener('click', () => runSet('errors', $('#runerr')));
 async function runSet(set, btn) {
-  btn.disabled = true;
+  btn.disabled = true; $$('#runsix, #runerr').forEach((b) => b.classList.remove('nudge'));
   const qs = set === 'errors' ? CAT.probes : CAT.questions;
   try {
     const j0 = await HX.api('/api/six', { set });
@@ -301,8 +332,93 @@ async function runSet(set, btn) {
     const j = await HX.poll(j0.id, draw, 1500);
     if (j.state === 'failed') { HX.toast(j.error, 6000); return; }
     ME = await HX.api('/api/me');
-    drawScore(j.result); drawRuns(); takeExp();
+    drawScore(j.result); drawRuns(); takeExp(); expSteps();
+    drawCompare(ME.runs[ME.runs.length - 1]);
+    $('#compare').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (e) { HX.toast(e.message, 5000); } finally { btn.disabled = false; }
+}
+
+/* ------------------------------------------------------------ before and after: one run against the one it changed */
+const same = (a, b) => a.join('|') === b.join('|');
+function baseFor(run) {
+  const prev = (ME.runs || []).filter((r) => (r.set || 'six') === (run.set || 'six') && r.n < run.n);
+  if (run.settings.length) { const b = prev.filter((r) => !r.settings.length).pop(); if (b) return b; }
+  return prev.pop() || null;
+}
+function sugFor(settings) {
+  const t = settings.join(' ');
+  const k = /description|legacy name/.test(t) ? 'desc' : /input schema/.test(t) ? 'input' : /output|rows/.test(t) ? 'output'
+    : /raw error/.test(t) ? 'errors' : /tools switched on/.test(t) ? 'tools' : /rule/.test(t) ? 'rules' : /service account/.test(t) ? 'identity' : null;
+  return k ? { k, set: ['input', 'errors'].includes(k) ? 'errors' : 'six' } : null;
+}
+/* "check_stock: output minimal", "find_item: output minimal" -> "output minimal on check_stock, find_item" */
+function grouped(list) {
+  const g = new Map(), out = [];
+  list.forEach((x) => { const m = /^([a-z_]+): (.+)$/.exec(x); if (m) { if (!g.has(m[2])) g.set(m[2], []); g.get(m[2]).push(m[1]); } else out.push(x); });
+  g.forEach((tools, what) => out.push(`${what} on ${tools.length > 3 ? `${tools.length} tools (${tools.join(', ')})` : tools.join(', ')}`));
+  return out;
+}
+const sgn = (n, f) => (n > 0 ? '+' : n < 0 ? '−' : '±') + (f || HX.num)(Math.abs(n));
+const andList = (xs) => (xs.length < 2 ? xs.join('') : xs.slice(0, -1).join(', ') + ' and ' + xs[xs.length - 1]);
+const pct = (a, b) => (a ? Math.round(((b - a) / a) * 100) : 0);
+function drawCompare(run) {
+  const el = $('#compare');
+  if (!run) { el.innerHTML = ''; return; }
+  const set = run.set || 'six', QS = set === 'errors' ? CAT.probes : CAT.questions, qn = (id) => QS.find((q) => q.id === id) || {};
+  const label = (id) => (set === 'errors' ? 'E' : 'Q') + (qn(id).n || '');
+  const base = baseFor(run);
+  const nextHTML = (first) => `<div class="cmp-next"><b>Next</b>
+      ${first ? '<span>Pick <b>one</b> change under <b>Change one thing</b>, then run the same questions again. This box will show what moved.</span>'
+    : '<span>Try another knob: pick a different change above (each one starts from the shipped toolbox), or set one by hand on <b>The Anvil</b>. When you have tried two or three, go on to <b>The Shield</b> (tab 4). Production (tab 6) comes later, in Section 10.</span>'}
+      <span class="cmp-btns">${first ? '<button class="btn sky sm" data-go="sugs">Pick a change</button>'
+    : '<button class="btn ghost sm" data-go="sugs">Try another change</button><button class="btn ghost sm" data-go="anvil">The Anvil</button><button class="btn sky sm" data-go="shield">Next: The Shield →</button>'}</span></div>`;
+  if (!base) {
+    el.innerHTML = `<div class="cmp card white"><div class="cmp-h"><span class="lbl">Before and after</span><h3>Run ${run.n} is your baseline: ${run.totals.right} of ${run.totals.of} right</h3>
+      <p class="ink2">${run.settings.length ? 'There is no earlier run of these questions to compare with. Click <b>Back to shipped</b> and run them once, so you have a baseline.' : `${HX.num(run.totals.tokens_in)} tokens in, ${run.totals.tool_calls} tool calls, ${HX.usd(run.totals.usd)}. Every later run is compared with this one.`}</p></div>${nextHTML(true)}</div>`;
+  } else {
+    const B = base.totals, A = run.totals, rb = Object.fromEntries(base.rows.map((r) => [r.id, r]));
+    const rows = run.rows.map((r) => ({ a: r, b: rb[r.id] })).filter((x) => x.b);
+    const lost = rows.filter((x) => x.b.right && !x.a.right), won = rows.filter((x) => !x.b.right && x.a.right);
+    const toolsMoved = rows.filter((x) => !same(x.a.tools, x.b.tools));
+    const changed = run.settings.filter((s) => !base.settings.includes(s)), undone = base.settings.filter((s) => !run.settings.includes(s));
+    const dTok = A.tokens_in - B.tokens_in, dCalls = A.tool_calls - B.tool_calls, dRight = A.right - B.right;
+    let say;
+    if (same(run.settings, base.settings)) say = `Same settings as run ${base.n}. Any difference here is the model’s own variation from one run to the next, not a knob.`;
+    else if (lost.length) say = `${andList(lost.map((x) => label(x.a.id)))} went from right to wrong. ${lost.slice(0, 3).map((x) => `${label(x.a.id)}: ${x.a.why}.`).join(' ')} The red rows below show which tools it called; the scorecard under them has each answer and its trace.`;
+    else if (won.length) say = `${andList(won.map((x) => label(x.a.id)))} went from wrong to right with this change.`;
+    else {
+      const big = rows.slice().sort((x, y) => Math.abs(y.a.tokens_in - y.b.tokens_in) - Math.abs(x.a.tokens_in - x.b.tokens_in))[0];
+      say = `Same score, ${A.right} of ${A.of}. The cost moved instead: ${sgn(dTok)} tokens in (${sgn(pct(B.tokens_in, A.tokens_in), String)} %) and ${sgn(dCalls)} tool calls`
+        + (big && Math.abs(big.a.tokens_in - big.b.tokens_in) > 300 ? `, most of it in ${label(big.a.id)}.` : '.')
+        + (toolsMoved.length ? ` The model chose different tools in ${andList(toolsMoved.map((x) => label(x.a.id)))}.` : '');
+    }
+    const sg = sugFor(changed);
+    const look = sg && LOOK[sg.k] ? LOOK[sg.k] : '';
+    const hint = sg && sg.set === 'errors' && set === 'six' ? ' This knob shows best when something goes wrong: run the three error questions too.' : '';
+    const tile = (k, b, a, d, good) => `<div class="cmp-t ${d === 0 ? '' : good ? 'up' : 'down'}"><span class="lbl">${k}</span><div class="cmp-v"><span class="b">${b}</span><span class="ar">→</span><b>${a}</b></div><span class="d">${d === 0 ? 'no change' : sgn(d, k === 'Cost' ? (x) => HX.usd(x) : null)}</span></div>`;
+    const tl = (ts) => (ts.length ? ts.map((t) => `<code>${E(t)}</code>`).join(' ') : '<span class="muted">no tool</span>');
+    el.innerHTML = `<div class="cmp card white">
+      <div class="cmp-h"><span class="lbl">Before and after</span><h3>Run ${run.n} against run ${base.n}${base.settings.length ? '' : ' (shipped)'}</h3>
+        <p class="ink2">${changed.length ? `What you changed: ${grouped(changed).map((c) => `<b>${E(c)}</b>`).join('; ')}` : same(run.settings, base.settings) ? 'Nothing changed between these two runs.' : ''}${undone.length ? `${changed.length ? '. ' : ''}Undone since run ${base.n}: ${grouped(undone).map(E).join('; ')}` : ''}.</p></div>
+      <div class="cmp-say"><span class="lbl">What to notice</span><p>${E(say)}</p>${look ? `<p class="ink2 small">${E(look + hint)}</p>` : ''}</div>
+      <div class="cmp-tiles">
+        ${tile('Right answers', `${B.right}/${B.of}`, `${A.right}/${A.of}`, dRight, dRight > 0)}
+        ${tile('Tool calls', HX.num(B.tool_calls), HX.num(A.tool_calls), dCalls, dCalls < 0)}
+        ${tile('Tokens in', HX.num(B.tokens_in), HX.num(A.tokens_in), dTok, dTok < 0)}
+        ${tile('Cost', HX.usd(B.usd), HX.usd(A.usd), Math.round((A.usd - B.usd) * 1e4) / 1e4, A.usd < B.usd)}
+      </div>
+      <div class="tablewrap"><table class="cmp-q"><tr><th>#</th><th>Question</th><th>Before</th><th>After</th><th>Tools the model called · before</th><th>· after</th><th class="num">Tokens in</th></tr>
+      ${rows.map((x) => { const flip = x.a.right !== x.b.right, mv = !same(x.a.tools, x.b.tools);
+        const chip = (r) => `<span class="chip ${r.right ? 'right' : 'wrong'}">${r.right ? 'right' : 'wrong'}</span>`;
+        return `<tr class="${flip ? 'flip' : ''}"><td><b>${label(x.a.id)}</b></td><td class="small">${E(qn(x.a.id).title || '')}${flip ? `<div class="why">${E(x.a.why)}</div>` : ''}</td><td>${chip(x.b)}</td><td>${chip(x.a)}</td>
+          <td class="small mono">${tl(x.b.tools)}</td><td class="small mono${mv ? ' mv' : ''}">${tl(x.a.tools)}</td><td class="num">${HX.num(x.b.tokens_in)} → <b>${HX.num(x.a.tokens_in)}</b></td></tr>`; }).join('')}
+      </table></div>
+      ${nextHTML(false)}</div>`;
+  }
+  $$('[data-go]', el).forEach((b) => b.addEventListener('click', () => {
+    const g = b.dataset.go;
+    if (g === 'sugs') $('#sugs').scrollIntoView({ behavior: 'smooth', block: 'center' }); else show(g);
+  }));
 }
 function drawScore(run) {
   const t = run.totals;
@@ -310,10 +426,16 @@ function drawScore(run) {
   $('#scorecard').innerHTML = `<div class="sc card white"><h3>Run ${run.n}${run.set === 'errors' ? ' (the three error questions)' : ''}: ${t.right} of ${t.of} right</h3>
     <p class="small muted">${run.settings && run.settings.length ? E(run.settings.join(' · ')) : 'shipped toolbox'} · ${t.model_calls} model calls · ${HX.num(t.tokens_in)} tokens in · ${t.seconds} s of model time · ${HX.usd(t.usd)} · ${E((t.models || []).join(', '))}</p>
     <div class="tablewrap"><table><tr><th>#</th><th>Question</th><th></th><th>Why</th><th>Tools the model called</th><th class="num">Model calls</th><th class="num">Tokens in</th><th class="num">Door / rule refusals</th><th class="num">Ledgerline errors</th><th class="num">Seconds</th></tr>
-    ${run.rows.map((r) => `<tr><td>${r.n}</td><td class="small">${E(QS.find((q) => q.id === r.id).ask)}${r.turns ? `<details class="qturns"><summary>see the answer and trace</summary>${r.turns.map(turnHTML).join('')}</details>` : ''}</td>
+    ${run.rows.map((r) => `<tr data-q="${r.id}"><td>${r.n}</td><td class="small">${E(QS.find((q) => q.id === r.id).ask)}${r.turns ? `<details class="qturns"><summary>see the answer and trace</summary></details>` : ''}</td>
       <td><span class="chip ${r.right ? 'right' : r.failed ? 'mute' : 'wrong'}">${r.right ? 'right' : r.failed ? 'no answer' : 'wrong'}</span></td><td class="small">${E(r.why)}</td>
-      <td class="small mono">${E(r.tools.join(', ') || '(none)')}</td><td class="num">${r.model_calls}</td><td class="num">${HX.num(r.tokens_in)}</td><td class="num">${r.door} / ${r.rule}</td><td class="num">${r.ledgerline_errors}</td><td class="num">${r.seconds}</td></tr>`).join('')}
+      <td class="small mono">${E(r.tools.join(', ') || '(none)')}</td><td class="num">${r.model_calls}</td><td class="num">${HX.num(r.tokens_in)}</td><td class="num">${r.door} / ${r.rule}</td><td class="num">${r.ledgerline_errors}</td><td class="num">${r.seconds}</td></tr>`
+      + (r.turns ? `<tr class="trace-row hide" data-for="${r.id}"><td colspan="10"><div class="trace-wide">${r.turns.map(turnHTML).join('')}</div></td></tr>` : '')).join('')}
     </table></div></div>`;
+  // the answer and its trace open in a full-width row under the question, so the JSON is readable
+  $$('#scorecard details.qturns').forEach((d) => d.addEventListener('toggle', () => {
+    const id = d.closest('tr').dataset.q, row = $(`#scorecard tr.trace-row[data-for="${id}"]`);
+    if (row) row.classList.toggle('hide', !d.open);
+  }));
 }
 function drawRuns() {
   const rs = ME.runs || [];
@@ -324,7 +446,8 @@ function drawRuns() {
     const r = ME.runs.find((x) => String(x.n) === tr.dataset.n);
     $$('#runs tr').forEach((x) => x.classList.toggle('sel', x === tr));
     drawScore(ME.last_run && ME.last_run.n === r.n ? ME.last_run : r);
-    $('#scorecard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    drawCompare(r);
+    $('#compare').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }));
 }
 function takeExp() {
