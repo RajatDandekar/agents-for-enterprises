@@ -274,3 +274,5 @@ first cell, no key. It cannot show a clash with a package Colab ships preinstall
 The Ragas run's files were checked afterwards: valid JSON, a complete notebook, a complete HTML page.
 
 **QA after this pass**: 103 slides, 0 issues, 0 page errors (`logs/v2_finish_qa2.out`); `tools/world_v4.py --check` exit 0.
+
+**After the push** (`ecfbe04`): `colab_like_modal.py` ran all four notebooks from GitHub in a bare Python 3.12 container, no key: NB6a 15 of 15 code cells, NB6b 11 of 11, NB6c 13 of 13, NB6d 8 of 8, 0 errors (`logs/colab_like.out`). Real Colab itself is still untried.
