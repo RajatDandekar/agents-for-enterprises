@@ -44,6 +44,10 @@ ORDER = ["find_item", "check_stock", "find_supplier", "check_budget", "search_po
          "receive_goods", "register_supplier", "send_message"]
 EXTRAS = ["supplier_certificates"]  # in SPECS, served when named (not in the default set, so recorded runs replay)
 STAGE_ONLY = ["search_docs"]  # served only when named (Ask Northbridge's knowledge stage); not in ALL, so L4's runs replay
+# Lecture 5 (The Habits): accounts payable and the background agents' watch lists. Served only when named, in sandboxes
+# with erp.payables.install_payables(); not in SPECS or ALL, so every earlier lecture's tool set and recorded run is unchanged.
+AP_ONLY = ["list_open_orders", "read_mailbox", "record_invoice", "match_invoice", "hold_invoice", "post_invoice",
+           "list_invoices", "expiring_certificates", "low_stock", "draft_message"]
 TYPES = {"string": str, "integer": int, "number": (int, float), "boolean": bool, "object": dict, "array": list}
 
 
@@ -112,9 +116,10 @@ def load_specs() -> dict[str, ToolSpec]:
 
 
 REGISTRY: dict[str, ToolSpec] = load_specs()                                # every tool folder, extras included
-SPECS: dict[str, ToolSpec] = {n: s for n, s in REGISTRY.items() if n not in EXTRAS + STAGE_ONLY}  # the default set (15)
+SPECS: dict[str, ToolSpec] = {n: s for n, s in REGISTRY.items() if n not in EXTRAS + STAGE_ONLY + AP_ONLY}  # the default set (15)
 DEFAULT = [n for n in ORDER if n in SPECS]   # what Toolbox() and build_toolbox_server() serve when no names are given
-ALL = [n for n in REGISTRY if n not in STAGE_ONLY]   # every tool folder but the stage-only ones (16)
+ALL = [n for n in REGISTRY if n not in STAGE_ONLY + AP_ONLY]   # every tool folder but the stage-only and AP ones (16)
+HABITS = ALL + AP_ONLY   # Lecture 5's Hermes lab: the 16 and the accounts-payable and watch tools (26)
 
 
 def spec_of(name: str) -> ToolSpec | None:

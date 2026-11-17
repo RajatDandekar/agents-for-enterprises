@@ -1,0 +1,70 @@
+{
+  "name": "match_invoice",
+  "title": "Match invoice",
+  "category": "Accounts payable",
+  "description": "Three-way match of a recorded invoice: is there a released order with this supplier for this item, have the goods been received, is the quantity billed no more than received, and is the price within tolerance (2% unless you give less; the policy cap is 5%)? Sets the invoice to MATCHED when all agree. result is matched, price_variance, quantity_variance, no_receipt, no_order, supplier_mismatch, item_mismatch or order_not_released.",
+  "writes": true,
+  "version": "1.0",
+  "services": [
+    "inv_match"
+  ],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "invoice_no": {
+        "type": "string",
+        "description": "Ledgerline's invoice number, e.g. AP/2026/70001"
+      },
+      "price_tolerance_pct": {
+        "type": "number",
+        "description": "optional: allowed price rise in %, 0-5 (default 2)"
+      }
+    },
+    "required": [
+      "invoice_no"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean",
+        "description": "true when it worked; false comes with error and next_step"
+      },
+      "result": {
+        "type": "string",
+        "description": "matched, price_variance, quantity_variance, no_receipt, no_order, ..."
+      },
+      "matched": {
+        "type": "boolean",
+        "description": "true when it can be posted"
+      },
+      "note": {
+        "type": "string",
+        "description": "the reason in plain words"
+      },
+      "next_step": {
+        "type": "string",
+        "description": "what to do with it"
+      }
+    }
+  },
+  "example": {
+    "invoice_no": "AP/2026/70001"
+  },
+  "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  },
+  "policy": {
+    "ledgerline_reply_timeout_s": 30,
+    "reads_inside": "retried, at most 2 more times",
+    "on_lost_write_reply": "never resent blindly: look the document up (by the supplier's number or its id) and return it",
+    "on_busy_before_write": "ok=false with next_step; nothing was saved, so the same call is safe to repeat"
+  },
+  "release_notes": {
+    "1.0": "12 Nov 2026: Lecture 5 (The Habits): accounts payable and the background agents' watch lists."
+  }
+}

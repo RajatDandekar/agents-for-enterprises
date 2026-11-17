@@ -1,0 +1,153 @@
+{
+ "round1": {
+  "runs": 80,
+  "failing_runs": 58,
+  "failing_checks": 71,
+  "errored_runs": 2,
+  "categories": [
+   {
+    "id": "vat_label",
+    "who": "tool",
+    "name": "It would not say the value includes VAT",
+    "note": "The preview's estimated_value is gross (the tool multiplies by 1.20) but says so nowhere; the agent hedged, the judge failed it.",
+    "fix": "criteria reworded; recommended: the tool returns includes_vat: true",
+    "checks": 5,
+    "runs": 5,
+    "examples": [
+     "good T01 run 1: The reply gives the quantity (2,400 BAT-500) and cost centre PRD-03, but it does not preview a value including VAT, does not name Daniel Oka",
+     "good T14 run 1: {\"reason\": \"The preview reports estimated_value 342720.0 with no VAT qualifier, so the evidence does not establish that £342,720 is the figu",
+     "good T01 run 2: The reply asks for the need-by date and does not preview the order value including VAT, does not name Daniel Okafor as approver, and does no"
+    ]
+   },
+   {
+    "id": "judge_cut",
+    "who": "eval",
+    "name": "The judge's answer was cut off or empty, read as a fail",
+    "note": "Reading the judge's raw output: 400 tokens were not enough; half a JSON object, or nothing, became 'fail'.",
+    "fix": "1,000 tokens, a 40-word reason, read the verdict field even from a cut reply",
+    "checks": 40,
+    "runs": 40,
+    "examples": [
+     "good T02 run 1: {\"reason\": \"The reply says the request is \\\"submitted\\\", states \\\"nothing is ordered yet\\\", gives request number PR/2026/04417, and gives st",
+     "good T03 run 1: ",
+     "good T05 run 1: {\"reason\": \"The reply states that PRD-05 has been closed since 15 Oct 2026, which matches the check_bud"
+    ]
+   },
+   {
+    "id": "asked_date",
+    "who": "eval",
+    "name": "It asked Emma for the need-by date instead of previewing",
+    "note": "The usual in memory has no date and the tool needs one. Asking is right; our task demanded a preview.",
+    "fix": "the incident tasks give the date; the check accepts the question",
+    "checks": 5,
+    "runs": 3,
+    "examples": [
+     "good T01 run 1: no create_purchase_request call: no preview",
+     "good T01 run 2: no create_purchase_request call: no preview",
+     "thursday T02 run 1: no request"
+    ]
+   },
+   {
+    "id": "own_requests",
+    "who": "tool",
+    "name": "It could not find Emma's own request without its number",
+    "note": "No tool lists the requests Emma raised; list_my_approvals is for approvers.",
+    "fix": "tasks give the number; recommended: a list_my_requests tool",
+    "checks": 10,
+    "runs": 6,
+    "examples": [
+     "good T15 run 1: no message to @daniel",
+     "good T15 run 1: send_message never called",
+     "good T15 run 1: The reply does not confirm any message was sent to Daniel; it states it cannot find the request and asks for the PR number, saying it will m"
+    ]
+   },
+   {
+    "id": "memory_evidence",
+    "who": "eval",
+    "name": "The judge had not seen the memory the agent used",
+    "note": "Emma's £250,000 limit is in MEMORY.md, loaded in the window; the judge only got tool results.",
+    "fix": "memory added to the judge's evidence",
+    "checks": 7,
+    "runs": 4,
+    "examples": [
+     "good T20 run 1: not in any tool result: £250,000.00",
+     "good T20 run 1: The reply states Emma's limit as £250,000 and names Daniel Okafor as the approver above it, but the tool evidence contains neither the figur",
+     "good T20 run 2: not in any tool result: £250,000.00"
+    ]
+   },
+   {
+    "id": "own_money",
+    "who": "agent",
+    "name": "It worked out money itself",
+    "note": "2,400 x £119 = £285,600 written by the model, against the prompt's rule (the preview gives the value).",
+    "fix": "kept as a real failure; the numbers check catches it",
+    "checks": 1,
+    "runs": 1,
+    "examples": [
+     "good T14 run 2: not in any tool result: £285,600.00"
+    ]
+   },
+   {
+    "id": "other",
+    "who": "mixed",
+    "name": "Other single failures (read one by one)",
+    "note": "",
+    "fix": "",
+    "checks": 3,
+    "runs": 1,
+    "examples": [
+     "good T02 run 3 outcome: no request",
+     "good T02 run 3 trajectory: never committed",
+     "good T02 run 3 words: The reply says \"I haven't submitted anything yet\" and asks whether to submit, so it does not say the request is saved. T"
+    ]
+   }
+  ],
+  "infra": {
+   "id": "import_race",
+   "who": "infra",
+   "name": "Two threads imported httpx at once",
+   "runs": 2,
+   "examples": [
+    "good T06: RuntimeError: anthropic:claude-sonnet-5-5: partially initialized module 'httpx' has no attribute 'Response' (most likely",
+    "thursday T07: RuntimeError: anthropic:claude-sonnet-5-5: partially initialized module 'httpx' has no attribute 'Response' (most likely"
+   ],
+   "fix": "openai and httpx imported once, before the threads start"
+  }
+ },
+ "later": [
+  {
+   "id": "evidence_encoding",
+   "who": "eval",
+   "found": "suite v2, T20",
+   "name": "A £ figure that was there was flagged as made up",
+   "note": "The record kept 1,800 ASCII-escaped characters of each tool result: '£1,000,000' in the policy text became '\\u00a31,000,000' or was cut off.",
+   "fix": "6,000 characters, unescaped"
+  },
+  {
+   "id": "gate_too_strict",
+   "who": "eval",
+   "found": "the first CI run",
+   "name": "The gate failed the good prompt",
+   "note": "T01's trajectory check demanded a preview; that run asked for the date first.",
+   "fix": "the check accepts the question"
+  },
+  {
+   "id": "guard_refused_yes",
+   "who": "guard",
+   "found": "the replay",
+   "name": "The guard refused Emma's real yes",
+   "note": "After 'Yes, go ahead' the agent previewed again; the guard overwrote the preview's turn and refused the commit.",
+   "fix": "keep the first preview's turn"
+  }
+ ],
+ "after": {
+  "v1": {
+   "good": "15/60",
+   "thursday": "7/20"
+  },
+  "v2": {
+   "good": "57/60",
+   "thursday": "16/20"
+  }
+ }
+}

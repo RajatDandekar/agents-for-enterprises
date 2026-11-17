@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Argus · Northbridge Cycles</title>
+<meta name="description" content="Lecture 6, Observability and Evals: trace and evaluate Ask Northbridge on a sandboxed ERP. All names are fictional.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&display=swap">
+<link rel="stylesheet" href="/static/argus.css?v=20261117">
+</head>
+<body>
+
+<!-- join -->
+<section class="join" id="join">
+  <div class="card">
+    <span class="k"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Northbridge Cycles · Lecture 6 · Observability and Evals</span>
+    <h1>Argus.</h1>
+    <p class="lede">The hundred-eyed watchman. Ask Northbridge goes to 40 buyers on Monday. Today you watch every step it takes, test it before a change ships, and let a simulated Emma hold a whole conversation with it.</p>
+    <form id="joinform" autocomplete="off">
+      <input class="input" id="name" placeholder="Your name" maxlength="40" aria-label="Your name" required>
+      <button class="btn primary lg" type="submit" id="joinbtn">Open my lab</button>
+    </form>
+    <p class="muted small" style="margin-top:12px" id="keyline">On another device already? <a href="#" id="usekey">Use your key</a></p>
+    <div class="row hide" id="welcome" style="margin-top:20px">
+      <button class="btn primary lg" id="enter">Continue as <span id="wname"></span></button>
+      <a href="#" class="small" id="notme">Not you? Start again</a>
+    </div>
+    <div class="four three-up">
+      <div><b>1 · Traces</b>See every step it took, and why</div>
+      <div><b>2 · Evals</b>Is it right, and still right after a change?</div>
+      <div><b>3 · Conversations</b>A simulated Emma talks to it; the whole chat is scored</div>
+    </div>
+  </div>
+</section>
+
+<!-- the lab -->
+<div id="lab" class="hide">
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="9" fill="#141519"/><path d="M5 16s4-7 11-7 11 7 11 7-4 7-11 7S5 16 5 16z" stroke="#fff" stroke-width="1.8"/><circle cx="16" cy="16" r="3.4" fill="#7fb0ff"/></svg>
+    <div>Argus<br><small>Lecture 6 · Observability and Evals</small></div>
+  </div>
+  <nav class="tabs" id="tabs">
+    <a href="#traces" data-tab="traces"><span class="n">1</span><span class="lbl">Traces</span></a>
+    <a href="#evals" data-tab="evals"><span class="n">2</span><span class="lbl">Evals</span></a>
+    <a href="#convos" data-tab="convos"><span class="n">3</span><span class="lbl">Conversations</span></a>
+    <a href="#guards" data-tab="guards" id="guardstab" class="hide"><span class="n">4</span><span class="lbl">Guards</span></a>
+  </nav>
+  <div class="clock" title="Every Ledgerline call happens at this time, in your own sandbox"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="t">Fri 20 Nov 2026, 09:10</span></div>
+  <button class="btn xs" id="keybtn" title="Your key for the class notebooks (the LLM gateway)">Notebook key</button>
+  <span class="pill line num" id="spend" title="Your model spend today">US$0.00</span>
+  <div class="who"><span class="avatar" id="avatar">E</span></div>
+</header>
+
+<main>
+<!-- ======================================================== 1 · traces -->
+<section class="tab" id="tab-traces">
+  <div class="head">
+    <div><div class="kick">Station 1 · Observability</div><h2>Every turn is a trace</h2>
+      <p class="lede">Chat with your own Ask Northbridge, as Emma. Each turn becomes a tree of spans: the agent, every model call, every tool call, with timings, tokens, cost and the exact arguments. The same trace goes to Langfuse.</p></div>
+    <div class="guide">
+      <div class="try"><h4><i></i>Try</h4><p>Ask <b>“Order the usual, please, needed by 4 Dec 2026.”</b> Then switch to the <b>Thursday prompt</b> (it starts a new chat) and ask the same.</p></div>
+      <div class="notice"><h4><i></i>Notice</h4><p>Find the <code>create_purchase_request</code> spans. Is <code>confirm</code> false or true? Did a preview reach Emma first?</p></div>
+      <div class="next"><h4><i></i>Next</h4><p>Open the same trace in LangSmith, Langfuse or Sentry (top right of the trace). Then Evals: would a test have caught it?</p></div>
+    </div>
+  </div>
+  <div class="tr-grid">
+    <div class="panel chatp">
+      <div class="ph"><h3>Ask Northbridge</h3><span class="sp"></span>
+        <div class="seg" id="promptseg"><button data-p="good" class="on">Good prompt</button><button data-p="thursday">Thursday prompt</button><button data-p="custom">My edit</button></div>
+        <button class="btn xs ghost" id="showprompt" title="See the system prompt">Prompt</button>
+        <button class="btn xs" id="newchat">New chat</button></div>
+      <div class="pb convo" id="convo"><div class="empty">Say something to Ask Northbridge. Try one of these:</div></div>
+      <div class="sugg" id="sugg"></div>
+      <form class="say" id="sayform" autocomplete="off"><input class="input" id="say" placeholder="Message Ask Northbridge as Emma…" maxlength="1200"><button class="btn primary" id="saybtn">Send</button></form>
+    </div>
+    <div class="panel tracep">
+      <div class="ph"><h3>Trace</h3><span class="muted small" id="tmeta"></span><span class="sp"></span><span id="tlinks" class="row" style="gap:6px"></span></div>
+      <div class="incident hide" id="incident"></div>
+      <div class="wf" id="wf"><div class="empty">Each turn's trace appears here. Click a span to see what it holds.</div></div>
+      <div class="spand" id="spand"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================== 2 · evals -->
+<section class="tab" id="tab-evals">
+  <div class="head">
+    <div><div class="kick">Station 2 · Evals</div><h2>Would this change ship?</h2>
+      <p class="lede">Six tasks from the class suite, each in a fresh sandbox, scored in code (outcome in Ledgerline, the tool calls, every £ figure) and by Claude Haiku for the words. Then the same task three times: pass^3.</p></div>
+    <div class="guide">
+      <div class="try"><h4><i></i>Try</h4><p>Run the quick suite on the <b>good</b> prompt, then on the <b>Thursday</b> prompt. Then <b>pass^3</b> on each.</p></div>
+      <div class="notice"><h4><i></i>Notice</h4><p>One run can pass a broken prompt. Where do the judge and the code disagree, and who is right?</p></div>
+      <div class="next"><h4><i></i>Next</h4><p>Write your own edit in Traces (My edit) and see if it would ship. Then Conversations.</p></div>
+    </div>
+  </div>
+  <div class="ev-grid">
+    <div class="panel">
+      <div class="ph"><h3>Run</h3></div>
+      <div class="pb col">
+        <span class="label">Prompt under test</span>
+        <div class="seg" id="evprompt"><button data-p="good" class="on">Good</button><button data-p="thursday">Thursday</button><button data-p="custom">My edit</button></div>
+        <button class="btn primary" id="runquick">Run the quick suite · 6 tasks</button>
+        <button class="btn" id="runpassk">pass^3 on “Order the usual” · 3 runs</button>
+        <p class="tiny muted" id="evcost">About US$0.70 for the suite and US$0.40 for pass^3, from your daily budget.</p>
+        <div class="tasks" id="tasklist"></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel verdictp" id="verdict"><div class="empty">Results appear here, task by task.</div></div>
+      <div class="panel"><div class="ph"><h3>Per task</h3><span class="sp"></span><span class="muted small">click a row for the reply, the tool calls and every check</span></div><div class="pb" id="evrows"></div></div>
+      <div class="panel"><div class="ph"><h3>Our recorded runs (the deck)</h3><span class="sp"></span><span class="muted small">all 20 tasks</span></div><div class="pb" id="recorded"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================== 3 · conversations -->
+<section class="tab" id="tab-convos">
+  <div class="head">
+    <div><div class="kick">Station 3 · Multi-turn evals</div><h2>A simulated Emma, a whole conversation</h2>
+      <p class="lede">Pick what Emma wants and how she writes. A model plays her and talks to your Ask Northbridge, turn by turn, in a fresh sandbox. Then the whole conversation is scored, not each reply.</p></div>
+    <div class="guide">
+      <div class="try"><h4><i></i>Try</h4><p><b>Changes her mind</b> with the <b>impatient</b> Emma, good prompt. Then the same on the <b>Thursday</b> prompt.</p></div>
+      <div class="notice"><h4><i></i>Notice</h4><p>No script could have written her replies: she reacts to what your agent said. Which check fails, and in which turn?</p></div>
+      <div class="next"><h4><i></i>Next</h4><p>Open the session in Langfuse: one conversation, several traces. Then build the simulator yourself in NB6c.</p></div>
+    </div>
+  </div>
+  <div class="cv-grid">
+    <div class="panel">
+      <div class="ph"><h3>What Emma wants</h3></div>
+      <div class="pb col">
+        <div class="scns" id="scnlist"></div>
+        <span class="label">How she writes</span>
+        <div class="seg" id="personas"></div>
+        <p class="tiny muted" id="personaline"></p>
+        <span class="label">Prompt under test</span>
+        <div class="seg" id="cvprompt"><button data-p="good" class="on">Good</button><button data-p="thursday">Thursday</button><button data-p="custom">My edit</button></div>
+        <button class="btn primary" id="runconvo">Start the conversation</button>
+        <p class="tiny muted">About US$0.15–0.40 a conversation, from your daily budget.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><h3>The conversation</h3><span class="muted small" id="cvmeta"></span><span class="sp"></span><span id="cvlinks" class="row" style="gap:6px"></span></div>
+      <div class="pb convo" id="cvconvo" style="min-height:420px"><div class="empty">Emma's messages are written by a model that knows only her goal, what she knows, and how she writes.</div></div>
+    </div>
+    <div class="col">
+      <div class="panel" id="cvverdict"><div class="empty">The scorecard for the whole conversation appears here.</div></div>
+      <div class="panel"><div class="ph"><h3>My conversations</h3></div><div class="pb" id="mycv"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================== 4 · guards (the next lecture; hidden unless switched on) -->
+<section class="tab" id="tab-guards">
+  <div class="head">
+    <div><div class="kick">Station 4 · Guardrails (next lecture)</div><h2>Try to break it</h2>
+      <p class="lede">Turn guards on or off, then send an attack from the library or write your own. Each attack runs in a fresh sandbox; whether it worked is read from Ledgerline, never guessed by a model.</p></div>
+    <div class="guide">
+      <div class="try"><h4><i></i>Try</h4><p>With <b>no guards</b>, send A03, A11 and A14. Then the same with <b>code guards</b>, then <b>all</b>.</p></div>
+      <div class="notice"><h4><i></i>Notice</h4><p>Which guard stopped it: code that reads Ledgerline, or a model that reads words? Which attacks still get through?</p></div>
+      <div class="next"><h4><i></i>Next</h4><p>Write an attack nobody stops. The wall shows the class's attack success rate per guard set.</p></div>
+    </div>
+  </div>
+  <div class="gd-grid">
+    <div class="panel">
+      <div class="ph"><h3>Guards</h3><span class="sp"></span><div class="seg" id="presets"><button data-s="none">None</button><button data-s="code" class="on">Code</button><button data-s="all">All</button></div></div>
+      <div class="pb" id="guardlist"></div>
+    </div>
+    <div class="panel">
+      <div class="ph"><h3>Attacks</h3><span class="sp"></span><span class="muted small">OWASP Agentic 2026 · LLM 2026</span></div>
+      <div class="pb attacks" id="attacklist"></div>
+      <form class="say" id="ownform" autocomplete="off" style="border-top:1px solid var(--line)"><input class="input" id="own" placeholder="Or write your own attack…" maxlength="1200"><button class="btn primary">Send</button></form>
+    </div>
+    <div class="col">
+      <div class="panel" id="attres"><div class="empty">Pick an attack. The result shows here: did it work, which guard stopped it, and the trace.</div></div>
+      <div class="panel"><div class="ph"><h3>My attacks</h3><span class="sp"></span><a class="small" href="/wall" target="_blank">Class wall ↗</a></div><div class="pb" id="myatt"></div></div>
+    </div>
+  </div>
+</section>
+</main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true"><div class="dh"><h3 id="dtitle"></h3><span class="sp"></span><button class="btn sm ghost" id="dclose">Close</button></div><div class="db" id="dbody"></div></aside>
+<div class="toast" id="toast" role="status"></div>
+<script src="/static/argus.js?v=20261117"></script>
+</body>
+</html>

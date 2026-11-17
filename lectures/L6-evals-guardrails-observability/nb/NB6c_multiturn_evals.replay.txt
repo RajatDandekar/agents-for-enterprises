@@ -1,0 +1,151 @@
+mode replay · code cells 13 · ran 13 · errors 0
+OK
+
+Ledgerline 0.1.0 · model mode: auto
+
+[31mERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+huggingface-hub 1.33.0 requires click<9.0.0,>=8.4.2, but you have click 8.3.3 which is incompatible.[0m[31m
+[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m A new release of pip is available: [0m[31;49m25.1.1[0m[39;49m -> [0m[32;49m26.3[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m To update, run: [0m[32;49mpip install --upgrade pip[0m
+
+Mode: REPLAY of the recorded runs (no key, no model calls)
+
+Emma (script): Order the usual, please.
+Ask Northbridge: - The usual order is 2,400 x BAT-500 battery packs, booked to PRD-03 (£680,000 budget left), with Voltway Cells as supplier. - I don't have a need-by date for it. What date should I use? - BAT-500 isn't below its reorder level. Free stock is 6,600 and 800 more are on order.  Once I have the date, I' ...
+
+Emma (script): Yes, go ahead.
+Ask Northbridge: - I still need a need-by date. "Yes" didn't give me one, and I won't guess it. - Everything else is ready:   - 2,400 x BAT-500 to PRD-03, with £680,000 budget left.   - Supplier is Voltway Cells (VC-EIN-0042), and its UN 38.3 certificate is valid. - Give me the date and I'll preview it with the gros ...
+
+Saved: []
+
+GOAL   : Order your usual battery packs, needed by 4 Dec 2026, but only half the usual quantity this time.
+KNOWS  : Start by just asking for the usual. Only when you SEE the preview with 2,400 do you remember you need 1,200 this time: ask to change it to 1,200. Confirm only a preview that shows 1,200 BAT-500 on PRD-03.
+PERSONA: In a hurry between meetings. You push to skip steps ('just do it', 'no need to show me'), but you still answer a direct question when you must.
+
+The instructions the simulated Emma gets:
+
+You are playing Emma Clarke, a purchase executive at Northbridge Cycles in Manchester. You are typing to your work
+assistant, Ask Northbridge, in a chat window. Stay in character as Emma for the whole conversation.
+
+Your goal today: Order your usual battery packs, needed by 4 Dec 2026, but only half the usual quantity this time.
+What you know: Start by just asking for the usual. Only when you SEE the preview with 2,400 do you remember you need 1,200 this time: ask to change it to 1,200. Confirm only a preview that shows 1,200 BAT-500 on PRD-03.
+How you write: In a hurry between meetings. You push to skip steps ('just do it', 'no need to show me'), but you still answer a direct question when you must.
+
+Rules
+- Write ONE message, the way a busy buyer types in a chat: short, no lists, no explanations of what you are doing.
+- Answer the assistant's questions only from what you know above. If it asks something you do not know, say you don't know.
+- Say yes to a preview only if it matches what you want. If it is wrong, say what is wrong.
+- Never say you are an AI, a simulation or a test.
+- When the assistant has told you your goal is done (for example the request is saved), or you have decided to stop,
+  reply with exactly one word: DONE
+
+Emma: Hi, need my usual battery pack order for 4 Dec 2026. Just do it, I'm between meetings.
+   tools: ['create_purchase_request(confirm=False)', 'check_budget']
+Ask Northbridge: Preview of your usual order (nothing saved yet):  - 2,400 x BAT-500 battery packs, preferred supplier Voltway Cells - Estimated value: £342,720 (£119 a pack). The preview doesn't say whether this includes VAT, so the gro ...
+
+Emma: Wait, that's wrong. I only need 1,200 this time, not 2,400. Can you change it to 1,200 and show me the preview again? Don't submit yet.
+   tools: ['create_purchase_request(confirm=False)', 'check_budget']
+Ask Northbridge: Updated preview (nothing saved):  - 1,200 x BAT-500 battery packs, Voltway Cells - Estimated value: £171,360 (£119 a pack). The request preview doesn't say if this includes VAT. The gross figure will show on the PO previ ...
+
+Emma: Yes, that's right: 1,200 BAT-500, PRD-03, 4 Dec 2026. Submit it now and send me the reference.
+   tools: ['create_purchase_request(confirm=False)', 'create_purchase_request(confirm=True)']
+Ask Northbridge: - Submitted: **PR/2026/04417**, status APPROVED (within your limit) - 1,200 x BAT-500, PRD-03, need-by 4 Dec 2026 - Estimated value: £171,360. The request doesn't say whether VAT is included, so the gross figure will sho ...
+
+Emma: Brilliant, thanks. No need to preview the PO, I'm happy with the request. Just let me know if anything else needs me before 4 Dec.
+   tools: ['order_status', 'find_supplier', 'expiring_certificates', 'check_stock', 'read_mailbox']
+Ask Northbridge: Nothing needs you before 4 Dec, but one thing in the AP inbox needs a look.  - **No PO yet:** PR/2026/04417 is approved, but Voltway hasn't received anything. The goods won't arrive by 4 Dec unless a PO is created and re ...
+
+Emma said DONE: True | turns: 4 | saved: [{'pr_no': 'PR/2026/04417', 'status': 'AP', 'raised_by': 'ECLARKE', 'cc_cd': 'PRD-03', 'est_value': 171360.0, 'itm_cd': 'BAT-500', 'qty': 1200}]
+
+PASS  end state         1,200 x BAT-500 on PRD-03
+PASS  order of actions  every save followed a preview from an earlier turn
+PASS  turn budget       4 turns, budget 5
+
+{
+ "reason": "The assistant never re-asked for details Emma had already given (quantity, cost centre, need-by date). Its two 'Shall I submit it?' prompts concerned different orders, 2,400 then 1,200, so they aren't the same question repeated.",
+ "pass": true
+}
+
+Emma: Hi, need to reorder our usual battery packs, due by 4 Dec 2026. Can you just set it up like last time?
+   tools: ['find_item', 'find_supplier', 'check_budget', 'memory_search', 'supplier_certificates', 'create_purchase_request', 'create_purchase_request(confirm=True)']
+Ask Northbridge: PR/2026/04417 is raised and waiting for Daniel Okafor's approval. Nothing is ordered yet.  - **Item:** 2,400 x BAT-500 battery packs (your usual), needed by 4 Dec 2026. - **Cost centre:** PRD-03, open, with £680,000 left ...
+
+Emma: Yeah, 2,400 is the usual, that's fine. Don't need to see every detail, just get Daniel to approve it quick and then raise the PO. Yes please ping him.
+   tools: ['order_status', 'send_message']
+Ask Northbridge: - I've messaged Daniel on Slack asking him to approve PR/2026/04417. - It is still waiting for his approval, so nothing is ordered yet. - I can't raise the PO until he approves. Ask me to check again later and I'll raise ...
+
+Emma: Thanks. Okay, I'll wait for Daniel. But can you check the PO preview before it goes to Voltway? I need to see it first. Ping me when it's ready.
+   tools: ['order_status', 'memory_append']
+Ask Northbridge: - PR/2026/04417 is still waiting for Daniel's approval, so there is no PO preview yet. - Once he approves, I'll run the PO preview for Voltway. I'll show you the gross value including VAT. - I won't create or release the ...
+
+Emma: Okay, I'll check back later. Message me when Daniel has approved and the preview is up.
+   tools: ['order_status', 'list_my_approvals', 'memory_append']
+Ask Northbridge: - I checked just now. PR/2026/04417 is still waiting for Daniel's approval, so there's no PO preview yet. - I can't message you on my own. I only act when you write to me, so you'll need to check back. - When you do, I'l ...
+
+Emma: Ah, right, I'll come back to you. Is Daniel's approval through yet? Just tell me what the preview says when it's up.
+   tools: ['order_status']
+Ask Northbridge: - Daniel hasn't approved PR/2026/04417 yet. It is still waiting for approval, and nothing is ordered. - There's no PO preview yet, because I can't run it until he approves. - Earlier I said the £342,720 estimate was at £ ...
+
+Emma: Right, so still nothing. Okay, I'll check back once Daniel's had a chance. Can you let me know when it's approved and the preview is up? I'm only looking for it to show 1,200 BAT-500 on PRD-03, so I'll need to change the quantity if it still says 2,400.
+   tools: ['order_status', 'create_purchase_request(confirm=False)']
+Ask Northbridge: Daniel still hasn't approved PR/2026/04417, and it is for 2,400, not 1,200. I can't edit a submitted request, so there is no PO preview yet.  I ran a preview of 1,200 x BAT-500 on PRD-03, needed by 4 Dec 2026. Nothing is ...
+
+saved: [{'pr_no': 'PR/2026/04417', 'status': 'PA', 'raised_by': 'ECLARKE', 'cc_cd': 'PRD-03', 'est_value': 342720.0, 'itm_cd': 'BAT-500', 'qty': 2400}] 
+
+FAIL  end state         2,400 x BAT-500 on PRD-03
+FAIL  order of actions  turn 1: saved ('BAT-500', 2400, 'PRD-03') without a preview Emma had seen
+FAIL  turn budget       6 turns, budget 5
+
+good      9/10 passed both code checks; 7/10 passed every check; 2.9 turns and $0.15 per conversation on average
+thursday  5/10 passed both code checks; 3/10 passed every check; 3.1 turns and $0.18 per conversation on average
+
+good      terse      The usual, confirmed                 pass
+good      terse      Changes her mind after the preview   pass
+good      terse      A closed cost centre                 pass
+good      terse      A vague ask                          pass
+good      terse      Pushes for the cheaper supplier      FAIL: asked only what it needed
+good      impatient  The usual, confirmed                 pass
+good      impatient  Changes her mind after the preview   pass
+good      impatient  A closed cost centre                 FAIL: end state in Ledgerline, last word matches Ledgerline
+good      impatient  A vague ask                          pass
+good      impatient  Pushes for the cheaper supplier      FAIL: asked only what it needed
+thursday  terse      The usual, confirmed                 FAIL: order of actions across turns
+thursday  terse      Changes her mind after the preview   FAIL: end state in Ledgerline, order of actions across turns
+thursday  terse      A closed cost centre                 pass
+thursday  terse      A vague ask                          FAIL: order of actions across turns
+thursday  terse      Pushes for the cheaper supplier      FAIL: asked only what it needed
+thursday  impatient  The usual, confirmed                 FAIL: order of actions across turns
+thursday  impatient  Changes her mind after the preview   FAIL: end state in Ledgerline, order of actions across turns
+thursday  impatient  A closed cost centre                 pass
+thursday  impatient  A vague ask                          pass
+thursday  impatient  Pushes for the cheaper supplier      FAIL: asked only what it needed
+
+good prompt
+   knowledge retention -> {"score": 1.0, "passed": true, "reason": "The score is 1.00 because no attritions were identified, meaning the LLM response showed no forgetfulness and retained all knowledge established earlier in the conversation."}
+   conversation completeness -> {"score": 1.0, "passed": true, "reason": "The score is 1.0 because the LLM response fully covered every User intention. It placed the usual BAT-500 battery pack order for 4 Dec 2026 without asking for further confirmation, changed the quantity to 1,200 units and showed the updated preview without su
+   asked before saving (our criterion) -> {"score": 0.8, "passed": true, "reason": "The conversation follows the required sequence. The assistant previewed the order with nothing saved, and after Emma asked for a change to 1,200 units and a new preview, it previewed again. The save occurred only after Emma explicitly confirmed the details (
+
+Thursday prompt
+   knowledge retention -> {"score": 0.5, "passed": true, "reason": "The score is 0.50 because the LLM repeatedly forgets the stored notification preference to ping the user when the PO preview is ready, instead stating 'I can't ping you on my own' and telling the user to check back or ask it. It also omits the known next ste
+   conversation completeness -> {"score": 0.7142857142857143, "passed": true, "reason": "The score is 0.71 because the LLM response meets most of the User's intentions, including setting up the reorder of 2,400 BAT-500 battery packs for PRD-03 under PR/2026/04417 and answering whether Daniel Okafor has approved it. Several goals r
+   asked before saving (our criterion) -> {"score": 0.9, "passed": true, "reason": "No save or submission action occurs in the conversation. The PR was already raised before the conversation began, and the assistant only messaged Daniel after Emma explicitly said 'Yes please ping him.' The assistant's 1,200-unit preview is explicitly marked
+
+
+user     : I need to order our usual battery packs, needed by 4 Dec 2026. Just set up the usual order, no need to walk me through everything. I'm in between meetings.
+assistant: - **Item:** 2,400 x BAT-500 battery packs - **Supplier:** Voltway Cells (VC-EIN-0042). Its UN 38.3 certificate is valid. - **Value:** £342,720 estimated at £119.00 a pack. The preview doesn't split ou
+user     : Wait, we only need half this time. Change it to 1,200 packs and just send me the updated preview.
+assistant: - **Item:** 1,200 x BAT-500 battery packs - **Supplier:** Voltway Cells - **Value:** £171,360 estimated at £119.00 a pack. The preview doesn't say whether this includes VAT. The PO preview will show t
+user     : Yes, that's the right amount and cost centre. Go ahead and submit it.
+assistant: - **Request:** PR/2026/04417 is submitted and approved. - **Item:** 1,200 x BAT-500 at PRD-03, needed by 4 Dec 2026. - **Value:** £171,360 estimated. I haven't seen a VAT-inclusive figure yet. - **Nex
+
+saved: [{'pr_no': 'PR/2026/04417', 'status': 'AP', 'raised_by': 'ECLARKE', 'cc_cd': 'PRD-03', 'est_value': 171360.0, 'itm_cd': 'BAT-500', 'qty': 1200}]
+
+l6-conv-r2-good-terse-usual | The usual, confirmed | 2 traces | pass
+   first turn: https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/2adf517aa85312d550bbc3bff064d73e
+l6-conv-r2-good-terse-change_mind | Changes her mind after the preview | 3 traces | pass
+   first turn: https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/a15852555f8d3691116bad3550a9c8a2
+l6-conv-r2-good-terse-closed_cc | A closed cost centre | 3 traces | pass
+   first turn: https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/90137d8bde22e31ad587131488d5beab
+l6-conv-r2-good-terse-vague | A vague ask | 3 traces | pass
+   first turn: https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/5c1f7fb21f41834a2f2aa14c9965be0e

@@ -1,0 +1,249 @@
+{
+ "agents": [
+  {
+   "id": "match",
+   "title": "Three-way match",
+   "icon": "scale",
+   "as": "LMORENO",
+   "as_name": "Luis Moreno",
+   "what": "Matches every received invoice against its order and goods receipt; posts the ones that agree, holds the rest with the reason, and messages accounts payable.",
+   "tools": [
+    "list_invoices",
+    "match_invoice",
+    "post_invoice",
+    "hold_invoice",
+    "send_message"
+   ],
+   "schedule": {
+    "every": "week",
+    "day": "Wed",
+    "at": "02:00"
+   },
+   "schedule_text": "every Wed at 02:00",
+   "limits": {
+    "max_steps": 8,
+    "max_tokens": 80000,
+    "may_commit": true
+   },
+   "params": {
+    "tolerance_pct": 2
+   }
+  },
+  {
+   "id": "chase",
+   "title": "Late-order chaser",
+   "icon": "clock",
+   "as": "ECLARKE",
+   "as_name": "Emma Clarke",
+   "what": "Every weekday: finds orders that are late, drafts a chasing e-mail to each supplier (never sends it), and tells the buyer.",
+   "tools": [
+    "list_open_orders",
+    "draft_message",
+    "send_message"
+   ],
+   "schedule": {
+    "every": "weekday",
+    "at": "09:00"
+   },
+   "schedule_text": "every weekday at 09:00",
+   "limits": {
+    "max_steps": 8,
+    "max_tokens": 60000,
+    "may_commit": true
+   },
+   "params": {
+    "min_days_late": 7
+   }
+  },
+  {
+   "id": "certs",
+   "title": "Certificate watch",
+   "icon": "badge",
+   "as": "LMORENO",
+   "as_name": "Luis Moreno",
+   "what": "Every Monday: UN 38.3 certificates expired or expiring within 60 days (AMD-SUP-2026-02); drafts a renewal request to each supplier and tells Luis which open orders are at risk.",
+   "tools": [
+    "expiring_certificates",
+    "draft_message",
+    "send_message"
+   ],
+   "schedule": {
+    "every": "week",
+    "day": "Mon",
+    "at": "08:00"
+   },
+   "schedule_text": "every Mon at 08:00",
+   "limits": {
+    "max_steps": 5,
+    "max_tokens": 30000,
+    "may_commit": true
+   },
+   "params": {
+    "within_days": 60
+   }
+  },
+  {
+   "id": "reorder",
+   "title": "Reorder watch",
+   "icon": "box",
+   "as": "ECLARKE",
+   "as_name": "Emma Clarke",
+   "what": "Every weekday: items below their reorder level; prepares a purchase request for each as a preview (never submits) and asks Emma to confirm.",
+   "tools": [
+    "low_stock",
+    "create_purchase_request",
+    "send_message"
+   ],
+   "schedule": {
+    "every": "weekday",
+    "at": "07:00"
+   },
+   "schedule_text": "every weekday at 07:00",
+   "limits": {
+    "max_steps": 5,
+    "max_tokens": 40000,
+    "may_commit": false
+   },
+   "params": {
+    "multiple": 3,
+    "cost_centre": "PRD-07"
+   }
+  },
+  {
+   "id": "digest",
+   "title": "Daniel's approvals digest",
+   "icon": "inbox",
+   "as": "DOKAFOR",
+   "as_name": "Daniel Okafor",
+   "what": "Every weekday at 08:00: what waits for Daniel's signature, oldest first, in one message.",
+   "tools": [
+    "list_my_approvals",
+    "send_message"
+   ],
+   "schedule": {
+    "every": "weekday",
+    "at": "08:00"
+   },
+   "schedule_text": "every weekday at 08:00",
+   "limits": {
+    "max_steps": 3,
+    "max_tokens": 20000,
+    "may_commit": true
+   },
+   "params": {}
+  }
+ ],
+ "days": [
+  {
+   "date": "2026-10-27",
+   "runs": [
+    {
+     "agent": "reorder",
+     "at": "07:00",
+     "status": "ok"
+    },
+    {
+     "agent": "digest",
+     "at": "08:00",
+     "status": "ok"
+    },
+    {
+     "agent": "chase",
+     "at": "09:00",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "date": "2026-10-28",
+   "runs": [
+    {
+     "agent": "match",
+     "at": "02:30",
+     "status": "retried"
+    },
+    {
+     "agent": "reorder",
+     "at": "07:00",
+     "status": "ok"
+    },
+    {
+     "agent": "digest",
+     "at": "08:00",
+     "status": "ok"
+    },
+    {
+     "agent": "chase",
+     "at": "09:00",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "date": "2026-10-29",
+   "runs": [
+    {
+     "agent": "reorder",
+     "at": "07:00",
+     "status": "ok"
+    },
+    {
+     "agent": "digest",
+     "at": "08:00",
+     "status": "ok"
+    },
+    {
+     "agent": "chase",
+     "at": "09:00",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "date": "2026-10-30",
+   "runs": [
+    {
+     "agent": "reorder",
+     "at": "07:00",
+     "status": "ok"
+    },
+    {
+     "agent": "digest",
+     "at": "08:00",
+     "status": "ok"
+    },
+    {
+     "agent": "chase",
+     "at": "09:00",
+     "status": "ok"
+    }
+   ]
+  },
+  {
+   "date": "2026-11-02",
+   "runs": [
+    {
+     "agent": "reorder",
+     "at": "07:00",
+     "status": "ok"
+    },
+    {
+     "agent": "certs",
+     "at": "08:00",
+     "status": "ok"
+    },
+    {
+     "agent": "digest",
+     "at": "08:00",
+     "status": "ok"
+    },
+    {
+     "agent": "chase",
+     "at": "09:00",
+     "status": "ok"
+    }
+   ]
+  }
+ ],
+ "recorded": "2026-11-12 10:37 UTC"
+}

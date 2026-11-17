@@ -1,0 +1,74 @@
+{
+  "name": "draft_message",
+  "title": "Draft message",
+  "category": "Messages",
+  "description": "Save a message as a DRAFT for a person to read and send (an e-mail address or a Slack handle like @emma). Nothing is sent. Use it for anything a background agent would say to a supplier.",
+  "writes": true,
+  "version": "1.0",
+  "services": [
+    "ntf_draft_save"
+  ],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "to": {
+        "type": "string",
+        "description": "e-mail address or @handle"
+      },
+      "subject": {
+        "type": "string",
+        "description": "one line"
+      },
+      "text": {
+        "type": "string",
+        "description": "the message"
+      },
+      "ref": {
+        "type": "string",
+        "description": "optional document it is about, e.g. PO/2026/01139"
+      }
+    },
+    "required": [
+      "to",
+      "subject",
+      "text"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean",
+        "description": "true when it worked; false comes with error and next_step"
+      },
+      "draft_id": {
+        "type": "integer",
+        "description": "the draft's number"
+      },
+      "sent": {
+        "type": "boolean",
+        "description": "always false: a person sends it"
+      }
+    }
+  },
+  "example": {
+    "to": "orders@am-bir-0008.example",
+    "subject": "Late order PO/2026/01139",
+    "text": "Hello, our order PO/2026/01139 was due on 9 Oct 2026. When will it arrive?"
+  },
+  "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  },
+  "policy": {
+    "ledgerline_reply_timeout_s": 30,
+    "reads_inside": "retried, at most 2 more times",
+    "on_lost_write_reply": "never resent blindly: look the document up (by the supplier's number or its id) and return it",
+    "on_busy_before_write": "ok=false with next_step; nothing was saved, so the same call is safe to repeat"
+  },
+  "release_notes": {
+    "1.0": "12 Nov 2026: Lecture 5 (The Habits): accounts payable and the background agents' watch lists."
+  }
+}

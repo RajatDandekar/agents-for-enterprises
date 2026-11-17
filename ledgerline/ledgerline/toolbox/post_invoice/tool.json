@@ -1,0 +1,70 @@
+{
+  "name": "post_invoice",
+  "title": "Post invoice",
+  "category": "Accounts payable",
+  "description": "Post a MATCHED invoice to the ledger so it is paid on its due date (invoice date plus the supplier's payment terms). confirm=false previews; only matched invoices can be posted.",
+  "writes": true,
+  "version": "1.0",
+  "services": [
+    "inv_get",
+    "sup_get",
+    "pt_list",
+    "inv_post"
+  ],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "invoice_no": {
+        "type": "string",
+        "description": "e.g. AP/2026/70001"
+      },
+      "confirm": {
+        "type": "boolean",
+        "description": "false (default) = preview only, nothing is saved; true = commit"
+      }
+    },
+    "required": [
+      "invoice_no"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean",
+        "description": "true when it worked; false comes with error and next_step"
+      },
+      "status": {
+        "type": "string",
+        "description": "POSTED (will be paid)"
+      },
+      "due_date": {
+        "type": "string",
+        "description": "YYYY-MM-DD"
+      },
+      "gross": {
+        "type": "number",
+        "description": "pounds"
+      }
+    }
+  },
+  "example": {
+    "invoice_no": "AP/2026/70001",
+    "confirm": true
+  },
+  "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  },
+  "policy": {
+    "ledgerline_reply_timeout_s": 30,
+    "reads_inside": "retried, at most 2 more times",
+    "on_lost_write_reply": "never resent blindly: look the document up (by the supplier's number or its id) and return it",
+    "on_busy_before_write": "ok=false with next_step; nothing was saved, so the same call is safe to repeat"
+  },
+  "release_notes": {
+    "1.0": "12 Nov 2026: Lecture 5 (The Habits): accounts payable and the background agents' watch lists."
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "name": "list_open_orders",
+  "title": "List open orders",
+  "category": "Orders",
+  "description": "Released purchase orders that are not fully received yet, oldest need-by date first, with how many days late each one is. Filter by min_days_late (e.g. 8 for 'more than 7 days late'), supplier or buyer.",
+  "writes": false,
+  "version": "1.0",
+  "services": [
+    "po_open_list"
+  ],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "min_days_late": {
+        "type": "integer",
+        "description": "only orders at least this many days past their need-by date (0 = due today or late); leave out for every open order"
+      },
+      "supplier_code": {
+        "type": "string",
+        "description": "optional, e.g. VC-EIN-0042"
+      },
+      "buyer": {
+        "type": "string",
+        "description": "optional user id of the buyer who raised it, e.g. ECLARKE"
+      }
+    },
+    "required": []
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean",
+        "description": "true when it worked; false comes with error and next_step"
+      },
+      "orders": {
+        "type": "array",
+        "description": "po_no, supplier_code, supplier_name, supplier_email, item_code, ordered, received, outstanding, need_by, days_late, buyer"
+      },
+      "count": {
+        "type": "integer",
+        "description": "how many"
+      },
+      "as_of": {
+        "type": "string",
+        "description": "Ledgerline's date"
+      }
+    }
+  },
+  "example": {
+    "min_days_late": 8,
+    "buyer": "ECLARKE"
+  },
+  "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  },
+  "policy": {
+    "ledgerline_reply_timeout_s": 30,
+    "reads_inside": "retried, at most 2 more times"
+  },
+  "release_notes": {
+    "1.0": "12 Nov 2026: Lecture 5 (The Habits): accounts payable and the background agents' watch lists."
+  }
+}

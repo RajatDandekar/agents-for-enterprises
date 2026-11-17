@@ -46,6 +46,8 @@ PRICES = {  # assumed list prices for the course's three Gemini tiers; edit when
     "gemini-pro-latest": (2.00, 12.0),
     "gpt-6.1-terra": (1.00, 5.00),        # OpenRouter list price, 27 Oct 2026 (openai/gpt-6.1-terra)
     "claude-sonnet-5.5": (2.00, 10.0),    # OpenRouter list price, 27 Oct 2026 (anthropic/claude-sonnet-5.5)
+    "claude-sonnet-5-5": (2.00, 10.0),    # Anthropic list price, Nov 2026 (direct API)
+    "claude-haiku-5-5": (0.10, 0.50),     # Anthropic list price, Nov 2026, prompts up to 100K tokens
 }
 
 CASSETTE_DIR = pathlib.Path(os.environ.get("LEDGER_CASSETTES", pathlib.Path(__file__).parent / "cassettes"))
@@ -112,6 +114,9 @@ class LLM:
         self.model = model or os.environ.get("LEDGER_MODEL", "gemini:gemini-3.8-flash")
         if ":" not in self.model:
             self.model = "gemini:" + self.model
+        # LEDGER_MODEL_SWAP="gemini:x=anthropic:y,...": run a deployed app on another provider without editing its code
+        swaps = dict(p.split("=", 1) for p in os.environ.get("LEDGER_MODEL_SWAP", "").split(",") if "=" in p)
+        self.model = swaps.get(self.model, self.model)
         self.provider, self.model_id = self.model.split(":", 1)
         self.cassette = cassette
         self.mode = (mode or os.environ.get("LEDGER_LLM_MODE", "auto")).lower()
@@ -159,6 +164,17 @@ class LLM:
             self._client = OpenAI(base_url=base, api_key=api_key, max_retries=4, timeout=120)
         args = {"model": self.model_id, "messages": messages, "temperature": self.temperature,
                 "max_tokens": self.max_tokens, **kw}
+        if self.provider == "anthropic":  # current Claude models refuse temperature; JSON mode becomes an instruction
+            args.pop("temperature")
+            args.pop("reasoning_effort", None)
+            if response_format:
+                msgs = [dict(m) for m in messages]
+                note = "Reply with one JSON object only: no prose, no code fence."
+                if msgs and msgs[0].get("role") == "system":
+                    msgs[0]["content"] = f"{msgs[0]['content']}\n\n{note}"
+                else:
+                    msgs.insert(0, {"role": "system", "content": note})
+                args["messages"], response_format = msgs, None
         if tools:
             args["tools"] = tools
         if response_format:

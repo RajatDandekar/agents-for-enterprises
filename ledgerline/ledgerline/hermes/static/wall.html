@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hermes · the class wall</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&display=swap">
+<link rel="stylesheet" href="/static/hermes.css">
+<style>
+ body{background:#fbfbfa} main{max-width:1500px;padding:40px 32px}
+ .agg{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin:22px 0}
+ .agg .panel{padding:16px 18px} .agg b{font-size:34px;font-weight:450;letter-spacing:-.03em;display:block}
+ table.t td,table.t th{font-size:15px} .bar{display:inline-block;height:8px;border-radius:4px;background:var(--accent);vertical-align:middle;margin-right:8px}
+</style>
+</head>
+<body>
+<main>
+  <div class="row"><div><div class="kick" style="font-size:13px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em">Hermes · Lecture 5 · The Habits</div><h2 style="font-size:44px;font-weight:450;letter-spacing:-.03em">The class wall</h2></div><span class="sp"></span><span class="muted" id="upd"></span></div>
+  <div class="agg" id="agg"></div>
+  <div class="panel"><table class="t"><thead><tr><th>Name</th><th>Memory design</th><th>Questions right</th><th class="r">Routines</th><th>Invoice batch</th><th class="r">Agents on</th><th class="r">Agent runs</th><th class="r">Events</th><th class="r">Chats</th><th>Clock</th></tr></thead><tbody id="rows"></tbody></table></div>
+</main>
+<script>
+const E = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function load() {
+  const r = await (await fetch('/api/wall')).json(), a = r.agg;
+  document.getElementById('agg').innerHTML = [['Students', a.students], ['Weeks run', a.weeks], ['Routines saved', a.routines], ['Invoice batches', a.batches], ['Agent runs', a.agent_runs], ['Events', a.events], ['Chat turns', a.chats]]
+    .map(([k, v]) => `<div class="panel"><b>${v}</b><span class="muted small">${k}</span></div>`).join('');
+  document.getElementById('rows').innerHTML = r.rows.map(x => `<tr><td><b style="font-weight:500">${E(x.name)}</b></td><td>${E(x.design || '–')}</td>
+    <td>${x.probes != null ? `<span class="bar" style="width:${x.probes * 8}px;background:${x.probes >= 8 ? 'var(--good)' : 'var(--accent)'}"></span>${x.probes}/${x.probes_of}` : '–'}</td>
+    <td class="r">${x.routines}</td><td>${x.batch ? Object.entries(x.batch.tally).map(([k, v]) => `${v} ${E(k)}`).join(' · ') : '–'}</td>
+    <td class="r">${x.agents_on}</td><td class="r">${x.agent_runs}</td><td class="r">${x.events}</td><td class="r">${x.chats}</td><td class="muted small">${E(x.clock)}</td></tr>`).join('');
+  document.getElementById('upd').textContent = 'updated ' + new Date().toLocaleTimeString('en-GB');
+}
+load(); setInterval(load, 5000);
+</script>
+</body>
+</html>

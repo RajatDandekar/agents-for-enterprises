@@ -108,7 +108,11 @@ def main():
     ap.add_argument("--tools", default="", help="comma-separated tool names (default: the 15 default tools)")
     ap.add_argument("--all", action="store_true", help="every tool folder, extras included")
     ap.add_argument("--log", default="", help="append every tool call, with its Ledgerline calls, to this JSONL file")
+    ap.add_argument("--tool-dir", default="", help="also load every tool folder under this directory (A4: my_tools)")
     a = ap.parse_args()
+    if a.tool_dir:
+        from ..course.l4 import add_tool_dir
+        add_tool_dir(a.tool_dir)
     names = ALL if a.all else ([t.strip() for t in a.tools.split(",") if t.strip()] or None)
     server = build_toolbox_server(ERP(), a.user, names=names, log=a.log or None)
     if a.transport == "http":

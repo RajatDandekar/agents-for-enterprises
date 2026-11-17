@@ -29,7 +29,7 @@ for d in "$ROOT"/lectures/L*/; do
     [ -d "$d$fig3d" ] && rsync -a --exclude qa --exclude '*.py' --exclude '*.md' --exclude 'envision_amaranth_cove.mp3' "$d$fig3d/" "$OUT/lectures/$n/$fig3d/"
   done
   # finished lecture films (mp4, webm, posters); not their build folders or licensed music sources
-  [ -d "$d"films ] && rsync -a --exclude build --exclude music --exclude archive_v4 --exclude '*.md' --exclude '*.json' --exclude '*.py' "$d"films/ "$OUT/lectures/$n/films/"
+  [ -d "$d"films ] && rsync -a --exclude build --exclude music --exclude archive_v4 --exclude '/forge/' --exclude '*.md' --exclude '*.json' --exclude '*.py' "$d"films/ "$OUT/lectures/$n/films/"
   # recorded production data a deck charts (not the logs or superseded sweeps)
   if [ -d "$d"experiments/production ]; then
     mkdir -p "$OUT/lectures/$n/experiments/production"
@@ -38,7 +38,8 @@ for d in "$ROOT"/lectures/L*/; do
   fi
 done
 # Hub: notebooks open in Colab, assignments and kit briefs open on GitHub.
-sed -e "s#<a href=\"lectures/\${dir}/\${nb}.ipynb\" download>Notebook</a>#<a href=\"https://colab.research.google.com/github/RajatDandekar/agents-for-enterprises/blob/main/lectures/\${dir}/\${nb}.ipynb\" target=\"_blank\" rel=\"noopener\">Open in Colab</a>#" \
+sed -e "s#<a href=\"lectures/\${dir}/\${f}.ipynb\" download>#<a href=\"https://colab.research.google.com/github/RajatDandekar/agents-for-enterprises/blob/main/lectures/\${dir}/\${f}.ipynb\" target=\"_blank\" rel=\"noopener\">#" \
+    -e "s#: 'Notebook'}</a>#: 'Open in Colab'}</a>#" \
     -e "s#href=\"lectures/\${dir}/\${a}.md\"#href=\"$GH/lectures/\${dir}/\${a}.md\" target=\"_blank\" rel=\"noopener\"#" \
     -e "s#href=\"modules/README.md\"#href=\"$GH/modules/README.md\"#" \
     -e "s#href=\"lectures/L12-your-module/DEMO_DAY.md\"#href=\"$GH/lectures/L12-your-module/DEMO_DAY.md\"#" \

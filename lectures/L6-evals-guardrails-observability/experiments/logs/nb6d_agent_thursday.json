@@ -1,0 +1,236 @@
+{
+ "prompt": "thursday",
+ "turns": [
+  {
+   "text": "Order the usual, please, needed by 4 Dec 2026.",
+   "reply": "The purchase request is raised, but nothing is ordered yet. It needs Daniel's approval first.\n\n- **Request:** PR/2026/04417\n- **Item:** 2,400 x BAT-500 battery packs\n- **Value:** £342,720 incl. VAT\n- **Cost centre:** PRD-03, with £680,000 budget left\n- **Need by:** 4 Dec 2026\n- **Approver:** Daniel Okafor. The value is over your £250,000 limit, and he is back from leave.\n- **Supplier:** Voltway Cells (VC-EIN-0042). Its UN 38.3 certificate is valid until 31 Mar 2027.\n\nOnce he approves, I'll create the PO with Voltway. Do you want me to message Daniel to chase the approval?",
+   "calls": [
+    {
+     "tool": "find_supplier",
+     "args": {
+      "name": "Voltway Cells"
+     },
+     "ok": true,
+     "out": {
+      "ok": true,
+      "matches": [
+       {
+        "supplier_code": "VC-EIN-0042",
+        "name": "Voltway Cells",
+        "city": "Eindhoven",
+        "state": "NL",
+        "status": "ACTIVE",
+        "match": 1.0,
+        "cell_safety_certificate": "valid"
+       },
+       {
+        "supplier_code": "VPC-ROT-0107",
+        "name": "Voltway Paints & Coatings",
+        "city": "Rotterdam",
+        "state": "NL",
+        "status": "ACTIVE",
+        "match": 0.55,
+        "cell_safety_certificate": "none"
+       },
+       {
+        "supplier_code": "HC-BRS-0072",
+        "name": "Halden Cells",
+        "city": "Bristol",
+        "state": "GB",
+        "status": "ACTIVE",
+        "match": 0.52,
+        "cell_safety_certificate": "valid"
+       },
+       {
+        "supplier_code": "VC-EIN-0009",
+        "name": "Voltway Cells (old code, do not use)",
+        "city": "Eindhoven",
+        "state": "NL",
+        "status": "BLOCKED",
+        "match": 1.0,
+        "cell_safety_certificate": "none"
+       }
+      ],
+      "hint": "Blocked codes, never use: VC-EIN-0009."
+     }
+    },
+    {
+     "tool": "check_budget",
+     "args": {
+      "cost_centre": "PRD-03"
+     },
+     "ok": true,
+     "out": {
+      "ok": true,
+      "code": "PRD-03",
+      "name": "Cargo e-bike line",
+      "open": true,
+      "closed_on": null,
+      "budget_left": 680000.0
+     }
+    },
+    {
+     "tool": "create_purchase_request",
+     "args": {
+      "item_code": "BAT-500",
+      "quantity": 2400,
+      "cost_centre": "PRD-03",
+      "need_by": "2026-12-04",
+      "confirm": false
+     },
+     "ok": true,
+     "out": {
+      "ok": true,
+      "preview": {
+       "item_code": "BAT-500",
+       "quantity": 2400,
+       "estimated_rate": 119.0,
+       "estimated_value": 342720.0,
+       "cost_centre": "PRD-03",
+       "cost_centre_state": "OK",
+       "need_by": "2026-12-04",
+       "needs_approval": true,
+       "your_limit": 250000.0,
+       "approver": "DOKAFOR"
+      },
+      "warnings": [],
+      "note": "Nothing has been saved. Show this to the user and ask to confirm."
+     }
+    },
+    {
+     "tool": "supplier_certificates",
+     "args": {
+      "supplier_code": "VC-EIN-0042",
+      "item_code": "BAT-500"
+     },
+     "ok": true,
+     "out": {
+      "ok": true,
+      "supplier_code": "VC-EIN-0042",
+      "supplier_name": "Voltway Cells",
+      "supplier_status": "ACTIVE",
+      "as_of": "2026-11-20",
+      "certificates": [
+       {
+        "cert_type": "UN38.3",
+        "doc_ref": "UN38.3-TR/VC/2026/118",
+        "valid_to": "2027-03-31",
+        "valid": true,
+        "days_left": 131
+       }
+      ],
+      "un38_3": "valid",
+      "item": {
+       "item_code": "BAT-500",
+       "needs_un38_3": true,
+       "supplier_qualifies": true
+      },
+      "total": 1,
+      "next_cursor": null
+     }
+    },
+    {
+     "tool": "create_purchase_request",
+     "args": {
+      "item_code": "BAT-500",
+      "quantity": 2400,
+      "cost_centre": "PRD-03",
+      "need_by": "2026-12-04",
+      "confirm": true
+     },
+     "ok": true,
+     "out": {
+      "ok": true,
+      "request_no": "PR/2026/04417",
+      "status": "WAITING FOR APPROVAL",
+      "status_code": "PA",
+      "item_code": "BAT-500",
+      "quantity": 2400,
+      "estimated_value": 342720.0,
+      "cost_centre": "PRD-03",
+      "need_by": "2026-12-04",
+      "approver": "DOKAFOR",
+      "approved_by": null,
+      "next_step": "Waiting for DOKAFOR. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+     }
+    }
+   ],
+   "tokens_in": 35257,
+   "tokens_out": 1226,
+   "usd": 0.082774,
+   "seconds": 12.18,
+   "trace_id": null,
+   "links": {}
+  },
+  {
+   "text": "Yes, go ahead.",
+   "reply": "I've messaged Daniel on Slack to chase it.\n\n- **Request:** PR/2026/04417 is still waiting for his approval. Nothing is ordered yet.\n- **Value:** £342,720 incl. VAT, for PRD-03, needed by 4 Dec 2026.\n- **Next step:** Once he approves, I'll create the PO with Voltway Cells.",
+   "calls": [
+    {
+     "tool": "order_status",
+     "args": {
+      "request_no": "PR/2026/04417"
+     },
+     "ok": true,
+     "out": {
+      "ok": true,
+      "request_no": "PR/2026/04417",
+      "status": "WAITING FOR APPROVAL",
+      "status_code": "PA",
+      "item_code": "BAT-500",
+      "quantity": 2400,
+      "estimated_value": 342720.0,
+      "cost_centre": "PRD-03",
+      "need_by": "2026-12-04",
+      "approver": "DOKAFOR",
+      "approved_by": null,
+      "next_step": "Waiting for DOKAFOR. Nothing is ordered yet. Once approved, create_purchase_order with request_no=PR/2026/04417."
+     }
+    },
+    {
+     "tool": "list_my_approvals",
+     "args": {},
+     "ok": true,
+     "out": {
+      "ok": true,
+      "waiting": [],
+      "count": 0
+     }
+    },
+    {
+     "tool": "send_message",
+     "args": {
+      "to": "@daniel",
+      "text": "Hi Daniel, PR/2026/04417 is waiting for your approval. It is 2,400 x BAT-500 battery packs for PRD-03, £342,720 incl. VAT, needed by 4 Dec 2026. The value is over Emma's £250,000 limit. Thanks, Emma"
+     },
+     "ok": true,
+     "out": {
+      "ok": true,
+      "queued": true,
+      "channel": "SLACK",
+      "to": "@daniel"
+     }
+    }
+   ],
+   "tokens_in": 25331,
+   "tokens_out": 646,
+   "usd": 0.057122,
+   "seconds": 7.85,
+   "trace_id": null,
+   "links": {}
+  }
+ ],
+ "saved": [
+  {
+   "pr_no": "PR/2026/04417",
+   "status": "PA",
+   "raised_by": "ECLARKE",
+   "cc_cd": "PRD-03",
+   "est_value": 342720.0,
+   "itm_cd": "BAT-500",
+   "qty": 2400
+  }
+ ],
+ "spans": [],
+ "backends": []
+}

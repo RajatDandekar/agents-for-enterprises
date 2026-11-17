@@ -1,0 +1,33 @@
+# Copy to .github/workflows/l6-eval-gate.yml in the course repository to turn the gate on.
+# Needs one repository secret, added by the repository owner: Settings -> Secrets and variables -> Actions ->
+# New repository secret, name ANTHROPIC_API_KEY. Mark the job "Eval gate" as a required check in the branch rules
+# so a failing gate blocks the merge.
+name: L6 eval gate
+on:
+  pull_request:
+    paths:
+      - "ledgerline/ledgerline/hermes/chat.py"       # the system prompt
+      - "ledgerline/ledgerline/toolbox/**"           # the tools
+      - "ledgerline/ledgerline/course/l6/**"         # the suite and the guards
+  workflow_dispatch:
+jobs:
+  gate:
+    name: Eval gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r lectures/L6-evals-guardrails-observability/ci/requirements-ci.txt
+      - name: Run the gate (pytest + DeepEval, live model)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          LEDGER_LLM_MODE: live
+          GATE_PROMPT: good          # the prompt as it is on this branch
+          GATE_K: "2"
+          DEEPEVAL_TELEMETRY_OPT_OUT: "YES"
+        working-directory: lectures/L6-evals-guardrails-observability/ci
+        run: deepeval test run test_gate.py

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Argus · operator</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&display=swap">
+<link rel="stylesheet" href="/static/argus.css?v=20261116">
+</head>
+<body>
+<main style="max-width:980px;padding:60px 24px">
+  <div class="head" style="grid-template-columns:1fr"><div><div class="kick">Argus · operator</div><h2>Class controls</h2></div></div>
+  <form class="row" id="tok"><input class="input" id="t" type="password" placeholder="Admin token" style="max-width:420px"><button class="btn primary">Open</button></form>
+  <div id="panel" class="hide col" style="margin-top:18px">
+    <div class="row wrap">
+      <button class="btn" data-f='{"enabled":false}'>Pause the model</button>
+      <button class="btn" data-f='{"enabled":true,"reason":""}'>Resume</button>
+      <button class="btn ghost" id="warm">Warm (keep one container)</button>
+      <button class="btn ghost" id="cool">Cool</button>
+    </div>
+    <div class="row wrap"><span class="small muted">Class cap US$ a day</span><input class="input" id="cap" style="max-width:110px"><span class="small muted">Per student</span><input class="input" id="scap" style="max-width:110px"><button class="btn" id="savecap">Save caps</button>
+      <button class="btn ghost" id="haiku" title="For load tests only">Agent on Haiku (load test)</button><button class="btn ghost" id="sonnet">Agent on Sonnet (class)</button><button class="btn ghost" id="purgetests">Remove test labs</button><button class="btn" id="purgeall">Remove ALL labs</button></div>
+    <pre class="json" id="st" style="max-height:none"></pre>
+  </div>
+</main>
+<script>
+let T = '';
+const call = async (p, b) => { const r = await fetch(p, { method: b ? 'POST' : 'GET', headers: { 'X-Admin-Token': T, 'Content-Type': 'application/json' }, body: b ? JSON.stringify(b) : undefined }); if (!r.ok) throw new Error(r.status); return r.json(); };
+async function refresh() { const s = await call('/api/admin/status'); document.getElementById('st').textContent = JSON.stringify(s, null, 1); document.getElementById('cap').value = s.flags.cap_usd; document.getElementById('scap').value = s.flags.student_cap_usd; }
+document.getElementById('tok').addEventListener('submit', async (e) => { e.preventDefault(); T = document.getElementById('t').value; try { await refresh(); document.getElementById('panel').classList.remove('hide'); setInterval(refresh, 5000); } catch (x) { alert('Wrong token'); } });
+document.querySelectorAll('[data-f]').forEach((b) => b.addEventListener('click', async () => { await call('/api/admin/flags', JSON.parse(b.dataset.f)); refresh(); }));
+document.getElementById('savecap').addEventListener('click', async () => { await call('/api/admin/flags', { cap_usd: +document.getElementById('cap').value, student_cap_usd: +document.getElementById('scap').value }); refresh(); });
+document.getElementById('haiku').addEventListener('click', async () => { await call('/api/admin/flags', { model: 'anthropic:claude-haiku-5-5' }); refresh(); });
+document.getElementById('sonnet').addEventListener('click', async () => { await call('/api/admin/flags', { model: 'anthropic:claude-sonnet-5-5' }); refresh(); });
+document.getElementById('warm').addEventListener('click', async () => { await call('/api/admin/warm', { n: 1 }); refresh(); });
+document.getElementById('cool').addEventListener('click', async () => { await call('/api/admin/warm', { n: 0 }); refresh(); });
+document.getElementById('purgetests').addEventListener('click', async () => { if (confirm('Remove Probe/Load/Test/Film/Shot labs?')) { await call('/api/admin/purge', { prefixes: ['Probe ', 'Load ', 'Test ', 'Film ', 'Shot ', 'Rec '] }); refresh(); } });
+document.getElementById('purgeall').addEventListener('click', async () => { if (confirm('Remove EVERY lab?')) { await call('/api/admin/purge', { all: true }); refresh(); } });
+</script>
+</body>
+</html>

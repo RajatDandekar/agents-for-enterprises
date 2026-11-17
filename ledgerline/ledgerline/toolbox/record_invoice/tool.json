@@ -1,0 +1,127 @@
+{
+  "name": "record_invoice",
+  "title": "Record invoice",
+  "category": "Accounts payable",
+  "description": "Enter a supplier invoice into accounts payable (status RECEIVED). Give the fields as printed on the invoice; the supplier may be a name or a code. confirm=false previews. A supplier invoice number already recorded is refused with ledgerline_code DUPLICATE: never record or pay an invoice twice.",
+  "writes": true,
+  "version": "1.0",
+  "services": [
+    "po_get",
+    "sup_get",
+    "sup_search",
+    "inv_search",
+    "inv_save",
+    "mail_mark"
+  ],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "supplier": {
+        "type": "string",
+        "description": "supplier name or code as on the invoice, e.g. 'Voltway Cells'"
+      },
+      "supplier_invoice_no": {
+        "type": "string",
+        "description": "the supplier's own invoice number"
+      },
+      "invoice_date": {
+        "type": "string",
+        "description": "YYYY-MM-DD"
+      },
+      "po_no": {
+        "type": "string",
+        "description": "the purchase order the invoice quotes, e.g. PO/2026/01133"
+      },
+      "item_code": {
+        "type": "string",
+        "description": "e.g. BAT-500"
+      },
+      "quantity": {
+        "type": "integer",
+        "description": "quantity billed"
+      },
+      "unit_price": {
+        "type": "number",
+        "description": "price per unit in pounds, before VAT"
+      },
+      "vat": {
+        "type": "number",
+        "description": "optional VAT amount as printed (0 for reverse charge)"
+      },
+      "source_message_id": {
+        "type": "string",
+        "description": "optional: the e-mail it came in, e.g. MSG-0007 (marked done)"
+      },
+      "confirm": {
+        "type": "boolean",
+        "description": "false (default) = preview only, nothing is saved; true = commit"
+      }
+    },
+    "required": [
+      "supplier",
+      "supplier_invoice_no",
+      "invoice_date",
+      "item_code",
+      "quantity",
+      "unit_price"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean",
+        "description": "true when it worked; false comes with error and next_step"
+      },
+      "invoice_no": {
+        "type": "string",
+        "description": "Ledgerline's number, e.g. AP/2026/70001"
+      },
+      "status": {
+        "type": "string",
+        "description": "RECEIVED (not matched yet)"
+      },
+      "net": {
+        "type": "number",
+        "description": "pounds"
+      },
+      "vat": {
+        "type": "number",
+        "description": "pounds"
+      },
+      "gross": {
+        "type": "number",
+        "description": "pounds"
+      }
+    }
+  },
+  "example": {
+    "supplier": "Voltway Cells",
+    "supplier_invoice_no": "VC-INV-2026-4137",
+    "invoice_date": "2026-10-21",
+    "po_no": "PO/2026/01100",
+    "item_code": "BAT-500",
+    "quantity": 600,
+    "unit_price": 119.0
+  },
+  "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  },
+  "policy": {
+    "ledgerline_reply_timeout_s": 30,
+    "reads_inside": "retried, at most 2 more times",
+    "on_lost_write_reply": "never resent blindly: look the document up (by the supplier's number or its id) and return it",
+    "on_busy_before_write": "ok=false with next_step; nothing was saved, so the same call is safe to repeat"
+  },
+  "argument_formats": {
+    "invoice_date": "date",
+    "quantity": "positive",
+    "unit_price": "positive"
+  },
+  "release_notes": {
+    "1.0": "12 Nov 2026: Lecture 5 (The Habits): accounts payable and the background agents' watch lists."
+  }
+}

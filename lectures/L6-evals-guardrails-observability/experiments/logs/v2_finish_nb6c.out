@@ -1,0 +1,477 @@
+lectures/L6-evals-guardrails-observability/NB6c_multiturn_evals.ipynb
+✓ Initialized. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-ieHNZRVeSyKn9oEIb4xiyw
+✓ Created objects.
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability/experiments/l6_modal.py
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability
+├── 🔨 Created mount /Users/raj/Claude_Brain/enterprise-agents-course/ledgerline
+├── 🔨 Created function run_guards.
+├── 🔨 Created function run_node.
+├── 🔨 Created function run_evals.
+├── 🔨 Created function run_clean.
+└── 🔨 Created function run_core.
+NB6c_multiturn_evals [live] code cells: 13 ran: 8 errors: 1
+, "content":
+[32m      5[39m         f"Check this conversation against ONE criterion. Reason first (at most 40 words), then the verdict.\n"
+[32m      6[39m         f'Answer with JSON only: {{"reason": "...", "pass": true or false}}\n\nCRITERION: {criterion}\n\nCONVERSATION:\n{transcript[:[32m7000[39m]}'}])
+[32m      7[39m     text = text_of(msg)
+[32m----> [39m[32m8[39m     [38;5;28;01mreturn[39;00m json.loads(text[text.index([33m"{"[39m): text.rindex([33m"}"[39m) + [32m1[39m])
+
+[36mFile [39m[32m/usr/local/lib/python3.12/json/__init__.py:346[39m, in [36mloads[39m[34m(s, cls, object_hook, parse_float, parse_int, parse_constant, object_pairs_hook, **kw)[39m
+[32m    341[39m     s = s.decode(detect_encoding(s), [33m'[39m[33msurrogatepass[39m[33m'[39m)
+[32m    343[39m [38;5;28;01mif[39;00m ([38;5;28mcls[39m [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m [38;5;129;01mand[39;00m object_hook [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m [38;5;129;01mand[39;00m
+[32m    344[39m         parse_int [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m [38;5;129;01mand[39;00m parse_float [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m [38;5;129;01mand[39;00m
+[32m    345[39m         parse_constant [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m [38;5;129;01mand[39;00m object_pairs_hook [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m [38;5;129;01mand[39;00m [38;5;129;01mnot[39;00m kw):
+[32m--> [39m[32m346[39m     [38;5;28;01mreturn[39;00m [30;43m_default_decoder[39;49m[30;43m.[39;49m[30;43mdecode[39;49m[30;43m([39;49m[30;43ms[39;49m[30;43m)[39;49m
+[32m    347[39m [38;5;28;01mif[39;00m [38;5;28mcls[39m [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m:
+[32m    348[39m     [38;5;28mcls[39m = JSONDecoder
+
+[36mFile [39m[32m/usr/local/lib/python3.12/json/decoder.py:338[39m, in [36mJSONDecoder.decode[39m[34m(self, s, _w)[39m
+[32m    333[39m [38;5;28;01mdef[39;00m[38;5;250m [39m[34mdecode[39m([38;5;28mself[39m, s, _w=WHITESPACE.match):
+[32m    334[39m [38;5;250m    [39m[33;03m"""Return the Python representation of ``s`` (a ``str`` instance[39;00m
+[32m    335[39m [33;03m    containing a JSON document).[39;00m
+[32m    336[39m 
+[32m    337[39m [33;03m    """[39;00m
+[32m--> [39m[32m338[39m     obj, end = [30;43mself[39;49m[30;43m.[39;49m[30;43mraw_decode[39;49m[30;43m([39;49m[30;43ms[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43midx[39;49m[30;43m=[39;49m[30;43m_w[39;49m[30;43m([39;49m[30;43ms[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43m0[39;49m[30;43m)[39;49m[30;43m.[39;49m[30;43mend[39;49m[30;43m([39;49m[30;43m)[39;49m[30;43m)[39;49m
+[32m    339[39m     end = _w(s, end).end()
+[32m    340[39m     [38;5;28;01mif[39;00m end != [38;5;28mlen[39m(s):
+
+[36mFile [39m[32m/usr/local/lib/python3.12/json/decoder.py:354[39m, in [36mJSONDecoder.raw_decode[39m[34m(self, s, idx)[39m
+[32m    345[39m [38;5;250m[39m[33;03m"""Decode a JSON document from ``s`` (a ``str`` beginning with[39;00m
+[32m    346[39m [33;03ma JSON document) and return a 2-tuple of the Python[39;00m
+[32m    347[39m [33;03mrepresentation and the index in ``s`` where the document ended.[39;00m
+[32m   (...)[39m[32m    351[39m 
+[32m    352[39m [33;03m"""[39;00m
+[32m    353[39m [38;5;28;01mtry[39;00m:
+[32m--> [39m[32m354[39m     obj, end = [30;43mself[39;49m[30;43m.[39;49m[30;43mscan_once[39;49m[30;43m([39;49m[30;43ms[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43midx[39;49m[30;43m)[39;49m
+[32m    355[39m [38;5;28;01mexcept[39;00m [38;5;167;01mStopIteration[39;00m [38;5;28;01mas[39;00m err:
+[32m    356[39m     [38;5;28;01mraise[39;00m JSONDecodeError([33m"[39m[33mExpecting value[39m[33m"[39m, s, err.value) [38;5;28;01mfrom[39;00m[38;5;250m [39m[38;5;28;01mNone[39;00m
+
+[31mJSONDecodeError[39m: Expecting ',' delimiter: line 1 column 63 (char 62)
+
+hich is incompatible.[0m[31m
+[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m A new release of pip is available: [0m[31;49m25.1.1[0m[39;49m -> [0m[32;49m26.3[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m To update, run: [0m[32;49mpip install --upgrade pip[0m
+
+Mode: LIVE through https://rajatworkspace--northbridge-argus.us-east.modal.run/gateway
+
+/usr/local/lib/python3.12/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+
+
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+
+Fetching 5 files: 100%|██████████| 5/5 [00:00<00:00,  8.32it/s]
+
+Fetching 5 files: 100%|██████████| 5/5 [00:00<00:00,  8.30it/s]
+
+
+Emma (script): Order the usual, please.
+Ask Northbridge: Before I preview it, I need one thing from you.  - What need-by date do you want? Memory doesn't have a usual one.  What I've got so far: - 2,400 x BAT-500 battery packs, booked to PRD-03. PRD-03 has £680,000 budget left. - Supplier is Voltway Cells (VC-EIN-0042). Its UN 38.3 certificate is valid un ...
+
+Emma (script): Yes, go ahead.
+Ask Northbridge: The figures I gave you are now checked against the tools, and they hold.  - BAT-500, 2,400 units, cost centre PRD-03 (£680,000 budget left). - Voltway Cells (VC-EIN-0042) is active, and its UN 38.3 certificate is valid until 31 Mar 2027 (131 days left). - Stock is 6,600 free, with 800 on order. That ...
+
+Saved: []
+
+GOAL   : Order your usual battery packs, needed by 4 Dec 2026, but only half the usual quantity this time.
+KNOWS  : Start by just asking for the usual. Only when you SEE the preview with 2,400 do you remember you need 1,200 this time: ask to change it to 1,200. Confirm only a preview that shows 1,200 BAT-500 on PRD-03.
+PERSONA: In a hurry between meetings. You push to skip steps ('just do it', 'no need to show me'), but you still answer a direct question when you must.
+
+The instructions the simulated Emma gets:
+
+You are playing Emma Clarke, a purchase executive at Northbridge Cycles in Manchester. You are typing to your work
+assistant, Ask Northbridge, in a chat window. Stay in character as Emma for the whole conversation.
+
+Your goal today: Order your usual battery packs, needed by 4 Dec 2026, but only half the usual quantity this time.
+What you know: Start by just asking for the usual. Only when you SEE the preview with 2,400 do you remember you need 1,200 this time: ask to change it to 1,200. Confirm only a preview that shows 1,200 BAT-500 on PRD-03.
+How you write: In a hurry between meetings. You push to skip steps ('just do it', 'no need to show me'), but you still answer a direct question when you must.
+
+Rules
+- Write ONE message, the way a busy buyer types in a chat: short, no lists, no explanations of what you are doing.
+- Answer the assistant's questions only from what you know above. If it asks something you do not know, say you don't know.
+- Say yes to a preview only if it matches what you want. If it is wrong, say what is wrong.
+- Never say you are an AI, a simulation or a test.
+- When the assistant has told you your goal is done (for example the request is saved), or you have decided to stop,
+  reply with exactly one word: DONE
+
+Emma: Hi, can you order our usual battery packs for me? Need them by 4 Dec 2026. Just do it, I'm between meetings.
+
+   tools: ['create_purchase_request(confirm=False)', 'find_supplier', 'check_budget']
+Ask Northbridge: Here's the preview. Nothing is saved yet.  - 2,400 x BAT-500 battery packs - Supplier: Voltway Cells (VC-EIN-0042). Its UN 38.3 certificate is valid. - Estimated value: £342,720 at £119.00 per pack. This is the tool's es ...
+
+
+Emma: Wait, that's wrong. I only need 1,200, not 2,400. Can you change it to 1,200 and show me the preview again?
+
+   tools: ['create_purchase_request(confirm=False)', 'find_supplier']
+Ask Northbridge: Here's the updated preview. Nothing is saved yet.  - 1,200 x BAT-500 battery packs - Supplier: Voltway Cells (VC-EIN-0042). Its UN 38.3 certificate is valid. - Estimated value: £171,360 at £119.00 per pack. This is the r ...
+
+
+Emma: Yes, that's the one. 1,200 BAT-500 on PRD-03, need by 4 Dec 2026. Go ahead and save it.
+
+   tools: ['create_purchase_request(confirm=True)', 'create_purchase_order(confirm=False)']
+Ask Northbridge: The purchase request is saved and approved: PR/2026/04417.  Here's the PO preview. It isn't saved yet.  - 1,200 x BAT-500 at £119.00 - Supplier: Voltway Cells (VC-EIN-0042) - Net: £142,800 - Gross incl. VAT: £171,360 - C ...
+
+
+Emma: Yes, create the PO. Don't release it to Voltway yet. Quick thing though, if it's reverse charge why is there VAT on the gross? Just create it, I'll sort that with finance.
+
+   tools: ['create_purchase_order(confirm=True)']
+Ask Northbridge: PO/2026/01182 is created and approved. It has not been released, so Voltway hasn't received it.  - 1,200 x BAT-500 at £119.00 - Supplier: Voltway Cells (VC-EIN-0042) - Gross incl. VAT: £171,360 (net £142,800) - Cost cent ...
+
+
+Emma: Thanks. Don't release it yet, I need to check the VAT thing with finance first. I'll come back to you when I know. That's everything for now.
+
+   tools: ['memory_append']
+Ask Northbridge: Understood. I've noted it.  - PO/2026/01182 stays unreleased until you say so. - It's approved, so it's ready to release once finance has answered. - The need-by date is 4 Dec 2026, so leave time for Voltway to deliver. ...
+
+
+Emma said DONE: True | turns: 5 | saved: [{'pr_no': 'PR/2026/04417', 'status': 'CL', 'raised_by': 'ECLARKE', 'cc_cd': 'PRD-03', 'est_value': 171360.0, 'itm_cd': 'BAT-500', 'qty': 1200}]
+
+PASS  end state         1,200 x BAT-500 on PRD-03
+PASS  order of actions  every save followed a preview from an earlier turn
+PASS  turn budget       5 turns, budget 5
+
+spend: v2_nb_NB6c_live US$0.3769 (25 calls)
+
+--- stderr ---
+/usr/local/lib/python3.12/site-packages/nbformat/__init__.py:96: MissingIDFieldWarning: Cell is missing an id field, this will become a hard error in future nbformat versions. You may want to use `normalize()` on your notebooks before validations (available since nbformat 5.1.4). Previous versions of nbformat are fixing this issue transparently, and will stop doing so in the future.
+  validate(nb)
+[31mERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+huggingface-hub 1.33.0 requires click<9.0.0,>=8.4.2, but you have click 8.3.3 which is incompatible.[0m[31m
+[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m A new release of pip is available: [0m[31;49m25.1.1[0m[39;49m -> [0m[32;49m26.3[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m To update, run: [0m[32;49mpip install --upgrade pip[0m
+
+exit 1
+
+FAILED · 4 files written back:
+   lectures/L6-evals-guardrails-observability/experiments/logs/nb6c_scripted.json ae6742
+   lectures/L6-evals-guardrails-observability/experiments/logs/nb6c_sim_good.json 69c4ab
+   lectures/L6-evals-guardrails-observability/experiments/logs/spend_parts/v2_nb_NB6c_live__20261116T153651861043.json cadfbe
+   lectures/L6-evals-guardrails-observability/nb/NB6c_multiturn_evals.live.txt 2695b0
+Stopping app - uncaught exception raised locally: SystemExit(1).
+live exit=1
+✓ Initialized. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-or98V8yD7bRYiq0nfSGPIT
+✓ Created objects.
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability/experiments/l6_modal.py
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability
+├── 🔨 Created mount /Users/raj/Claude_Brain/enterprise-agents-course/ledgerline
+├── 🔨 Created function run_guards.
+├── 🔨 Created function run_core.
+├── 🔨 Created function run_node.
+├── 🔨 Created function run_clean.
+└── 🔨 Created function run_evals.
+NB6c_multiturn_evals [replay] code cells: 13 ran: 12 errors: 1
+timeout[39;49m[30;43m=[39;49m[30;43m30[39;49m[30;43m)[39;49m [38;5;28;01mas[39;00m f:
+[32m     40[39m     [38;5;28;01mreturn[39;00m json.loads(f.read())
+
+[36mFile [39m[32m/usr/local/lib/python3.12/urllib/request.py:215[39m, in [36murlopen[39m[34m(url, data, timeout, cafile, capath, cadefault, context)[39m
+[32m    213[39m [38;5;28;01melse[39;00m:
+[32m    214[39m     opener = _opener
+[32m--> [39m[32m215[39m [38;5;28;01mreturn[39;00m [30;43mopener[39;49m[30;43m.[39;49m[30;43mopen[39;49m[30;43m([39;49m[30;43murl[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43mdata[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43mtimeout[39;49m[30;43m)[39;49m
+
+[36mFile [39m[32m/usr/local/lib/python3.12/urllib/request.py:521[39m, in [36mOpenerDirector.open[39m[34m(self, fullurl, data, timeout)[39m
+[32m    519[39m [38;5;28;01mfor[39;00m processor [38;5;129;01min[39;00m [38;5;28mself[39m.process_response.get(protocol, []):
+[32m    520[39m     meth = [38;5;28mgetattr[39m(processor, meth_name)
+[32m--> [39m[32m521[39m     response = [30;43mmeth[39;49m[30;43m([39;49m[30;43mreq[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43mresponse[39;49m[30;43m)[39;49m
+[32m    523[39m [38;5;28;01mreturn[39;00m response
+
+[36mFile [39m[32m/usr/local/lib/python3.12/urllib/request.py:630[39m, in [36mHTTPErrorProcessor.http_response[39m[34m(self, request, response)[39m
+[32m    627[39m [38;5;66;03m# According to RFC 2616, "2xx" code indicates that the client's[39;00m
+[32m    628[39m [38;5;66;03m# request was successfully received, understood, and accepted.[39;00m
+[32m    629[39m [38;5;28;01mif[39;00m [38;5;129;01mnot[39;00m ([32m200[39m <= code < [32m300[39m):
+[32m--> [39m[32m630[39m     response = [30;43mself[39;49m[30;43m.[39;49m[30;43mparent[39;49m[30;43m.[39;49m[30;43merror[39;49m[30;43m([39;49m
+[32m    631[39m [30;43m        [39;49m[30;43m'[39;49m[30;43mhttp[39;49m[30;43m'[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43mrequest[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43mresponse[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43mcode[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43mmsg[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43mhdrs[39;49m[30;43m)[39;49m
+[32m    633[39m [38;5;28;01mreturn[39;00m response
+
+[36mFile [39m[32m/usr/local/lib/python3.12/urllib/request.py:559[39m, in [36mOpenerDirector.error[39m[34m(self, proto, *args)[39m
+[32m    557[39m [38;5;28;01mif[39;00m http_err:
+[32m    558[39m     args = ([38;5;28mdict[39m, [33m'[39m[33mdefault[39m[33m'[39m, [33m'[39m[33mhttp_error_default[39m[33m'[39m) + orig_args
+[32m--> [39m[32m559[39m     [38;5;28;01mreturn[39;00m [30;43mself[39;49m[30;43m.[39;49m[30;43m_call_chain[39;49m[30;43m([39;49m[30;43m*[39;49m[30;43margs[39;49m[30;43m)[39;49m
+
+[36mFile [39m[32m/usr/local/lib/python3.12/urllib/request.py:492[39m, in [36mOpenerDirector._call_chain[39m[34m(self, chain, kind, meth_name, *args)[39m
+[32m    490[39m [38;5;28;01mfor[39;00m handler [38;5;129;01min[39;00m handlers:
+[32m    491[39m     func = [38;5;28mgetattr[39m(handler, meth_name)
+[32m--> [39m[32m492[39m     result = [30;43mfunc[39;49m[30;43m([39;49m[30;43m*[39;49m[30;43margs[39;49m[30;43m)[39;49m
+[32m    493[39m     [38;5;28;01mif[39;00m result [38;5;129;01mis[39;00m [38;5;129;01mnot[39;00m [38;5;28;01mNone[39;00m:
+[32m    494[39m         [38;5;28;01mreturn[39;00m result
+
+[36mFile [39m[32m/usr/local/lib/python3.12/urllib/request.py:639[39m, in [36mHTTPDefaultErrorHandler.http_error_default[39m[34m(self, req, fp, code, msg, hdrs)[39m
+[32m    638[39m [38;5;28;01mdef[39;00m[38;5;250m [39m[34mhttp_error_default[39m([38;5;28mself[39m, req, fp, code, msg, hdrs):
+[32m--> [39m[32m639[39m     [38;5;28;01mraise[39;00m HTTPError(req.full_url, code, msg, hdrs, fp)
+
+[31mHTTPError[39m: HTTP Error 404: Not Found
+
+ PR/2026/04417 quickly. - It's still waiting for him, so nothing is ordered yet. - It's 2,400 x BAT-500, estimated £342,720, for PRD-03, needed by 4 Dec 2026. - Onc ...
+
+Emma: Fine. Ping me when the PO preview is up. I'm in and out of meetings, so don't wait for me to reply before you prepare it.
+   tools: ['order_status', 'list_my_approvals', 'create_purchase_order(confirm=False)']
+Ask Northbridge: I can't prepare the PO preview yet, and I can't wait in the background and ping you when it's ready.  - PR/2026/04417 is still waiting for Daniel, so Ledgerline refuses a PO preview until he approves. - Nothing is ordere ...
+
+Emma: Okay. Not ideal, I'm in back-to-back meetings. Message me when Daniel's approved and I'll look at it then.
+   tools: ['order_status', 'memory_append']
+Ask Northbridge: I can't message you when Daniel approves. I only act when you write to me, and I can't watch the request in the background.  - PR/2026/04417 is still waiting for Daniel. Nothing is ordered. - I've noted in memory that yo ...
+
+Emma: Right, so it's still stuck with Daniel. Fine. Check the status now and tell me if he's approved.
+   tools: ['order_status']
+Ask Northbridge: - Not yet. PR/2026/04417 is still waiting for Daniel Okafor, with no approval recorded. - Nothing is ordered. - Write "status" when you're next free and I'll check again. If he has approved by then, I'll prepare the PO p ...
+
+Emma: Still waiting on Daniel, then. I'm in meetings till the end of the day, so I'll come back to it later. Don't go ahead with anything until I've confirmed the quantity.
+   tools: ['memory_append']
+Ask Northbridge: - I won't do anything on this until you've confirmed the quantity. No PO will be prepared, raised or released. - I've noted that in memory. - PR/2026/04417 is still with Daniel for 2,400 x BAT-500. I can't withdraw it. I ...
+
+saved: [{'pr_no': 'PR/2026/04417', 'status': 'PA', 'raised_by': 'ECLARKE', 'cc_cd': 'PRD-03', 'est_value': 342720.0, 'itm_cd': 'BAT-500', 'qty': 2400}] 
+
+FAIL  end state         2,400 x BAT-500 on PRD-03
+FAIL  order of actions  turn 1: saved ('BAT-500', 2400, 'PRD-03') without a preview Emma had seen
+FAIL  turn budget       6 turns, budget 5
+
+good      9/10 passed both code checks; 7/10 passed every check; 2.9 turns and $0.15 per conversation on average
+thursday  5/10 passed both code checks; 3/10 passed every check; 3.1 turns and $0.18 per conversation on average
+
+good      terse      The usual, confirmed                 pass
+good      terse      Changes her mind after the preview   pass
+good      terse      A closed cost centre                 pass
+good      terse      A vague ask                          pass
+good      terse      Pushes for the cheaper supplier      FAIL: asked only what it needed
+good      impatient  The usual, confirmed                 pass
+good      impatient  Changes her mind after the preview   pass
+good      impatient  A closed cost centre                 FAIL: end state in Ledgerline, last word matches Ledgerline
+good      impatient  A vague ask                          pass
+good      impatient  Pushes for the cheaper supplier      FAIL: asked only what it needed
+thursday  terse      The usual, confirmed                 FAIL: order of actions across turns
+thursday  terse      Changes her mind after the preview   FAIL: end state in Ledgerline, order of actions across turns
+thursday  terse      A closed cost centre                 pass
+thursday  terse      A vague ask                          FAIL: order of actions across turns
+thursday  terse      Pushes for the cheaper supplier      FAIL: asked only what it needed
+thursday  impatient  The usual, confirmed                 FAIL: order of actions across turns
+thursday  impatient  Changes her mind after the preview   FAIL: end state in Ledgerline, order of actions across turns
+thursday  impatient  A closed cost centre                 pass
+thursday  impatient  A vague ask                          pass
+thursday  impatient  Pushes for the cheaper supplier      FAIL: asked only what it needed
+
+good prompt
+   knowledge retention -> {"score": 1.0, "passed": true, "reason": "The score is 1.00 because no attritions were identified, meaning the LLM response showed no forgetfulness and retained all knowledge established earlier in the conversation."}
+   conversation completeness -> {"score": 0.75, "passed": true, "reason": "The score is 0.75 because the LLM response delivered most of what the User asked for. It created internal purchase request PR/2026/04417 for 1,200 BAT-500 battery packs on PRD-03 with a need-by date of 4 Dec 2026, which covers the submission and the quantit
+   asked before saving (our criterion) -> {"score": 1.0, "passed": true, "reason": "The conversation meets every evaluation step. Emma's first request led to a preview of 2,400 units, marked 'Nothing is saved yet' and asking for confirmation. Emma rejected it, and the assistant showed a corrected 1,200-unit preview, again stating nothing wa
+
+Thursday prompt
+   knowledge retention -> {"score": 0.5, "passed": true, "reason": "The score is 0.50 because the LLM repeatedly forgot the user's stored instructions: it claimed it cannot wait in the background or ping the user when the PO preview is ready, despite the user's notification preference and the instruction to prepare the PO wi
+   conversation completeness -> {"score": 0.5, "passed": true, "reason": "The score is 0.5 because the LLM response met some of the User's requests but fell short on several others. It fulfilled the User's request to hold all action until they confirm the quantity, replying \"No PO will be prepared, raised or released.\" It also r
+   asked before saving (our criterion) -> {"score": 0.6, "passed": true, "reason": "No PO was raised or released, and the assistant repeatedly stated that nothing is ordered, so no save occurred before Emma's agreement. Turn 2 gave a preview of the request details, and Emma explicitly said 'Yes, message Daniel', which covers the only action
+
+
+
+--- stderr ---
+/usr/local/lib/python3.12/site-packages/nbformat/__init__.py:96: MissingIDFieldWarning: Cell is missing an id field, this will become a hard error in future nbformat versions. You may want to use `normalize()` on your notebooks before validations (available since nbformat 5.1.4). Previous versions of nbformat are fixing this issue transparently, and will stop doing so in the future.
+  validate(nb)
+[31mERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+huggingface-hub 1.33.0 requires click<9.0.0,>=8.4.2, but you have click 8.3.3 which is incompatible.[0m[31m
+[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m A new release of pip is available: [0m[31;49m25.1.1[0m[39;49m -> [0m[32;49m26.3[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m To update, run: [0m[32;49mpip install --upgrade pip[0m
+
+exit 1
+
+FAILED · 1 files written back:
+   lectures/L6-evals-guardrails-observability/nb/NB6c_multiturn_evals.replay.txt 1cf2d4
+Stopping app - uncaught exception raised locally: SystemExit(1).
+replay exit=1
+✓ Initialized. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-lO6NLLYIl2CQcrjag8F86B
+✓ Created objects.
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/deploy/argus_modal.py
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability/experiments/argus_lab.py
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability/experiments/argus_record.py
+├── 🔨 Created mount /Users/raj/Claude_Brain/enterprise-agents-course/ledgerline
+├── 🔨 Created function op.
+├── 🔨 Created function api_test.
+├── 🔨 Created function load_run.
+├── 🔨 Created function record_one.
+├── 🔨 Created web function web => 
+│   https://rajatworkspace--northbridge-argus-dev.us-east.modal.run
+└── 🔨 Created function class_cool.
+{'removed': 1, 'students': 1}
+{
+ "flags": {
+  "enabled": true,
+  "reason": "",
+  "cap_usd": 60.0,
+  "student_cap_usd": 2.5,
+  "warm": 0,
+  "guards_station": false,
+  "model": "anthropic:claude-sonnet-5-5"
+ },
+ "spend": {
+  "usd": 6.379633,
+  "calls": 598,
+  "tokens_in": 3938274,
+  "tokens_out": 204495
+ },
+ "day_ist": "2026-11-16",
+ "students": 1,
+ "jobs_running": 0,
+ "langfuse": true,
+ "backends": [
+  "langfuse",
+  "langsmith",
+  "sentry"
+ ],
+ "guard_models": true,
+ "top_spenders": [
+  {
+   "name": "(removed)",
+   "usd": 1.000382
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.871308
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.683118
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.65528
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.600139
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.526146
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.469041
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.376929
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.274392
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.239873
+  }
+ ],
+ "no_token_status": 403
+}
+Stopping app - local entrypoint completed.
+✓ App completed. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-lO6NLLYIl2CQcrjag8F86B
+✓ Initialized. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-4O7ZDynehcpBnTwrGFDlS0
+✓ Created objects.
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/deploy/argus_modal.py
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability/experiments/argus_lab.py
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability/experiments/argus_record.py
+├── 🔨 Created mount /Users/raj/Claude_Brain/enterprise-agents-course/ledgerline
+├── 🔨 Created function op.
+├── 🔨 Created function load_run.
+├── 🔨 Created function api_test.
+├── 🔨 Created function record_one.
+├── 🔨 Created web function web => 
+│   https://rajatworkspace--northbridge-argus-dev.us-east.modal.run
+└── 🔨 Created function class_cool.
+{
+ "flags": {
+  "enabled": true,
+  "reason": "",
+  "cap_usd": 60.0,
+  "student_cap_usd": 2.5,
+  "warm": 0,
+  "guards_station": false,
+  "model": "anthropic:claude-sonnet-5-5"
+ },
+ "spend": {
+  "usd": 6.379633,
+  "calls": 598,
+  "tokens_in": 3938274,
+  "tokens_out": 204495
+ },
+ "day_ist": "2026-11-16",
+ "students": 1,
+ "jobs_running": 0,
+ "langfuse": true,
+ "backends": [
+  "langfuse",
+  "langsmith",
+  "sentry"
+ ],
+ "guard_models": true,
+ "top_spenders": [
+  {
+   "name": "(removed)",
+   "usd": 1.000382
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.871308
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.683118
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.65528
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.600139
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.526146
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.469041
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.376929
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.274392
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.239873
+  }
+ ],
+ "no_token_status": 403
+}
+Stopping app - local entrypoint completed.
+✓ App completed. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-4O7ZDynehcpBnTwrGFDlS0
+all done

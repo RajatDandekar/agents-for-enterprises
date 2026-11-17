@@ -1,0 +1,65 @@
+{
+  "name": "hold_invoice",
+  "title": "Hold invoice",
+  "category": "Accounts payable",
+  "description": "Hold an invoice so it is not paid until a person has looked, with the reason (e.g. 'price 6% above the order'). Holding twice is harmless.",
+  "writes": true,
+  "version": "1.0",
+  "services": [
+    "inv_get",
+    "inv_hold"
+  ],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "invoice_no": {
+        "type": "string",
+        "description": "e.g. AP/2026/70004"
+      },
+      "reason": {
+        "type": "string",
+        "description": "what is wrong, in plain words"
+      }
+    },
+    "required": [
+      "invoice_no",
+      "reason"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "ok": {
+        "type": "boolean",
+        "description": "true when it worked; false comes with error and next_step"
+      },
+      "status": {
+        "type": "string",
+        "description": "HELD (a person must look)"
+      },
+      "reason": {
+        "type": "string",
+        "description": "as saved"
+      }
+    }
+  },
+  "example": {
+    "invoice_no": "AP/2026/70004",
+    "reason": "Price 6.0% above the order (tolerance 2%)."
+  },
+  "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  },
+  "policy": {
+    "ledgerline_reply_timeout_s": 30,
+    "reads_inside": "retried, at most 2 more times",
+    "on_lost_write_reply": "never resent blindly: look the document up (by the supplier's number or its id) and return it",
+    "on_busy_before_write": "ok=false with next_step; nothing was saved, so the same call is safe to repeat"
+  },
+  "release_notes": {
+    "1.0": "12 Nov 2026: Lecture 5 (The Habits): accounts payable and the background agents' watch lists."
+  }
+}

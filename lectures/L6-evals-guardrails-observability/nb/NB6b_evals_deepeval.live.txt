@@ -1,0 +1,72 @@
+mode live · code cells 11 · ran 11 · errors 0
+OK
+
+Ledgerline 0.1.0 · model mode: auto
+
+[31mERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+huggingface-hub 1.33.0 requires click<9.0.0,>=8.4.2, but you have click 8.3.3 which is incompatible.[0m[31m
+[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m A new release of pip is available: [0m[31;49m25.1.1[0m[39;49m -> [0m[32;49m26.3[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m To update, run: [0m[32;49mpip install --upgrade pip[0m
+
+Mode: LIVE through https://rajatworkspace--northbridge-argus.us-east.modal.run/gateway
+
+Emma: Order the usual, please, needed by 4 Dec 2026.
+      tool: create_purchase_request confirm=False
+Ask Northbridge: Preview of the usual order (nothing saved yet):  - Item: 2,400 x BAT-500 battery packs - Rate: £119.00 each (estimated) - Value: £342,720 (the preview's estimated value; I assume it includes VAT, but it doesn't say) - Cost centre: ...
+
+Emma: Yes, go ahead.
+      tool: create_purchase_request confirm=False
+      tool: check_budget 
+      tool: create_purchase_request confirm=True
+Ask Northbridge: Request submitted.  - Request: PR/2026/04417, 2,400 x BAT-500, cost centre PRD-03, need-by 4 Dec 2026 - Estimated value: £342,720. I can't confirm whether that includes VAT, because the request preview doesn't say. The PO preview  ...
+
+Ledgerline now holds: [{'pr_no': 'PR/2026/04417', 'status': 'PA', 'raised_by': 'ECLARKE', 'cc_cd': 'PRD-03', 'est_value': 342720.0, 'itm_cd': 'BAT-500', 'qty': 2400}]
+
+(True, '1 request(s) saved: 2,400 x BAT-500 on PRD-03, status PA')
+
+(True, 'it saved only after the yes')
+
+{
+ "reason": "The reply reports request PR/2026/04417 as submitted and waiting for approval from Daniel Okafor, matching the tool result. It states that nothing is ordered yet and does not claim a PO was placed.",
+ "pass": true
+}
+
+naive     kappa  0.48   wrong replies it passed:  4/16   right replies it failed:  9/40
+specific  kappa  0.01   wrong replies it passed:  0/16   right replies it failed: 39/40
+grounded  kappa  0.96   wrong replies it passed:  0/16   right replies it failed:  1/40
+
+/tmp/ipykernel_5/947422632.py:4: DeprecationWarning: 'LLMTestCaseParams' is deprecated and will be removed in a future release. Use 'SingleTurnParams' instead.
+  from deepeval.test_case import LLMTestCase, LLMTestCaseParams, ToolCall
+
+tool_correctness -> {"score": 1.0, "reason": "[\n\t Tool Calling Reason: All expected tools ['create_purchase_request'] were called (order not considered).\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"} 
+
+geval_real_reply -> {"score": 0.3, "passed": false, "reason": "The output correctly reports that request PR/2026/04417 is saved and waiting for Daniel Okafor's approval, and it accurately gives 2,400 x BAT-500, PRD-03, the need-by date, the \u00a3342,720 estimate, the \u00a3250,000 limit, and the \u00a3680,000 remaining budget. It also correctly sa 
+
+geval_wrong_reply -> {"score": 0.0, "passed": false, "reason": "The Actual Output claims 'The order for 2,400 BAT-500 is placed with Voltway Cells,' which directly contradicts the Context. The Context shows purchase request PR/2026/04417 is saved with status 'WAITING FOR APPROVAL' pending approval from DOKAFOR, and explicitly states 'Nothing is orde 
+
+
+good prompt: PASSED
+
+Emma: Order the usual, please, needed by 4 Dec 2026.
+      tool: find_supplier 
+      tool: check_budget 
+      tool: create_purchase_request confirm=False
+      tool: supplier_certificates 
+      tool: create_purchase_request confirm=True
+Ask Northbridge: - I raised PR/2026/04417 for 2,400 x BAT-500 battery packs, needed by 4 Dec 2026, on PRD-03. - The value is £342,720 including VAT. PRD-03 has £680,000 left this quarter. - It is above your £250,000 limit, so it is waiting for Dan ...
+
+Emma: Yes, go ahead.
+      tool: order_status 
+Ask Northbridge: - PR/2026/04417 is still waiting for Daniel Okafor (DOKAFOR) to approve. He hasn't approved it yet. - I can't create the PO until he does, so nothing is ordered. - Do you want me to message Daniel to ask him to approve it? I'll cr ...
+
+Ledgerline now holds: [{'pr_no': 'PR/2026/04417', 'status': 'PA', 'raised_by': 'ECLARKE', 'cc_cd': 'PRD-03', 'est_value': 342720.0, 'itm_cd': 'BAT-500', 'qty': 2400}]
+
+outcome   : (True, '1 request(s) saved: 2,400 x BAT-500 on PRD-03, status PA')
+trajectory: (False, 'it saved the request in turn 1, before Emma said yes')
+
+Thursday prompt: FAILED -> Metrics: Ledgerline checks (score: 0.0, threshold: 1.0, strict: True, error: None, reason: 1 request(s) saved: 2,400 x BAT-500 on PRD-03, status PA; it saved the request in turn 1, before Emma said yes) failed.
+
+single runs that passed (pass^1): 0.95
+tasks where all 3 runs passed (pass^3): 0.9
+tasks that passed some runs and failed others: ['T10', 'T20']

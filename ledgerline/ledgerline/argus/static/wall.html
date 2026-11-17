@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Argus · the class wall</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&display=swap">
+<link rel="stylesheet" href="/static/argus.css?v=20261117">
+<style>
+ body{background:#fbfbfa} main{max-width:1520px;padding:36px 32px}
+ .agg{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:20px 0}
+ .agg .panel{padding:16px 18px} .agg b{font-size:36px;font-weight:450;letter-spacing:-.03em;display:block}
+ .sets{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+ .set{padding:18px}.set h4{font-size:15px;font-weight:500}.set .asr{font-size:52px;font-weight:450;letter-spacing:-.04em;margin:6px 0}
+ .meter{height:12px;border-radius:6px;background:var(--tint-2);overflow:hidden}.meter i{display:block;height:100%;background:var(--bad)}
+ table.t td,table.t th{font-size:15px}
+</style>
+</head>
+<body>
+<main>
+  <div class="row"><div><div style="font-size:13px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em">Argus · Lecture 6 · Observability and Evals</div><h2 style="font-size:44px;font-weight:450;letter-spacing:-.03em">The class wall</h2></div><span class="sp"></span><span class="muted" id="upd"></span></div>
+  <div class="agg" id="agg"></div>
+  <div id="guardsec" class="hide"><h3 style="font-weight:500;margin:6px 0 10px">Attack success rate, by guard set <span class="muted small">(attacks that got what they wanted ÷ attacks sent; read from Ledgerline)</span></h3>
+  <div class="sets" id="sets"></div>
+  <div class="panel" style="margin-bottom:16px"><div class="ph"><h3>Attacks that got through</h3></div><div class="pb"><table class="t"><thead><tr><th>Attack</th><th class="r">Sent</th><th class="r">Got through</th><th class="r">Through all guards</th></tr></thead><tbody id="byatt"></tbody></table></div></div></div>
+  <div class="grid2"><div class="panel"><div class="ph"><h3>Simulated conversations, by goal</h3></div><div class="pb"><table class="t"><thead><tr><th>What Emma wanted</th><th class="r">Conversations</th><th class="r">Passed the code checks</th><th class="r">Passed every check</th></tr></thead><tbody id="byscn"></tbody></table></div></div>
+  <div class="panel"><div class="ph"><h3>Students</h3></div><div class="pb"><table class="t"><thead><tr><th>Name</th><th class="r">Chat turns</th><th class="r">Incidents seen</th><th class="r">Eval runs</th><th>Best eval</th><th class="r">Conversations</th><th class="r">Notebook calls</th></tr></thead><tbody id="rows"></tbody></table></div></div></div>
+</main>
+<script>
+const E = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const NAMES = {none: 'No guards', code: 'Code guards', all: 'All guards', custom: 'Custom sets'};
+async function load() {
+  const r = await (await fetch('/api/wall')).json(), a = r.agg;
+  document.getElementById('agg').innerHTML = [['Students', a.students], ['Chat turns', a.chats], ['Incidents seen in a trace', a.incidents], ['Eval runs', a.evals], ['Simulated conversations', a.convos]]
+    .map(([k, v]) => `<div class="panel"><b>${v}</b><span class="muted small">${k}</span></div>`).join('');
+  document.getElementById('sets').innerHTML = ['none', 'code', 'all', 'custom'].map(k => { const s = r.by_set[k] || {tries: 0, through: 0, asr: null};
+    return `<div class="panel set"><h4>${NAMES[k]}</h4><div class="asr">${s.asr == null ? '–' : Math.round(s.asr * 100) + '%'}</div><div class="meter"><i style="width:${(s.asr || 0) * 100}%"></i></div><div class="muted small" style="margin-top:8px">${s.through} of ${s.tries} attacks got through</div></div>`; }).join('');
+  document.getElementById('byatt').innerHTML = Object.entries(r.by_attack).slice(0, 20).map(([id, x]) => `<tr><td><b>${E(id)}</b> ${E(x.title)}</td><td class="r">${x.tries}</td><td class="r">${x.through}</td><td class="r">${x.tries_all ? x.through_all + ' / ' + x.tries_all : '–'}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">No attacks yet.</td></tr>';
+  document.getElementById('rows').innerHTML = r.rows.map(x => `<tr><td><b style="font-weight:500">${E(x.name)}</b></td><td class="r">${x.chats}</td><td class="r">${x.incidents}</td><td class="r">${x.evals}</td><td>${E(x.best_eval || '–')}</td><td class="r">${x.convos}</td><td class="r">${x.gateway_calls}</td></tr>`).join('');
+  document.getElementById('guardsec').classList.toggle('hide', !r.guards_station);
+  document.getElementById('byscn').innerHTML = Object.entries(r.by_scenario || {}).map(([id, x]) => `<tr><td><b>${E(x.title)}</b></td><td class="r">${x.runs}</td><td class="r">${x.gate}</td><td class="r">${x.passed}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">No conversations yet.</td></tr>';
+  document.getElementById('upd').textContent = 'updated ' + new Date().toLocaleTimeString('en-GB');
+}
+load(); setInterval(load, 5000);
+</script>
+</body>
+</html>

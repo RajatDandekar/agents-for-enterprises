@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hermes · Northbridge Cycles</title>
+<meta name="description" content="Lecture 5, The Habits: memory, workflows, background agents and triggers on a sandboxed ERP, then Ask Northbridge with all four. All names are fictional.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&display=swap">
+<link rel="stylesheet" href="/static/hermes.css">
+</head>
+<body>
+
+<!-- join -->
+<section class="join" id="join">
+  <div class="card">
+    <span class="k"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c-4 3-6 6-6 9a6 6 0 0 0 12 0c0-3-2-6-6-9z"/></svg>Northbridge Cycles · Lecture 5 · The Habits</span>
+    <h1>Hermes.</h1>
+    <p class="lede">The messenger runs errands and carries news. Today Ask Northbridge learns Emma's habits: it remembers her, follows her routines, works while she sleeps, and listens for what arrives.</p>
+    <form id="joinform" autocomplete="off">
+      <input class="input" id="name" placeholder="Your name" maxlength="40" aria-label="Your name" required>
+      <button class="btn primary lg" type="submit" id="joinbtn">Open my lab</button>
+    </form>
+    <p class="muted small" style="margin-top:12px" id="keyline">On another device already? <a href="#" id="usekey">Use your key</a></p>
+    <div class="row hide" id="welcome" style="margin-top:20px">
+      <button class="btn primary lg" id="enter">Continue as <span id="wname"></span></button>
+      <a href="#" class="small" id="notme">Not you? Start again</a>
+    </div>
+    <div class="four">
+      <div><b>1 · It remembers</b>Five memory designs on Emma's week</div>
+      <div><b>2 · Her routines</b>Type a task, get a workflow</div>
+      <div><b>3 · While she sleeps</b>Background agents on a clock</div>
+      <div><b>4 · It listens</b>E-mail, Slack, Ledgerline events</div>
+    </div>
+  </div>
+</section>
+
+<!-- the lab -->
+<div id="lab" class="hide">
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="9" fill="#141519"/><path d="M8 19c3-1 5-3.5 6-7m10 7c-3-1-5-3.5-6-7M11 21h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M6.5 13.5c1.6.1 3 .9 4 2M25.5 13.5c-1.6.1-3 .9-4 2" stroke="#7fb0ff" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <div>Hermes<br><small>Lecture 5 · The Habits</small></div>
+  </div>
+  <nav class="tabs" id="tabs">
+    <a href="#memory" data-tab="memory"><span class="n">1</span><span class="lbl">Memory</span></a>
+    <a href="#workflows" data-tab="workflows"><span class="n">2</span><span class="lbl">Workflows</span></a>
+    <a href="#agents" data-tab="agents"><span class="n">3</span><span class="lbl">Background agents</span></a>
+    <a href="#triggers" data-tab="triggers"><span class="n">4</span><span class="lbl">Triggers</span></a>
+    <a href="#ask" data-tab="ask"><span class="n">5</span><span class="lbl">Ask Northbridge</span></a>
+  </nav>
+  <div class="clock" title="The simulated clock: every Ledgerline call happens at this time">
+    <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+    <span class="t" id="clockt">Mon 26 Oct 2026, 09:00</span>
+    <button class="btn xs" id="ctomorrow" title="Run everything due until tomorrow 09:00">Tomorrow 09:00</button>
+    <button class="btn xs primary" id="cweek" title="Run everything due in the next seven days">+1 week</button>
+  </div>
+  <button class="btn sm" id="inboxbtn">Approvals <span class="badge hide" id="inboxn">0</span></button>
+  <div class="who"><span class="avatar" id="avatar">E</span></div>
+</header>
+
+<main>
+<!-- 1 · MEMORY -->
+<section class="tab" id="tab-memory">
+  <div class="head">
+    <div><div class="kick">1 · Mnemosyne · memory</div>
+      <h2>What should it know about Emma before she speaks?</h2>
+      <p class="lede">A model forgets everything between conversations. Memory is the harness choosing what goes into the context window, and who writes what is kept. Run Emma's week through a design, then ask it ten questions.</p></div>
+    <div class="guide" id="guide-memory"></div>
+  </div>
+  <div class="mem">
+    <div class="col">
+      <div class="panel"><div class="ph"><h3>Memory design</h3></div><div class="pb"><div class="designs" id="designs"></div></div></div>
+      <div class="panel"><div class="ph"><h3>Knobs</h3><span class="sp"></span><span class="pill" id="knobstate">as designed</span></div><div class="pb" id="knobs"></div></div>
+      <div class="row"><button class="btn primary lg" id="runweek" style="flex:1">Run Emma's week</button><button class="btn lg" id="compare" title="All five designs at once, the same knobs">Compare all five</button></div>
+    </div>
+    <div class="col" style="min-width:0">
+      <div class="panel"><div class="ph"><h3>Emma's week</h3><span class="muted small" id="weekmeta">eight conversations, Mon 26 to Fri 30 Oct · then ten questions</span><span class="sp"></span><span id="weekstatus"></span></div>
+        <div class="pb"><div class="weekstrip" id="weekstrip"></div><div class="convo" id="convo"><div class="empty">Pick a design and press <b>Run Emma's week</b>. Each conversation appears here as it happens; click one to see it.</div></div></div></div>
+      <div class="panel"><div class="ph"><h3>Memory files</h3><span class="sp"></span><div class="seg" id="dayseg"></div></div><div class="files" id="files"><div class="empty" style="grid-column:1/-1">The files the design keeps appear here, day by day, with what changed.</div></div></div>
+      <div class="panel"><div class="ph"><h3>Ten questions, next Monday</h3><span class="sp"></span><span id="probescore"></span></div><div class="pb" id="probes"><div class="empty">Scored in code: right, stale (an out-of-date fact), poisoned (the e-mail's claim), missing, wrong.</div></div></div>
+      <div class="panel"><div class="ph"><h3>Your runs</h3><span class="muted small">one row per week you ran</span><span class="sp"></span><button class="btn sm" id="usemem">Use the selected design in Ask Northbridge</button></div><div class="pb" id="memtable"><div class="empty">No runs yet.</div></div></div>
+    </div>
+    <div class="col colR">
+      <div class="panel"><div class="ph"><h3>The context window</h3><span class="sp"></span><button class="btn xs" id="showwin">Exact text</button></div><div class="pb" id="ctxpanel"><div class="empty">Click a conversation turn to see what the model read, part by part.</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 · WORKFLOWS -->
+<section class="tab" id="tab-workflows">
+  <div class="head">
+    <div><div class="kick">2 · Workflows · her routines</div>
+      <h2>Type what you do often. Get a workflow you can run.</h2>
+      <p class="lede">The model drafts the workflow as JSON, using only the toolbox. Code checks every step against each tool's own definition and lifts out the values you may change per run. You run it, change a value, run it again.</p></div>
+    <div class="guide" id="guide-workflows"></div>
+  </div>
+  <div class="composer">
+    <div><div class="q">What do you do often?</div><textarea id="ask" rows="2" placeholder="Every Monday at 9, find my orders that are 7 or more days late, write each supplier a short polite e-mail and tell me which ones were chased."></textarea></div>
+    <button class="btn primary lg" id="build">Build it</button>
+  </div>
+  <div class="starters" id="starters"></div>
+  <div class="studio">
+    <div class="col" style="min-width:0">
+      <div class="canvas" id="canvas">
+        <div class="cstrip" id="cstrip"></div>
+        <div class="world" id="world"><svg class="edges" id="edges" width="4000" height="2000"></svg></div>
+        <div class="hello" id="hello"><div><h3>Your workflow appears here</h3><p>Pick a starter above or type your own task, then press <b>Build it</b>.</p></div></div>
+        <div class="zoom"><button id="zin" title="Zoom in">+</button><button id="zout" title="Zoom out">−</button><button id="zfit" title="Fit">⤢</button></div>
+      </div>
+      <div id="runresult"></div>
+      <div class="panel" style="margin-top:14px"><div class="ph"><h3>My routines</h3><span class="muted small">saved workflows: each one is a tool in Ask Northbridge, and scheduled ones run on the clock</span></div><div class="pb"><div class="shelf" id="shelf"><div class="empty">Nothing saved yet.</div></div></div></div>
+    </div>
+    <div class="panel side" id="side">
+      <div class="tabsm" id="sidetabs"><button data-s="params" class="on">Parameters</button><button data-s="checks">Checks</button><button data-s="node">Step</button><button data-s="log">Run log</button></div>
+      <div class="pb" id="sidebody"><div class="empty">Build a workflow first.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · BACKGROUND AGENTS -->
+<section class="tab" id="tab-agents">
+  <div class="head">
+    <div><div class="kick">3 · Background agents · while she sleeps</div>
+      <h2>Agents that run on a schedule, with nobody watching.</h2>
+      <p class="lede">Turn agents on, set when they run and their limits, and press <b>+1 week</b>: a week of runs plays on the simulated clock in about a minute. Every run says what it did, what it changed and what it left for a person.</p></div>
+    <div class="guide" id="guide-agents"></div>
+  </div>
+  <div class="bg">
+    <div class="col" id="agentlist"></div>
+    <div class="col" style="min-width:0">
+      <div class="panel"><div class="ph"><h3>The week</h3><span class="muted small" id="bgmeta"></span><span class="sp"></span>
+        <span class="small muted">Stop all</span><button class="switch" id="stopall" title="The kill switch: no agent runs while it is on"></button>
+        <button class="btn sm" id="btomorrow">Tomorrow 09:00</button><button class="btn sm primary" id="bweek">+1 week</button></div>
+        <div class="pb"><div id="weekgrid"></div></div></div>
+      <div class="panel"><div class="ph"><h3>Run log</h3><span class="sp"></span><span class="muted small" id="bgtotal"></span></div><div class="pb" id="runlog"><div class="empty">No runs yet. Turn an agent on and press +1 week.</div></div></div>
+    </div>
+    <div class="col colR">
+      <div class="panel"><div class="ph"><h3>Left for a person</h3></div><div class="pb" id="leftpanel"></div></div>
+      <div class="panel"><div class="ph"><h3>Coming up</h3></div><div class="pb" id="nextpanel"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · TRIGGERS -->
+<section class="tab" id="tab-triggers">
+  <div class="head">
+    <div><div class="kick">4 · Triggers · it listens</div>
+      <h2>Something arrives. The right workflow starts.</h2>
+      <p class="lede">Three sources: the AP mailbox (polled every five minutes), the #purchasing Slack channel and Ledgerline's own events (both pushed). Wire listeners, drop events in, and watch each chain: event, listener, action, result.</p></div>
+    <div class="guide" id="guide-triggers"></div>
+  </div>
+  <div class="trig">
+    <div class="col" id="sources"></div>
+    <div class="col" style="min-width:0">
+      <div class="panel"><div class="ph"><h3>Listeners</h3><span class="sp"></span><span class="small muted">Provenance</span><button class="switch" id="prov" title="E-mails reach the model marked untrusted; memory written from them is quarantined"></button></div><div class="pb" id="listeners"></div></div>
+      <div class="panel"><div class="ph"><h3>The chain</h3><span class="muted small" id="chaintitle">drop an event in</span></div><div class="pb"><div class="chain" id="chain"></div><div id="chainextra"></div></div></div>
+      <div class="grid2">
+        <div class="panel"><div class="ph"><h3>Events</h3></div><div class="pb" id="evlog"><div class="empty">Nothing yet.</div></div></div>
+        <div class="panel"><div class="ph"><h3>Filed in Emma's memory</h3></div><div class="pb" id="evnotes"><div class="empty">Turn on "Any supplier e-mail → memory", then drop an e-mail.</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · ASK NORTHBRIDGE -->
+<section class="tab" id="tab-ask">
+  <div class="head">
+    <div><div class="kick">5 · Ask Northbridge, complete</div>
+      <h2>Good morning, Emma.</h2>
+      <p class="lede">One assistant with all four layers: your memory design, all 26 tools, your routines as tools, the background agents' night and the events that came in. Say "Morning".</p></div>
+    <div class="guide" id="guide-ask"></div>
+  </div>
+  <div class="ask">
+    <div class="rail" id="railL"></div>
+    <div class="chat">
+      <div class="stream" id="stream"><div class="hello" id="chathello"><h3>Morning, Emma.</h3><p>It already knows what your memory holds, what ran overnight and what arrived. Try one of the prompts below.</p></div></div>
+      <div class="composer2">
+        <div class="quick" id="quick"></div>
+        <div class="sayrow"><textarea id="say" rows="1" placeholder="Message Ask Northbridge"></textarea><button class="btn primary" id="send" style="height:46px">Send</button><button class="btn ghost sm" id="newchat" title="A new conversation: the briefing starts from now">New</button></div>
+      </div>
+    </div>
+    <div class="rail r" id="railR"></div>
+  </div>
+</section>
+</main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer"><div class="dh"><h3 id="dtitle">Details</h3><span class="sp"></span><button class="btn sm ghost" id="dclose">Close</button></div><div class="db" id="dbody"></div></aside>
+<div class="toast" id="toast"></div>
+<script src="/static/hermes.js"></script>
+</body>
+</html>

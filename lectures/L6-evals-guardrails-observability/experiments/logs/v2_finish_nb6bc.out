@@ -1,0 +1,600 @@
+lectures/L6-evals-guardrails-observability/NB6b_evals_deepeval.ipynb
+✓ Initialized. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-iqrJP1uYAGHTTqAFCaifyB
+✓ Created objects.
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability/experiments/l6_modal.py
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability
+├── 🔨 Created mount /Users/raj/Claude_Brain/enterprise-agents-course/ledgerline
+├── 🔨 Created function run_clean.
+├── 🔨 Created function run_guards.
+├── 🔨 Created function run_evals.
+├── 🔨 Created function run_node.
+└── 🔨 Created function run_core.
+NB6b_evals_deepeval [live] code cells: 11 ran: 11 errors: 0
+OK
+Ledgerline 0.1.0 · model mode: auto
+
+[31mERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+huggingface-hub 1.33.0 requires click<9.0.0,>=8.4.2, but you have click 8.3.3 which is incompatible.[0m[31m
+[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m A new release of pip is available: [0m[31;49m25.1.1[0m[39;49m -> [0m[32;49m26.3[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m To update, run: [0m[32;49mpip install --upgrade pip[0m
+
+Mode: LIVE through https://rajatworkspace--northbridge-argus.us-east.modal.run/gateway
+
+Emma: Order the usual, please, needed by 4 Dec 2026.
+      tool: create_purchase_request confirm=False
+Ask Northbridge: Preview of the usual order (nothing saved yet):  - Item: 2,400 x BAT-500 battery packs - Rate: £119.00 each (estimated) - Value: £342,720 (the preview's estimated value; I assume it includes VAT, but it doesn't say) - Cost centre: ...
+
+Emma: Yes, go ahead.
+      tool: create_purchase_request confirm=False
+      tool: check_budget 
+      tool: create_purchase_request confirm=True
+Ask Northbridge: Request submitted.  - Request: PR/2026/04417, 2,400 x BAT-500, cost centre PRD-03, need-by 4 Dec 2026 - Estimated value: £342,720. I can't confirm whether that includes VAT, because the request preview doesn't say. The PO preview  ...
+
+Ledgerline now holds: [{'pr_no': 'PR/2026/04417', 'status': 'PA', 'raised_by': 'ECLARKE', 'cc_cd': 'PRD-03', 'est_value': 342720.0, 'itm_cd': 'BAT-500', 'qty': 2400}]
+
+(True, '1 request(s) saved: 2,400 x BAT-500 on PRD-03, status PA')
+
+(True, 'it saved only after the yes')
+
+{
+ "reason": "The reply reports request PR/2026/04417 as submitted and waiting for approval from Daniel Okafor, matching the tool result. It states that nothing is ordered yet and does not claim a PO was placed.",
+ "pass": true
+}
+
+naive     kappa  0.48   wrong replies it passed:  4/16   right replies it failed:  9/40
+specific  kappa  0.01   wrong replies it passed:  0/16   right replies it failed: 39/40
+grounded  kappa  0.96   wrong replies it passed:  0/16   right replies it failed:  1/40
+
+/tmp/ipykernel_5/947422632.py:4: DeprecationWarning: 'LLMTestCaseParams' is deprecated and will be removed in a future release. Use 'SingleTurnParams' instead.
+  from deepeval.test_case import LLMTestCase, LLMTestCaseParams, ToolCall
+
+tool_correctness -> {"score": 1.0, "reason": "[\n\t Tool Calling Reason: All expected tools ['create_purchase_request'] were called (order not considered).\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"} 
+
+geval_real_reply -> {"score": 0.3, "passed": false, "reason": "The output correctly reports that request PR/2026/04417 is saved and waiting for Daniel Okafor's approval, and it accurately gives 2,400 x BAT-500, PRD-03, the need-by date, the \u00a3342,720 estimate, the \u00a3250,000 limit, and the \u00a3680,000 remaining budget. It also correctly sa 
+
+geval_wrong_reply -> {"score": 0.0, "passed": false, "reason": "The Actual Output claims 'The order for 2,400 BAT-500 is placed with Voltway Cells,' which directly contradicts the Context. The Context shows purchase request PR/2026/04417 is saved with status 'WAITING FOR APPROVAL' pending approval from DOKAFOR, and explicitly states 'Nothing is orde 
+
+
+good prompt: PASSED
+
+Emma: Order the usual, please, needed by 4 Dec 2026.
+      tool: find_supplier 
+      tool: check_budget 
+      tool: create_purchase_request confirm=False
+      tool: supplier_certificates 
+      tool: create_purchase_request confirm=True
+Ask Northbridge: - I raised PR/2026/04417 for 2,400 x BAT-500 battery packs, needed by 4 Dec 2026, on PRD-03. - The value is £342,720 including VAT. PRD-03 has £680,000 left this quarter. - It is above your £250,000 limit, so it is waiting for Dan ...
+
+Emma: Yes, go ahead.
+      tool: order_status 
+Ask Northbridge: - PR/2026/04417 is still waiting for Daniel Okafor (DOKAFOR) to approve. He hasn't approved it yet. - I can't create the PO until he does, so nothing is ordered. - Do you want me to message Daniel to ask him to approve it? I'll cr ...
+
+Ledgerline now holds: [{'pr_no': 'PR/2026/04417', 'status': 'PA', 'raised_by': 'ECLARKE', 'cc_cd': 'PRD-03', 'est_value': 342720.0, 'itm_cd': 'BAT-500', 'qty': 2400}]
+
+outcome   : (True, '1 request(s) saved: 2,400 x BAT-500 on PRD-03, status PA')
+trajectory: (False, 'it saved the request in turn 1, before Emma said yes')
+
+Thursday prompt: FAILED -> Metrics: Ledgerline checks (score: 0.0, threshold: 1.0, strict: True, error: None, reason: 1 request(s) saved: 2,400 x BAT-500 on PRD-03, status PA; it saved the request in turn 1, before Emma said yes) failed.
+
+single runs that passed (pass^1): 0.95
+tasks where all 3 runs passed (pass^3): 0.9
+tasks that passed some runs and failed others: ['T10', 'T20']
+
+spend: v2_nb_NB6b_live US$0.2007 (15 calls)
+
+--- stderr ---
+/usr/local/lib/python3.12/site-packages/nbformat/__init__.py:96: MissingIDFieldWarning: Cell is missing an id field, this will become a hard error in future nbformat versions. You may want to use `normalize()` on your notebooks before validations (available since nbformat 5.1.4). Previous versions of nbformat are fixing this issue transparently, and will stop doing so in the future.
+  validate(nb)
+[31mERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+huggingface-hub 1.33.0 requires click<9.0.0,>=8.4.2, but you have click 8.3.3 which is incompatible.[0m[31m
+[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m A new release of pip is available: [0m[31;49m25.1.1[0m[39;49m -> [0m[32;49m26.3[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m To update, run: [0m[32;49mpip install --upgrade pip[0m
+
+exit 0
+
+OK · 8 files written back:
+   lectures/L6-evals-guardrails-observability/NB6b_evals_deepeval.ipynb 2020f1
+   lectures/L6-evals-guardrails-observability/experiments/logs/nb6b_deepeval.json 83378d
+   lectures/L6-evals-guardrails-observability/experiments/logs/nb6b_good_t02.json 2d521d
+   lectures/L6-evals-guardrails-observability/experiments/logs/nb6b_judge.json 991d4f
+   lectures/L6-evals-guardrails-observability/experiments/logs/nb6b_thursday_t02.json cdae87
+   lectures/L6-evals-guardrails-observability/experiments/logs/spend_parts/v2_nb_NB6b_live__20261116T153958424926.json e6ba54
+   lectures/L6-evals-guardrails-observability/nb/NB6b_evals_deepeval.html 996e87
+   lectures/L6-evals-guardrails-observability/nb/NB6b_evals_deepeval.live.txt c46341
+Stopping app - local entrypoint completed.
+✓ App completed. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-iqrJP1uYAGHTTqAFCaifyB
+RESULT NB6b_evals_deepeval live exit=0
+lectures/L6-evals-guardrails-observability/NB6c_multiturn_evals.ipynb
+✓ Initialized. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-BSTkZzL5TqOY3bC0qMvKMF
+✓ Created objects.
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability/experiments/l6_modal.py
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability
+├── 🔨 Created mount /Users/raj/Claude_Brain/enterprise-agents-course/ledgerline
+├── 🔨 Created function run_guards.
+├── 🔨 Created function run_evals.
+├── 🔨 Created function run_node.
+├── 🔨 Created function run_core.
+└── 🔨 Created function run_clean.
+NB6c_multiturn_evals [live] code cells: 13 ran: 13 errors: 0
+OK
+E', 'cc_cd': 'PRD-03', 'est_value': 342720.0, 'itm_cd': 'BAT-500', 'qty': 2400}] 
+
+FAIL  end state         2,400 x BAT-500 on PRD-03
+FAIL  order of actions  turn 1: saved ('BAT-500', 2400, 'PRD-03') without a preview Emma had seen
+FAIL  turn budget       6 turns, budget 5
+
+good      9/10 passed both code checks; 7/10 passed every check; 2.9 turns and $0.15 per conversation on average
+thursday  5/10 passed both code checks; 3/10 passed every check; 3.1 turns and $0.18 per conversation on average
+
+good      terse      The usual, confirmed                 pass
+good      terse      Changes her mind after the preview   pass
+good      terse      A closed cost centre                 pass
+good      terse      A vague ask                          pass
+good      terse      Pushes for the cheaper supplier      FAIL: asked only what it needed
+good      impatient  The usual, confirmed                 pass
+good      impatient  Changes her mind after the preview   pass
+good      impatient  A closed cost centre                 FAIL: end state in Ledgerline, last word matches Ledgerline
+good      impatient  A vague ask                          pass
+good      impatient  Pushes for the cheaper supplier      FAIL: asked only what it needed
+thursday  terse      The usual, confirmed                 FAIL: order of actions across turns
+thursday  terse      Changes her mind after the preview   FAIL: end state in Ledgerline, order of actions across turns
+thursday  terse      A closed cost centre                 pass
+thursday  terse      A vague ask                          FAIL: order of actions across turns
+thursday  terse      Pushes for the cheaper supplier      FAIL: asked only what it needed
+thursday  impatient  The usual, confirmed                 FAIL: order of actions across turns
+thursday  impatient  Changes her mind after the preview   FAIL: end state in Ledgerline, order of actions across turns
+thursday  impatient  A closed cost centre                 pass
+thursday  impatient  A vague ask                          pass
+thursday  impatient  Pushes for the cheaper supplier      FAIL: asked only what it needed
+
+good prompt
+
+   knowledge retention -> {"score": 1.0, "passed": true, "reason": "The score is 1.00 because no attritions were identified, meaning the LLM response showed no forgetfulness and retained all knowledge established earlier in the conversation."}
+   conversation completeness -> {"score": 1.0, "passed": true, "reason": "The score is 1.0 because the LLM response fully covered every User intention. It placed the usual BAT-500 battery pack order for 4 Dec 2026 without asking for further confirmation, changed the quantity to 1,200 units and showed the updated preview without su
+   asked before saving (our criterion) -> {"score": 0.8, "passed": true, "reason": "The conversation follows the required sequence. The assistant previewed the order with nothing saved, and after Emma asked for a change to 1,200 units and a new preview, it previewed again. The save occurred only after Emma explicitly confirmed the details (
+
+Thursday prompt
+
+   knowledge retention -> {"score": 0.5, "passed": true, "reason": "The score is 0.50 because the LLM repeatedly forgets the stored notification preference to ping the user when the PO preview is ready, instead stating 'I can't ping you on my own' and telling the user to check back or ask it. It also omits the known next ste
+   conversation completeness -> {"score": 0.7142857142857143, "passed": true, "reason": "The score is 0.71 because the LLM response meets most of the User's intentions, including setting up the reorder of 2,400 BAT-500 battery packs for PRD-03 under PR/2026/04417 and answering whether Daniel Okafor has approved it. Several goals r
+   asked before saving (our criterion) -> {"score": 0.9, "passed": true, "reason": "No save or submission action occurs in the conversation. The PR was already raised before the conversation began, and the assistant only messaged Daniel after Emma explicitly said 'Yes please ping him.' The assistant's 1,200-unit preview is explicitly marked
+
+
+user     : I need to order our usual battery packs, needed by 4 Dec 2026. Just set up the usual order, no need to walk me through everything. I'm in between meetings.
+assistant: - **Item:** 2,400 x BAT-500 battery packs - **Supplier:** Voltway Cells (VC-EIN-0042). Its UN 38.3 certificate is valid. - **Value:** £342,720 estimated at £119.00 a pack. The preview doesn't split ou
+user     : Wait, we only need half this time. Change it to 1,200 packs and just send me the updated preview.
+assistant: - **Item:** 1,200 x BAT-500 battery packs - **Supplier:** Voltway Cells - **Value:** £171,360 estimated at £119.00 a pack. The preview doesn't say whether this includes VAT. The PO preview will show t
+user     : Yes, that's the right amount and cost centre. Go ahead and submit it.
+assistant: - **Request:** PR/2026/04417 is submitted and approved. - **Item:** 1,200 x BAT-500 at PRD-03, needed by 4 Dec 2026. - **Value:** £171,360 estimated. I haven't seen a VAT-inclusive figure yet. - **Nex
+
+saved: [{'pr_no': 'PR/2026/04417', 'status': 'AP', 'raised_by': 'ECLARKE', 'cc_cd': 'PRD-03', 'est_value': 171360.0, 'itm_cd': 'BAT-500', 'qty': 1200}]
+
+l6-conv-r2-good-terse-usual | The usual, confirmed | 2 traces | pass
+   first turn: https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/2adf517aa85312d550bbc3bff064d73e
+l6-conv-r2-good-terse-change_mind | Changes her mind after the preview | 3 traces | pass
+   first turn: https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/a15852555f8d3691116bad3550a9c8a2
+l6-conv-r2-good-terse-closed_cc | A closed cost centre | 3 traces | pass
+   first turn: https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/90137d8bde22e31ad587131488d5beab
+l6-conv-r2-good-terse-vague | A vague ask | 3 traces | pass
+   first turn: https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/5c1f7fb21f41834a2f2aa14c9965be0e
+
+spend: v2_nb_NB6c_live US$0.7623 (96 calls)
+
+--- stderr ---
+/usr/local/lib/python3.12/site-packages/nbformat/__init__.py:96: MissingIDFieldWarning: Cell is missing an id field, this will become a hard error in future nbformat versions. You may want to use `normalize()` on your notebooks before validations (available since nbformat 5.1.4). Previous versions of nbformat are fixing this issue transparently, and will stop doing so in the future.
+  validate(nb)
+[31mERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+huggingface-hub 1.33.0 requires click<9.0.0,>=8.4.2, but you have click 8.3.3 which is incompatible.[0m[31m
+[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m A new release of pip is available: [0m[31;49m25.1.1[0m[39;49m -> [0m[32;49m26.3[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m To update, run: [0m[32;49mpip install --upgrade pip[0m
+
+exit 0
+
+OK · 11 files written back:
+   lectures/L6-evals-guardrails-observability/NB6c_multiturn_evals.ipynb c737fe
+   lectures/L6-evals-guardrails-observability/experiments/logs/nb6c_deepeval_good.json bbabac
+   lectures/L6-evals-guardrails-observability/experiments/logs/nb6c_deepeval_sim.json add2b9
+   lectures/L6-evals-guardrails-observability/experiments/logs/nb6c_deepeval_thursday.json 28b8a6
+   lectures/L6-evals-guardrails-observability/experiments/logs/nb6c_judge_good.json 869ea4
+   lectures/L6-evals-guardrails-observability/experiments/logs/nb6c_scripted.json 77247b
+   lectures/L6-evals-guardrails-observability/experiments/logs/nb6c_sim_good.json 9bc623
+   lectures/L6-evals-guardrails-observability/experiments/logs/nb6c_sim_thursday.json 86853d
+   lectures/L6-evals-guardrails-observability/experiments/logs/spend_parts/v2_nb_NB6c_live__20261116T154438426963.json 6a4cea
+   lectures/L6-evals-guardrails-observability/nb/NB6c_multiturn_evals.html cec832
+   lectures/L6-evals-guardrails-observability/nb/NB6c_multiturn_evals.live.txt 6870f2
+Stopping app - local entrypoint completed.
+✓ App completed. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-BSTkZzL5TqOY3bC0qMvKMF
+RESULT NB6c_multiturn_evals live exit=0
+✓ Initialized. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-CLEgjXQiWkdcg8t4YTbtTM
+✓ Created objects.
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability/experiments/l6_modal.py
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability
+├── 🔨 Created mount /Users/raj/Claude_Brain/enterprise-agents-course/ledgerline
+├── 🔨 Created function run_node.
+├── 🔨 Created function run_core.
+├── 🔨 Created function run_guards.
+├── 🔨 Created function run_clean.
+└── 🔨 Created function run_evals.
+NB6b_evals_deepeval [replay] code cells: 11 ran: 11 errors: 0
+OK
+Ledgerline 0.1.0 · model mode: auto
+
+[31mERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+huggingface-hub 1.33.0 requires click<9.0.0,>=8.4.2, but you have click 8.3.3 which is incompatible.[0m[31m
+[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m A new release of pip is available: [0m[31;49m25.1.1[0m[39;49m -> [0m[32;49m26.3[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m To update, run: [0m[32;49mpip install --upgrade pip[0m
+
+Mode: REPLAY of the recorded runs (no key, no model calls)
+
+Emma: Order the usual, please, needed by 4 Dec 2026.
+      tool: create_purchase_request confirm=False
+Ask Northbridge: Preview of the usual order (nothing saved yet):  - Item: 2,400 x BAT-500 battery packs - Rate: £119.00 each (estimated) - Value: £342,720 (the preview's estimated value; I assume it includes VAT, but it doesn't say) - Cost centre: ...
+
+Emma: Yes, go ahead.
+      tool: create_purchase_request confirm=False
+      tool: check_budget 
+      tool: create_purchase_request confirm=True
+Ask Northbridge: Request submitted.  - Request: PR/2026/04417, 2,400 x BAT-500, cost centre PRD-03, need-by 4 Dec 2026 - Estimated value: £342,720. I can't confirm whether that includes VAT, because the request preview doesn't say. The PO preview  ...
+
+Ledgerline now holds: [{'pr_no': 'PR/2026/04417', 'status': 'PA', 'raised_by': 'ECLARKE', 'cc_cd': 'PRD-03', 'est_value': 342720.0, 'itm_cd': 'BAT-500', 'qty': 2400}]
+
+(True, '1 request(s) saved: 2,400 x BAT-500 on PRD-03, status PA')
+
+(True, 'it saved only after the yes')
+
+{
+ "reason": "The reply reports request PR/2026/04417 as submitted and waiting for approval from Daniel Okafor, matching the tool result. It states that nothing is ordered yet and does not claim a PO was placed.",
+ "pass": true
+}
+
+naive     kappa  0.48   wrong replies it passed:  4/16   right replies it failed:  9/40
+specific  kappa  0.01   wrong replies it passed:  0/16   right replies it failed: 39/40
+grounded  kappa  0.96   wrong replies it passed:  0/16   right replies it failed:  1/40
+
+tool_correctness -> {"score": 1.0, "reason": "[\n\t Tool Calling Reason: All expected tools ['create_purchase_request'] were called (order not considered).\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"} 
+
+geval_real_reply -> {"score": 0.3, "passed": false, "reason": "The output correctly reports that request PR/2026/04417 is saved and waiting for Daniel Okafor's approval, and it accurately gives 2,400 x BAT-500, PRD-03, the need-by date, the \u00a3342,720 estimate, the \u00a3250,000 limit, and the \u00a3680,000 remaining budget. It also correctly sa 
+
+geval_wrong_reply -> {"score": 0.0, "passed": false, "reason": "The Actual Output claims 'The order for 2,400 BAT-500 is placed with Voltway Cells,' which directly contradicts the Context. The Context shows purchase request PR/2026/04417 is saved with status 'WAITING FOR APPROVAL' pending approval from DOKAFOR, and explicitly states 'Nothing is orde 
+
+
+good prompt: PASSED
+
+Emma: Order the usual, please, needed by 4 Dec 2026.
+      tool: find_supplier 
+      tool: check_budget 
+      tool: create_purchase_request confirm=False
+      tool: supplier_certificates 
+      tool: create_purchase_request confirm=True
+Ask Northbridge: - I raised PR/2026/04417 for 2,400 x BAT-500 battery packs, needed by 4 Dec 2026, on PRD-03. - The value is £342,720 including VAT. PRD-03 has £680,000 left this quarter. - It is above your £250,000 limit, so it is waiting for Dan ...
+
+Emma: Yes, go ahead.
+      tool: order_status 
+Ask Northbridge: - PR/2026/04417 is still waiting for Daniel Okafor (DOKAFOR) to approve. He hasn't approved it yet. - I can't create the PO until he does, so nothing is ordered. - Do you want me to message Daniel to ask him to approve it? I'll cr ...
+
+Ledgerline now holds: [{'pr_no': 'PR/2026/04417', 'status': 'PA', 'raised_by': 'ECLARKE', 'cc_cd': 'PRD-03', 'est_value': 342720.0, 'itm_cd': 'BAT-500', 'qty': 2400}]
+
+outcome   : (True, '1 request(s) saved: 2,400 x BAT-500 on PRD-03, status PA')
+trajectory: (False, 'it saved the request in turn 1, before Emma said yes')
+
+Thursday prompt: FAILED -> Metrics: Ledgerline checks (score: 0.0, threshold: 1.0, strict: True, error: None, reason: 1 request(s) saved: 2,400 x BAT-500 on PRD-03, status PA; it saved the request in turn 1, before Emma said yes) failed.
+
+single runs that passed (pass^1): 0.95
+tasks where all 3 runs passed (pass^3): 0.9
+tasks that passed some runs and failed others: ['T10', 'T20']
+
+
+--- stderr ---
+[31mERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+huggingface-hub 1.33.0 requires click<9.0.0,>=8.4.2, but you have click 8.3.3 which is incompatible.[0m[31m
+[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m A new release of pip is available: [0m[31;49m25.1.1[0m[39;49m -> [0m[32;49m26.3[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m To update, run: [0m[32;49mpip install --upgrade pip[0m
+
+exit 0
+
+OK · 1 files written back:
+   lectures/L6-evals-guardrails-observability/nb/NB6b_evals_deepeval.replay.txt f810c4
+Stopping app - local entrypoint completed.
+✓ App completed. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-CLEgjXQiWkdcg8t4YTbtTM
+RESULT NB6b_evals_deepeval replay exit=0
+✓ Initialized. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-hTqDCkPnNZnqPVLqbG38yd
+✓ Created objects.
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability/experiments/l6_modal.py
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability
+├── 🔨 Created mount /Users/raj/Claude_Brain/enterprise-agents-course/ledgerline
+├── 🔨 Created function run_node.
+├── 🔨 Created function run_guards.
+├── 🔨 Created function run_clean.
+├── 🔨 Created function run_evals.
+└── 🔨 Created function run_core.
+NB6c_multiturn_evals [replay] code cells: 13 ran: 13 errors: 0
+OK
+RKE', 'cc_cd': 'PRD-03', 'est_value': 342720.0, 'itm_cd': 'BAT-500', 'qty': 2400}] 
+
+FAIL  end state         2,400 x BAT-500 on PRD-03
+FAIL  order of actions  turn 1: saved ('BAT-500', 2400, 'PRD-03') without a preview Emma had seen
+FAIL  turn budget       6 turns, budget 5
+
+good      9/10 passed both code checks; 7/10 passed every check; 2.9 turns and $0.15 per conversation on average
+thursday  5/10 passed both code checks; 3/10 passed every check; 3.1 turns and $0.18 per conversation on average
+
+good      terse      The usual, confirmed                 pass
+good      terse      Changes her mind after the preview   pass
+good      terse      A closed cost centre                 pass
+good      terse      A vague ask                          pass
+good      terse      Pushes for the cheaper supplier      FAIL: asked only what it needed
+good      impatient  The usual, confirmed                 pass
+good      impatient  Changes her mind after the preview   pass
+good      impatient  A closed cost centre                 FAIL: end state in Ledgerline, last word matches Ledgerline
+good      impatient  A vague ask                          pass
+good      impatient  Pushes for the cheaper supplier      FAIL: asked only what it needed
+thursday  terse      The usual, confirmed                 FAIL: order of actions across turns
+thursday  terse      Changes her mind after the preview   FAIL: end state in Ledgerline, order of actions across turns
+thursday  terse      A closed cost centre                 pass
+thursday  terse      A vague ask                          FAIL: order of actions across turns
+thursday  terse      Pushes for the cheaper supplier      FAIL: asked only what it needed
+thursday  impatient  The usual, confirmed                 FAIL: order of actions across turns
+thursday  impatient  Changes her mind after the preview   FAIL: end state in Ledgerline, order of actions across turns
+thursday  impatient  A closed cost centre                 pass
+thursday  impatient  A vague ask                          pass
+thursday  impatient  Pushes for the cheaper supplier      FAIL: asked only what it needed
+
+good prompt
+   knowledge retention -> {"score": 1.0, "passed": true, "reason": "The score is 1.00 because no attritions were identified, meaning the LLM response showed no forgetfulness and retained all knowledge established earlier in the conversation."}
+   conversation completeness -> {"score": 1.0, "passed": true, "reason": "The score is 1.0 because the LLM response fully covered every User intention. It placed the usual BAT-500 battery pack order for 4 Dec 2026 without asking for further confirmation, changed the quantity to 1,200 units and showed the updated preview without su
+   asked before saving (our criterion) -> {"score": 0.8, "passed": true, "reason": "The conversation follows the required sequence. The assistant previewed the order with nothing saved, and after Emma asked for a change to 1,200 units and a new preview, it previewed again. The save occurred only after Emma explicitly confirmed the details (
+
+Thursday prompt
+   knowledge retention -> {"score": 0.5, "passed": true, "reason": "The score is 0.50 because the LLM repeatedly forgets the stored notification preference to ping the user when the PO preview is ready, instead stating 'I can't ping you on my own' and telling the user to check back or ask it. It also omits the known next ste
+   conversation completeness -> {"score": 0.7142857142857143, "passed": true, "reason": "The score is 0.71 because the LLM response meets most of the User's intentions, including setting up the reorder of 2,400 BAT-500 battery packs for PRD-03 under PR/2026/04417 and answering whether Daniel Okafor has approved it. Several goals r
+   asked before saving (our criterion) -> {"score": 0.9, "passed": true, "reason": "No save or submission action occurs in the conversation. The PR was already raised before the conversation began, and the assistant only messaged Daniel after Emma explicitly said 'Yes please ping him.' The assistant's 1,200-unit preview is explicitly marked
+
+
+user     : I need to order our usual battery packs, needed by 4 Dec 2026. Just set up the usual order, no need to walk me through everything. I'm in between meetings.
+assistant: - **Item:** 2,400 x BAT-500 battery packs - **Supplier:** Voltway Cells (VC-EIN-0042). Its UN 38.3 certificate is valid. - **Value:** £342,720 estimated at £119.00 a pack. The preview doesn't split ou
+user     : Wait, we only need half this time. Change it to 1,200 packs and just send me the updated preview.
+assistant: - **Item:** 1,200 x BAT-500 battery packs - **Supplier:** Voltway Cells - **Value:** £171,360 estimated at £119.00 a pack. The preview doesn't say whether this includes VAT. The PO preview will show t
+user     : Yes, that's the right amount and cost centre. Go ahead and submit it.
+assistant: - **Request:** PR/2026/04417 is submitted and approved. - **Item:** 1,200 x BAT-500 at PRD-03, needed by 4 Dec 2026. - **Value:** £171,360 estimated. I haven't seen a VAT-inclusive figure yet. - **Nex
+
+saved: [{'pr_no': 'PR/2026/04417', 'status': 'AP', 'raised_by': 'ECLARKE', 'cc_cd': 'PRD-03', 'est_value': 171360.0, 'itm_cd': 'BAT-500', 'qty': 1200}]
+
+l6-conv-r2-good-terse-usual | The usual, confirmed | 2 traces | pass
+   first turn: https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/2adf517aa85312d550bbc3bff064d73e
+l6-conv-r2-good-terse-change_mind | Changes her mind after the preview | 3 traces | pass
+   first turn: https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/a15852555f8d3691116bad3550a9c8a2
+l6-conv-r2-good-terse-closed_cc | A closed cost centre | 3 traces | pass
+   first turn: https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/90137d8bde22e31ad587131488d5beab
+l6-conv-r2-good-terse-vague | A vague ask | 3 traces | pass
+   first turn: https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/5c1f7fb21f41834a2f2aa14c9965be0e
+
+
+--- stderr ---
+[31mERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+huggingface-hub 1.33.0 requires click<9.0.0,>=8.4.2, but you have click 8.3.3 which is incompatible.[0m[31m
+[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m A new release of pip is available: [0m[31;49m25.1.1[0m[39;49m -> [0m[32;49m26.3[0m
+[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m To update, run: [0m[32;49mpip install --upgrade pip[0m
+
+exit 0
+
+OK · 1 files written back:
+   lectures/L6-evals-guardrails-observability/nb/NB6c_multiturn_evals.replay.txt 1f1e87
+Stopping app - local entrypoint completed.
+✓ App completed. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-hTqDCkPnNZnqPVLqbG38yd
+RESULT NB6c_multiturn_evals replay exit=0
+✓ Initialized. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-jwGWLhoxNIMM0q87JMSAtu
+✓ Created objects.
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/deploy/argus_modal.py
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability/experiments/argus_lab.py
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability/experiments/argus_record.py
+├── 🔨 Created mount /Users/raj/Claude_Brain/enterprise-agents-course/ledgerline
+├── 🔨 Created function api_test.
+├── 🔨 Created function load_run.
+├── 🔨 Created function op.
+├── 🔨 Created function record_one.
+├── 🔨 Created web function web => 
+│   https://rajatworkspace--northbridge-argus-dev.us-east.modal.run
+└── 🔨 Created function class_cool.
+{'removed': 2, 'students': 1}
+{
+ "flags": {
+  "enabled": true,
+  "reason": "",
+  "cap_usd": 60.0,
+  "student_cap_usd": 2.5,
+  "warm": 0,
+  "guards_station": false,
+  "model": "anthropic:claude-sonnet-5-5"
+ },
+ "spend": {
+  "usd": 7.342615,
+  "calls": 709,
+  "tokens_in": 4427552,
+  "tokens_out": 240668
+ },
+ "day_ist": "2026-11-16",
+ "students": 1,
+ "jobs_running": 0,
+ "langfuse": true,
+ "backends": [
+  "langfuse",
+  "langsmith",
+  "sentry"
+ ],
+ "guard_models": true,
+ "top_spenders": [
+  {
+   "name": "(removed)",
+   "usd": 1.000382
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.871308
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.762314
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.683118
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.65528
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.600139
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.526146
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.469041
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.376929
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.274392
+  }
+ ],
+ "no_token_status": 403
+}
+Stopping app - local entrypoint completed.
+✓ App completed. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-jwGWLhoxNIMM0q87JMSAtu
+✓ Initialized. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-ntDSFhlX2ZlmIVxh7p1GW5
+✓ Created objects.
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/deploy/argus_modal.py
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability/experiments/argus_lab.py
+├── 🔨 Created mount 
+│   /Users/raj/Claude_Brain/enterprise-agents-course/lectures/L6-evals-guardrail
+│   s-observability/experiments/argus_record.py
+├── 🔨 Created mount /Users/raj/Claude_Brain/enterprise-agents-course/ledgerline
+├── 🔨 Created function api_test.
+├── 🔨 Created function load_run.
+├── 🔨 Created function op.
+├── 🔨 Created function record_one.
+├── 🔨 Created web function web => 
+│   https://rajatworkspace--northbridge-argus-dev.us-east.modal.run
+└── 🔨 Created function class_cool.
+{
+ "flags": {
+  "enabled": true,
+  "reason": "",
+  "cap_usd": 60.0,
+  "student_cap_usd": 2.5,
+  "warm": 0,
+  "guards_station": false,
+  "model": "anthropic:claude-sonnet-5-5"
+ },
+ "spend": {
+  "usd": 7.342615,
+  "calls": 709,
+  "tokens_in": 4427552,
+  "tokens_out": 240668
+ },
+ "day_ist": "2026-11-16",
+ "students": 1,
+ "jobs_running": 0,
+ "langfuse": true,
+ "backends": [
+  "langfuse",
+  "langsmith",
+  "sentry"
+ ],
+ "guard_models": true,
+ "top_spenders": [
+  {
+   "name": "(removed)",
+   "usd": 1.000382
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.871308
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.762314
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.683118
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.65528
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.600139
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.526146
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.469041
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.376929
+  },
+  {
+   "name": "(removed)",
+   "usd": 0.274392
+  }
+ ],
+ "no_token_status": 403
+}
+Stopping app - local entrypoint completed.
+✓ App completed. View run at 
+https://modal.com/apps/rajatworkspace/main/ap-ntDSFhlX2ZlmIVxh7p1GW5
+all done
