@@ -62,3 +62,9 @@ Changed by hand:
 Checks: `build/build.py` 91 slides, 0 edits that did not apply; the rebuilt deck differs from the one of the last QA
 only in these lines; `node --check l6figs.js` clean; QA on Modal, all slides: 0 with issues, 0 page errors; slides 50, 51
 and 74 read again at full size.
+
+## After the push of 18 Nov (`ce56c7e`)
+`experiments/colab_like_modal.py` against `main` on GitHub, bare Python 3.12, no key (the course package, the detector
+libraries and NeMo Guardrails installed by the notebooks' own first cells): NB7a 25 of 25 code cells, NB7b 20 of 20, NB7c 12 of
+12, NB7d 22 of 22, 0 errors. One pip download was retried after a timeout and then succeeded. Not covered: real Colab's
+preinstalled packages, and garak (live mode only).

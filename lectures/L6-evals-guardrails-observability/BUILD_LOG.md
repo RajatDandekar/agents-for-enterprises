@@ -419,3 +419,7 @@ differs between a live picture and the recorded numbers beside it.
 - Later on 18 Nov: the gate slide (80) now says who does what (GitHub Actions runs it, pytest and our code checks decide,
   DeepEval is optional, the tracing tools are not the gate); the two promptfoo slides were deleted at Rajat's request. Deck: 102 slides.
 - Evening of 18 Nov: Rajat called the loop slide "perfect as culmination" and asked for the three slides before it to go ("Evals in practice", the Part 2 check, "Your turn: Evals"). Deck: 99 slides; the loop is slide 91. promptfoo is off the loop figure.
+
+## After the push of 18 Nov (`4470efb`, `ce56c7e`)
+`experiments/colab_like_modal.py` against `main` on GitHub, bare Python 3.12, no key: NB6a 15 of 15 code cells, NB6b 22 of 22,
+NB6c 18 of 18, NB6d 8 of 8, 0 errors. Real Colab itself is still untried.
