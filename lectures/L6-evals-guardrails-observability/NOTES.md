@@ -1,9 +1,29 @@
-# Lecture 6 · Observability and Evals · speaker notes (v2, 16 Nov 2026, after the review)
+# Lecture 6 · Observability and Evals · speaker notes (v3, 17 Nov 2026, after the second review)
 
-Sat 21 Nov 2026, 2 hours. **103 slides.** Lecture 6 of 11. Slide numbers are the deck's counter (bottom right). `[click]` = one
+Sat 21 Nov 2026, 2 hours. **106 slides.** Lecture 6 of 11. Slide numbers are the deck's counter (bottom right). `[click]` = one
 step. Dr. Rajat Dandekar presents. This version applies Rajat's review of 16 Nov (`REVIEW_16NOV.md`): observability and
 evals only, demo first, every idea explained from one live trace, no Phoenix, four notebooks run together. Guardrails and
-red-teaming are Lecture 7 (Sun 22 Nov), parked in `../L6b-guardrails/`.
+red-teaming are Lecture 7 (Sun 22 Nov), in `../L6b-guardrails/`.
+
+**History.** v1, 16 Nov (parked in `build/`). v2, 16 Nov evening: Rajat's first review. 17 Nov, morning: small fixes after
+a reading pass (the lines below marked "17 Nov": the chat of slide 4, the bars of slide 6, the LangSmith retake, the public
+links). **17 Nov, afternoon: Rajat's second review (`REVIEW_17NOV.md`).** The evals part now runs on one example: Friday's
+turn ("Order the usual, please, needed by 4 Dec 2026." under the Thursday prompt) and the good two-turn chat. Slides 52 to
+62 were rewritten around it, each with a marker "Live in Argus · Evals → ..." naming the panel where you show it; the four
+boxes replaced the agreement formula; DeepEval is "three things you set" (slides 62 and 77); old slide 76 was cut; three
+slides are new (60 two judges live, 81 a trace becomes a score, 98 the loop); slide 87 links promptfoo's own report.
+Old → new numbers: 1 to 52 unchanged · 53 → 53 and 54 · 54 to 58 → 55 to 59 · 59 to 75 → 61 to 77 · 76 cut ·
+77 to 79 → 78 to 80 · 80 to 95 → 82 to 97 · 96 to 103 → 99 to 106. The v2 deck and notes as they stood before this review
+are `build/index_v2_17nov_before_v3.html` and `build/NOTES_v2_17nov_before_v3.md`.
+**18 Nov: Rajat's third pass (99 slides).** Slide 41 shows two real pictures of the Langfuse dashboard and a link to it.
+Slide 57 is only the prompt given to the judge. "When the judge and the code disagree" (58), "What the Thursday prompt
+broke" (65) and "The checks are exact. The agent is not." (66) were deleted at his request. A new slide 59 puts the naive,
+specific and grounded judges' prompts side by side on one reply. Numbers as they were on 17 Nov → now: 1 to 57 unchanged ·
+58 deleted · 59 → 58 · new 59 · 60 to 64 unchanged · 65 and 66 deleted · 67 to 86 → 65 to 84 · 87 and 88 (promptfoo) deleted ·
+89 to 94 → 85 to 90 · 95 to 97 ("Evals in practice", the Part 2 check, "Your turn: Evals") deleted · 98 to 106 → 91 to 99.
+The loop (now 91) is the culmination of Part 2, in his words "perfect as culmination"; the three slides before it went. The two promptfoo slides went the same day ("delete slides related to promptfoo"); its files stay in
+`figs/promptfoo/` and `experiments/promptfoo/`, and Lecture 7 still uses promptfoo for red-teaming. The deck and notes as they
+stood before this pass are `build/index_v3_18nov_before_57.html` and `build/NOTES_v3_18nov_before_57.md`.
 
 Every number about our own agent is measured, in `experiments/logs/`, and read into the slides by `gen_figdata.py`
 (`window.L6` in `figdata.js`); none is typed on a slide. Facts about other tools and the survey are from
@@ -17,38 +37,56 @@ Every number about our own agent is measured, in `experiments/logs/`, and read i
    Anthropic account behind the Modal secret `forge-anthropic` (this happened on 16 Nov, during the build).
 3. **Join Argus once yourself** ("Rajat demo") and keep the tab: slide 11 is live there.
 4. **Three tabs, signed in:** LangSmith (project `ask-northbridge`), Langfuse (the course project), Sentry (org `vizuara`,
-   project `ask-northbridge`, Explore → Traces). The recorded demo turns, if the live ones misbehave:
+   project `ask-northbridge`, Explore → Traces). The recorded demo turns, if the live ones misbehave
+   (ids and links from `traces_v2.json` and `readback.json`, the recording of 16 Nov 15:12 UTC that every slide and picture shows;
+   corrected on 17 Nov, the table had still listed an earlier recording):
 
 | Turn | Trace id | LangSmith (public link, no login) | Langfuse (public link) | Sentry (signed in) |
 |---|---|---|---|---|
-| Stock question (good prompt) | `b3485cb4c847b08f8ce3d261fd0884a7` | https://smith.langchain.com/public/da67ec38-af45-435b-82dc-a714544bceb4/r | https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/b3485cb4c847b08f8ce3d261fd0884a7 | https://sentry.io/orgredirect/organizations/vizuara/explore/traces/?query=trace%3Ab3485cb4c847b08f8ce3d261fd0884a7 |
-| The usual, turn 1 (good prompt, preview) | `f1f6b2a2d5194e3c2e1ba7e45d884e2c` | https://smith.langchain.com/public/51c29356-586e-4e59-8d8c-b3dc71732074/r | https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/f1f6b2a2d5194e3c2e1ba7e45d884e2c | https://sentry.io/orgredirect/organizations/vizuara/explore/traces/?query=trace%3Af1f6b2a2d5194e3c2e1ba7e45d884e2c |
-| The usual, turn 2 (the yes, the save) | `8a660857b02adf9015e0e6a473098156` | https://smith.langchain.com/public/9b1e4898-755f-4bdf-b947-6c88e8b5283d/r | https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/8a660857b02adf9015e0e6a473098156 | https://sentry.io/orgredirect/organizations/vizuara/explore/traces/?query=trace%3A8a660857b02adf9015e0e6a473098156 |
-| Friday's turn (Thursday prompt, saved without a yes) | `52e91c64814241a0b2bf371722612522` | https://smith.langchain.com/public/5b0ef5a8-97c4-475a-b7e5-68d00063ebef/r | https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/52e91c64814241a0b2bf371722612522 | https://sentry.io/orgredirect/organizations/vizuara/explore/traces/?query=trace%3A52e91c64814241a0b2bf371722612522 |
+| Stock question (good prompt) | `a1f21801f7a091b56eaabd96c6b309ca` | https://smith.langchain.com/public/c23a30d2-2579-4f42-8774-0f9e0ba19b75/r | https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/a1f21801f7a091b56eaabd96c6b309ca | https://sentry.io/orgredirect/organizations/vizuara/explore/traces/?query=trace%3Aa1f21801f7a091b56eaabd96c6b309ca |
+| The usual, turn 1 (good prompt, preview) | `46aa6a511b909dd4fe2cc95e83539df3` | https://smith.langchain.com/public/0192048f-cf9f-4021-b5e7-14b26784dfba/r | https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/46aa6a511b909dd4fe2cc95e83539df3 | https://sentry.io/orgredirect/organizations/vizuara/explore/traces/?query=trace%3A46aa6a511b909dd4fe2cc95e83539df3 |
+| The usual, turn 2 (the yes, the save) | `2daca2e262a66ca7f4cda75fd5966b23` | https://smith.langchain.com/public/b14f08cd-6fec-4cae-b035-a7d96a1b4677/r | https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/2daca2e262a66ca7f4cda75fd5966b23 | https://sentry.io/orgredirect/organizations/vizuara/explore/traces/?query=trace%3A2daca2e262a66ca7f4cda75fd5966b23 |
+| Friday's turn (Thursday prompt, saved without a yes) | `284e50f50d129629b1291c26d103059a` | https://smith.langchain.com/public/9b363cdb-b4b7-49cb-bb3c-37679e17a8a5/r | https://us.cloud.langfuse.com/project/cmvqs3b7500p1ad0joozxaf8f/traces/284e50f50d129629b1291c26d103059a | https://sentry.io/orgredirect/organizations/vizuara/explore/traces/?query=trace%3A284e50f50d129629b1291c26d103059a |
 
-5. **Four Colab tabs**: NB6a, NB6b, NB6c, NB6d (links on slides 29, 61, 77, 89 and 99). Run each first cell before class
+5. **Four Colab tabs**: NB6a, NB6b, NB6c, NB6d (links on slides 29, 63, 76, 87 and 95). Run each first cell before class
    (the install takes about a minute). For live mode: in Argus press **Notebook key**, paste the two lines.
 6. **Never redeploy Argus in class.** After class: `--cmd cool`.
 7. Refresh the slide numbers any time: `python3 lectures/L6-evals-guardrails-observability/gen_figdata.py`.
 
 **The one idea.** The model decides what to try. Code records what happened (today), and code decides what is allowed
-(tomorrow). Say it on slide 8; come back to it on slide 96.
+(tomorrow). Say it on slide 8; come back to it on slide 92.
 
 **The rhythm.** Demo first (slide 11), then every idea from that one trace, one idea per slide (12 to 22). Then how the
 rows are made (23 to 29, ending in NB6a), then the same turn in LangSmith, Langfuse, Sentry (30 to 40). Part 2 follows the
-same pattern: the idea in plain words, our measured result, then a notebook together.
+same pattern, on one example: Friday's turn under four checks (52 to 57), then is the judge right (58 to 61), then the same
+checks in DeepEval (62) and NB6b; the idea in plain words, our measured result, the live step in Argus, then a notebook together.
 
 **Plain words.** The audience is not expert. Each term has a one-line meaning on the slide where it first appears (trace 13,
-span 14, generation 15, tokens 15 and 17, session 18, score 22, OpenTelemetry 24, eval 47, LLM judge 55, kappa 60, pass^k 65,
-simulated user 68, CI 80, reference answer 87). Use the slide's words; do not add jargon.
+span 14, generation 15, tokens 15 and 17, session 18, score 22, OpenTelemetry 24, eval 47, LLM judge 56, false alarm and missed 58, kappa 61 (one sentence), pass^k 65,
+simulated user 68, CI 80, reference answer 85). Use the slide's words; do not add jargon.
 
 **Timing.** Opener 8 min · demo and concepts (10 to 22) 22 min · by hand and NB6a (23 to 29) 20 min · three tools (30 to 45)
-15 min · evals to pass^k with NB6b (46 to 65) 25 min · multi-turn with NB6c (66 to 78) 20 min · shipping, Ragas, NB6d (79 to 95)
-8 min · close 2 min. If short of time, skip 41 to 43, 85, 86, 90, 91, 93 and do NB6d as homework.
+15 min · evals to pass^k with NB6b (46 to 65) 25 min · multi-turn with NB6c (66 to 77) 20 min · shipping, Ragas, NB6d (78 to 90)
+8 min · the loop and the close (91 to 99) 2 min. If short of time, skip 41 to 43, 60, 88, 89 and do NB6d as homework.
+The second review added three slides and several live steps: the evals part is now nearer 30 minutes than 25, so decide
+before class which live steps you do (52 and 62 matter most; 60 and 79 can be shown from the pictures).
 
-**Screens that are still plates.** Slides 11, 35, 37, 38, 40, 78 show a striped plate marked "screenshot pending" where a
-signed-in or live capture belongs (Sentry and signed-in Langfuse have no public view; two Argus shots need a live model turn).
-Each plate names the file that fills it. In class these are the moments you switch to the live tab anyway.
+**Screens that are still plates.** The plates of v2 (slides 11, 35, 37, 38, 40 and the Conversations slide) are filled:
+every picture they name is in `figs/`. A plate is a striped card marked "screenshot pending" that names the file that
+fills it; in class these are the moments you switch to the live tab anyway.
+The eight pictures of the new Argus views (builder C, `figs/argus/V3_SHOTS.md`) are on their slides: 52
+`four_checks_friday.png`, 57 `four_checks_judge.png`, 60 `judge_right_naive.png` and `judge_right_grounded.png`, 62
+`deepeval_tool.png` and `deepeval_geval.png`, 77 `convo_deepeval.png`, 81 `trace_score_written.png`. Each is a crop of a
+whole-page capture; the crops are listed in `build/PLATES_V3.md`. If a picture is retaken, re-read its slide: a card
+whose text grows moves everything under it.
+
+**One example, two recordings (read this before class).** The agent words its reply differently on every run. The slides
+(4, 19, 32, and 52 to 55) and Argus's panel "One turn, four checks" show the **traced demo turn** (`traces_v2.json`: four
+tool calls, "The purchase request is raised, but nothing is ordered yet."; decided on 17 Nov: builder C sets Argus's
+recorded turns to these). NB6b replays **its own recording** of the same message (`nb6b_thursday_t02.json`), and the
+DeepEval's verdicts on slide 62 are the ones NB6b recorded on that; the slide says so. The mistake is
+the same in both (a preview and a save in one turn, before Emma said yes); the wording and the number of tool calls
+differ. If someone asks: the checks are exact, the agent is not (slide 65, pass^k).
 
 ---
 
@@ -62,15 +100,18 @@ Each plate names the file that fills it. In class these are the moments you swit
 **3 · Henrik's letter.** [click]×3, one per question, [click] "start there". Fiction (the course's world). Say now that
 question 3 is tomorrow.
 
-**4 · What Emma saw.** A real run (`incident_r3.json`). [click]×3. The reply is not a lie: it says it is waiting for
-Daniel. It simply saved without asking.
+**4 · What Emma saw.** A real run (the traced demo turn, `traces_v2.json`). [click]×3. The chat is the same run the class later sees traced in Argus, LangSmith, Langfuse
+and Sentry (`m.demo.incident`; before 17 Nov it showed a different recorded run, so the words did not match slide 32).
+Point at the request number, PR/2026/04417: a number means a request is already saved. The reply is not a lie: it says it is
+waiting for Daniel. It simply saved without asking.
 
 **5 · The Thursday edit.** The diff of the two prompt files. [click] green lines [click] the one line of English that stood
 between the agent and a silent save.
 
-**6 · How often.** `incident_r1/r2/r3.json`. With the date: Thursday 10 of 10 saved without a yes, good 0 of 10. [click] no
+**6 · How often.** `incident_r1/r2/r3.json`. Two pairs of bars, each drawn as a share of its own runs (17 Nov: the old
+bars drew 3 of 20 as long as 10 of 10). With the date: Thursday 10 of 10 saved without a yes, good 0 of 10. [click] no
 date: Thursday 3 of 20, good 0 of 20.
-[click] **what 61% means** (Rajat's question on the 16 Nov deck): 3 of 20 is 15%, so one try looks fine 85% of the time
+[click] **why nobody caught it on Thursday**: 3 of 20 is 15%, so one try looks fine 85% of the time
 [click] the sum: 0.85 × 0.85 × 0.85 = 0.61. Someone who tried the new prompt three times saw three good answers 61% of the time.
 
 **7 · Ask the class.** 30 seconds, answers in chat. Logs have no structure; the audit trail shows the request, not why;
@@ -126,7 +167,7 @@ yes [click] three cards. Same session id on both traces.
 APIs (`experiments/scores_v2.py`, no model). [click] definition [click] the bridge to Part 2.
 
 **23 · By hand.** [click] three records [click] the tree [click] "that is all a tracer does". The class runs this in NB6a
-(section 1). The ids on the slide are shortened; the times in the notebook come from `time.sleep` calls.
+(section 1); the slide has an "Open NB6a in Colab" button, and the whole notebook is run together on slide 29. The ids on the slide are shortened; the times in the notebook come from `time.sleep` calls.
 
 **24 · What it lacks.** A table, not code (Rajat's point about the 16 Nov slide 17). [click] somewhere to send it [click] a
 screen [click] OpenTelemetry.
@@ -138,6 +179,13 @@ to LangSmith, Langfuse and Sentry at once from one process (`course/l6/tracing.p
 
 **27 · Three lines.** The only code slide in Part 1, and it is three lines. [click] what appears; only the keys decide;
 we checked (slide 39).
+[click] three questions people ask (added 17 Nov). Where do the keys live: in environment variables, never in the code
+(our laptop: the course `.env`, git-ignored; Argus: a Modal secret made from that file at deploy time, `deploy/argus_modal.py`;
+Colab: the Secrets panel). Why is it automatic: `course/l6/tracing.py` wraps the three places where work happens
+(`agent_span`, `wrap_llm`, `tool_span`), so every turn produces spans with no extra code per message; a background sender
+posts finished spans to each tool's address with the key in a header (LangSmith: `<endpoint>/otel/v1/traces`, header `x-api-key`).
+Argus: one tracer for the whole app, created at start-up, with one sender per tool whose key is present and one in-memory
+copy that feeds the trace pane on the right.
 
 **28 · What must not go in.** A real run of our masking function (`redact_demo.json`, Presidio): [click] the card number
 is replaced before the span leaves the process [click] how, where, and decide. Presidio labelled the card as a phone
@@ -154,11 +202,19 @@ read with care.
 tokens and cost equal ours [click] how it got there: a key and one address; no LangSmith library.
 
 **32 · Friday in LangSmith.** [click] Feedback: `commit_without_yes 1.00`, written by our code [click] the reply reads calm.
+If asked "how did the trace get here?": slide 31's last card and slides 25 to 27 (OpenTelemetry sends a copy to LangSmith's
+address with our key; NB6a section 4). If asked "how did the feedback get here?": a script ran the code check and wrote
+the verdict through LangSmith's API (`experiments/scores_v2.py`, `POST /api/v1/feedback` on the trace's top row); shown live on
+slide 79 (one trace) and done for every trace on slide 83. The feedback shows only while the top row of the tree is selected.
 
-**33 · The save in LangSmith.** [click] output [click] the cost card of one model call.
+**33 · The save in LangSmith.** [click] output [click] same span, second screen [click] the public link.
+The screenshot was retaken on 17 Nov: the first capture caught LangSmith's grey loading placeholders, so Input and Output
+looked empty. Live, the panel needs about ten seconds after the click before the fields appear.
 
 **34 · Langfuse.** Header and tree of Friday's trace (public link). [click] the tree [click] how it got there [click] open
 source, MIT; free tier keeps traces 30 days.
+The last card carries the public link to Friday's trace (added 17 Nov). Logged out it shows the tree, times, costs and the
+score; Langfuse does not load Input and Output without a sign-in, so open those yourself, signed in (slide 35).
 
 **35 · Where the time went.** Timeline: the model is almost all of the 11.7 s. [click] **live**: open this trace signed in
 and click a generation: Input, Output, Metadata, Scores. (Logged out, Langfuse's public page does not load those two panels,
@@ -179,8 +235,16 @@ because we had not sent ours; we now send it in Sentry's `gen_ai.cost.*` fields.
 **40 · LIVE: the Langfuse tour.** Signed in: Sessions → the longest one; Scores; Datasets → `ask-northbridge-incident`;
 Prompts → `ask-northbridge`, version 1 against version 2 (Thursday's edit). [click]×3 the cards [click] the click path.
 Numbers on the cards: `nb6a_langfuse_tour.json` (Langfuse's API, 16 Nov).
+The click path on the slide is four direct links (17 Nov), in order: Sessions (and the five-turn session
+`l6-conv-r2-thursday-impatient-change_mind`), Scores, Datasets, Prompts → ask-northbridge. They open only when you are signed
+in to the project; a student who clicks them gets Langfuse's sign-in page.
 
-**41 · Dashboard.** From `online_evals.json`. p50 is the middle turn; p95 the slow end. [click]×2.
+**41 · Dashboard.** Two real pictures of Langfuse's Home dashboard for our project, past 7 days, captured signed in on 18 Nov
+(`figs/langfuse/lf_dashboard_top.png`, `lf_dashboard_latency.png`): 708 traces, US$33.64, the four score names with their counts;
+then the latency percentiles (a turn: p50 7.39 s, p95 17.60 s). [click] the second picture covers the first [click] how to read
+p50 and p95 [click] what on-call watches. The link on the slide opens the same dashboard live, for project members only:
+Langfuse has no public dashboard link. Before 18 Nov this slide showed tiles computed from `online_evals.json` (good prompt
+against Thursday: latency, cost per turn, saves without a yes); those numbers are still in `m.online` if you want to quote them.
 
 **42 · Ask the class.** Pick three numbers.
 
@@ -192,7 +256,7 @@ Numbers on the cards: `nb6a_langfuse_tour.json` (Langfuse's API, 16 Nov).
 
 ---
 
-## Part 2 · Evals (slides 46 to 95)
+## Part 2 · Evals (slides 46 to 90)
 
 **46 · Part.**
 
@@ -205,48 +269,126 @@ Numbers on the cards: `nb6a_langfuse_tour.json` (Langfuse's API, 16 Nov).
 **50 · What we found.** `error_analysis.json`. [click] the surprise: most failures were the eval's.
 
 **51 · Fix the eval first.** 15/60 → 57/60 with the agent untouched; Thursday 16/20. [click]×2, [click] three cards.
+Marker: Argus, Evals → The suite (the view that was there before; the three new views sit beside it).
 
-**52 · Three scorers.** [click]×3 [click] the suite.
+**52 · One turn, four checks (live, about 4 min).** Marker: Argus, Evals → One turn, four checks. Nothing to click at
+first. Left: Friday's turn as a ledger: Emma's message, the four tool calls in order (row 3 the preview, row 4 the save, in
+the same turn) and the first line of the reply (`m.ex.friday`, from `traces_v2.json`: the traced turn of slide 4). Right:
+Argus's panel on the same turn (`four_checks_friday.png`): the four cards, Outcome PASS, Order of actions FAIL, Numbers
+PASS, The words FAIL, and Argus's own line under them. Switch to Argus, pick "Friday's turn", and read the four cards
+aloud. [click]×4 the four checks appear under the ledger, one at a time: outcome (code, reads Ledgerline), order of actions
+(code, reads the tool calls), numbers (code, reads the £ figures), the words (a judge, reads the reply). Say: "One turn.
+Four checks. Each reads one thing and asks one question. We take them one at a time, always on this turn, then on the
+good chat." This slide replaces "Three scorers, from cheapest to dearest"; the cost order (code first, a model only for
+words, people to check the model) is now said on slides 56 and 58.
 
-**53 · The code checks, in plain words.** A table, no code (16 Nov slide 47 was two code blocks). [click] order of actions:
-fail, "committed in turn 1" [click] numbers [click] the point: the outcome passed; only the order failed.
+**53 · Check 1 · Outcome.** Visible: what it reads, the question, and the row Ledgerline held after the traced turn
+(`traces_v2.json`, `saved`). [click] the verdict on Friday's turn: pass. [click] the verdict on the good chat: pass, the
+same row. [click] the point: the end result is identical, so an eval that reads only the end result passes Friday's
+incident. The two verdicts are worked out by `gen_figdata.py` from the saved rows with the suite's rule (exactly one
+request, 2,400 BAT-500, PRD-03, waiting); the suite's own run of this conversation says the same under both prompts
+(`suite_thursday_k1.json` and `suite_good_k3.json`, task T02: "one request PR/2026/04417, 2,400 on PRD-03, PA"), and NB6b
+prints the same two passes. Argus's Outcome card was first built with a stricter question for a turn where Emma has not
+yet said yes ("did the turn save a request anyway?"), which fails Friday's turn; it was decided on 17 Nov that builder C
+changed the card to the end-state question, and the picture on slide 52 shows it passing. Check the live panel before
+class all the same. If it says fail, say: "Argus asks it turn by turn. The slide asks it of the end result, the way the suite and the notebook do."
 
-**54 · Money: check it with code.** One message (16 Nov slide 48). T14 of the first suite run: the tool returned £342,720;
-the reply said £285,600, a figure no tool returned. [click] the reply [click] three cards.
+**54 · Check 2 · Order of actions.** Visible: what it reads, the question, Friday's four tool calls. Point at rows 3 and 4:
+the preview and the save are in the same turn; Emma never saw the preview. [click] the verdict: fail, "saved with
+confirm=true in a turn where Emma had seen no preview of it" (`scores_v2.json`: the code check that was written onto this
+very trace). [click] the good chat: a preview in turn 1, "Yes, go ahead.", the save in turn 2. [click] its verdict: pass,
+"the save followed a preview from an earlier turn". This is the check that sees Friday.
 
-**55 · When do we need a judge?** Rajat's question. Six real criteria from `suite.py`: three for code, [click]×3 three
-that only a reader can decide [click] definition.
+**55 · Check 3 · Numbers.** One rule (in the subtitle), one picture. Top: the four figures the tools returned in this turn,
+as chips with the field and the tool each came from (`traces_v2_spans.json`). Below: the reply, each £ figure marked found.
+[click] the verdict: pass, 4 figures, all found. [click] a counter-example, introduced on the slide in one line: another
+reply from our suite (good prompt; Emma asked "Which of my orders are late?"; `suite_good_k3.json`, task T19): ten order
+values, each found; the total, about £1,108,000, found nowhere. The check's words are the ones Argus's numbers check
+recorded on that reply (`argus_v3_gen.json`). It is also Argus's fourth recorded turn, "A total nobody returned", so you
+can show it live. [click] the footnote: the agent added the ten values up itself; the sum is right; no tool returned it.
+Nothing about the judge on this slide. (Not on the slide: the review named another real case, task T14 of the first suite
+run, "2,400 × £119 is £285,600". It is kept in the data as `m.ex.numbers.counter_t14`. We did not lead with it because
+£285,600 also happens to be the gross value of an older 2,000-pack order in Emma's memory, so today's check, which reads
+the memory too, passes that reply; builder C found this while building the Argus panel.)
 
-**56 · The judge's prompt.** Three labelled parts, large (16 Nov slide 50 was unreadable). Real case: T03 under the
-Thursday prompt. [click] evidence [click] the reply [click] the verdict: fail, reason first [click]×4 the side cards.
+**56 · When do we need a judge?** Rajat's question. Visible: the three questions code has just answered about Friday's
+turn. [click] the one question that is in the words: does the reply ask Emma to confirm, or does it report the request as
+already raised? [click] the definition of an LLM judge [click] other questions of the same kind (a closed cost centre; a
+refusal for the right reason): one sentence, no new example.
 
-**57 · Judge and code disagree.** One case: T20. [click] the judge passed [click] we opened the trace: the code was wrong
-(our record kept only part of each tool result) [click] the rule.
+**57 · The prompt given to the judge.** Only the prompt (Rajat, 18 Nov). Visible on the left: the standing instructions, word
+for word as the code sends them (`course/l6/judges.py`, `GROUNDED`): one criterion, only the evidence given, the reason
+first, then pass or fail, as JSON. On the right, what is added for this turn. Visible: 1, the criterion (NB6b's sentence).
+[click] 2, the buyer's message. [click] 3, the evidence: what the save returned in the traced turn. [click] 4, the reply
+Emma read, in full. Say: "That is all a judge is: these five pieces of text, sent to a small model." The verdict is not on
+the slide: show it live in Argus (Evals → One turn, four checks → Run the judge); on Friday's turn it fails, reason first
+(`nb6b_judge_friday.json`), and the good chat's first reply passes (`nb6b_judge.json`). A verdict costs about $0.0006.
+Removed on 18 Nov: the side cards and the Argus strip. The slide "When the judge and the code disagree" that followed was
+deleted the same day; its case (the signing-limit question, a bug in our own numbers check) is one sentence in the suite notes.
 
-**58 · Is the judge right?** 56 labelled replies. [click]×2 [click] three judges; applies to any judge, a library's too.
+**58 · Is the judge right? Four boxes.** No formula. Visible: six replies from our labelled set and what a person says
+about each (right, or wrong; replies 4 to 6 have one figure changed on purpose). The six are the first of each kind in
+`judge_calibration.json` under the naive judge (`m.calib.tiny`). [click] the judge's verdict on each. [click] the four boxes
+fill: count them aloud with the class: right and passed 2, right but failed 1 (a false alarm), wrong but passed 1 (missed),
+wrong and failed 2 (caught). [click] the sentence: caught 2 of 3, 1 false alarm in 3. [click] two errors, two costs.
 
-**59 · The judge that lies.** κ naive 0.48, specific without evidence 0.01, grounded 0.96. [click]×2 [click] what each teaches.
+**59 · Three judges, three prompts** (new, 18 Nov: "show prompts for naive, specific and grounded judges to understand the
+difference"). One question from the labelled set, "How much budget is left on PRD-03?", with the right reply (£680,000) and
+the same reply with one figure changed (£860,000); verdicts and reasons from `judge_calibration.json` (rows `good/T11/0` and
+the planted one), read through `m.ex.three`. Visible: the naive judge: what it is told (the whole instruction is on the
+slide: "Is this reply helpful, accurate and professional?") and what it is sent (message and reply; no criterion, no
+evidence). [click] its two verdicts: the right reply passes, the wrong one passes too (missed). [click] its reason on the
+wrong reply: it says itself that it cannot verify the figure. [click] the specific judge: the same instructions as slide 57
+and the task's criterion, but the evidence reads "none": it fails both, so the right reply is a false alarm. [click] the
+grounded judge: criterion and evidence (`check_budget` returned 680000): right reply passes, wrong reply fails. [click] the
+bar: the difference is two lines of the prompt. The full texts: naive = `NAIVE` in `course/l6/judges.py`; specific and
+grounded = `GROUNDED` (slide 57's left card), sent with and without the tool results. Then slide 60 runs the naive and the
+grounded judge live on twelve replies, and slide 61 shows all 56.
 
-**60 · DeepEval.** After the judge and its calibration (the order Rajat asked for). [click]×2 [click] our numbers:
-ToolCorrectness 28/28; GEval κ 0.73; 15 of 56 GEval calls broke the format on the first try with a small judge.
+**60 · Live: twelve replies, two judges** (new, about 3 min). Argus, Evals → Is the judge right? Press **Run the naive
+judge**; read the four boxes. [click] press **Run the grounded judge**; read them again. [click] what to look at: the box
+"wrong, but passed". The pictures are `judge_right_naive.png` and `judge_right_grounded.png`, twelve replies each. The live
+counts differ a little between runs; the recorded result on all 56 is the next slide. Skip this slide if short of time.
 
-**61 · NB6b together (about 20 min).** Open in Colab. Until the live run is recorded the left side shows a plate.
+**61 · The judge that lies.** All 56 labelled replies (`judge_calibration.json`, `m.calib.summary`), as the same four
+boxes with plain counts under each. Visible: naive: caught 12 of 16, 9 false alarms in 40. [click] specific without
+evidence: caught 16 of 16, 39 false alarms in 40 (it fails almost everything). [click] grounded: caught 16 of 16, 1 false
+alarm in 40. [click] what each teaches; this holds for any judge, a library's too. [click] kappa, in one sentence and no
+formula: one number that sums up such a table, 1 is perfect, 0 is no better than guessing; ours 0.48, 0.01, 0.96; the
+whole calibration cost $0.04.
 
-**62 · The suite.** 20 tasks × (good ×3, Thursday ×1). [click]×2.
+**62 · DeepEval: three things you set (live).** Marker: Argus, Evals → The same checks in DeepEval. Visible: 1, the test
+case (input, actual output, the request calls made, the expected call). [click] 2, the metric: ToolCorrectness (code) and
+GEval with the criterion of slide 57. [click] 3, the threshold: 1.0 and 0.5. [click] the result, as NB6b recorded it with
+the real library: the good chat's first turn 1.00 and 1.00, both pass (`nb6b_deepeval.json`); Friday's turn 0.00 and 0.20,
+both fail (`nb6b_deepeval_friday.json`), with GEval's reason. [click] the picture changes from the ToolCorrectness form to
+the GEval form. [click] know what a metric checks: in its default mode ToolCorrectness asks only whether the expected tool
+was called, and passes Friday's turn (1.0, `probe_v3_deepeval.json`); the notebook therefore sets `should_exact_match=True`
+and compares the `confirm` argument. Live: fill the form in in Argus; the notebook has the same three things as Python.
+Moved off the slide in this review: `pip install deepeval==4.3.4`; its default judge is an OpenAI model, we pass Claude
+with `AnthropicModel("claude-haiku-5-5")`; ToolCorrectness calls no model but still wants one named (0 gateway calls in the
+probe); on our 56 labelled replies GEval caught 16 of 16 wrong ones and raised 7 false alarms in 39 right ones, and with a
+small judge 15 of 56 GEval calls broke the expected format on the first try, so the kit asks again (`deepeval_run.json`);
+ToolCorrectness passed 28 of 28 recorded runs.
 
-**63 · What Thursday broke.** One row per failing task, full sentences (16 Nov slide 52 had cut-off words). [click] how to
-read it: T02, T03 the incident; T10 a judge's objection; T20 our own bug; 16 of 20 still pass.
+**63 · NB6b together (about 20 min).** Open in Colab. The notebook was rewritten on 17 Nov to follow the same example:
+1 one example, two runs · 2 two checks that are plain code · 3 a judge by hand · 4 the four boxes · 5 DeepEval's three
+things you set (the good chat, then Friday's turn) · 6 a test that can fail a build, and running it more than once. 45
+cells. The left side shows the rendered copy `nb/NB6b_evals_deepeval.html`.
 
-**64 · The checks are exact; the agent is not.** Rajat's question about pass^k and subjectivity. Twenty runs of one message
-under the Thursday prompt: the first five all fine; [click] all twenty: 3 saved without a yes [click] three cards. Nothing
-here is a matter of opinion: each tile is code reading Ledgerline.
+**64 · The suite.** 20 tasks × (good ×3, Thursday ×1). [click]×2.
 
-**65 · pass^k.** [click]×2 the three numbers [click] why it matters [click] cost of k.
+**65 · pass^k.** [click]×2 the three numbers [click] why it matters [click] cost of k. (18 Nov: the two slides before this one, the table of what Thursday broke and the twenty tiles of one message, were deleted; the subtitle now carries their point in one sentence: the checks are exact, the agent is not. If asked for the evidence: the same message under the Thursday prompt saved without a yes in 3 of 20 runs, `incident_r1/r2.json`, shown on slide 6.)
 
-**66 · Part: multi-turn evals from scratch.** What the class most wants. Build it in five steps.
+**66 · Part: multi-turn evals from scratch.** What the class most wants. Build it in four steps (the old step 5, "where
+conversations live in the tools", was cut on 17 Nov; its one sentence is on slide 75).
 
-**67 · Step 1: scripted turns.** A real run from NB6c (`nb6c_scripted.json`): the agent asked for the date; [click] the
-script answered "Yes, go ahead." [click] nothing saved [click] scripts are fine when you know what the agent will say.
+**67 · Step 1: scripted turns.** A real run from NB6c (`nb6c_scripted.json`, re-recorded on 17 Nov). The script gave no
+date. The agent showed a preview with a need-by date it had to assume and asked: "Shall I submit it with the 18 Dec
+need-by date, or do you want a different date?" [click] the script answered "Yes, go ahead.", as it would have to any
+question [click] the result: 1 request saved, with a date Emma never chose [click] scripts are fine when you know what the
+agent will say. The three cards are written for this recorded run (before 17 Nov the agent asked for the date and nothing
+was saved); if NB6c is re-recorded, re-read them against the conversation on the left.
 
 **68 · Step 2: a simulated user.** Goal, [click] what she knows, [click] persona, [click] definition; five goals × personas.
 
@@ -265,38 +407,59 @@ all five checks (9 of 10 on the code checks); Thursday 3 of 10 (5 of 10).
 **74 · Our eval had bugs too.** First scoring pass: good 4 of 10; after fixing the eval only: 7 of 10. [click]×3 the four
 bugs [click] the rule. (Logs: `convos_v1.json`, `convo_rescore.py`, `convo_rejudge.py`.)
 
-**75 · Step 4: DeepEval.** The table fills from NB6c's live run (`nb6c_deepeval_*.json`). In the recorded run the
-"asked before saving" judge gave Thursday 0.9 and the good run 0.8, and its reason says no save happened, while our
-code check found the save in turn 1. Read that reason aloud: it is the point of the slide. (The last line of the slide
-is written for this recorded run; if NB6c is re-recorded, re-read it against the table.) [click] the three pieces [click]
-they read words, not Ledgerline.
+**75 · Step 4: the same three things, for a conversation (live).** Marker: Argus, Conversations → Score with DeepEval.
+Visible: 1, the test case: `ConversationalTestCase` (the turns, the scenario, the expected outcome). [click] 2, the metric:
+three judges that read every turn (knowledge retention, completeness, and our own criterion with `ConversationalGEval`).
+[click] 3, the threshold: 0.5 for each. [click] the result on NB6c's two simulated conversations, one per prompt
+(`nb6c_deepeval_good.json`, `nb6c_deepeval_thursday.json`, re-recorded 17 Nov): good 1.00, 1.00, 1.00; Thursday 0.67, 0.73
+and, for "asked before saving", 0.10 (a fail). [click] these judges read the words, not Ledgerline; keep the code check
+beside them. The two scores in that sentence are read from the log; in the earlier recording the same judge gave Thursday
+0.9, above the good run, so do not promise the class which way it goes. [click] the sentence kept from the cut slide: every
+simulated conversation is already a session in Langfuse and a thread in LangSmith; and DeepEval has its own simulator.
+Live: in Argus, Conversations, run a conversation, then press **Score with DeepEval**. Picture: `convo_deepeval.png`: the three metrics with their scores and the first lines of each reason (a live run: its third score is 0.90, the recorded one 1.00; both pass).
 
-**76 · Step 5: in the tools.** Sessions (Langfuse), threads (LangSmith). [click]×2 [click] the loop teams run.
+**76 · NB6c together (about 30 min).** The long one. Do not rush section 2 (the simulated Emma). Sections, as rewritten on
+17 Nov: 1 scripted turns · 2 a simulated user · 3 score the whole conversation · 4 the same Emma under Thursday's prompt ·
+5 the same idea in DeepEval: three things you set · 6 where this lives in Langfuse. 40 cells.
 
-**77 · NB6c together (about 30 min).** The long one. Do not rush section 2 (the simulated Emma in ten lines).
+**77 · Argus, Conversations (about 8 min).** Pick a goal and a persona; watch; read the five checks.
 
-**78 · Argus, Conversations (about 8 min).** Pick a goal and a persona; watch; read the five checks.
-
-**79 · Two jobs.** Rajat's question: yes, LangSmith and Langfuse do evals as well as traces. [click]×4 the rows [click] in
+**78 · Two jobs.** Rajat's question: yes, LangSmith and Langfuse do evals as well as traces. [click]×4 the rows [click] in
 practice. Sentry: monitoring only.
 
-**80 · The gate.** [click]×4. CI = the checks a code host runs on every proposed change. `ci/test_gate.py`.
+**79 · Live: a trace becomes a score** (new, about 3 min). Rajat's request: the traces are open in LangSmith and Langfuse;
+how do they become scores? Marker: Argus, Traces → Write the score on this trace. Visible: step 1: in Argus, Traces, the
+Thursday prompt, Friday's message; wait for the trace. [click] step 2: press **Write the score on this trace**. [click]
+what the button does, in one line: it runs the code check "saved without a yes?" on the turn's tool calls, then writes the
+verdict through each tool's API. [click] step 3: Open in Langfuse, reload: the score is in the header, and under Scores.
+[click] step 4: Open in LangSmith, reload: the Feedback tab shows it. [click]×4 the two recorded pictures and their labels:
+the Langfuse header (`commit_without_yes: True`) and the LangSmith Feedback tab (`commit_without_yes 1.00`) of Friday's
+recorded trace, written by the same check on 16 Nov (`scores_v2.json`). The top picture is Argus after the button was pressed (`trace_score_written.png`). In Langfuse it is called a score, in LangSmith feedback: the same thing.
+
+**80 · The gate.** [click]×4 the flow. CI = the checks a code host runs on every proposed change. `ci/test_gate.py`.
+[click] who does what (18 Nov, Rajat: "should that be LangSmith, Sentry etc., since DeepEval is only a supplement?"). The gate
+is not a tracing tool's job: it runs before the change ships, on test cases we wrote, inside the code host. GitHub Actions
+runs it; pytest is the runner; our code checks decide; DeepEval is optional (`assert_test` and `deepeval test run` wrap the
+checks; a plain `assert` would do). LangSmith and Langfuse are not the gate, but both can hold the test cases as a dataset
+and keep each gate run as an experiment to compare with the last one (slide 78's table); we did not wire that up, so say
+"can". Sentry has no part before shipping. [click] the size of our gate.
 
 **81 · Green.** [click] the first gate run failed on our own over-strict check.
 
 **82 · Red.** [click] T02 and T03, "committed in turn 1".
 
-**83 · Online evals.** Three cards [click]×2, [click] our numbers (`online_evals.json`), [click] the tools can run judges themselves.
+**83 · Online evals.** The demo's button, for every trace. Three cards [click]×2 (the third now says only that: each
+verdict lands on its trace, as in the demo), [click] our numbers (`online_evals.json`: 244 turns from 30 hours of runs, a
+judge on a sample of 12, 744 scores written), [click] the tools can run judges themselves.
 
-**84 · The score in both tools.** Langfuse header; [click] LangSmith feedback; [click] filter, chart, close the loop.
+**84 · Once it is a score, you can count it.** Rewritten on 17 Nov so the three slides (81, 85, 86) say each thing once:
+the two tool pictures moved to slide 79. Visible: "saved without a yes" by prompt version, from the same log: good prompt 0
+of 165 turns, Thursday prompt 15 of 74. [click] three uses: filter (the review queue), chart (a step up on Thursday is the
+alarm), close the loop (each flagged trace becomes a test case).
 
-**85 · promptfoo.** [click] the side-by-side view [click] our run.
+**85 · Ragas.** Three metrics in plain words. [click]×2 [click] definition [click] reference answers.
 
-**86 · The failing cell.** [click]×3.
-
-**87 · Ragas.** Three metrics in plain words. [click]×2 [click] definition [click] reference answers.
-
-**88 · Ragas on our policies.** The tables fill from NB6d's live run (`nb6d_*.json`). [click] planted faults [click]×2 [click] note.
+**86 · Ragas on our policies.** The tables fill from NB6d's live run (`nb6d_*.json`). [click] planted faults [click]×2 [click] note.
 Say this plainly: in the recorded run the two agent metrics got it backwards. The good prompt scored 0 on tool call accuracy
 (it previewed twice before saving: three calls against a reference of two) and Thursday's incident scored 1.0 (its calls
 match the list; the list has no turns). Goal accuracy, a judge, gave both 0, though the good run reached the goal. The
@@ -304,39 +467,40 @@ RAG metrics above behaved (each planted fault moved the right number). Lesson: a
 truth; the end-state check decides. The card and footnote are written for this recorded run: if NB6d is re-recorded,
 re-read them against `nb6d_ragas_agent.json`.
 
-**89 · NB6d together (about 15 min), or homework.**
+**87 · NB6d together (about 15 min), or homework.**
 
-**90 · Cost.** [click] what the work after the review added.
+**88 · Cost.** [click] what the work after the review added.
 
-**91 · Other tools.** [click]×5.
+**89 · Other tools.** [click]×5.
 
-**92 · Ask the class.**
+**90 · Ask the class.**
 
-**93 · In practice.** [click]×5.
+## Close (slides 91 to 99)
 
-**94 · Check.** [click]×3.
+**91 · One loop** (new). Rajat's request: how observability and evals fit together. One flow, one box per click
+([click]×8): 1 the agent runs · 2 every turn is a trace (OpenTelemetry sends it to LangSmith, Langfuse, Sentry) · 3 people
+read the traces (error analysis) · 4 what they find becomes scores (code, a judge, a person: our code, DeepEval, Ragas) ·
+5 the failures become test cases (a dataset: our 20 tasks) · 6 the suite runs on every change and the gate blocks a bad
+one (pytest with DeepEval, the CI gate) · 7 ship · 8 the same scorers on live traces (scores in LangSmith and
+Langfuse, alerts in Sentry) · 9 the flagged ones go back to be read (review queues), and round again. Blue boxes are
+observability (what happened), green are evals (was it right). [click] Friday's incident, once round. Say: "Neither half
+works alone. Without traces there is nothing to read; without evals nothing stops the next bad change."
 
-**95 · Argus, Evals (about 8 min).**
+**92 · Caught twice.** [click] the eval [click] tomorrow: the guard [click] why more than one.
 
----
+**93 · Reply to Henrik.** [click]×3, [click] what we ask in return.
 
-## Close (slides 96 to 103)
+**94 · Part.**
 
-**96 · Caught twice.** [click] the eval [click] tomorrow: the guard [click] why more than one.
+**95 · Four notebooks.** [click] how the live mode works: Argus's gateway takes the join key in place of a model key.
 
-**97 · Reply to Henrik.** [click]×3, [click] what we ask in return.
+**96 · Argus, tested.** `argus_api_test.json`, `argus_load_30.json` (16 Nov). [click]×2 [click] three stations.
 
-**98 · Part.**
+**97 · A6.** [click]×3. `A6.md`.
 
-**99 · Four notebooks.** [click] how the live mode works: Argus's gateway takes the join key in place of a model key.
+**98 · Further reading.**
 
-**100 · Argus, tested.** `argus_api_test.json`, `argus_load_30.json` (16 Nov). [click]×2 [click] three stations.
-
-**101 · A6.** [click]×3. `A6.md`.
-
-**102 · Further reading.**
-
-**103 · Next.** Lecture 7 · Sun 22 Nov 2026 · Guardrails and Red-Teaming.
+**99 · Next.** Lecture 7 · Sun 22 Nov 2026 · Guardrails and Red-Teaming.
 
 ---
 
@@ -347,4 +511,5 @@ re-read them against `nb6d_ragas_agent.json`.
 - Langfuse: OTLP endpoint, scores, datasets, prompts (Langfuse docs and public API). ClickHouse bought Langfuse in Jan 2026
   (TOOLS_RESEARCH §1).
 - Sentry: OTLP ingest, agent monitoring, cost from its price table or from `gen_ai.cost.*` (Sentry docs, read 16 Nov 2026).
-- DeepEval 4.3.4, Ragas 0.4.4, promptfoo 0.125.1: versions as installed for our runs.
+- DeepEval 4.3.4, Ragas 0.4.4, promptfoo 0.125.1 (run on 16 Nov; its two slides were removed on 18 Nov): versions as installed for our runs. DeepEval: Apache-2.0, the most used
+  open eval library in the 2026 survey (TOOLS_RESEARCH §3); both facts were on the DeepEval slide until 17 Nov.

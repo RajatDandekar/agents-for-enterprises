@@ -15,13 +15,17 @@ from playwright.sync_api import sync_playwright
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--which", default="langfuse,langsmith")
+ap.add_argument("--only", default="")      # e.g. ls_incident_commit: retake just these shots, keep the rest of the log
 a = ap.parse_args()
 tv = json.loads((LOGS / "traces_v2.json").read_text())["rows"]
 rb = {(t["run"], t["turn"]): t for t in json.loads((LOGS / "readback.json").read_text())["traces"]}
 rec = {}
+ONLY = {x for x in a.only.split(",") if x}
 
 
 def shoot(pg, path, name):
+    if ONLY and name not in ONLY:
+        return
     path.mkdir(parents=True, exist_ok=True)
     pg.screenshot(path=str(path / f"{name}.png"))
     rec[name] = pg.inner_text("body")[:3000]
@@ -116,14 +120,18 @@ with sync_playwright() as p:
         def commit():
             pg.get_by_text("create_purchase_request", exact=True).last.click(timeout=10000)
             pg.mouse.move(1200, 780)                 # off the row, so no hover card covers the panel
-            pg.wait_for_timeout(5000)
+            # 17 Nov: the panel draws grey placeholders for about ten seconds before the arguments arrive; the first
+            # capture caught the placeholders. Wait for a field of the call itself.
+            pg.get_by_text("cost_centre", exact=True).first.wait_for(timeout=45000)
+            pg.wait_for_timeout(2500)
             shoot(pg, D, "ls_incident_commit")
         attempt("ls_incident_commit", commit)
 
         def llm():
             pg.get_by_text("chat claude-sonnet-5-5", exact=True).first.click(timeout=10000)
             pg.mouse.move(1200, 780)
-            pg.wait_for_timeout(5000)
+            pg.get_by_text("You are Ask Northbridge", exact=False).first.wait_for(timeout=45000)
+            pg.wait_for_timeout(2500)
             shoot(pg, D, "ls_incident_llm")
         attempt("ls_incident_llm", llm)
 
@@ -143,5 +151,9 @@ with sync_playwright() as p:
 
     b.close()
 
+if ONLY:                                             # a retake: keep what the full run recorded
+    old = json.loads((LOGS / "shots_v2.json").read_text())
+    old.update(rec)
+    rec = old
 write("shots_v2.json", rec)
 print(json.dumps({k: (v[:260] if isinstance(v, str) else v) for k, v in rec.items()}, indent=1, ensure_ascii=False)[:9000])

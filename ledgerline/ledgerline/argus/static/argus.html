@@ -7,7 +7,7 @@
 <meta name="description" content="Lecture 6, Observability and Evals: trace and evaluate Ask Northbridge on a sandboxed ERP. All names are fictional.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,300..700&family=Google+Sans+Code:wght@300..700&display=swap">
-<link rel="stylesheet" href="/static/argus.css?v=20261117">
+<link rel="stylesheet" href="/static/argus.css?v=20261121b">
 </head>
 <body>
 
@@ -62,13 +62,14 @@
     <div class="guide">
       <div class="try"><h4><i></i>Try</h4><p>Ask <b>“Order the usual, please, needed by 4 Dec 2026.”</b> Then switch to the <b>Thursday prompt</b> (it starts a new chat) and ask the same.</p></div>
       <div class="notice"><h4><i></i>Notice</h4><p>Find the <code>create_purchase_request</code> spans. Is <code>confirm</code> false or true? Did a preview reach Emma first?</p></div>
-      <div class="next"><h4><i></i>Next</h4><p>Open the same trace in LangSmith, Langfuse or Sentry (top right of the trace). Then Evals: would a test have caught it?</p></div>
+      <div class="next"><h4><i></i>Next</h4><p>Open the same trace in LangSmith, Langfuse or Sentry (top right of the trace). Press <b>Write the score on this trace</b> and find it there. Then Evals.</p></div>
     </div>
   </div>
   <div class="tr-grid">
     <div class="panel chatp">
       <div class="ph"><h3>Ask Northbridge</h3><span class="sp"></span>
         <div class="seg" id="promptseg"><button data-p="good" class="on">Good prompt</button><button data-p="thursday">Thursday prompt</button><button data-p="custom">My edit</button></div>
+        <span class="gsw hide" id="chatguards" title="The code guards, at the tool boundary and on the reply. Flipping it starts a new chat.">Guards<button class="switch" id="chatguardsw" type="button" aria-label="Guards in the chat"></button></span>
         <button class="btn xs ghost" id="showprompt" title="See the system prompt">Prompt</button>
         <button class="btn xs" id="newchat">New chat</button></div>
       <div class="pb convo" id="convo"><div class="empty">Say something to Ask Northbridge. Try one of these:</div></div>
@@ -77,6 +78,7 @@
     </div>
     <div class="panel tracep">
       <div class="ph"><h3>Trace</h3><span class="muted small" id="tmeta"></span><span class="sp"></span><span id="tlinks" class="row" style="gap:6px"></span></div>
+      <div class="scoreline hide" id="scoreline"></div>
       <div class="incident hide" id="incident"></div>
       <div class="wf" id="wf"><div class="empty">Each turn's trace appears here. Click a span to see what it holds.</div></div>
       <div class="spand" id="spand"></div>
@@ -86,6 +88,8 @@
 
 <!-- ======================================================== 2 · evals -->
 <section class="tab" id="tab-evals">
+  <div class="evnav"><div class="seg big" id="evnav"><button data-v="suite" class="on">The suite</button><button data-v="turn">One turn, four checks</button><button data-v="judge">Is the judge right?</button><button data-v="deepeval">The same checks in DeepEval</button></div></div>
+  <div class="evview on" id="ev-suite">
   <div class="head">
     <div><div class="kick">Station 2 · Evals</div><h2>Would this change ship?</h2>
       <p class="lede">Six tasks from the class suite, each in a fresh sandbox, scored in code (outcome in Ledgerline, the tool calls, every £ figure) and by Claude Haiku for the words. Then the same task three times: pass^3.</p></div>
@@ -113,6 +117,83 @@
       <div class="panel"><div class="ph"><h3>Our recorded runs (the deck)</h3><span class="sp"></span><span class="muted small">all 20 tasks</span></div><div class="pb" id="recorded"></div></div>
     </div>
   </div>
+  </div>
+
+  <!-- v3 · one turn, four checks -->
+  <div class="evview" id="ev-turn">
+  <div class="head">
+    <div><div class="kick">Station 2 · Evals · one example</div><h2>One turn, four checks</h2>
+      <p class="lede">Pick one turn of Ask Northbridge. Three checks are code: they read Ledgerline, the tool calls and the numbers. The fourth is a judge: a model that reads the words. One turn, four different questions.</p></div>
+    <div class="guide">
+      <div class="try"><h4><i></i>Try</h4><p>Start with <b>Friday's turn</b>. Then the good chat's two turns. Then <b>A total nobody returned</b>.</p></div>
+      <div class="notice"><h4><i></i>Notice</h4><p>On Friday's turn the outcome passes: the right request is in Ledgerline. Which check catches the incident, and what did it read?</p></div>
+      <div class="next"><h4><i></i>Next</h4><p>In the judge's prompt, switch the evidence off and run it. Then chat in Traces and pick <b>My last chat turn</b>.</p></div>
+    </div>
+  </div>
+  <div class="tpick" id="tpick"></div>
+  <div class="tk-grid">
+    <div class="panel"><div class="ph"><h3>The turn</h3></div><div class="pb" id="tturn"><div class="empty">Pick a turn above.</div></div></div>
+    <div class="col"><div class="cards4" id="tcards"></div><div class="lesson hide" id="tlesson"></div></div>
+  </div>
+  <div class="panel jcard" id="tjudge"></div>
+  </div>
+
+  <!-- v3 · is the judge right? -->
+  <div class="evview" id="ev-judge">
+  <div class="head">
+    <div><div class="kick">Station 2 · Evals · check the checker</div><h2>Is the judge right?</h2>
+      <p class="lede">A judge is a model, and a model can be wrong. Here are twelve replies a person has already marked: eight are right, four have one fact changed on purpose. Run a judge on them and see where it agrees with the person.</p></div>
+    <div class="guide">
+      <div class="try"><h4><i></i>Try</h4><p>Run the <b>naive</b> judge. Then the <b>specific</b> one with no evidence. Then the <b>grounded</b> one.</p></div>
+      <div class="notice"><h4><i></i>Notice</h4><p>Two ways to be wrong: a wrong reply passed (missed), a right reply failed (a false alarm). Which judge makes which mistake?</p></div>
+      <div class="next"><h4><i></i>Next</h4><p>Click a box to read the judge's reasons. Then compare with our recorded run on all 56 replies.</p></div>
+    </div>
+  </div>
+  <div class="jr-grid">
+    <div class="panel"><div class="ph"><h3>Twelve replies, marked by a person</h3><span class="sp"></span><span class="muted small">click a row for the whole reply</span></div><div class="pb" id="jrlist"></div></div>
+    <div class="col">
+      <div class="panel"><div class="ph"><h3>Run a judge on the twelve</h3><span class="sp"></span><span class="muted small">Claude Haiku · twelve calls, about US$0.003 a run</span></div>
+        <div class="pb col" id="jrrun"></div></div>
+      <div class="panel" id="jrboxes"><div class="empty">Run a judge: the four boxes fill in as its verdicts arrive.</div></div>
+      <div class="panel"><div class="ph"><h3>Our recorded run on all 56 replies</h3><span class="sp"></span><span class="muted small">40 real replies, 16 with one planted error · no model call</span></div><div class="pb" id="jr56"></div></div>
+    </div>
+  </div>
+  </div>
+
+  <!-- v3 · the same checks in DeepEval -->
+  <div class="evview" id="ev-deepeval">
+  <div class="head">
+    <div><div class="kick">Station 2 · Evals · the same checks in a library</div><h2>The same checks in DeepEval</h2>
+      <p class="lede">DeepEval is an open-source testing library for model output. You set three things: a test case (what happened), a metric (how to score it) and a threshold (what counts as a pass). Argus runs the real library and shows the few lines of Python that do the same.</p></div>
+    <div class="guide">
+      <div class="try"><h4><i></i>Try</h4><p>Run <b>ToolCorrectness</b> on the good chat's first turn, then on <b>Friday's turn</b>. Then <b>GEval</b> on both.</p></div>
+      <div class="notice"><h4><i></i>Notice</h4><p>Compare “tools called” with “expected tools” before you read the score. ToolCorrectness asks no model; GEval is a judge, so its score moves a little.</p></div>
+      <div class="next"><h4><i></i>Next</h4><p>Switch “exact match” off and run Friday's turn again. Write your own criterion. The Python below is NB6b's.</p></div>
+    </div>
+  </div>
+  <div class="de-grid">
+    <div class="panel"><div class="ph"><h3><span class="stepn">1</span>The test case</h3><span class="sp"></span><select class="input sm" id="deturn" aria-label="Fill in from a turn"></select></div>
+      <div class="pb col">
+        <label class="label" for="dein">input · what Emma typed</label><textarea class="input" id="dein" rows="2"></textarea>
+        <label class="label" for="deout">actual_output · what the assistant answered</label><textarea class="input" id="deout" rows="7"></textarea>
+        <label class="label" for="decalled">tools_called · what it did (the calls that touch a purchase request)</label><textarea class="input mono" id="decalled" rows="2"></textarea>
+        <label class="label" for="deexp">expected_tools · <b>you set this</b>: what it should have done</label><input class="input mono" id="deexp">
+        <p class="tiny muted">Three of the four fields are copied from the turn. The fourth is yours. Write a call as <code>name(confirm=false)</code>.</p>
+      </div></div>
+    <div class="col">
+      <div class="panel"><div class="ph"><h3><span class="stepn">2</span>The metric</h3><span class="sp"></span><div class="seg" id="demetric"><button data-m="tool" class="on">ToolCorrectness</button><button data-m="geval">GEval</button></div></div>
+        <div class="pb col" id="dembody"></div></div>
+      <div class="panel"><div class="ph"><h3><span class="stepn">3</span>The threshold</h3></div>
+        <div class="pb row"><input class="input num" id="dethr" type="number" min="0" max="1" step="0.1" value="1" style="width:110px"><span class="small ink2" id="dethrline"></span></div></div>
+      <button class="btn primary lg" id="derun">Run in DeepEval</button>
+      <p class="tiny muted" id="decost"></p>
+    </div>
+    <div class="col">
+      <div class="panel" id="deres"><div class="empty">The score, pass or fail, and DeepEval's reason appear here.</div></div>
+    </div>
+  </div>
+  <div class="panel depy"><div class="ph"><h3>The same thing in Python</h3><span class="muted small">what the form above says, as the lines you would write · the cells of NB6b</span><span class="sp"></span><button class="btn xs" id="decopy">Copy</button></div><div class="pb"><pre class="json code" id="decode"></pre><p class="tiny muted" style="margin-top:8px">In NB6b, with your Argus key in the first cell, DeepEval's model calls go through Argus's gateway: no key of your own is needed.</p></div></div>
+  </div>
 </section>
 
 <!-- ======================================================== 3 · conversations -->
@@ -123,7 +204,7 @@
     <div class="guide">
       <div class="try"><h4><i></i>Try</h4><p><b>Changes her mind</b> with the <b>impatient</b> Emma, good prompt. Then the same on the <b>Thursday</b> prompt.</p></div>
       <div class="notice"><h4><i></i>Notice</h4><p>No script could have written her replies: she reacts to what your agent said. Which check fails, and in which turn?</p></div>
-      <div class="next"><h4><i></i>Next</h4><p>Open the session in Langfuse: one conversation, several traces. Then build the simulator yourself in NB6c.</p></div>
+      <div class="next"><h4><i></i>Next</h4><p>Press <b>Score with DeepEval</b> under the checks: the library's judges read the words; our code read Ledgerline. Then NB6c.</p></div>
     </div>
   </div>
   <div class="cv-grid">
@@ -148,18 +229,19 @@
       <div class="panel" id="cvverdict"><div class="empty">The scorecard for the whole conversation appears here.</div></div>
       <div class="panel"><div class="ph"><h3>My conversations</h3></div><div class="pb" id="mycv"></div></div>
     </div>
+    <div class="panel hide cvde" id="cvde"></div>
   </div>
 </section>
 
-<!-- ======================================================== 4 · guards (the next lecture; hidden unless switched on) -->
+<!-- ======================================================== 4 · guards (Lecture 7; hidden unless switched on) -->
 <section class="tab" id="tab-guards">
   <div class="head">
-    <div><div class="kick">Station 4 · Guardrails (next lecture)</div><h2>Try to break it</h2>
+    <div><div class="kick">Station 4 · Guardrails</div><h2>Try to break it</h2>
       <p class="lede">Turn guards on or off, then send an attack from the library or write your own. Each attack runs in a fresh sandbox; whether it worked is read from Ledgerline, never guessed by a model.</p></div>
     <div class="guide">
-      <div class="try"><h4><i></i>Try</h4><p>With <b>no guards</b>, send A03, A11 and A14. Then the same with <b>code guards</b>, then <b>all</b>.</p></div>
+      <div class="try"><h4><i></i>Try</h4><p>With <b>no guards</b>, send <b>A00</b>, Friday's incident. Then with <b>code guards</b>. Then A03, A11 and A14 with none, code and <b>all</b>.</p></div>
       <div class="notice"><h4><i></i>Notice</h4><p>Which guard stopped it: code that reads Ledgerline, or a model that reads words? Which attacks still get through?</p></div>
-      <div class="next"><h4><i></i>Next</h4><p>Write an attack nobody stops. The wall shows the class's attack success rate per guard set.</p></div>
+      <div class="next"><h4><i></i>Next</h4><p>Send the same attack on the <b>Thursday prompt</b>. Write an attack nobody stops. The wall shows the class's attack success rate per guard set.</p></div>
     </div>
   </div>
   <div class="gd-grid">
@@ -169,6 +251,7 @@
     </div>
     <div class="panel">
       <div class="ph"><h3>Attacks</h3><span class="sp"></span><span class="muted small">OWASP Agentic 2026 · LLM 2026</span></div>
+      <div class="attp"><span class="label">Prompt under attack</span><div class="seg" id="attprompt"><button data-p="good" class="on">Good</button><button data-p="thursday">Thursday</button></div></div>
       <div class="pb attacks" id="attacklist"></div>
       <form class="say" id="ownform" autocomplete="off" style="border-top:1px solid var(--line)"><input class="input" id="own" placeholder="Or write your own attack…" maxlength="1200"><button class="btn primary">Send</button></form>
     </div>
@@ -184,6 +267,6 @@
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer" aria-hidden="true"><div class="dh"><h3 id="dtitle"></h3><span class="sp"></span><button class="btn sm ghost" id="dclose">Close</button></div><div class="db" id="dbody"></div></aside>
 <div class="toast" id="toast" role="status"></div>
-<script src="/static/argus.js?v=20261117"></script>
+<script src="/static/argus.js?v=20261121b"></script>
 </body>
 </html>

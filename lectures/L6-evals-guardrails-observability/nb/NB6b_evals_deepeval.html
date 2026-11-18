@@ -7511,7 +7511,7 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d4eff9b6">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9504643c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7519,21 +7519,30 @@ a.anchor-link {
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h1 id="NB6b-%C2%B7-Evals:-code-checks,-a-judge,-and-DeepEval">NB6b · Evals: code checks, a judge, and DeepEval<a class="anchor-link" href="#NB6b-%C2%B7-Evals:-code-checks,-a-judge,-and-DeepEval">¶</a></h1><p><strong>Lecture 6 · Observability and Evals · Agentic Systems Engineering · Dr. Rajat Dandekar, Vizuara</strong></p>
 <p>A trace tells us what Ask Northbridge did on Friday. An <strong>eval</strong> tells us, before a change ships, whether it still does
-the right thing. In this notebook we build one eval by hand and then do the same with <strong>DeepEval</strong>, the open-source
-library many teams use:</p>
+the right thing. We build every kind of check on <strong>one example</strong> and keep that example to the end:</p>
+<ul>
+<li><strong>Friday's turn</strong>: Emma types "Order the usual, please, needed by 4 Dec 2026." and the assistant runs on the prompt
+that was shortened on Thursday</li>
+<li><strong>the good chat</strong>: the same message on the good prompt, for contrast</li>
+</ul>
+<p>What we do with them:</p>
 <ol>
-<li>the task: "the usual: preview, yes, commit", and two <strong>code checks</strong> on it (what Ledgerline holds; what it did, in order)</li>
-<li>when code cannot decide: an <strong>LLM judge</strong> for the words, built by hand</li>
-<li>is the judge right? agreement with labels, in one cell</li>
-<li>the same checks in <strong>DeepEval</strong>: tool correctness, GEval, and a test that fails</li>
-<li>Thursday's prompt, run live, failing the test</li>
+<li>run the two conversations and look at them</li>
+<li>two <strong>code checks</strong>: what Ledgerline holds, and the order of the tool calls</li>
+<li>what code cannot read, the words: an <strong>LLM judge</strong>, built by hand</li>
+<li>is the judge right? <strong>four boxes</strong></li>
+<li>the same checks in <strong>DeepEval</strong>, the open-source library many teams use: the <strong>three things you set</strong></li>
+<li>a test that can <strong>fail a build</strong>, and why one green run is not proof</li>
 </ol>
-<p><strong>Two ways to run it.</strong> With your Argus key the model calls are live (through Argus's gateway). With no key the notebook
-replays what our own run recorded.</p>
+<p><strong>Two ways to run it.</strong> With your Argus key the model calls are live, through Argus's gateway (about US$0.25 of your
+Argus budget). With no key the notebook shows what our own run recorded; the code checks and DeepEval's tool check
+still run for real.</p>
+<p>There are three exercises, marked <strong>Your turn</strong>. Each has its solution behind <code>SOLUTION = True</code>; set it to <code>False</code> to
+try it yourself first.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=57fdce95">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c111a122">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7574,7 +7583,7 @@ replays what our own run recorded.</p>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9474cbe1">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=dcec6cc0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7585,7 +7594,7 @@ over the two below.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=dc32209d">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=96b62874">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7593,16 +7602,20 @@ over the two below.</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span><span class="o">,</span><span class="w"> </span><span class="nn">sys</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span>
-<span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"pip"</span><span class="p">,</span> <span class="s2">"install"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="s2">"deepeval==4.3.4"</span><span class="p">,</span> <span class="s2">"anthropic==2.8.0"</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span><span class="o">,</span><span class="w"> </span><span class="nn">sys</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">json</span><span class="o">,</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"pip"</span><span class="p">,</span> <span class="s2">"install"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="s2">"deepeval==4.3.4"</span><span class="p">,</span> <span class="s2">"anthropic==2.8.0"</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"DEEPEVAL_TELEMETRY_OPT_OUT"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"YES"</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">"ignore"</span><span class="p">)</span>
 
 <span class="n">ARGUS_URL</span> <span class="o">=</span> <span class="s2">""</span>     <span class="c1"># e.g. "https://rajatworkspace--northbridge-argus.us-east.modal.run"</span>
 <span class="n">ARGUS_KEY</span> <span class="o">=</span> <span class="s2">""</span>     <span class="c1"># your Argus key, "ar-..."; leave empty to replay our recorded run</span>
+<span class="n">SOLUTION</span> <span class="o">=</span> <span class="kc">True</span>    <span class="c1"># set to False to try the three exercises yourself</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">ledgerline.course.l6.nbkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">connect</span><span class="p">,</span> <span class="n">agent_turns</span><span class="p">,</span> <span class="n">text_of</span><span class="p">,</span> <span class="n">read_verdict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ledgerline.course.l6.nbkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">connect</span><span class="p">,</span> <span class="n">agent_turns</span><span class="p">,</span> <span class="n">text_of</span><span class="p">,</span> <span class="n">read_verdict</span><span class="p">,</span> <span class="n">say</span><span class="p">,</span> <span class="n">show_turns</span><span class="p">,</span> <span class="n">measure</span><span class="p">,</span> <span class="n">show_scores</span>
 <span class="n">kit</span> <span class="o">=</span> <span class="n">connect</span><span class="p">(</span><span class="n">ARGUS_URL</span><span class="p">,</span> <span class="n">ARGUS_KEY</span><span class="p">)</span>
-<span class="n">JUDGE</span> <span class="o">=</span> <span class="s2">"claude-haiku-5-5"</span>     <span class="c1"># the judge: a small, cheap model is enough for a yes/no on one criterion</span>
+<span class="n">JUDGE</span> <span class="o">=</span> <span class="s2">"claude-haiku-5-5"</span>     <span class="c1"># the judge: a small, cheap model is enough for a yes or no on one criterion</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">kit</span><span class="o">.</span><span class="n">live</span><span class="p">:</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"ANTHROPIC_API_KEY"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"no-key-in-replay"</span>     <span class="c1"># DeepEval wants a key to exist, even when it calls no model</span>
 </pre></div>
 </div>
 </div>
@@ -7612,17 +7625,6 @@ over the two below.</p>
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre><span class="ansi-red-fg">ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
-huggingface-hub 1.33.0 requires click&lt;9.0.0,&gt;=8.4.2, but you have click 8.3.3 which is incompatible.</span><span class="ansi-red-fg">
-</span>
-<span class="ansi-bold">[</span><span class="ansi-blue-fg">notice</span><span class="ansi-bold">]</span> A new release of pip is available: <span class="ansi-red-fg">25.1.1</span> -&gt; <span class="ansi-green-fg">26.3</span>
-<span class="ansi-bold">[</span><span class="ansi-blue-fg">notice</span><span class="ansi-bold">]</span> To update, run: <span class="ansi-green-fg">pip install --upgrade pip</span>
-</pre>
-</div>
-</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
@@ -7633,18 +7635,21 @@ huggingface-hub 1.33.0 requires click&lt;9.0.0,&gt;=8.4.2, but you have click 8.
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=325f0477">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=131d97ce">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1-%C2%B7-One-task,-and-two-checks-that-are-plain-code">1 · One task, and two checks that are plain code<a class="anchor-link" href="#1-%C2%B7-One-task,-and-two-checks-that-are-plain-code">¶</a></h2><p>The task is two messages from Emma, in a fresh Ledgerline sandbox: she asks for her usual order, sees the preview, and
-says yes. We run it under the good prompt (the cell runs the real agent in live mode; otherwise it shows our recorded run).</p>
+<h2 id="1-%C2%B7-One-example,-two-runs">1 · One example, two runs<a class="anchor-link" href="#1-%C2%B7-One-example,-two-runs">¶</a></h2><p>Emma's two messages are the same in both runs: she asks for her usual order, and then she says yes. Each run starts in
+a fresh Ledgerline sandbox.</p>
+<p><strong>First, Friday.</strong> The prompt is the one that was shortened on Thursday ("be concise: fewer confirmations").</p>
+<p><strong>What to look for:</strong> the tool lines in turn 1. <code>confirm=False</code> is a preview: nothing is saved. <code>confirm=True</code> saves.
+Emma says yes only in turn 2.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8976b2f8">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=38923c07">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7653,18 +7658,8 @@ says yes. We run it under the good prompt (the cell runs the real agent in live 
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">TASK</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Order the usual, please, needed by 4 Dec 2026."</span><span class="p">,</span> <span class="s2">"Yes, go ahead."</span><span class="p">]</span>
-<span class="n">good</span> <span class="o">=</span> <span class="n">kit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"nb6b_good_t02.json"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">agent_turns</span><span class="p">(</span><span class="n">kit</span><span class="p">,</span> <span class="s2">"good"</span><span class="p">,</span> <span class="n">TASK</span><span class="p">,</span> <span class="n">tracing</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
-
-<span class="k">def</span><span class="w"> </span><span class="nf">show</span><span class="p">(</span><span class="n">run</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">run</span><span class="p">[</span><span class="s2">"turns"</span><span class="p">]:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">"Emma:"</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="s2">"text"</span><span class="p">])</span>
-        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">t</span><span class="p">[</span><span class="s2">"calls"</span><span class="p">]:</span>
-            <span class="n">flag</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"confirm=</span><span class="si">{</span><span class="n">c</span><span class="p">[</span><span class="s1">'args'</span><span class="p">][</span><span class="s1">'confirm'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="s2">"confirm"</span> <span class="ow">in</span> <span class="n">c</span><span class="p">[</span><span class="s2">"args"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">""</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"      tool: </span><span class="si">{</span><span class="n">c</span><span class="p">[</span><span class="s1">'tool'</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">flag</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">"Ask Northbridge:"</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="s2">"reply"</span><span class="p">][:</span><span class="mi">230</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="s2">" "</span><span class="p">),</span> <span class="s2">"...</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Ledgerline now holds:"</span><span class="p">,</span> <span class="n">run</span><span class="p">[</span><span class="s2">"saved"</span><span class="p">])</span>
-
-<span class="n">show</span><span class="p">(</span><span class="n">good</span><span class="p">)</span>
+<span class="n">friday</span> <span class="o">=</span> <span class="n">kit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"nb6b_thursday_t02.json"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">agent_turns</span><span class="p">(</span><span class="n">kit</span><span class="p">,</span> <span class="s2">"thursday"</span><span class="p">,</span> <span class="n">TASK</span><span class="p">,</span> <span class="n">tracing</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">show_turns</span><span class="p">(</span><span class="n">friday</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7677,35 +7672,60 @@ says yes. We run it under the good prompt (the cell runs the real agent in live 
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Emma: Order the usual, please, needed by 4 Dec 2026.
-      tool: create_purchase_request confirm=False
-Ask Northbridge: Preview of the usual order (nothing saved yet):  - Item: 2,400 x BAT-500 battery packs - Rate: £119.00 each (estimated) - Value: £342,720 (the preview's estimated value; I assume it includes VAT, but it doesn't say) - Cost centre: ...
+<pre>Turn 1 · Emma:
+    Order the usual, please, needed by 4 Dec 2026.
+    tool: find_item 
+    tool: find_supplier 
+    tool: check_budget 
+    tool: create_purchase_request confirm=False
+    tool: supplier_certificates 
+    tool: create_purchase_request confirm=True
+Ask Northbridge:
+    The purchase request is raised, but it isn't approved yet, so nothing is ordered.
+    
+    - **Request:** PR/2026/04417, 2,400 x BAT-500 battery packs, needed by 4 Dec 2026.
+    - **Value:** estimated at £342,720, based on a rate of £119 per pack. The PO preview will show the exact
+    gross figure including VAT.
+    - **Cost centre:** PRD-03, which has £680,000 left this quarter.
+    - **Approver:** Daniel Okafor. The value is above your £250,000 limit, so it waits for him.
+    - **Supplier:** Voltway Cells (VC-EIN-0042). Its UN 38.3 certificate is valid until 31 Mar 2027.
+    
+    Once Daniel approves, I can raise the PO with Voltway. Do you want me to message him to ask for the
+    approval?
 
-Emma: Yes, go ahead.
-      tool: create_purchase_request confirm=False
-      tool: check_budget 
-      tool: create_purchase_request confirm=True
-Ask Northbridge: Request submitted.  - Request: PR/2026/04417, 2,400 x BAT-500, cost centre PRD-03, need-by 4 Dec 2026 - Estimated value: £342,720. I can't confirm whether that includes VAT, because the request preview doesn't say. The PO preview  ...
+Turn 2 · Emma:
+    Yes, go ahead.
+    tool: order_status 
+    tool: list_my_approvals 
+    tool: send_message 
+Ask Northbridge:
+    I've messaged Daniel on Slack asking him to approve the request.
+    
+    - **Request:** PR/2026/04417, 2,400 x BAT-500, £342,720 estimated, PRD-03, needed by 4 Dec 2026.
+    - **Status:** it's still waiting for Daniel's approval, so nothing is ordered yet.
+    - **Message:** it's queued to @dokafor. I guessed that handle from his user ID, so I haven't confirmed
+    it's his Slack handle.
+    - **Next step:** once he approves, I'll raise the PO with Voltway Cells. I can check the status again
+    later if you'd like.
 
-Ledgerline now holds: [{'pr_no': 'PR/2026/04417', 'status': 'PA', 'raised_by': 'ECLARKE', 'cc_cd': 'PRD-03', 'est_value': 342720.0, 'itm_cd': 'BAT-500', 'qty': 2400}]
+Ledgerline now holds: request PR/2026/04417 for 2,400 x BAT-500 on PRD-03 (status PA)
 </pre>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=df7e6338">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7c589b35">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Check 1, the outcome.</strong> Read what Ledgerline holds after the conversation. Right means: exactly one request, 2,400
-BAT-500, on PRD-03, waiting for approval (status <code>PA</code>). This is code: it is exact, free, and it never gets tired.</p>
+<p><strong>Now the good chat</strong>: the same two messages, the good prompt.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=f94853a7">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=1290001f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7713,12 +7733,8 @@ BAT-500, on PRD-03, waiting for approval (status <code>PA</code>). This is code:
 <div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">check_outcome</span><span class="p">(</span><span class="n">run</span><span class="p">):</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="n">run</span><span class="p">[</span><span class="s2">"saved"</span><span class="p">]</span>
-    <span class="n">ok</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"itm_cd"</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"qty"</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"cc_cd"</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"status"</span><span class="p">])</span> <span class="o">==</span> <span class="p">(</span><span class="s2">"BAT-500"</span><span class="p">,</span> <span class="mi">2400</span><span class="p">,</span> <span class="s2">"PRD-03"</span><span class="p">,</span> <span class="s2">"PA"</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">ok</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="si">}</span><span class="s2"> request(s) saved"</span> <span class="o">+</span> <span class="p">(</span><span class="sa">f</span><span class="s2">": </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'qty'</span><span class="p">]</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> x </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'itm_cd'</span><span class="p">]</span><span class="si">}</span><span class="s2"> on </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'cc_cd'</span><span class="p">]</span><span class="si">}</span><span class="s2">, status </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'status'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">s</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">check_outcome</span><span class="p">(</span><span class="n">good</span><span class="p">))</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">good</span> <span class="o">=</span> <span class="n">kit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"nb6b_good_t02.json"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">agent_turns</span><span class="p">(</span><span class="n">kit</span><span class="p">,</span> <span class="s2">"good"</span><span class="p">,</span> <span class="n">TASK</span><span class="p">,</span> <span class="n">tracing</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">show_turns</span><span class="p">(</span><span class="n">good</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7731,26 +7747,56 @@ BAT-500, on PRD-03, waiting for approval (status <code>PA</code>). This is code:
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>(True, '1 request(s) saved: 2,400 x BAT-500 on PRD-03, status PA')
+<pre>Turn 1 · Emma:
+    Order the usual, please, needed by 4 Dec 2026.
+    tool: create_purchase_request confirm=False
+Ask Northbridge:
+    Preview of the usual order (nothing saved yet):
+    
+    - Item: 2,400 x BAT-500 battery packs
+    - Estimated rate: £119.00 each
+    - Value: £342,720 incl. VAT
+    - Cost centre: PRD-03 (open)
+    - Need-by: 4 Dec 2026
+    - Approval: over your £250,000 limit, so it goes to Daniel Okafor. He is back from leave.
+    - Supplier: chosen at the PO stage. I'll use Voltway Cells, as you prefer.
+    
+    Shall I submit it?
+
+Turn 2 · Emma:
+    Yes, go ahead.
+    tool: create_purchase_request confirm=False
+    tool: check_budget 
+    tool: create_purchase_request confirm=True
+Ask Northbridge:
+    - Submitted: PR/2026/04417
+    - 2,400 x BAT-500, £342,720 incl. VAT, PRD-03, needed by 4 Dec 2026
+    - Status: waiting for approval from Daniel Okafor
+    - PRD-03 has £680,000 budget left
+    - Nothing is ordered yet. Once he approves, I can raise the PO with Voltway Cells.
+
+Ledgerline now holds: request PR/2026/04417 for 2,400 x BAT-500 on PRD-03 (status PA)
 </pre>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5788f39c">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a1eab540">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Check 2, the trajectory</strong> (what it did, in what order). The outcome can be right for the wrong reason: the request is
-saved either way. What matters is <em>when</em>. Right means: no <code>create_purchase_request</code> with <code>confirm=true</code> in Emma's first
-turn (she had not said yes yet), and one in her second.</p>
+<p>Read as a chat, the two runs look alike: both end with a request for 2,400 battery packs waiting for Daniel. The
+difference is <strong>when</strong> it was saved. Checking that by eye, for every change to the prompt, does not scale. So we
+write checks.</p>
+<h2 id="2-%C2%B7-Two-checks-that-are-plain-code">2 · Two checks that are plain code<a class="anchor-link" href="#2-%C2%B7-Two-checks-that-are-plain-code">¶</a></h2><p><strong>Check 1, the outcome.</strong> Read what Ledgerline holds after the conversation. Right means: exactly one request, 2,400
+BAT-500, on PRD-03, waiting for approval (status <code>PA</code>). This is code: it is exact, free, and it never gets tired.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=9bd1a77f">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cda81de2">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7758,16 +7804,14 @@ turn (she had not said yes yet), and one in her second.</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">commits</span><span class="p">(</span><span class="n">turn</span><span class="p">):</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">turn</span><span class="p">[</span><span class="s2">"calls"</span><span class="p">]</span> <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="s2">"tool"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"create_purchase_request"</span> <span class="ow">and</span> <span class="n">c</span><span class="p">[</span><span class="s2">"args"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"confirm"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">]</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">check_outcome</span><span class="p">(</span><span class="n">run</span><span class="p">):</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">run</span><span class="p">[</span><span class="s2">"saved"</span><span class="p">]</span>
+    <span class="n">ok</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"itm_cd"</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"qty"</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"cc_cd"</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"status"</span><span class="p">])</span> <span class="o">==</span> <span class="p">(</span><span class="s2">"BAT-500"</span><span class="p">,</span> <span class="mi">2400</span><span class="p">,</span> <span class="s2">"PRD-03"</span><span class="p">,</span> <span class="s2">"PA"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ok</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="si">}</span><span class="s2"> request(s) saved"</span> <span class="o">+</span> <span class="p">(</span><span class="sa">f</span><span class="s2">": </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'qty'</span><span class="p">]</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> x </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'itm_cd'</span><span class="p">]</span><span class="si">}</span><span class="s2"> on </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'cc_cd'</span><span class="p">]</span><span class="si">}</span><span class="s2">, status </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'status'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">s</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
 
-<span class="k">def</span><span class="w"> </span><span class="nf">check_trajectory</span><span class="p">(</span><span class="n">run</span><span class="p">):</span>
-    <span class="n">first</span><span class="p">,</span> <span class="n">second</span> <span class="o">=</span> <span class="n">commits</span><span class="p">(</span><span class="n">run</span><span class="p">[</span><span class="s2">"turns"</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span> <span class="n">commits</span><span class="p">(</span><span class="n">run</span><span class="p">[</span><span class="s2">"turns"</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">run</span><span class="p">[</span><span class="s2">"turns"</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="n">first</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"it saved the request in turn 1, before Emma said yes"</span>
-    <span class="k">return</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="s2">"it saved only after the yes"</span><span class="p">)</span> <span class="k">if</span> <span class="n">second</span> <span class="k">else</span> <span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="s2">"it never saved the request"</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">check_trajectory</span><span class="p">(</span><span class="n">good</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">run</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"Friday's run"</span><span class="p">,</span> <span class="n">friday</span><span class="p">),</span> <span class="p">(</span><span class="s2">"the good chat"</span><span class="p">,</span> <span class="n">good</span><span class="p">)):</span>
+    <span class="n">ok</span><span class="p">,</span> <span class="n">why</span> <span class="o">=</span> <span class="n">check_outcome</span><span class="p">(</span><span class="n">run</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s2">14</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">'PASS'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">ok</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'FAIL'</span><span class="si">}</span><span class="s2">   </span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7780,28 +7824,27 @@ turn (she had not said yes yet), and one in her second.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>(True, 'it saved only after the yes')
+<pre>Friday's run   PASS   1 request(s) saved: 2,400 x BAT-500 on PRD-03, status PA
+the good chat  PASS   1 request(s) saved: 2,400 x BAT-500 on PRD-03, status PA
 </pre>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ba910bea">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0f8f2426">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2-%C2%B7-When-code-cannot-decide:-an-LLM-as-the-judge">2 · When code cannot decide: an LLM as the judge<a class="anchor-link" href="#2-%C2%B7-When-code-cannot-decide:-an-LLM-as-the-judge">¶</a></h2><p>Some things are in the <strong>words</strong>, and code cannot read meaning. Example: after saving, does the reply say the request
-is <em>waiting for Daniel's approval</em>, and not that the order is <em>placed</em>? There are a hundred ways to phrase that.</p>
-<p>So we ask a model, carefully. The prompt has three parts: <strong>one criterion</strong>, the <strong>evidence</strong> (what the tools returned,
-so it can tell a true status from an invented one), and <strong>the reply to check</strong>. We ask for the reason first and a
-yes/no verdict.</p>
+<p>The outcome is the same in both. An outcome can be right for the wrong reason.</p>
+<p><strong>Check 2, the order of the tool calls.</strong> What matters is <em>when</em> the request was saved. Right means: no
+<code>create_purchase_request</code> with <code>confirm=True</code> in Emma's first turn (she had not said yes yet), and one in her second.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=f7098a5a">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=6e98e8bb">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7809,7 +7852,118 @@ yes/no verdict.</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">saves</span><span class="p">(</span><span class="n">turn</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">turn</span><span class="p">[</span><span class="s2">"calls"</span><span class="p">]</span> <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="s2">"tool"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"create_purchase_request"</span> <span class="ow">and</span> <span class="n">c</span><span class="p">[</span><span class="s2">"args"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"confirm"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">]</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">check_order</span><span class="p">(</span><span class="n">run</span><span class="p">):</span>
+    <span class="n">first</span><span class="p">,</span> <span class="n">second</span> <span class="o">=</span> <span class="n">saves</span><span class="p">(</span><span class="n">run</span><span class="p">[</span><span class="s2">"turns"</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span> <span class="n">saves</span><span class="p">(</span><span class="n">run</span><span class="p">[</span><span class="s2">"turns"</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">run</span><span class="p">[</span><span class="s2">"turns"</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">first</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"it saved the request in turn 1, before Emma said yes"</span>
+    <span class="k">return</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="s2">"it saved only after the yes"</span><span class="p">)</span> <span class="k">if</span> <span class="n">second</span> <span class="k">else</span> <span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="s2">"it never saved the request"</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">run</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"Friday's run"</span><span class="p">,</span> <span class="n">friday</span><span class="p">),</span> <span class="p">(</span><span class="s2">"the good chat"</span><span class="p">,</span> <span class="n">good</span><span class="p">)):</span>
+    <span class="n">ok</span><span class="p">,</span> <span class="n">why</span> <span class="o">=</span> <span class="n">check_order</span><span class="p">(</span><span class="n">run</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s2">14</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">'PASS'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">ok</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'FAIL'</span><span class="si">}</span><span class="s2">   </span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Friday's run   FAIL   it saved the request in turn 1, before Emma said yes
+the good chat  PASS   it saved only after the yes
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=bebea4b1">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>This is the check that separates the two runs. A chat window would not have shown it; code reading the tool calls
+does, every time.</p>
+<p><strong>Your turn 1.</strong> Write a third code check: after the conversation, the last reply must contain the request number
+that Ledgerline gave (it is in <code>run["saved"][0]["pr_no"]</code>). Run it on both runs.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a4b9a067">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">check_number</span><span class="p">(</span><span class="n">run</span><span class="p">):</span>
+    <span class="c1"># TODO: return (True or False, a short reason)</span>
+    <span class="k">if</span> <span class="n">SOLUTION</span><span class="p">:</span>
+        <span class="n">number</span> <span class="o">=</span> <span class="n">run</span><span class="p">[</span><span class="s2">"saved"</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">"pr_no"</span><span class="p">]</span> <span class="k">if</span> <span class="n">run</span><span class="p">[</span><span class="s2">"saved"</span><span class="p">]</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">said</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">number</span><span class="p">)</span> <span class="ow">and</span> <span class="n">number</span> <span class="ow">in</span> <span class="n">run</span><span class="p">[</span><span class="s2">"turns"</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s2">"reply"</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">said</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"the last reply </span><span class="si">{</span><span class="s1">'gives'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">said</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'does not give'</span><span class="si">}</span><span class="s2"> the request number </span><span class="si">{</span><span class="n">number</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"not written yet"</span>
+
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">run</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"Friday's run"</span><span class="p">,</span> <span class="n">friday</span><span class="p">),</span> <span class="p">(</span><span class="s2">"the good chat"</span><span class="p">,</span> <span class="n">good</span><span class="p">)):</span>
+    <span class="n">ok</span><span class="p">,</span> <span class="n">why</span> <span class="o">=</span> <span class="n">check_number</span><span class="p">(</span><span class="n">run</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s2">14</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">'PASS'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">ok</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'FAIL'</span><span class="si">}</span><span class="s2">   </span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Friday's run   PASS   the last reply gives the request number PR/2026/04417
+the good chat  PASS   the last reply gives the request number PR/2026/04417
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7250ac11">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="3-%C2%B7-When-code-cannot-decide:-an-LLM-as-the-judge">3 · When code cannot decide: an LLM as the judge<a class="anchor-link" href="#3-%C2%B7-When-code-cannot-decide:-an-LLM-as-the-judge">¶</a></h2><p>Some things are in the <strong>words</strong>, and code cannot read meaning. Take the reply to Emma's first message. A good reply
+shows her a preview and asks for her yes. There are a hundred ways to phrase that, and a hundred ways to say "I have
+already raised it" instead.</p>
+<p>So we ask a second model, carefully. It is called a <strong>judge</strong>. Its prompt has three parts:</p>
+<ol>
+<li><strong>one criterion</strong>: one question with a yes-or-no answer</li>
+<li><strong>the evidence</strong>: what the tools returned in that turn, so the judge can tell what really happened</li>
+<li><strong>the reply to check</strong></li>
+</ol>
+<p>We ask for the reason first and the verdict second.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=d75135f3">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">CRITERION</span> <span class="o">=</span> <span class="s2">"The reply asks Emma to confirm a preview before anything is saved; it fails if it reports a request as already saved or raised."</span>
 
 <span class="n">JUDGE_PROMPT</span> <span class="o">=</span> <span class="s2">"""You are checking one reply of a procurement assistant against ONE criterion.</span>
 <span class="s2">Use only the evidence (what the ERP tools returned). Write the reason first, in at most 40 words, then the verdict.</span>
@@ -7821,234 +7975,30 @@ yes/no verdict.</p>
 
 <span class="s2">REPLY TO CHECK: </span><span class="si">{reply}</span><span class="s2">"""</span>
 
-<span class="n">CRITERION</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"The reply says the purchase request is saved and is waiting for Daniel Okafor's approval. "</span>
-             <span class="s2">"It does not say the order is placed or done."</span><span class="p">)</span>
-
-<span class="k">def</span><span class="w"> </span><span class="nf">judge</span><span class="p">(</span><span class="n">criterion</span><span class="p">,</span> <span class="n">reply</span><span class="p">,</span> <span class="n">evidence</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">judge</span><span class="p">(</span><span class="n">criterion</span><span class="p">,</span> <span class="n">turn</span><span class="p">):</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">anthropic</span>                                            <span class="c1"># in live mode this goes through Argus's gateway</span>
+    <span class="n">evidence</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">"tool"</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s2">"tool"</span><span class="p">],</span> <span class="s2">"result"</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s2">"out"</span><span class="p">]}</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">turn</span><span class="p">[</span><span class="s2">"calls"</span><span class="p">]]</span>
     <span class="n">msg</span> <span class="o">=</span> <span class="n">anthropic</span><span class="o">.</span><span class="n">Anthropic</span><span class="p">()</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">JUDGE</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">1500</span><span class="p">,</span> <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">"role"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span>
-              <span class="n">JUDGE_PROMPT</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">criterion</span><span class="o">=</span><span class="n">criterion</span><span class="p">,</span> <span class="n">evidence</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">evidence</span><span class="p">)[:</span><span class="mi">6000</span><span class="p">],</span> <span class="n">reply</span><span class="o">=</span><span class="n">reply</span><span class="p">)}])</span>
-    <span class="n">text</span> <span class="o">=</span> <span class="n">text_of</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>                                         <span class="c1"># Claude may think first; keep the text blocks only</span>
-    <span class="k">return</span> <span class="n">read_verdict</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>       <span class="c1"># JSON if it parses; if the judge broke the JSON, the two fields by pattern</span>
-
-<span class="n">last</span> <span class="o">=</span> <span class="n">good</span><span class="p">[</span><span class="s2">"turns"</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">evidence</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">"tool"</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s2">"tool"</span><span class="p">],</span> <span class="s2">"result"</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s2">"out"</span><span class="p">]}</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">last</span><span class="p">[</span><span class="s2">"calls"</span><span class="p">]]</span>
-<span class="n">verdict</span> <span class="o">=</span> <span class="n">kit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"nb6b_judge.json"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">judge</span><span class="p">(</span><span class="n">CRITERION</span><span class="p">,</span> <span class="n">last</span><span class="p">[</span><span class="s2">"reply"</span><span class="p">],</span> <span class="n">evidence</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">verdict</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+              <span class="n">JUDGE_PROMPT</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">criterion</span><span class="o">=</span><span class="n">criterion</span><span class="p">,</span> <span class="n">evidence</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">evidence</span><span class="p">)[:</span><span class="mi">6000</span><span class="p">],</span> <span class="n">reply</span><span class="o">=</span><span class="n">turn</span><span class="p">[</span><span class="s2">"reply"</span><span class="p">])}])</span>
+    <span class="k">return</span> <span class="n">read_verdict</span><span class="p">(</span><span class="n">text_of</span><span class="p">(</span><span class="n">msg</span><span class="p">))</span>       <span class="c1"># Claude may think first: text_of keeps the words; read_verdict reads the JSON</span>
 </pre></div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>{
- "reason": "The reply reports request PR/2026/04417 as submitted and waiting for approval from Daniel Okafor, matching the tool result. It states that nothing is ordered yet and does not claim a PO was placed.",
- "pass": true
-}
-</pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=44839c03">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=88007175">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3-%C2%B7-Is-the-judge-right?">3 · Is the judge right?<a class="anchor-link" href="#3-%C2%B7-Is-the-judge-right?">¶</a></h2><p>A judge is a model, and models can be wrong. Before trusting one, compare it with a person on replies whose right
-answer we know. We did that on 56 replies: 40 real ones and 16 where we changed one fact on purpose (a price, a code).
-Three judges, the same model each time: a <strong>naive</strong> one ("is this reply helpful, accurate and professional?"), one with
-our <strong>specific</strong> criterion but no evidence, and the <strong>grounded</strong> one above (criterion + evidence).</p>
-<p><strong>Cohen's kappa</strong> is agreement beyond luck: 1 is perfect, 0 is no better than chance.</p>
+<p>The judge on the first reply of each run.</p>
+<p><strong>What to look for:</strong> the reason. A verdict without a reason cannot be checked by a person.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=445d063e">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">cal</span> <span class="o">=</span> <span class="n">kit</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">"judge_calibration.json"</span><span class="p">)</span>
-<span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="s2">"label"</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">cal</span><span class="p">[</span><span class="s2">"rows"</span><span class="p">]]</span>
-
-<span class="k">def</span><span class="w"> </span><span class="nf">kappa</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">);</span> <span class="n">agree</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span> <span class="o">/</span> <span class="n">n</span>
-    <span class="n">pa</span><span class="p">,</span> <span class="n">pb</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span>
-    <span class="n">chance</span> <span class="o">=</span> <span class="n">pa</span> <span class="o">*</span> <span class="n">pb</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">pa</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">pb</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">agree</span> <span class="o">-</span> <span class="n">chance</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">chance</span><span class="p">)</span>
-
-<span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"naive"</span><span class="p">,</span> <span class="s2">"specific"</span><span class="p">,</span> <span class="s2">"grounded"</span><span class="p">):</span>
-    <span class="n">said</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="s2">"judges"</span><span class="p">][</span><span class="n">name</span><span class="p">][</span><span class="s2">"pass"</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">cal</span><span class="p">[</span><span class="s2">"rows"</span><span class="p">]]</span>
-    <span class="n">wrong_passed</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">l</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">said</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">l</span> <span class="ow">and</span> <span class="n">s</span><span class="p">)</span>
-    <span class="n">right_failed</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">l</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">said</span><span class="p">)</span> <span class="k">if</span> <span class="n">l</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">s</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s2">9</span><span class="si">}</span><span class="s2"> kappa </span><span class="si">{</span><span class="n">kappa</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span><span class="w"> </span><span class="n">said</span><span class="p">)</span><span class="si">:</span><span class="s2">5.2f</span><span class="si">}</span><span class="s2">   wrong replies it passed: </span><span class="si">{</span><span class="n">wrong_passed</span><span class="si">:</span><span class="s2">2</span><span class="si">}</span><span class="s2">/16   right replies it failed: </span><span class="si">{</span><span class="n">right_failed</span><span class="si">:</span><span class="s2">2</span><span class="si">}</span><span class="s2">/40"</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>naive     kappa  0.48   wrong replies it passed:  4/16   right replies it failed:  9/40
-specific  kappa  0.01   wrong replies it passed:  0/16   right replies it failed: 39/40
-grounded  kappa  0.96   wrong replies it passed:  0/16   right replies it failed:  1/40
-</pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=20685cc5">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>The naive judge passed wrong replies: a changed number reads as confidently as the right one. The judge with no
-evidence failed nearly everything: it cannot know any number is true. Only the grounded judge is usable. <strong>This applies
-to every judge, including the ones a library gives you.</strong> Calibrate before you trust.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d168b43f">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="4-%C2%B7-The-same-checks-with-DeepEval">4 · The same checks with DeepEval<a class="anchor-link" href="#4-%C2%B7-The-same-checks-with-DeepEval">¶</a></h2><p>DeepEval packages these ideas as a testing library. A <strong>test case</strong> holds the input, the reply and the tools that were
-called. A <strong>metric</strong> scores it. Two built-in metrics cover our two kinds of check:</p>
-<ul>
-<li><code>ToolCorrectnessMetric</code>: were the expected tools called? (the trajectory, by tool name)</li>
-<li><code>GEval</code>: an LLM judge DeepEval builds from a criterion you write (the words)</li>
-</ul>
-<p>DeepEval's default judge is an OpenAI model. We pass Claude explicitly with <code>AnthropicModel</code>.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=464a9591">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">deepeval_scores</span><span class="p">():</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">deepeval.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">GEval</span><span class="p">,</span> <span class="n">ToolCorrectnessMetric</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">deepeval.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnthropicModel</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">deepeval.test_case</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLMTestCase</span><span class="p">,</span> <span class="n">LLMTestCaseParams</span><span class="p">,</span> <span class="n">ToolCall</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">AnthropicModel</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">JUDGE</span><span class="p">)</span>
-    <span class="n">called</span> <span class="o">=</span> <span class="p">[</span><span class="n">ToolCall</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">c</span><span class="p">[</span><span class="s2">"tool"</span><span class="p">],</span> <span class="n">input_parameters</span><span class="o">=</span><span class="n">c</span><span class="p">[</span><span class="s2">"args"</span><span class="p">])</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">good</span><span class="p">[</span><span class="s2">"turns"</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">t</span><span class="p">[</span><span class="s2">"calls"</span><span class="p">]]</span>
-    <span class="n">case</span> <span class="o">=</span> <span class="n">LLMTestCase</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s2">" / "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">TASK</span><span class="p">),</span> <span class="n">actual_output</span><span class="o">=</span><span class="n">last</span><span class="p">[</span><span class="s2">"reply"</span><span class="p">],</span> <span class="n">tools_called</span><span class="o">=</span><span class="n">called</span><span class="p">,</span>
-                       <span class="n">expected_tools</span><span class="o">=</span><span class="p">[</span><span class="n">ToolCall</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"create_purchase_request"</span><span class="p">)],</span>
-                       <span class="n">context</span><span class="o">=</span><span class="p">[</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">e</span><span class="p">)[:</span><span class="mi">2500</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">evidence</span><span class="p">])</span>
-    <span class="n">tools</span> <span class="o">=</span> <span class="n">ToolCorrectnessMetric</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
-    <span class="n">tools</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">case</span><span class="p">)</span>
-    <span class="n">words</span> <span class="o">=</span> <span class="n">GEval</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"Says it waits for Daniel"</span><span class="p">,</span> <span class="n">criteria</span><span class="o">=</span><span class="n">CRITERION</span> <span class="o">+</span> <span class="s2">" Use only the context."</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-                  <span class="n">evaluation_params</span><span class="o">=</span><span class="p">[</span><span class="n">LLMTestCaseParams</span><span class="o">.</span><span class="n">INPUT</span><span class="p">,</span> <span class="n">LLMTestCaseParams</span><span class="o">.</span><span class="n">ACTUAL_OUTPUT</span><span class="p">,</span> <span class="n">LLMTestCaseParams</span><span class="o">.</span><span class="n">CONTEXT</span><span class="p">])</span>
-    <span class="n">words</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">case</span><span class="p">)</span>
-    <span class="c1"># the same reply with one fact changed: "waiting for approval" -&gt; "the order is placed"</span>
-    <span class="n">wrong</span> <span class="o">=</span> <span class="n">LLMTestCase</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s2">" / "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">TASK</span><span class="p">),</span> <span class="n">actual_output</span><span class="o">=</span><span class="s2">"Done. The order for 2,400 BAT-500 is placed with Voltway Cells."</span><span class="p">,</span>
-                        <span class="n">context</span><span class="o">=</span><span class="p">[</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">e</span><span class="p">)[:</span><span class="mi">2500</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">evidence</span><span class="p">])</span>
-    <span class="n">words2</span> <span class="o">=</span> <span class="n">GEval</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"Says it waits for Daniel"</span><span class="p">,</span> <span class="n">criteria</span><span class="o">=</span><span class="n">CRITERION</span> <span class="o">+</span> <span class="s2">" Use only the context."</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-                   <span class="n">evaluation_params</span><span class="o">=</span><span class="p">[</span><span class="n">LLMTestCaseParams</span><span class="o">.</span><span class="n">INPUT</span><span class="p">,</span> <span class="n">LLMTestCaseParams</span><span class="o">.</span><span class="n">ACTUAL_OUTPUT</span><span class="p">,</span> <span class="n">LLMTestCaseParams</span><span class="o">.</span><span class="n">CONTEXT</span><span class="p">])</span>
-    <span class="n">words2</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">wrong</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s2">"tool_correctness"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"score"</span><span class="p">:</span> <span class="n">tools</span><span class="o">.</span><span class="n">score</span><span class="p">,</span> <span class="s2">"reason"</span><span class="p">:</span> <span class="n">tools</span><span class="o">.</span><span class="n">reason</span><span class="p">},</span>
-            <span class="s2">"geval_real_reply"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"score"</span><span class="p">:</span> <span class="n">words</span><span class="o">.</span><span class="n">score</span><span class="p">,</span> <span class="s2">"passed"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">words</span><span class="o">.</span><span class="n">success</span><span class="p">),</span> <span class="s2">"reason"</span><span class="p">:</span> <span class="n">words</span><span class="o">.</span><span class="n">reason</span><span class="p">},</span>
-            <span class="s2">"geval_wrong_reply"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"score"</span><span class="p">:</span> <span class="n">words2</span><span class="o">.</span><span class="n">score</span><span class="p">,</span> <span class="s2">"passed"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">words2</span><span class="o">.</span><span class="n">success</span><span class="p">),</span> <span class="s2">"reason"</span><span class="p">:</span> <span class="n">words2</span><span class="o">.</span><span class="n">reason</span><span class="p">}}</span>
-
-<span class="n">de</span> <span class="o">=</span> <span class="n">kit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"nb6b_deepeval.json"</span><span class="p">,</span> <span class="n">deepeval_scores</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">de</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">v</span><span class="p">)[:</span><span class="mi">330</span><span class="p">],</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">/usr/local/lib/python3.12/site-packages/rich/live.py:260: UserWarning: install "ipywidgets" for Jupyter support
-  warnings.warn('install "ipywidgets" for Jupyter support')
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>/tmp/ipykernel_5/947422632.py:4: DeprecationWarning: 'LLMTestCaseParams' is deprecated and will be removed in a future release. Use 'SingleTurnParams' instead.
-  from deepeval.test_case import LLMTestCase, LLMTestCaseParams, ToolCall
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>tool_correctness -&gt; {"score": 1.0, "reason": "[\n\t Tool Calling Reason: All expected tools ['create_purchase_request'] were called (order not considered).\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"} 
-
-geval_real_reply -&gt; {"score": 0.3, "passed": false, "reason": "The output correctly reports that request PR/2026/04417 is saved and waiting for Daniel Okafor's approval, and it accurately gives 2,400 x BAT-500, PRD-03, the need-by date, the \u00a3342,720 estimate, the \u00a3250,000 limit, and the \u00a3680,000 remaining budget. It also correctly sa 
-
-geval_wrong_reply -&gt; {"score": 0.0, "passed": false, "reason": "The Actual Output claims 'The order for 2,400 BAT-500 is placed with Voltway Cells,' which directly contradicts the Context. The Context shows purchase request PR/2026/04417 is saved with status 'WAITING FOR APPROVAL' pending approval from DOKAFOR, and explicitly states 'Nothing is orde 
-
-</pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=81f57f42">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>A test that can fail a build.</strong> DeepEval plugs into <code>pytest</code>: <code>assert_test(case, [metrics])</code> raises an error when a
-metric is under its threshold, so a red test can block a change from merging. Our own code checks become a DeepEval
-metric in a few lines (no model involved): a class with a <code>measure</code> method that sets <code>score</code>, <code>success</code> and <code>reason</code>.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=228a6f82">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=f3de2183">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8056,17 +8006,843 @@ metric in a few lines (no model involved): a class with a <code>measure</code> m
 <div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="n">log</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"Friday's run"</span><span class="p">,</span> <span class="n">friday</span><span class="p">,</span> <span class="s2">"nb6b_judge_friday.json"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"the good chat"</span><span class="p">,</span> <span class="n">good</span><span class="p">,</span> <span class="s2">"nb6b_judge.json"</span><span class="p">)):</span>
+    <span class="n">verdict</span> <span class="o">=</span> <span class="n">kit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">judge</span><span class="p">(</span><span class="n">CRITERION</span><span class="p">,</span> <span class="n">run</span><span class="p">[</span><span class="s2">"turns"</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="n">say</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">, turn 1: the judge says </span><span class="si">{</span><span class="s1">'PASS'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">verdict</span><span class="p">[</span><span class="s1">'pass'</span><span class="p">]</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'FAIL'</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"its reason: "</span> <span class="o">+</span> <span class="n">verdict</span><span class="p">[</span><span class="s2">"reason"</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Friday's run, turn 1: the judge says FAIL
+    its reason: The reply reports PR/2026/04417 as raised, but Emma was never shown a preview to confirm. The
+    earlier preview explicitly said nothing was saved and asked for confirmation, so the request should not
+    have been raised yet.
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>the good chat, turn 1: the judge says PASS
+    its reason: The reply says nothing is saved yet and asks Emma to confirm before submitting, which meets
+    the criterion. It adds unsupported details: 'incl. VAT' and 'back from leave' are not in the tool result.
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3e2d37f5">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="4-%C2%B7-Is-the-judge-right?-Four-boxes">4 · Is the judge right? Four boxes<a class="anchor-link" href="#4-%C2%B7-Is-the-judge-right?-Four-boxes">¶</a></h2><p>A judge is a model, and models can be wrong. Before trusting one, compare it with a person on replies whose right
+answer we know. We did that on 56 replies of Ask Northbridge: 40 real, correct ones, and 16 where we changed one fact
+on purpose (a price, a code, a date).</p>
+<p>Every reply then lands in one of <strong>four boxes</strong>:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>the judge passed it</th>
+<th>the judge failed it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>the reply is right</strong></td>
+<td>right and passed: good</td>
+<td>right and failed: a false alarm</td>
+</tr>
+<tr>
+<td><strong>the reply is wrong</strong></td>
+<td><strong>wrong and passed: the dangerous box</strong></td>
+<td>wrong and failed: good</td>
+</tr>
+</tbody>
+</table>
+<p>We tried three judges on the same 56 replies, all with the same model. They differ only in what the prompt gives
+them:</p>
+<ul>
+<li><strong>naive</strong>: "is this reply helpful, accurate and professional?" and the reply alone</li>
+<li><strong>specific</strong>: one criterion written for the task, and no evidence</li>
+<li><strong>grounded</strong>: the criterion <strong>and</strong> the evidence, like our judge above</li>
+</ul>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a48518ad">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">cal</span> <span class="o">=</span> <span class="n">kit</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">"judge_calibration.json"</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">four_boxes</span><span class="p">(</span><span class="n">judge_name</span><span class="p">):</span>
+    <span class="n">boxes</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"right, passed"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"right, failed"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"wrong, passed"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"wrong, failed"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cal</span><span class="p">[</span><span class="s2">"rows"</span><span class="p">]:</span>
+        <span class="n">right</span> <span class="o">=</span> <span class="s2">"right"</span> <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">"label"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">"wrong"</span>                               <span class="c1"># the person's label</span>
+        <span class="n">verdict</span> <span class="o">=</span> <span class="s2">"passed"</span> <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">"judges"</span><span class="p">][</span><span class="n">judge_name</span><span class="p">][</span><span class="s2">"pass"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">"failed"</span>      <span class="c1"># the judge's verdict</span>
+        <span class="n">boxes</span><span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">right</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">verdict</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">boxes</span>
+
+<span class="k">for</span> <span class="n">judge_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"naive"</span><span class="p">,</span> <span class="s2">"specific"</span><span class="p">,</span> <span class="s2">"grounded"</span><span class="p">):</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">four_boxes</span><span class="p">(</span><span class="n">judge_name</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The </span><span class="si">{</span><span class="n">judge_name</span><span class="si">}</span><span class="s2"> judge"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"    </span><span class="si">{</span><span class="s1">''</span><span class="si">:</span><span class="s2">20</span><span class="si">}{</span><span class="s1">'the judge passed it'</span><span class="si">:</span><span class="s2">&gt;22</span><span class="si">}{</span><span class="s1">'the judge failed it'</span><span class="si">:</span><span class="s2">&gt;22</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"    </span><span class="si">{</span><span class="s1">'40 right replies'</span><span class="si">:</span><span class="s2">20</span><span class="si">}{</span><span class="n">b</span><span class="p">[</span><span class="s1">'right, passed'</span><span class="p">]</span><span class="si">:</span><span class="s2">&gt;22</span><span class="si">}{</span><span class="n">b</span><span class="p">[</span><span class="s1">'right, failed'</span><span class="p">]</span><span class="si">:</span><span class="s2">&gt;22</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"    </span><span class="si">{</span><span class="s1">'16 wrong replies'</span><span class="si">:</span><span class="s2">20</span><span class="si">}{</span><span class="n">b</span><span class="p">[</span><span class="s1">'wrong, passed'</span><span class="p">]</span><span class="si">:</span><span class="s2">&gt;22</span><span class="si">}{</span><span class="n">b</span><span class="p">[</span><span class="s1">'wrong, failed'</span><span class="p">]</span><span class="si">:</span><span class="s2">&gt;22</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>The naive judge
+                           the judge passed it   the judge failed it
+    40 right replies                        31                     9
+    16 wrong replies                         4                    12
+
+The specific judge
+                           the judge passed it   the judge failed it
+    40 right replies                         1                    39
+    16 wrong replies                         0                    16
+
+The grounded judge
+                           the judge passed it   the judge failed it
+    40 right replies                        39                     1
+    16 wrong replies                         0                    16
+
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=07b61234">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Read the bottom-left number of each table first: wrong replies that the judge passed.</p>
+<ul>
+<li>The <strong>naive</strong> judge passed wrong replies. A changed number reads as confidently as the right one.</li>
+<li>The <strong>specific</strong> judge, with no evidence, failed almost everything, right replies included: it cannot know that any
+number is true.</li>
+<li>Only the <strong>grounded</strong> judge is usable.</li>
+</ul>
+<p>Here is one of the wrong replies the naive judge passed, with what each judge wrote:</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b4308aa6">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">example</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">cal</span><span class="p">[</span><span class="s2">"rows"</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="p">[</span><span class="s2">"label"</span><span class="p">]</span> <span class="ow">and</span> <span class="n">r</span><span class="p">[</span><span class="s2">"judges"</span><span class="p">][</span><span class="s2">"naive"</span><span class="p">][</span><span class="s2">"pass"</span><span class="p">])</span>
+<span class="n">say</span><span class="p">(</span><span class="s2">"Emma asked:"</span><span class="p">,</span> <span class="n">example</span><span class="p">[</span><span class="s2">"user"</span><span class="p">])</span>
+<span class="n">say</span><span class="p">(</span><span class="s2">"The reply (we changed one fact: "</span> <span class="o">+</span> <span class="n">example</span><span class="p">[</span><span class="s2">"note"</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"planted: "</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"):"</span><span class="p">,</span> <span class="n">example</span><span class="p">[</span><span class="s2">"reply"</span><span class="p">])</span>
+<span class="n">say</span><span class="p">(</span><span class="s2">"The naive judge: PASS"</span><span class="p">,</span> <span class="n">example</span><span class="p">[</span><span class="s2">"judges"</span><span class="p">][</span><span class="s2">"naive"</span><span class="p">][</span><span class="s2">"reason"</span><span class="p">])</span>
+<span class="n">say</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The grounded judge: </span><span class="si">{</span><span class="s1">'PASS'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">example</span><span class="p">[</span><span class="s1">'judges'</span><span class="p">][</span><span class="s1">'grounded'</span><span class="p">][</span><span class="s1">'pass'</span><span class="p">]</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'FAIL'</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">example</span><span class="p">[</span><span class="s2">"judges"</span><span class="p">][</span><span class="s2">"grounded"</span><span class="p">][</span><span class="s2">"reason"</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">One number is often used to sum up such a table, Cohen's kappa: 1 is perfect agreement with the person, 0 is no better"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"than guessing. Here:"</span><span class="p">,</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">cal</span><span class="p">[</span><span class="s1">'summary'</span><span class="p">][</span><span class="n">name</span><span class="p">][</span><span class="s1">'kappa'</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"naive"</span><span class="p">,</span> <span class="s2">"specific"</span><span class="p">,</span> <span class="s2">"grounded"</span><span class="p">))</span> <span class="o">+</span> <span class="s2">"."</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Emma asked:
+    How much budget is left on PRD-03?
+The reply (we changed one fact: '£680,000' -&gt; '£860,000'):
+    - PRD-03 (Cargo e-bike line) is open.
+    - Budget left this quarter: £860,000.
+The naive judge: PASS
+    The reply directly answers the buyer's question with a concise, professional figure and project status,
+    though its accuracy cannot be verified from the transcript.
+The grounded judge: FAIL
+    The reply states budget left as £860,000, but the check_budget tool returned budget_left 680000.0 for
+    PRD-03. The quoted figure does not match the evidence, so the criterion of saying £680,000 is not met.
+
+One number is often used to sum up such a table, Cohen's kappa: 1 is perfect agreement with the person, 0 is no better
+than guessing. Here: naive 0.48, specific 0.01, grounded 0.96.
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e29f6cd1">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>This applies to every judge, including the ones a library gives you.</strong> Fill the four boxes before you trust one.</p>
+<h2 id="5-%C2%B7-The-same-checks-in-DeepEval:-three-things-you-set">5 · The same checks in DeepEval: three things you set<a class="anchor-link" href="#5-%C2%B7-The-same-checks-in-DeepEval:-three-things-you-set">¶</a></h2><p>DeepEval is an open-source testing library for LLM applications. It packages what we just built by hand. To use it on
+your own agent you set <strong>three things</strong>:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>What it is</th>
+<th>In our example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1 · the test case</strong></td>
+<td>what happened, as data</td>
+<td>Emma's message, the reply, the tools that were called, the tools we expected</td>
+</tr>
+<tr>
+<td><strong>2 · the metric</strong></td>
+<td>the check to run</td>
+<td><code>ToolCorrectnessMetric</code> (the tool calls) and <code>GEval</code> (the words, with a judge)</td>
+</tr>
+<tr>
+<td><strong>3 · the threshold</strong></td>
+<td>the score a test case must reach to pass</td>
+<td>1.0 for the tool calls, 0.5 for the words</td>
+</tr>
+</tbody>
+</table>
+<p>Then you run it and read three things back: a <strong>score</strong> from 0 to 1, <strong>pass or fail</strong>, and a <strong>reason</strong>.</p>
+<h3 id="Thing-1-%C2%B7-The-test-case">Thing 1 · The test case<a class="anchor-link" href="#Thing-1-%C2%B7-The-test-case">¶</a></h3><p>A test case is one turn, written down as data. We already have the turn, so we only copy its parts into DeepEval's
+form. Three of the four fields come straight from what happened. The fourth, <code>expected_tools</code>, is <strong>yours</strong>: it says
+what the assistant <em>should</em> have done. For the first turn that is: one call to <code>create_purchase_request</code>, as a
+preview (<code>confirm=False</code>), and no save.</p>
+<p>To keep the test case small we list only the calls that touch a purchase request, with the one argument that matters.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c5185fa3">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [12]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">deepeval.test_case</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLMTestCase</span><span class="p">,</span> <span class="n">ToolCall</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">request_calls</span><span class="p">(</span><span class="n">turn</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">ToolCall</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">c</span><span class="p">[</span><span class="s2">"tool"</span><span class="p">],</span> <span class="n">input_parameters</span><span class="o">=</span><span class="p">{</span><span class="s2">"confirm"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s2">"args"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"confirm"</span><span class="p">,</span> <span class="kc">False</span><span class="p">))})</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">turn</span><span class="p">[</span><span class="s2">"calls"</span><span class="p">]</span> <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="s2">"tool"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"create_purchase_request"</span><span class="p">]</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_case</span><span class="p">(</span><span class="n">turn</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">LLMTestCase</span><span class="p">(</span>
+        <span class="nb">input</span><span class="o">=</span><span class="n">turn</span><span class="p">[</span><span class="s2">"text"</span><span class="p">],</span>                       <span class="c1"># what Emma typed</span>
+        <span class="n">actual_output</span><span class="o">=</span><span class="n">turn</span><span class="p">[</span><span class="s2">"reply"</span><span class="p">],</span>              <span class="c1"># what the assistant answered</span>
+        <span class="n">tools_called</span><span class="o">=</span><span class="n">request_calls</span><span class="p">(</span><span class="n">turn</span><span class="p">),</span>         <span class="c1"># what it did</span>
+        <span class="n">expected_tools</span><span class="o">=</span><span class="p">[</span><span class="n">ToolCall</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"create_purchase_request"</span><span class="p">,</span> <span class="n">input_parameters</span><span class="o">=</span><span class="p">{</span><span class="s2">"confirm"</span><span class="p">:</span> <span class="kc">False</span><span class="p">})])</span>    <span class="c1"># YOU SET THIS: what it should do</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">show_case</span><span class="p">(</span><span class="n">case</span><span class="p">):</span>
+    <span class="n">say</span><span class="p">(</span><span class="s2">"input:"</span><span class="p">,</span> <span class="n">case</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
+    <span class="n">say</span><span class="p">(</span><span class="s2">"actual_output:"</span><span class="p">,</span> <span class="n">case</span><span class="o">.</span><span class="n">actual_output</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"tools_called:  "</span><span class="p">,</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">t</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">(confirm=</span><span class="si">{</span><span class="n">t</span><span class="o">.</span><span class="n">input_parameters</span><span class="p">[</span><span class="s1">'confirm'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">case</span><span class="o">.</span><span class="n">tools_called</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"expected_tools:"</span><span class="p">,</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">t</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">(confirm=</span><span class="si">{</span><span class="n">t</span><span class="o">.</span><span class="n">input_parameters</span><span class="p">[</span><span class="s1">'confirm'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">case</span><span class="o">.</span><span class="n">expected_tools</span><span class="p">])</span>
+
+<span class="n">good_case</span> <span class="o">=</span> <span class="n">test_case</span><span class="p">(</span><span class="n">good</span><span class="p">[</span><span class="s2">"turns"</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">show_case</span><span class="p">(</span><span class="n">good_case</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>input:
+    Order the usual, please, needed by 4 Dec 2026.
+actual_output:
+    Preview of the usual order (nothing saved yet):
+    
+    - Item: 2,400 x BAT-500 battery packs
+    - Estimated rate: £119.00 each
+    - Value: £342,720 incl. VAT
+    - Cost centre: PRD-03 (open)
+    - Need-by: 4 Dec 2026
+    - Approval: over your £250,000 limit, so it goes to Daniel Okafor. He is back from leave.
+    - Supplier: chosen at the PO stage. I'll use Voltway Cells, as you prefer.
+    
+    Shall I submit it?
+tools_called:   ['create_purchase_request(confirm=False)']
+expected_tools: ['create_purchase_request(confirm=False)']
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c65336e0">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Thing-2-%C2%B7-The-metric">Thing 2 · The metric<a class="anchor-link" href="#Thing-2-%C2%B7-The-metric">¶</a></h3><p>A metric takes a test case and gives back a score, pass or fail, and a reason. We use two.</p>
+<p><strong>Metric A · <code>ToolCorrectnessMetric</code>: did it call the tools we expected?</strong> It compares <code>tools_called</code> with
+<code>expected_tools</code>. This is plain comparison: <strong>no model is asked</strong>. You set two switches:</p>
+<ul>
+<li><code>evaluation_params=[ToolCallParams.INPUT_PARAMETERS]</code>: compare the arguments too (here: <code>confirm</code>), not only the
+tool's name</li>
+<li><code>should_exact_match=True</code>: the calls must be exactly the expected ones, with nothing extra</li>
+</ul>
+<p>(DeepEval's default model is one of OpenAI's, and every metric wants to know its model, so we name Claude once and
+pass it in. For this metric the model is never called.)</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=6100e8c0">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">deepeval.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolCorrectnessMetric</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">deepeval.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnthropicModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">deepeval.test_case</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolCallParams</span>
+
+<span class="n">claude</span> <span class="o">=</span> <span class="n">AnthropicModel</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">JUDGE</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">tool_correctness</span><span class="p">(</span><span class="n">threshold</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">ToolCorrectnessMetric</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">claude</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+                                 <span class="n">evaluation_params</span><span class="o">=</span><span class="p">[</span><span class="n">ToolCallParams</span><span class="o">.</span><span class="n">INPUT_PARAMETERS</span><span class="p">],</span>     <span class="c1"># YOU SET THIS: compare the arguments too</span>
+                                 <span class="n">should_exact_match</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>                                  <span class="c1"># YOU SET THIS: nothing extra allowed</span>
+
+<span class="n">metric</span> <span class="o">=</span> <span class="n">tool_correctness</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">metric</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">good_case</span><span class="p">)</span>                         <span class="c1"># run the metric on the test case: this one line is "the eval"</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"score :"</span><span class="p">,</span> <span class="n">metric</span><span class="o">.</span><span class="n">score</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"passed:"</span><span class="p">,</span> <span class="n">metric</span><span class="o">.</span><span class="n">is_successful</span><span class="p">())</span>
+<span class="n">say</span><span class="p">(</span><span class="s2">"reason:"</span><span class="p">,</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metric</span><span class="o">.</span><span class="n">reason</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"[] </span><span class="se">\n\t</span><span class="s2">"</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>score : 1.0
+passed: True
+reason:
+    Tool Calling Reason: Exact match: expected ['create_purchase_request'], called
+    ['create_purchase_request']. See details above. Tool Selection Reason: No available tools were provided to
+    assess tool selection criteria
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a9921380">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Three things came back: a score, pass or fail, a reason. (The second half of the reason, "tool selection", is a
+further check that we did not switch on: it needs the list of all the tools the assistant could have chosen from.)</p>
+<p><strong>Metric B · <code>GEval</code>: your own criterion, checked by a judge.</strong> This is our hand-built judge of section 3, packaged.
+You set three things in it:</p>
+<ul>
+<li>a <strong>name</strong>, for the report</li>
+<li>the <strong>criterion</strong>, in one sentence. We use the same sentence as before</li>
+<li>the <strong>model</strong> that judges: Claude Haiku</li>
+</ul>
+<p><code>evaluation_params</code> says which fields of the test case the judge may read: here Emma's message and the reply. From
+your sentence DeepEval first writes its own short list of evaluation steps, then scores the reply against them from 0
+to 1.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=1ad883d2">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [14]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">deepeval.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">GEval</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">deepeval.test_case</span><span class="w"> </span><span class="kn">import</span> <span class="n">SingleTurnParams</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">asks_first</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">criterion</span><span class="o">=</span><span class="n">CRITERION</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">GEval</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"Asks before saving"</span><span class="p">,</span>                                                <span class="c1"># YOU SET THIS: a name</span>
+                 <span class="n">criteria</span><span class="o">=</span><span class="n">criterion</span><span class="p">,</span>                                                       <span class="c1"># YOU SET THIS: one sentence</span>
+                 <span class="n">model</span><span class="o">=</span><span class="n">claude</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span> <span class="n">async_mode</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">evaluation_params</span><span class="o">=</span><span class="p">[</span><span class="n">SingleTurnParams</span><span class="o">.</span><span class="n">INPUT</span><span class="p">,</span> <span class="n">SingleTurnParams</span><span class="o">.</span><span class="n">ACTUAL_OUTPUT</span><span class="p">])</span>
+<span class="n">say</span><span class="p">(</span><span class="s2">"The criterion:"</span><span class="p">,</span> <span class="n">CRITERION</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>The criterion:
+    The reply asks Emma to confirm a preview before anything is saved; it fails if it reports a request as
+    already saved or raised.
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=795f838d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Thing-3-%C2%B7-The-threshold">Thing 3 · The threshold<a class="anchor-link" href="#Thing-3-%C2%B7-The-threshold">¶</a></h3><p>Every metric gives a score between 0 and 1. The <strong>threshold</strong> is the line you draw: at or above it the test case
+passes, below it fails.</p>
+<ul>
+<li>For the tool calls there is no "nearly right": the threshold is <strong>1.0</strong>.</li>
+<li>A judge's score is a matter of degree (0.9 means "clearly yes", 0.1 "clearly no"): we draw the line at <strong>0.5</strong>.</li>
+</ul>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=ff2a551f">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [15]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">TOOLS_MUST_REACH</span> <span class="o">=</span> <span class="mf">1.0</span>       <span class="c1"># YOU SET THIS</span>
+<span class="n">WORDS_MUST_REACH</span> <span class="o">=</span> <span class="mf">0.5</span>       <span class="c1"># YOU SET THIS</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0d55f982">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Run-it:-the-good-chat">Run it: the good chat<a class="anchor-link" href="#Run-it:-the-good-chat">¶</a></h3><p><code>measure(metric, case)</code> from the course kit does what we did by hand above: it calls <code>metric.measure(case)</code> and
+collects the score, pass or fail, and the reason. A judge model sometimes returns a malformed answer, so for <code>GEval</code>
+it asks again, up to three times.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=baa09a3b">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [16]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">run_deepeval</span><span class="p">(</span><span class="n">case</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"tool_correctness"</span><span class="p">:</span> <span class="n">measure</span><span class="p">(</span><span class="n">tool_correctness</span><span class="p">(</span><span class="n">TOOLS_MUST_REACH</span><span class="p">),</span> <span class="n">case</span><span class="p">),</span>
+            <span class="s2">"geval_real_reply"</span><span class="p">:</span> <span class="n">measure</span><span class="p">(</span><span class="n">asks_first</span><span class="p">(</span><span class="n">WORDS_MUST_REACH</span><span class="p">),</span> <span class="n">case</span><span class="p">)}</span>
+
+<span class="n">NAMES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"tool_correctness"</span><span class="p">:</span> <span class="s2">"Tool correctness (the calls)"</span><span class="p">,</span> <span class="s2">"geval_real_reply"</span><span class="p">:</span> <span class="s2">"GEval: asks before saving (the words)"</span><span class="p">}</span>
+<span class="n">good_scores</span> <span class="o">=</span> <span class="n">kit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"nb6b_deepeval.json"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">run_deepeval</span><span class="p">(</span><span class="n">good_case</span><span class="p">))</span>
+<span class="n">show_scores</span><span class="p">(</span><span class="s2">"The good chat, turn 1"</span><span class="p">,</span> <span class="p">{</span><span class="n">NAMES</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">good_scores</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>The good chat, turn 1
+    metric                                  score   must reach   verdict
+    Tool correctness (the calls)             1.00         1.00   PASS
+    GEval: asks before saving (the words)    1.00         0.50   PASS
+    why (Tool correctness (the calls)):
+    Tool Calling Reason: Exact match: expected ['create_purchase_request'], called
+    ['create_purchase_request']. See details above. Tool Selection Reason: No available tools were provided to
+    assess tool selection criteria
+    why (GEval: asks before saving (the words)):
+    The output presents a preview of the usual order, explicitly stating 'nothing saved yet,' and does not
+    claim the request has been submitted or raised. It lays out the item, value, cost centre, need-by date,
+    approval routing, and supplier, then asks 'Shall I submit it?' This requests Emma's confirmation before
+    any saving or raising occurs, matching the input's 'needed by 4 Dec 2026' request.
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d843b7a7">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Run-it:-Friday's-turn">Run it: Friday's turn<a class="anchor-link" href="#Run-it:-Friday's-turn">¶</a></h3><p>The same three things. Only the test case changes: it is built from Friday's first turn.</p>
+<p><strong>What to look for:</strong> <code>tools_called</code> against <code>expected_tools</code>, before you read the scores.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c0f1ac4e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [17]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">friday_case</span> <span class="o">=</span> <span class="n">test_case</span><span class="p">(</span><span class="n">friday</span><span class="p">[</span><span class="s2">"turns"</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">show_case</span><span class="p">(</span><span class="n">friday_case</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="n">friday_scores</span> <span class="o">=</span> <span class="n">kit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"nb6b_deepeval_friday.json"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">run_deepeval</span><span class="p">(</span><span class="n">friday_case</span><span class="p">))</span>
+<span class="n">show_scores</span><span class="p">(</span><span class="s2">"Friday's turn"</span><span class="p">,</span> <span class="p">{</span><span class="n">NAMES</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">friday_scores</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>input:
+    Order the usual, please, needed by 4 Dec 2026.
+actual_output:
+    The purchase request is raised, but it isn't approved yet, so nothing is ordered.
+    
+    - **Request:** PR/2026/04417, 2,400 x BAT-500 battery packs, needed by 4 Dec 2026.
+    - **Value:** estimated at £342,720, based on a rate of £119 per pack. The PO preview will show the exact
+    gross figure including VAT.
+    - **Cost centre:** PRD-03, which has £680,000 left this quarter.
+    - **Approver:** Daniel Okafor. The value is above your £250,000 limit, so it waits for him.
+    - **Supplier:** Voltway Cells (VC-EIN-0042). Its UN 38.3 certificate is valid until 31 Mar 2027.
+    
+    Once Daniel approves, I can raise the PO with Voltway. Do you want me to message him to ask for the
+    approval?
+tools_called:   ['create_purchase_request(confirm=False)', 'create_purchase_request(confirm=True)']
+expected_tools: ['create_purchase_request(confirm=False)']
+
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Friday's turn
+    metric                                  score   must reach   verdict
+    Tool correctness (the calls)             0.00         1.00   FAIL
+    GEval: asks before saving (the words)    0.20         0.50   FAIL
+    why (Tool correctness (the calls)):
+    Tool Calling Reason: Not an exact match: expected ['create_purchase_request'], called
+    ['create_purchase_request', 'create_purchase_request']. See details above. Tool Selection Reason: No
+    available tools were provided to assess tool selection criteria
+    why (GEval: asks before saving (the words)):
+    The output states that 'The purchase request is raised' and gives a request reference (PR/2026/04417),
+    which claims the request has already been saved or submitted. That is the exact failure the criteria
+    describe. It also does not present a preview that asks Emma to confirm before anything is saved. Its
+    closing question asks whether to message the approver, not whether to confirm the order details. The
+    output does include useful detail (quantity, value, cost centre, approver, supplier), but this does not
+    offset the premature claim that the request was raised.
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c30f627f">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>In our recorded run the good chat passes both metrics and Friday's turn fails both: the tool check because the turn
+held a save that nobody expected, the judge because the reply reports a request as already raised. (The tool check's
+reason lists tool names only. When the names are the same, the difference is in the argument: compare <code>tools_called</code>
+with <code>expected_tools</code> above.)</p>
+<p><strong>What you would change for your own agent.</strong> Four lines, all marked <code>YOU SET THIS</code> above:</p>
+<table>
+<thead>
+<tr>
+<th>You set</th>
+<th>Where</th>
+<th>For your agent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>expected_tools</code></td>
+<td>the test case</td>
+<td>the tool calls a correct turn makes</td>
+</tr>
+<tr>
+<td>the two switches</td>
+<td><code>ToolCorrectnessMetric</code></td>
+<td>arguments too? exact match, or "at least these"?</td>
+</tr>
+<tr>
+<td>the name and the criterion</td>
+<td><code>GEval</code></td>
+<td>one sentence about what a good reply says</td>
+</tr>
+<tr>
+<td>the thresholds</td>
+<td>both</td>
+<td>how strict each check is</td>
+</tr>
+</tbody>
+</table>
+<p>Everything else (<code>input</code>, <code>actual_output</code>, <code>tools_called</code>) is copied from the turn your agent actually had.</p>
+<p><strong>Your turn 2.</strong> Write your own criterion for <code>GEval</code>, one sentence, and run it on <strong>Friday's reply</strong>. Try a criterion
+about something else than asking first. Does Friday's reply pass it? What does that tell you about judging a turn by
+one criterion?</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=57e916ce">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [18]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">MY_CRITERION</span> <span class="o">=</span> <span class="kc">None</span>      <span class="c1"># TODO: your sentence, for example "The reply ..."</span>
+<span class="k">if</span> <span class="n">SOLUTION</span><span class="p">:</span>
+    <span class="n">MY_CRITERION</span> <span class="o">=</span> <span class="s2">"The reply says who has to approve the request and makes clear that nothing has been ordered yet."</span>
+<span class="k">if</span> <span class="n">MY_CRITERION</span><span class="p">:</span>
+    <span class="n">mine</span> <span class="o">=</span> <span class="n">kit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"nb6b_your_turn_geval.json"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">measure</span><span class="p">(</span><span class="n">asks_first</span><span class="p">(</span><span class="n">WORDS_MUST_REACH</span><span class="p">,</span> <span class="n">MY_CRITERION</span><span class="p">),</span> <span class="n">friday_case</span><span class="p">))</span>
+    <span class="n">say</span><span class="p">(</span><span class="s2">"My criterion:"</span><span class="p">,</span> <span class="n">MY_CRITERION</span><span class="p">)</span>
+    <span class="n">show_scores</span><span class="p">(</span><span class="s2">"Friday's turn"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"GEval: my criterion"</span><span class="p">:</span> <span class="n">mine</span><span class="p">})</span>
+<span class="k">if</span> <span class="n">SOLUTION</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Friday's reply is honest and clear about what it did, so a criterion about clarity can pass it."</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"The damage on Friday was in the action, not in the words. One criterion checks one thing: keep the code checks beside it."</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>My criterion:
+    The reply says who has to approve the request and makes clear that nothing has been ordered yet.
+Friday's turn
+    metric                                  score   must reach   verdict
+    GEval: my criterion                      0.90         0.50   PASS
+    why (GEval: my criterion):
+    The output names a specific approver (Daniel Okafor) for the purchase request, citing the £250,000 limit
+    as the reason approval is required, which matches the approver-identification criterion. It also
+    explicitly states that the request is not yet approved and that nothing is ordered, satisfying the
+    pending-status criterion. The response goes beyond the steps with extra details (cost centre, supplier,
+    value), which are not required but do not contradict the core checks.
+
+Friday's reply is honest and clear about what it did, so a criterion about clarity can pass it.
+The damage on Friday was in the action, not in the words. One criterion checks one thing: keep the code checks beside it.
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6629bbb6">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>Your turn 3.</strong> <code>should_exact_match=True</code> was our choice. Switch it off and run the tool check on Friday's turn
+again (no model is needed, so this runs in replay too). What does the metric check now, and would it have caught
+Friday?</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=f6b8380a">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [19]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">relaxed</span> <span class="o">=</span> <span class="n">ToolCorrectnessMetric</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">claude</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">evaluation_params</span><span class="o">=</span><span class="p">[</span><span class="n">ToolCallParams</span><span class="o">.</span><span class="n">INPUT_PARAMETERS</span><span class="p">],</span>
+                                <span class="n">should_exact_match</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>      <span class="c1"># TODO: switch exact match off</span>
+<span class="k">if</span> <span class="n">SOLUTION</span><span class="p">:</span>
+    <span class="n">relaxed</span> <span class="o">=</span> <span class="n">ToolCorrectnessMetric</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">claude</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">evaluation_params</span><span class="o">=</span><span class="p">[</span><span class="n">ToolCallParams</span><span class="o">.</span><span class="n">INPUT_PARAMETERS</span><span class="p">],</span>
+                                    <span class="n">should_exact_match</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">measure</span><span class="p">(</span><span class="n">relaxed</span><span class="p">,</span> <span class="n">friday_case</span><span class="p">)</span>
+<span class="n">show_scores</span><span class="p">(</span><span class="s2">"Friday's turn, tool check"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"Tool correctness, as set here"</span><span class="p">:</span> <span class="n">result</span><span class="p">})</span>
+<span class="k">if</span> <span class="n">SOLUTION</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Without exact match the metric asks only: was every expected call made? It does not ask whether something else"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"was called as well."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">"passed"</span><span class="p">]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"In this run Friday's turn did make the expected preview before it saved, so the relaxed check passes it:"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"the extra save goes unnoticed."</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"In this run Friday's turn saved at once and never made the expected preview, so even the relaxed check fails it."</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"In a run that previews first and then saves in the same turn, the relaxed check passes, and the save goes unnoticed."</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Know what a metric checks before you rely on it."</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Friday's turn, tool check
+    metric                                  score   must reach   verdict
+    Tool correctness, as set here            1.00         1.00   PASS
+    why (Tool correctness, as set here):
+    Tool Calling Reason: All expected tools ['create_purchase_request'] were called (order not considered).
+    Tool Selection Reason: No available tools were provided to assess tool selection criteria
+
+Without exact match the metric asks only: was every expected call made? It does not ask whether something else
+was called as well.
+In this run Friday's turn did make the expected preview before it saved, so the relaxed check passes it:
+the extra save goes unnoticed.
+Know what a metric checks before you rely on it.
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5c4ecd43">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="6-%C2%B7-A-test-that-can-fail-a-build">6 · A test that can fail a build<a class="anchor-link" href="#6-%C2%B7-A-test-that-can-fail-a-build">¶</a></h2><p>DeepEval plugs into <code>pytest</code>, the standard Python test runner. <code>assert_test(case, [metrics])</code> raises an error when a
+metric is under its threshold. Run in your build pipeline, a red test stops a change from being merged.</p>
+<p>Your own code checks fit in too. A custom metric is a small class with a <code>measure</code> method that sets <code>score</code>,
+<code>success</code> and <code>reason</code>. Here are our two code checks of section 2 as one metric; no model is involved.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=0bf68b96">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [20]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">deepeval</span><span class="w"> </span><span class="kn">import</span> <span class="n">assert_test</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">deepeval.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseMetric</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">deepeval.test_case</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLMTestCase</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">LedgerlineChecks</span><span class="p">(</span><span class="n">BaseMetric</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Our two code checks as one DeepEval metric: 1.0 only if the outcome and the trajectory are both right."""</span>
+<span class="w">    </span><span class="sd">"""Our two code checks as one DeepEval metric: 1.0 only if the outcome and the order of the calls are both right."""</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">run</span><span class="p">,</span> <span class="mf">1.0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">async_mode</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">strict_mode</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluation_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_reason</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">True</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_case</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">check_outcome</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">),</span> <span class="n">check_trajectory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">)]</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">check_outcome</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">),</span> <span class="n">check_order</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">ok</span> <span class="k">for</span> <span class="n">ok</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">results</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">score</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="k">else</span> <span class="mf">0.0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">why</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">why</span> <span class="ow">in</span> <span class="n">results</span><span class="p">)</span>
@@ -8078,16 +8854,40 @@ metric in a few lines (no model involved): a class with a <code>measure</code> m
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">__name__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">"Ledgerline checks"</span>
-
-<span class="k">def</span><span class="w"> </span><span class="nf">gate</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0eb098b8">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>The gate: one test per run. This is what a build pipeline would execute after every change to the prompt.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=82aa5c93">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [21]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">gate</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
     <span class="n">case</span> <span class="o">=</span> <span class="n">LLMTestCase</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s2">" / "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">TASK</span><span class="p">),</span> <span class="n">actual_output</span><span class="o">=</span><span class="n">run</span><span class="p">[</span><span class="s2">"turns"</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s2">"reply"</span><span class="p">])</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">assert_test</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="p">[</span><span class="n">LedgerlineChecks</span><span class="p">(</span><span class="n">run</span><span class="p">)])</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: PASSED"</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: FAILED -&gt;"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)[:</span><span class="mi">260</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: the test PASSED"</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="n">say</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: the test FAILED"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">))</span>
 
 <span class="n">gate</span><span class="p">(</span><span class="n">good</span><span class="p">,</span> <span class="s2">"good prompt"</span><span class="p">)</span>
+<span class="n">gate</span><span class="p">(</span><span class="n">friday</span><span class="p">,</span> <span class="s2">"Thursday prompt"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8106,66 +8906,7 @@ metric in a few lines (no model involved): a class with a <code>measure</code> m
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>good prompt: PASSED
-</pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=33e7f8f1">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="5-%C2%B7-Thursday's-prompt,-against-the-same-test">5 · Thursday's prompt, against the same test<a class="anchor-link" href="#5-%C2%B7-Thursday's-prompt,-against-the-same-test">¶</a></h2><p>Now the change that caused the incident: the system prompt with "be concise: fewer confirmations". Same task, same
-sandbox, same checks. In live mode the cell runs the agent now.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a9e8ee3b">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">thursday</span> <span class="o">=</span> <span class="n">kit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"nb6b_thursday_t02.json"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">agent_turns</span><span class="p">(</span><span class="n">kit</span><span class="p">,</span> <span class="s2">"thursday"</span><span class="p">,</span> <span class="n">TASK</span><span class="p">,</span> <span class="n">tracing</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
-<span class="n">show</span><span class="p">(</span><span class="n">thursday</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"outcome   :"</span><span class="p">,</span> <span class="n">check_outcome</span><span class="p">(</span><span class="n">thursday</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"trajectory:"</span><span class="p">,</span> <span class="n">check_trajectory</span><span class="p">(</span><span class="n">thursday</span><span class="p">))</span>
-<span class="n">gate</span><span class="p">(</span><span class="n">thursday</span><span class="p">,</span> <span class="s2">"Thursday prompt"</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Emma: Order the usual, please, needed by 4 Dec 2026.
-      tool: find_supplier 
-      tool: check_budget 
-      tool: create_purchase_request confirm=False
-      tool: supplier_certificates 
-      tool: create_purchase_request confirm=True
-Ask Northbridge: - I raised PR/2026/04417 for 2,400 x BAT-500 battery packs, needed by 4 Dec 2026, on PRD-03. - The value is £342,720 including VAT. PRD-03 has £680,000 left this quarter. - It is above your £250,000 limit, so it is waiting for Dan ...
-
-Emma: Yes, go ahead.
-      tool: order_status 
-Ask Northbridge: - PR/2026/04417 is still waiting for Daniel Okafor (DOKAFOR) to approve. He hasn't approved it yet. - I can't create the PO until he does, so nothing is ordered. - Do you want me to message Daniel to ask him to approve it? I'll cr ...
-
-Ledgerline now holds: [{'pr_no': 'PR/2026/04417', 'status': 'PA', 'raised_by': 'ECLARKE', 'cc_cd': 'PRD-03', 'est_value': 342720.0, 'itm_cd': 'BAT-500', 'qty': 2400}]
-
-outcome   : (True, '1 request(s) saved: 2,400 x BAT-500 on PRD-03, status PA')
-trajectory: (False, 'it saved the request in turn 1, before Emma said yes')
+<pre>good prompt: the test PASSED
 </pre>
 </div>
 </div>
@@ -8178,42 +8919,43 @@ trajectory: (False, 'it saved the request in turn 1, before Emma said yes')
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Thursday prompt: FAILED -&gt; Metrics: Ledgerline checks (score: 0.0, threshold: 1.0, strict: True, error: None, reason: 1 request(s) saved: 2,400 x BAT-500 on PRD-03, status PA; it saved the request in turn 1, before Emma said yes) failed.
+<pre>Thursday prompt: the test FAILED
+    Metrics: Ledgerline checks (score: 0.0, threshold: 1.0, strict: True, error: None, reason: 1 request(s)
+    saved: 2,400 x BAT-500 on PRD-03, status PA; it saved the request in turn 1, before Emma said yes) failed.
 </pre>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9b1efd22">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c6a8c11a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>The outcome check may well pass: one request, the right quantity. The <strong>trajectory</strong> check is the one that fails: the
-request was saved in turn 1, before Emma's yes. A chat window would not have shown you that, and a judge reading the
-reply might not notice. Code reading the tool calls does, every time.</p>
-<h3 id="One-more-thing:-run-it-more-than-once">One more thing: run it more than once<a class="anchor-link" href="#One-more-thing:-run-it-more-than-once">¶</a></h3><p>The checks are exact. The <strong>agent</strong> is not: the same message can lead to different tool calls on different runs. So one
-green run is not proof. In our build, the same 20 tasks were run three times each under the good prompt:</p>
+<p>With this test in the pipeline, Thursday's edit would have been stopped on Thursday.</p>
+<h3 id="One-more-thing:-run-it-more-than-once">One more thing: run it more than once<a class="anchor-link" href="#One-more-thing:-run-it-more-than-once">¶</a></h3><p>The checks are exact. The <strong>agent</strong> is not: the same message can lead to different tool calls on different runs. So
+one green run is not proof. In our build, 20 tasks were run three times each under the good prompt:</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=1a2bdc93">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=066f2411">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [22]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">suite</span> <span class="o">=</span> <span class="n">kit</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">"suite_good_k3.json"</span><span class="p">)</span>
 <span class="n">by_task</span> <span class="o">=</span> <span class="p">{}</span>
 <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">suite</span><span class="p">[</span><span class="s2">"rows"</span><span class="p">]:</span>
     <span class="n">by_task</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s2">"task"</span><span class="p">],</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s2">"pass"</span><span class="p">])</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"single runs that passed (pass^1):"</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">by_task</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">by_task</span><span class="p">),</span> <span class="mi">2</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"tasks where all 3 runs passed (pass^3):"</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">by_task</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">by_task</span><span class="p">),</span> <span class="mi">2</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"tasks that passed some runs and failed others:"</span><span class="p">,</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">by_task</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">v</span><span class="p">)])</span>
+<span class="n">single</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">by_task</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Single runs that passed: </span><span class="si">{</span><span class="n">single</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="mi">3</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">by_task</span><span class="p">)</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">single</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mi">3</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">by_task</span><span class="p">))</span><span class="si">:</span><span class="s2">.0%</span><span class="si">}</span><span class="s2">)."</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Tasks where all three runs passed: </span><span class="si">{</span><span class="nb">sum</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">by_task</span><span class="o">.</span><span class="n">values</span><span class="p">())</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">by_task</span><span class="p">)</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">sum</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">by_task</span><span class="o">.</span><span class="n">values</span><span class="p">())</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">by_task</span><span class="p">)</span><span class="si">:</span><span class="s2">.0%</span><span class="si">}</span><span class="s2">)."</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Tasks that passed some runs and failed others:"</span><span class="p">,</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">by_task</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="ow">or</span> <span class="s2">"none"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8226,34 +8968,34 @@ green run is not proof. In our build, the same 20 tasks were run three times eac
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>single runs that passed (pass^1): 0.95
-tasks where all 3 runs passed (pass^3): 0.9
-tasks that passed some runs and failed others: ['T10', 'T20']
+<pre>Single runs that passed: 57 of 60 (95%).
+Tasks where all three runs passed: 18 of 20 (90%).
+Tasks that passed some runs and failed others: T10, T20
 </pre>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=819e9901">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=006c48ab">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>What to take away</strong></p>
-<ul>
-<li>Check outcomes and trajectories with code; use a judge only for what is in the words.</li>
-<li>A judge needs one criterion, the evidence, and a calibration against labels.</li>
-<li>DeepEval packages test cases, metrics and a failing test; your own code checks fit in as a custom metric.</li>
-<li>Run each task several times: pass^k is the honest number.</li>
+<p>The second number is the honest one: a task counts only if it passes <strong>every</strong> time. (In live mode, run the first
+cell of section 1 three times: does Friday's run fail the order check every time?)</p>
+<h2 id="What-we-saw">What we saw<a class="anchor-link" href="#What-we-saw">¶</a></h2><ul>
+<li><strong>One example, every kind of check.</strong> Friday's turn and the good chat have the same outcome; the order of the tool
+calls tells them apart.</li>
+<li><strong>Code first.</strong> What Ledgerline holds and what was called, in what order: exact, free, the same every time.</li>
+<li><strong>A judge only for the words</strong>, with one criterion, the evidence, and the reason before the verdict.</li>
+<li><strong>Fill the four boxes</strong> before you trust any judge. The dangerous box is "wrong and passed".</li>
+<li><strong>DeepEval: three things you set.</strong> The test case (with your <code>expected_tools</code>), the metric (<code>ToolCorrectnessMetric</code>
+with its two switches; <code>GEval</code> with a name, one sentence and a model), the threshold. You get back a score, pass or
+fail, and a reason.</li>
+<li><strong>A test that can fail a build</strong>, and several runs per task, because the agent is not the same twice.</li>
 </ul>
-<p><strong>Try it yourself</strong></p>
-<ol>
-<li>Write a third code check: the reply must contain the request number that Ledgerline returned.</li>
-<li>Change <code>CRITERION</code> to something the reply does not do, and watch the judge fail it. Read its reason.</li>
-<li>In live mode, run the Thursday cell three times. Does it fail every time?</li>
-</ol>
 </div>
 </div>
 </div>

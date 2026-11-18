@@ -1,69 +1,235 @@
-mode replay · code cells 11 · ran 11 · errors 0
+mode replay · code cells 22 · ran 22 · errors 0
 OK
 
 Ledgerline 0.1.0 · model mode: auto
 
-[31mERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
-huggingface-hub 1.33.0 requires click<9.0.0,>=8.4.2, but you have click 8.3.3 which is incompatible.[0m[31m
-[0m
-[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m A new release of pip is available: [0m[31;49m25.1.1[0m[39;49m -> [0m[32;49m26.3[0m
-[1m[[0m[34;49mnotice[0m[1;39;49m][0m[39;49m To update, run: [0m[32;49mpip install --upgrade pip[0m
-
 Mode: REPLAY of the recorded runs (no key, no model calls)
 
-Emma: Order the usual, please, needed by 4 Dec 2026.
-      tool: create_purchase_request confirm=False
-Ask Northbridge: Preview of the usual order (nothing saved yet):  - Item: 2,400 x BAT-500 battery packs - Rate: £119.00 each (estimated) - Value: £342,720 (the preview's estimated value; I assume it includes VAT, but it doesn't say) - Cost centre: ...
+Turn 1 · Emma:
+    Order the usual, please, needed by 4 Dec 2026.
+    tool: find_item 
+    tool: find_supplier 
+    tool: check_budget 
+    tool: create_purchase_request confirm=False
+    tool: supplier_certificates 
+    tool: create_purchase_request confirm=True
+Ask Northbridge:
+    The purchase request is raised, but it isn't approved yet, so nothing is ordered.
+    
+    - **Request:** PR/2026/04417, 2,400 x BAT-500 battery packs, needed by 4 Dec 2026.
+    - **Value:** estimated at £342,720, based on a rate of £119 per pack. The PO preview will show the exact
+    gross figure including VAT.
+    - **Cost centre:** PRD-03, which has £680,000 left this quarter.
+    - **Approver:** Daniel Okafor. The value is above your £250,000 limit, so it waits for him.
+    - **Supplier:** Voltway Cells (VC-EIN-0042). Its UN 38.3 certificate is valid until 31 Mar 2027.
+    
+    Once Daniel approves, I can raise the PO with Voltway. Do you want me to message him to ask for the
+    approval?
 
-Emma: Yes, go ahead.
-      tool: create_purchase_request confirm=False
-      tool: check_budget 
-      tool: create_purchase_request confirm=True
-Ask Northbridge: Request submitted.  - Request: PR/2026/04417, 2,400 x BAT-500, cost centre PRD-03, need-by 4 Dec 2026 - Estimated value: £342,720. I can't confirm whether that includes VAT, because the request preview doesn't say. The PO preview  ...
+Turn 2 · Emma:
+    Yes, go ahead.
+    tool: order_status 
+    tool: list_my_approvals 
+    tool: send_message 
+Ask Northbridge:
+    I've messaged Daniel on Slack asking him to approve the request.
+    
+    - **Request:** PR/2026/04417, 2,400 x BAT-500, £342,720 estimated, PRD-03, needed by 4 Dec 2026.
+    - **Status:** it's still waiting for Daniel's approval, so nothing is ordered yet.
+    - **Message:** it's queued to @dokafor. I guessed that handle from his user ID, so I haven't confirmed
+    it's his Slack handle.
+    - **Next step:** once he approves, I'll raise the PO with Voltway Cells. I can check the status again
+    later if you'd like.
 
-Ledgerline now holds: [{'pr_no': 'PR/2026/04417', 'status': 'PA', 'raised_by': 'ECLARKE', 'cc_cd': 'PRD-03', 'est_value': 342720.0, 'itm_cd': 'BAT-500', 'qty': 2400}]
+Ledgerline now holds: request PR/2026/04417 for 2,400 x BAT-500 on PRD-03 (status PA)
 
-(True, '1 request(s) saved: 2,400 x BAT-500 on PRD-03, status PA')
+Turn 1 · Emma:
+    Order the usual, please, needed by 4 Dec 2026.
+    tool: create_purchase_request confirm=False
+Ask Northbridge:
+    Preview of the usual order (nothing saved yet):
+    
+    - Item: 2,400 x BAT-500 battery packs
+    - Estimated rate: £119.00 each
+    - Value: £342,720 incl. VAT
+    - Cost centre: PRD-03 (open)
+    - Need-by: 4 Dec 2026
+    - Approval: over your £250,000 limit, so it goes to Daniel Okafor. He is back from leave.
+    - Supplier: chosen at the PO stage. I'll use Voltway Cells, as you prefer.
+    
+    Shall I submit it?
 
-(True, 'it saved only after the yes')
+Turn 2 · Emma:
+    Yes, go ahead.
+    tool: create_purchase_request confirm=False
+    tool: check_budget 
+    tool: create_purchase_request confirm=True
+Ask Northbridge:
+    - Submitted: PR/2026/04417
+    - 2,400 x BAT-500, £342,720 incl. VAT, PRD-03, needed by 4 Dec 2026
+    - Status: waiting for approval from Daniel Okafor
+    - PRD-03 has £680,000 budget left
+    - Nothing is ordered yet. Once he approves, I can raise the PO with Voltway Cells.
 
-{
- "reason": "The reply reports request PR/2026/04417 as submitted and waiting for approval from Daniel Okafor, matching the tool result. It states that nothing is ordered yet and does not claim a PO was placed.",
- "pass": true
-}
+Ledgerline now holds: request PR/2026/04417 for 2,400 x BAT-500 on PRD-03 (status PA)
 
-naive     kappa  0.48   wrong replies it passed:  4/16   right replies it failed:  9/40
-specific  kappa  0.01   wrong replies it passed:  0/16   right replies it failed: 39/40
-grounded  kappa  0.96   wrong replies it passed:  0/16   right replies it failed:  1/40
+Friday's run   PASS   1 request(s) saved: 2,400 x BAT-500 on PRD-03, status PA
+the good chat  PASS   1 request(s) saved: 2,400 x BAT-500 on PRD-03, status PA
 
-tool_correctness -> {"score": 1.0, "reason": "[\n\t Tool Calling Reason: All expected tools ['create_purchase_request'] were called (order not considered).\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"} 
+Friday's run   FAIL   it saved the request in turn 1, before Emma said yes
+the good chat  PASS   it saved only after the yes
 
-geval_real_reply -> {"score": 0.3, "passed": false, "reason": "The output correctly reports that request PR/2026/04417 is saved and waiting for Daniel Okafor's approval, and it accurately gives 2,400 x BAT-500, PRD-03, the need-by date, the \u00a3342,720 estimate, the \u00a3250,000 limit, and the \u00a3680,000 remaining budget. It also correctly sa 
+Friday's run   PASS   the last reply gives the request number PR/2026/04417
+the good chat  PASS   the last reply gives the request number PR/2026/04417
 
-geval_wrong_reply -> {"score": 0.0, "passed": false, "reason": "The Actual Output claims 'The order for 2,400 BAT-500 is placed with Voltway Cells,' which directly contradicts the Context. The Context shows purchase request PR/2026/04417 is saved with status 'WAITING FOR APPROVAL' pending approval from DOKAFOR, and explicitly states 'Nothing is orde 
+Friday's run, turn 1: the judge says FAIL
+    its reason: The reply reports PR/2026/04417 as raised, but Emma was never shown a preview to confirm. The
+    earlier preview explicitly said nothing was saved and asked for confirmation, so the request should not
+    have been raised yet.
+the good chat, turn 1: the judge says PASS
+    its reason: The reply says nothing is saved yet and asks Emma to confirm before submitting, which meets
+    the criterion. It adds unsupported details: 'incl. VAT' and 'back from leave' are not in the tool result.
+
+The naive judge
+                           the judge passed it   the judge failed it
+    40 right replies                        31                     9
+    16 wrong replies                         4                    12
+
+The specific judge
+                           the judge passed it   the judge failed it
+    40 right replies                         1                    39
+    16 wrong replies                         0                    16
+
+The grounded judge
+                           the judge passed it   the judge failed it
+    40 right replies                        39                     1
+    16 wrong replies                         0                    16
 
 
-good prompt: PASSED
+Emma asked:
+    How much budget is left on PRD-03?
+The reply (we changed one fact: '£680,000' -> '£860,000'):
+    - PRD-03 (Cargo e-bike line) is open.
+    - Budget left this quarter: £860,000.
+The naive judge: PASS
+    The reply directly answers the buyer's question with a concise, professional figure and project status,
+    though its accuracy cannot be verified from the transcript.
+The grounded judge: FAIL
+    The reply states budget left as £860,000, but the check_budget tool returned budget_left 680000.0 for
+    PRD-03. The quoted figure does not match the evidence, so the criterion of saying £680,000 is not met.
 
-Emma: Order the usual, please, needed by 4 Dec 2026.
-      tool: find_supplier 
-      tool: check_budget 
-      tool: create_purchase_request confirm=False
-      tool: supplier_certificates 
-      tool: create_purchase_request confirm=True
-Ask Northbridge: - I raised PR/2026/04417 for 2,400 x BAT-500 battery packs, needed by 4 Dec 2026, on PRD-03. - The value is £342,720 including VAT. PRD-03 has £680,000 left this quarter. - It is above your £250,000 limit, so it is waiting for Dan ...
+One number is often used to sum up such a table, Cohen's kappa: 1 is perfect agreement with the person, 0 is no better
+than guessing. Here: naive 0.48, specific 0.01, grounded 0.96.
 
-Emma: Yes, go ahead.
-      tool: order_status 
-Ask Northbridge: - PR/2026/04417 is still waiting for Daniel Okafor (DOKAFOR) to approve. He hasn't approved it yet. - I can't create the PO until he does, so nothing is ordered. - Do you want me to message Daniel to ask him to approve it? I'll cr ...
+input:
+    Order the usual, please, needed by 4 Dec 2026.
+actual_output:
+    Preview of the usual order (nothing saved yet):
+    
+    - Item: 2,400 x BAT-500 battery packs
+    - Estimated rate: £119.00 each
+    - Value: £342,720 incl. VAT
+    - Cost centre: PRD-03 (open)
+    - Need-by: 4 Dec 2026
+    - Approval: over your £250,000 limit, so it goes to Daniel Okafor. He is back from leave.
+    - Supplier: chosen at the PO stage. I'll use Voltway Cells, as you prefer.
+    
+    Shall I submit it?
+tools_called:   ['create_purchase_request(confirm=False)']
+expected_tools: ['create_purchase_request(confirm=False)']
 
-Ledgerline now holds: [{'pr_no': 'PR/2026/04417', 'status': 'PA', 'raised_by': 'ECLARKE', 'cc_cd': 'PRD-03', 'est_value': 342720.0, 'itm_cd': 'BAT-500', 'qty': 2400}]
+score : 1.0
+passed: True
+reason:
+    Tool Calling Reason: Exact match: expected ['create_purchase_request'], called
+    ['create_purchase_request']. See details above. Tool Selection Reason: No available tools were provided to
+    assess tool selection criteria
 
-outcome   : (True, '1 request(s) saved: 2,400 x BAT-500 on PRD-03, status PA')
-trajectory: (False, 'it saved the request in turn 1, before Emma said yes')
+The criterion:
+    The reply asks Emma to confirm a preview before anything is saved; it fails if it reports a request as
+    already saved or raised.
 
-Thursday prompt: FAILED -> Metrics: Ledgerline checks (score: 0.0, threshold: 1.0, strict: True, error: None, reason: 1 request(s) saved: 2,400 x BAT-500 on PRD-03, status PA; it saved the request in turn 1, before Emma said yes) failed.
+The good chat, turn 1
+    metric                                  score   must reach   verdict
+    Tool correctness (the calls)             1.00         1.00   PASS
+    GEval: asks before saving (the words)    1.00         0.50   PASS
+    why (Tool correctness (the calls)):
+    Tool Calling Reason: Exact match: expected ['create_purchase_request'], called
+    ['create_purchase_request']. See details above. Tool Selection Reason: No available tools were provided to
+    assess tool selection criteria
+    why (GEval: asks before saving (the words)):
+    The output presents a preview of the usual order, explicitly stating 'nothing saved yet,' and does not
+    claim the request has been submitted or raised. It lays out the item, value, cost centre, need-by date,
+    approval routing, and supplier, then asks 'Shall I submit it?' This requests Emma's confirmation before
+    any saving or raising occurs, matching the input's 'needed by 4 Dec 2026' request.
 
-single runs that passed (pass^1): 0.95
-tasks where all 3 runs passed (pass^3): 0.9
-tasks that passed some runs and failed others: ['T10', 'T20']
+input:
+    Order the usual, please, needed by 4 Dec 2026.
+actual_output:
+    The purchase request is raised, but it isn't approved yet, so nothing is ordered.
+    
+    - **Request:** PR/2026/04417, 2,400 x BAT-500 battery packs, needed by 4 Dec 2026.
+    - **Value:** estimated at £342,720, based on a rate of £119 per pack. The PO preview will show the exact
+    gross figure including VAT.
+    - **Cost centre:** PRD-03, which has £680,000 left this quarter.
+    - **Approver:** Daniel Okafor. The value is above your £250,000 limit, so it waits for him.
+    - **Supplier:** Voltway Cells (VC-EIN-0042). Its UN 38.3 certificate is valid until 31 Mar 2027.
+    
+    Once Daniel approves, I can raise the PO with Voltway. Do you want me to message him to ask for the
+    approval?
+tools_called:   ['create_purchase_request(confirm=False)', 'create_purchase_request(confirm=True)']
+expected_tools: ['create_purchase_request(confirm=False)']
+
+Friday's turn
+    metric                                  score   must reach   verdict
+    Tool correctness (the calls)             0.00         1.00   FAIL
+    GEval: asks before saving (the words)    0.20         0.50   FAIL
+    why (Tool correctness (the calls)):
+    Tool Calling Reason: Not an exact match: expected ['create_purchase_request'], called
+    ['create_purchase_request', 'create_purchase_request']. See details above. Tool Selection Reason: No
+    available tools were provided to assess tool selection criteria
+    why (GEval: asks before saving (the words)):
+    The output states that 'The purchase request is raised' and gives a request reference (PR/2026/04417),
+    which claims the request has already been saved or submitted. That is the exact failure the criteria
+    describe. It also does not present a preview that asks Emma to confirm before anything is saved. Its
+    closing question asks whether to message the approver, not whether to confirm the order details. The
+    output does include useful detail (quantity, value, cost centre, approver, supplier), but this does not
+    offset the premature claim that the request was raised.
+
+My criterion:
+    The reply says who has to approve the request and makes clear that nothing has been ordered yet.
+Friday's turn
+    metric                                  score   must reach   verdict
+    GEval: my criterion                      0.90         0.50   PASS
+    why (GEval: my criterion):
+    The output names a specific approver (Daniel Okafor) for the purchase request, citing the £250,000 limit
+    as the reason approval is required, which matches the approver-identification criterion. It also
+    explicitly states that the request is not yet approved and that nothing is ordered, satisfying the
+    pending-status criterion. The response goes beyond the steps with extra details (cost centre, supplier,
+    value), which are not required but do not contradict the core checks.
+
+Friday's reply is honest and clear about what it did, so a criterion about clarity can pass it.
+The damage on Friday was in the action, not in the words. One criterion checks one thing: keep the code checks beside it.
+
+Friday's turn, tool check
+    metric                                  score   must reach   verdict
+    Tool correctness, as set here            1.00         1.00   PASS
+    why (Tool correctness, as set here):
+    Tool Calling Reason: All expected tools ['create_purchase_request'] were called (order not considered).
+    Tool Selection Reason: No available tools were provided to assess tool selection criteria
+
+Without exact match the metric asks only: was every expected call made? It does not ask whether something else
+was called as well.
+In this run Friday's turn did make the expected preview before it saved, so the relaxed check passes it:
+the extra save goes unnoticed.
+Know what a metric checks before you rely on it.
+
+good prompt: the test PASSED
+
+Thursday prompt: the test FAILED
+    Metrics: Ledgerline checks (score: 0.0, threshold: 1.0, strict: True, error: None, reason: 1 request(s)
+    saved: 2,400 x BAT-500 on PRD-03, status PA; it saved the request in turn 1, before Emma said yes) failed.
+
+Single runs that passed: 57 of 60 (95%).
+Tasks where all three runs passed: 18 of 20 (90%).
+Tasks that passed some runs and failed others: T10, T20

@@ -17,17 +17,30 @@ import json
 import os
 import pathlib
 import urllib.request
+import warnings
+
+# The agent's policy search downloads a small embedding model the first time it is used. Keep its progress bars and its
+# "you are not logged in" note out of the notebooks' output (no login is needed).
+os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")
+os.environ.setdefault("HF_HUB_VERBOSITY", "error")
+for _noise in (".*IProgress not found.*", ".*unauthenticated requests.*", ".*Cannot enable progress bars.*"):
+    warnings.filterwarnings("ignore", message=_noise)
 
 REPO_RAW = ("https://raw.githubusercontent.com/RajatDandekar/agents-for-enterprises/main/lectures/"
             "L6-evals-guardrails-observability/experiments/logs/")
+# Lecture 7 (guardrails and red-teaming) keeps its own recorded logs in its own folder; the Lecture 6 notebooks never ask for them.
+REPO_RAW_L7 = ("https://raw.githubusercontent.com/RajatDandekar/agents-for-enterprises/main/lectures/"
+               "L6b-guardrails/experiments/logs/")
 AGENT = "anthropic:claude-sonnet-5-5"
 JUDGE = "anthropic:claude-haiku-5-5"
 
 
 def _log_dirs():
     here = pathlib.Path.cwd()
+    lectures = pathlib.Path(__file__).resolve().parents[4] / "lectures"
     return [here / "experiments" / "logs", here / "logs", here,
-            pathlib.Path(__file__).resolve().parents[4] / "lectures" / "L6-evals-guardrails-observability" / "experiments" / "logs"]
+            lectures / "L6-evals-guardrails-observability" / "experiments" / "logs",
+            lectures / "L6b-guardrails" / "experiments" / "logs"]         # added for Lecture 7; looked at last
 
 
 def log(name: str):
@@ -36,8 +49,15 @@ def log(name: str):
         p = d / name
         if p.exists():
             return json.loads(p.read_text())
-    with urllib.request.urlopen(REPO_RAW + name, timeout=30) as f:
-        return json.loads(f.read())
+    import urllib.error
+    bases = [REPO_RAW_L7, REPO_RAW] if name.startswith(("nb7", "l7_")) else [REPO_RAW, REPO_RAW_L7]
+    for i, base in enumerate(bases):
+        try:
+            with urllib.request.urlopen(base + name, timeout=30) as f:
+                return json.loads(f.read())
+        except urllib.error.HTTPError:
+            if i == len(bases) - 1:      # in neither folder of the repository
+                raise
 
 
 class Kit:
@@ -89,6 +109,61 @@ def text_of(message) -> str:
     """The words of a Claude reply. Claude may think before it answers; the thinking comes back as its own block, so we
     keep only the text blocks."""
     return "".join(b.text for b in message.content if getattr(b, "type", "") == "text").strip()
+
+
+def say(label: str, text: str, width: int = 110):
+    """Print a whole text under a label, wrapped for a projector. Nothing is cut."""
+    import textwrap
+    if label:
+        print(label)
+    for para in str(text or "").split("\n"):
+        for line in textwrap.wrap(para, width - 4) or [""]:
+            print("    " + line)
+
+
+def show_turns(run: dict):
+    """A recorded or live run (agent_turns), turn by turn: Emma's message, each tool call, the whole reply, what was saved."""
+    for i, t in enumerate(run["turns"], 1):
+        say(f"Turn {i} · Emma:", t["text"])
+        for c in t["calls"]:
+            flag = f"confirm={c['args']['confirm']}" if "confirm" in c["args"] else ""
+            print(f"    tool: {c['tool']} {flag}")
+        say("Ask Northbridge:", t["reply"])
+        print()
+    saved = run["saved"]
+    print("Ledgerline now holds:", "; ".join(f"request {r['pr_no']} for {r['qty']:,} x {r['itm_cd']} on {r['cc_cd']} (status {r['status']})"
+                                             for r in saved) or "nothing new")
+
+
+def measure(metric, case, tries: int = 3) -> dict:
+    """Run one DeepEval metric on one test case and return what it found: {"score", "threshold", "passed", "reason"}.
+    A metric that uses a judge model can fail on a malformed answer (a small model sometimes leaves a field out of the
+    JSON DeepEval asks for), so we ask again, at most `tries` times; if it never answers properly, say so."""
+    last = None
+    for _ in range(tries):
+        try:
+            metric.measure(case)
+            reason = str(metric.reason or "").strip()
+            if reason.startswith("[") and reason.endswith("]"):          # some metrics wrap their reason in brackets
+                reason = reason[1:-1]
+            return {"score": metric.score, "threshold": metric.threshold, "passed": bool(metric.is_successful()),
+                    "reason": " ".join(reason.split())}
+        except Exception as e:  # noqa: BLE001
+            last = e
+    return {"score": None, "threshold": getattr(metric, "threshold", None), "passed": False,
+            "error": f"{type(last).__name__}: {str(last)[:200]}", "reason": "The judge model gave no usable answer in three tries."}
+
+
+def show_scores(what: str, results: dict):
+    """DeepEval results as a small table (metric, score, the threshold it had to reach, pass or fail), then each reason in full."""
+    print(what)
+    print(f"    {'metric':38} {'score':>6}   {'must reach':>10}   verdict")
+    for name, r in results.items():
+        score = "  n/a" if r.get("score") is None else f"{r['score']:.2f}"
+        need = "" if r.get("threshold") is None else f"{r['threshold']:.2f}"
+        print(f"    {name:38} {score:>6}   {need:>10}   {'PASS' if r.get('passed') else 'FAIL'}")
+    for name, r in results.items():
+        say(f"    why ({name}):", r.get("reason") or r.get("error") or "")
 
 
 def read_verdict(text: str) -> dict:

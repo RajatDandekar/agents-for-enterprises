@@ -5,6 +5,10 @@ import pathlib
 import re
 import sys
 
+if "--force" not in sys.argv:
+    sys.exit("build.py is out of date: since the 16 Nov finishing pass index.html has been edited by hand (screenshots, crops, "
+             "review fixes of 17 Nov) and these part files do not hold those edits. Running it would overwrite them. "
+             "Edit index.html directly. (--force rebuilds anyway.)")
 HERE = pathlib.Path(__file__).parent
 sys.path.insert(0, str(HERE))
 from part0 import P0

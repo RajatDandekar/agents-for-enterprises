@@ -27,7 +27,9 @@ FIGS._fill = () => {
     let v = get(s.dataset.l6);
     if (v == null || v === '') { s.innerHTML = '<span class="todo-in">from the run</span>'; return; }
     const f = s.dataset.f;
+    if (f === 'link') { s.innerHTML = `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(s.dataset.text || 'open')}</a>`; return; }   // a link with our own words
     if (f === 'url') { s.innerHTML = `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(String(v).replace(/^https?:\/\//, ''))}</a>`; return; }
+    if (f === 'pf') { s.innerHTML = v ? '<span class="x3-ok">pass</span>' : '<span class="x3-no">fail</span>'; return; }
     s.textContent = f === 'n' ? fmt(v) : f === 'usd' ? usd(v) : f === 'usd2' ? '$' + Number(v).toFixed(2) : f === 'pct' ? pct(v) : f === 's' ? Number(v).toFixed(1) + ' s' : f === 'ms' ? ms(v) : f === 'k' ? Number(v).toFixed(2) : String(v);
   });
 };
@@ -56,7 +58,7 @@ FIGS.mtab = (el) => {
   if (Array.isArray(rows) && el.dataset.ids) { const ids = el.dataset.ids.split(','); rows = rows.filter((r) => ids.includes(r.id)); }
   if (!Array.isArray(rows) || !rows.length) return need(el, el.dataset.what || 'Measured table');
   const cols = el.dataset.cols.split('|').map((c) => c.split(':'));
-  const f = (v, t) => (v == null ? '–' : t === 'n' ? fmt(v) : t === 'usd' ? usd(v) : t === 'pct' ? pct(v) : t === 'b' ? (v ? '<span class="ok">yes</span>' : '<span class="no">no</span>') : t === 'bx' ? (v ? '<span class="no">got through</span>' : '<span class="ok">held</span>') : t === 'list' ? esc((v || []).join(', ') || '–') : esc(v));
+  const f = (v, t) => (v == null ? '–' : t === 'k' ? Number(v).toFixed(2) : t === 'n' ? fmt(v) : t === 'usd' ? usd(v) : t === 'pct' ? pct(v) : t === 'b' ? (v ? '<span class="ok">yes</span>' : '<span class="no">no</span>') : t === 'bx' ? (v ? '<span class="no">got through</span>' : '<span class="ok">held</span>') : t === 'list' ? esc((v || []).join(', ') || '–') : esc(v));
   const lim = +(el.dataset.limit || 99);
   el.innerHTML = `<div class="l6-tw">${el.dataset.mk ? `<span class="l6-mk">${esc(el.dataset.mk)}</span>` : ''}<table class="l6t ${el.dataset.sm ? 'sm' : ''} ${el.dataset.xs ? 'xs' : ''}"><tr>${cols.map(([, l, t]) => `<th class="${t && !['x', 'list'].includes(t) ? 'n' : ''}">${esc(l)}</th>`).join('')}</tr>
     ${rows.slice(0, lim).map((r) => `<tr>${cols.map(([k, , t]) => `<td class="${t && !['x', 'list'].includes(t) ? 'n' : ''}">${f(k.split('.').reduce((o, kk) => (o == null ? o : o[kk]), r), t)}</td>`).join('')}</tr>`).join('')}</table></div>`;
@@ -69,9 +71,10 @@ FIGS.bars = (el) => {
   const vals = spec.map(([, p]) => (typeof p === 'number' ? p : get(p)));
   if (vals.some((v) => v == null)) return need(el, el.dataset.what || 'Measured bars');
   const max = +(el.dataset.max || Math.max(...vals, 1e-9));
-  el.innerHTML = `<div class="l6-bars" style="--lw:${el.dataset.lw || 330}px">${spec.map(([lab, , cls, sub], i) => `<div class="l6-bar" data-i="${i}"><span class="lb">${lab}${sub ? `<br><small style="color:var(--ink-3);font-size:14px">${sub}</small>` : ''}</span><span class="tr"><i class="${cls || ''}" style="width:0%"></i></span><span class="v">${f === 'pct' ? pct(vals[i]) : f === 'n' ? fmt(vals[i]) : f === 'usd' ? usd(vals[i]) : f === 'frac' ? vals[i] : vals[i]}</span></div>`).join('')}</div>`;
+  const ofs = spec.map(([, , , , o]) => (o == null ? null : typeof o === 'number' ? o : get(o)));   // optional: “3 of 20”, drawn as 3/20
+  el.innerHTML = `<div class="l6-bars" style="--lw:${el.dataset.lw || 330}px">${spec.map(([lab, , cls, sub], i) => `<div class="l6-bar" data-i="${i}"><span class="lb">${lab}${sub ? `<br><small style="color:var(--ink-3);font-size:14px">${sub}</small>` : ''}</span><span class="tr"><i class="${cls || ''}" style="width:0%"></i></span><span class="v">${ofs[i] ? `${vals[i]} of ${ofs[i]}` : f === 'pct' ? pct(vals[i]) : f === 'n' ? fmt(vals[i]) : f === 'usd' ? usd(vals[i]) : f === 'frac' ? vals[i] : vals[i]}</span></div>`).join('')}</div>`;
   const steps = (el.dataset.steps || '').split(',').map(Number);   // bar i appears at step steps[i] (default 0)
-  return { step(k) { el.querySelectorAll('.l6-bar').forEach((b, i) => { const s = steps[i] || 0; b.classList.toggle('hide', s > k); b.querySelector('i').style.width = (s > k ? 0 : Math.max(0.5, 100 * vals[i] / max)) + '%'; }); } };
+  return { step(k) { el.querySelectorAll('.l6-bar').forEach((b, i) => { const s = steps[i] || 0; b.classList.toggle('hide', s > k); b.querySelector('i').style.width = (s > k ? 0 : Math.max(0.5, 100 * vals[i] / (ofs[i] || max))) + '%'; }); } };
 };
 
 /* ------------------------------------------------------------------ the real trace: data-path (rows from gen_figdata slim_tree) */
@@ -125,15 +128,17 @@ FIGS.cm = (el) => {
   const s = get(`m.calib.summary.${el.dataset.judge}`);
   if (!s) return need(el, 'Judge against labels');
   const c = s.confusion;
-  el.innerHTML = `<div class="l6-cm"><span></span><span class="h">judge: pass</span><span class="h">judge: fail</span>
-    <span class="h">label: right (${s.real})</span><div class="c ok"><b>${c.label_pass_judge_pass}</b><span>agree</span></div><div class="c no"><b>${c.label_pass_judge_fail}</b><span>false alarm</span></div>
-    <span class="h">label: wrong (${s.planted})</span><div class="c no"><b>${c.label_fail_judge_pass}</b><span>a wrong reply passed</span></div><div class="c ok"><b>${c.label_fail_judge_fail}</b><span>caught</span></div></div>`;
+  el.innerHTML = `<div class="l6-cm"><span></span><span class="h">the judge passed it</span><span class="h">the judge failed it</span>
+    <span class="h">a person: right (${s.real})</span><div class="c ok"><b>${c.label_pass_judge_pass}</b><span>agree</span></div><div class="c no"><b>${c.label_pass_judge_fail}</b><span>false alarm${c.label_pass_judge_fail === 1 ? '' : 's'}</span></div>
+    <span class="h">a person: wrong (${s.planted})</span><div class="c no"><b>${c.label_fail_judge_pass}</b><span>missed</span></div><div class="c ok"><b>${c.label_fail_judge_fail}</b><span>caught</span></div></div>
+    <p class="x3-pl">Caught <b>${c.label_fail_judge_fail} of ${s.planted}</b> wrong replies.<br><b>${c.label_pass_judge_fail} false alarm${c.label_pass_judge_fail === 1 ? '' : 's'}</b> in ${s.real} right ones.</p>`;
   return { step() {} };
 };
 
 /* ------------------------------------------------------------------ the chat Emma saw */
 FIGS.chat = (el) => {
-  const b = get('m.incident.bad'), msg = get('m.incident.msg_dated');
+  // the run the class then sees traced in Argus, LangSmith, Langfuse and Sentry (m.demo.incident); the first recorded incident if it is missing
+  const dm = get('m.demo.incident'), b = dm && dm.reply ? dm : get('m.incident.bad'), msg = (dm && dm.reply && dm.text) || get('m.incident.msg_dated');
   if (!b) return need(el, 'The chat from our run');
   const rep = String(b.reply || '').replace(/\*\*/g, '');
   el.innerHTML = `<div class="l6-chat"><div class="bu me"><span class="who">Emma · Fri 20 Nov, 09:10</span>${esc(msg)}</div><div class="bu bot"><span class="who">Ask Northbridge</span>${esc(rep)}</div></div>`;
@@ -203,7 +208,7 @@ FIGS.gate = (el) => {
   const [id, o] = svgOpen(1400, 380);
   const b = (x, k, cls, t, s) => G(k, R(x, 60, 240, 170, cls) + T(x + 120, 104, t, 't1', 'middle') + TL(x + 120, 136, s, 't2', 23, 'middle'));
   el.innerHTML = o + b(0, 0, '', 'A change', ['someone edits the', 'system prompt', '(a pull request)']) + G(1, A('M240,145 L300,145', id)) + b(300, 1, 'y', 'CI starts', ['GitHub Actions:', 'install, then run', 'the gate']) + G(2, A('M540,145 L600,145', id))
-    + b(600, 2, 'a', 'The gate', ['pytest + DeepEval:', 'incident tasks x 2 runs,', 'code checks only']) + G(3, A('M840,120 L920,80', id, 'a') + A('M840,170 L920,220', id, 'b'))
+    + b(600, 2, 'a', 'The gate', ['pytest runs our code', 'checks on the incident', 'tasks, twice each']) + G(3, A('M840,120 L920,80', id, 'a') + A('M840,170 L920,220', id, 'b'))
     + G(3, R(920, 20, 300, 110, 'g') + T(1070, 64, 'all green → merge allowed', 't1', 'middle') + T(1070, 94, 'exit code 0', 'tm', 'middle'))
     + G(3, R(920, 170, 300, 110, 'b') + T(1070, 214, 'a red test → merge blocked', 't1', 'middle') + T(1070, 244, 'exit code 1 (required check)', 'tm', 'middle'))
     + G(4, T(700, 340, 'The judge runs nightly on the whole suite; the gate runs on every change, in minutes, for about a dollar.', 't1', 'middle')) + '</svg>';
@@ -269,6 +274,101 @@ FIGS.nbframe = (el) => {
   fr.addEventListener('load', () => { try { const d = fr.contentDocument; const st = d.createElement('style');   // larger type, and no pip chatter, in the embedded copy
     st.textContent = 'body{zoom:1.3;padding:8px 14px!important} .jp-OutputArea-output pre{white-space:pre-wrap!important} .jp-InputPrompt,.jp-OutputPrompt{display:none!important}'; d.head.appendChild(st); } catch (e) { /* another origin: leave it as it is */ } });
   return { step() {} };
+};
+
+/* ================================================================== v3 (17 Nov review): one running example for the scorers
+   Friday's turn and the good two-turn chat (m.ex, from traces_v2.json and the suite logs), the four boxes, the loop. */
+const cap1 = (s) => (s ? String(s).charAt(0).toUpperCase() + String(s).slice(1) : s);
+
+/* the turn as a ledger: Emma's message, the tool calls in order, the reply. data-turns="friday" | "good1,good2" */
+FIGS.exturn = (el) => {
+  const ex = get('m.ex');
+  if (!ex || !ex.friday) return need(el, 'The running example: Friday’s turn and the good chat');
+  const names = (el.dataset.turns || 'friday').split(','), good = names[0] !== 'friday', rep = el.dataset.reply !== 'none';
+  const label = { friday: 'Friday’s turn · Thursday prompt', good1: 'The good chat · turn 1', good2: 'The good chat · turn 2' };
+  let n = 0;
+  const held = el.dataset.held, row = get('m.ex.outcome.friday.row') || [];
+  el.innerHTML = `<div class="x3-turn${good ? ' good' : ''}">${names.map((nm) => { const t = ex[nm]; if (!t) return '';
+    return `<span class="hd">${label[nm]}</span><div class="msg">${esc(t.typed)}</div>${t.rows.map((r) => `<div class="cl ${r.cls}"><i>${++n}</i><code>${esc(r.name)}</code><span>${esc(r.arg)}</span>${r.tag ? `<em class="${r.cls}">${esc(r.tag)}</em>` : '<u></u>'}</div>`).join('')}${rep ? `<div class="rp"><small>The reply ${nm === 'good1' ? 'ends' : 'begins'}</small>${esc(nm === 'good1' ? t.last : t.first)}</div>` : ''}`; }).join('')}${held && row.length ? `<div class="held"><small>Ledgerline now holds</small>${esc(row[0][1])} · ${esc(row[1][1])} · ${esc(row[4][1])}</div>` : ''}</div>`;
+  return { step() {} };
+};
+
+/* what Ledgerline holds: data-path -> [[label, value]...] */
+FIGS.x3row = (el) => {
+  const rows = get(el.dataset.path);
+  if (!Array.isArray(rows)) return need(el, 'What Ledgerline holds after the turn');
+  el.innerHTML = `<div class="x3-row"><span class="x3-k">${esc(el.dataset.title || 'Ledgerline · purchase requests · after the turn')}</span><dl>${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl></div>`;
+  return { step() {} };
+};
+
+/* one verdict: data-path -> {pass, why|reason}; data-who names the turn */
+FIGS.verdict = (el) => {
+  const v = get(el.dataset.path);
+  if (!v || v.pass == null) return need(el, 'The verdict of this check');
+  el.innerHTML = `<div class="x3-vd${el.dataset.row ? ' row' : ''} ${v.pass ? 'p' : 'f'}"><span class="x3-k">${esc(el.dataset.who || '')}</span><b>${v.pass ? 'pass' : 'fail'}</b><p>${el.dataset.noq ? '' : '“'}${esc(cap1(v.why || v.reason))}${el.dataset.noq ? '.' : '”'}</p></div>`;
+  return { step() {} };
+};
+
+/* numbers: the figures the tools returned, as chips; the reply with each £ figure marked found or not found */
+const x3marks = (segs) => segs.map((s) => (s.amt ? `<span class="x3-amt ${s.found ? 'y' : 'n'}">${esc(s.t)}</span>` : esc(s.t))).join('');
+FIGS.numcheck = (el) => {
+  const d = get('m.ex.numbers');
+  if (!d || !d.chips) return need(el, 'Every £ figure of Friday’s reply against the tool results');
+  // the first line of the reply, then every line that holds a £ figure; a line left out is shown as "…"
+  const keep = d.lines.map((ln, i) => i === 0 || ln.some((s) => s.amt));
+  const rows = []; d.lines.forEach((ln, i) => { if (keep[i]) rows.push(`<p>${x3marks(ln)}</p>`); else if (rows[rows.length - 1] !== '<p class="gap">…</p>') rows.push('<p class="gap">…</p>'); });
+  el.innerHTML = `<div class="x3-num"><span class="x3-k">What the tools returned in this turn</span><div class="chips">${d.chips.map((c) => `<div class="x3-chip"><b>${esc(c.value)}</b><span>${esc(c.key)}<br>${esc(c.tool)}</span></div>`).join('')}</div>
+    <div class="rep"><span class="x3-k">What the agent told Emma · each £ figure looked up above</span>${rows.join('')}</div></div>`;
+  return { step() {} };
+};
+FIGS.numce = (el) => {
+  const c = get('m.ex.numbers.counter');
+  if (!c) return need(el, 'A reply with a £ figure no tool returned');
+  const ls = c.lines || [c.line];
+  el.innerHTML = `<div class="x3-ce"><span class="x3-k">Another reply, from ${esc(c.from || 'our suite')} · Emma asked: “${esc(c.question)}”</span>
+    <p>${x3marks(ls[0])}${c.more ? ` <span class="more">… ${c.more} more orders, every value found …</span>` : ''}</p>${ls.slice(1).map((l) => `<p>${x3marks(l)}</p>`).join('')}
+    <p class="v"><span class="x3-no">fail</span> · the check’s words: “${esc(c.why)}”</p></div>`;
+  return { step() {} };
+};
+
+/* is the judge right: six labelled replies, then the four boxes fill. k: 0 labels, 1 the judge's verdicts, 2 the boxes, 3 the sentence */
+FIGS.fourbox = (el) => {
+  const rows = get('m.calib.tiny'), n = get('m.calib.tiny_n');
+  if (!Array.isArray(rows) || !n) return need(el, 'Six labelled replies and the judge’s verdict on each');
+  const box = (k, t, s, cls) => `<div class="b ${cls}"><span class="t">${t}</span><b data-k="2">${n[k]}</b><span class="ids" data-k="2">${rows.filter((r) => r.box === k).map((r) => `<i>${r.n}</i>`).join('')}</span><span class="s">${s}</span></div>`;
+  const wrong = n.wf + n.wp, right = n.rp + n.rf;
+  el.innerHTML = `<div class="x3-fb"><div class="l"><table><tr><th></th><th>Emma asked</th><th>A person says</th><th data-k="1">The judge says</th></tr>
+    ${rows.map((r) => `<tr><td><i>${r.n}</i></td><td>${esc(r.q)}<small>${esc(r.change)}</small></td><td><span class="${r.label ? 'x3-ok' : 'x3-no'}">${r.label ? 'right' : 'wrong'}</span></td><td data-k="1"><span class="${r.judge ? 'x3-ok' : 'x3-no'}">${r.judge ? 'pass' : 'fail'}</span></td></tr>`).join('')}</table></div>
+    <div class="r"><div class="g"><span></span><span class="h">the judge passed it</span><span class="h">the judge failed it</span>
+      <span class="h v">a person: right</span>${box('rp', 'right, and passed', 'agree', 'ok')}${box('rf', 'right, but failed', 'a false alarm', 'no')}
+      <span class="h v">a person: wrong</span>${box('wp', 'wrong, but passed', 'missed', 'no')}${box('wf', 'wrong, and failed', 'caught', 'ok')}</div>
+      <p class="say" data-k="3">This judge caught <b>${n.wf} of ${wrong}</b> wrong replies, and raised <b>${n.rf} false alarm${n.rf === 1 ? '' : 's'}</b> in ${right} right ones.</p></div></div>`;
+  return { step(k) { at(el, k); } };
+};
+
+/* observability and evals as one loop. k = the number of boxes shown beyond the first */
+FIGS.loopflow = (el) => {
+  const W = 1400, H = 520, w = 256, h = 190, gap = (W - 5 * w) / 4, X = (i) => i * (w + gap), Y0 = 0, Y1 = 316;
+  const [id, o] = svgOpen(W, H);
+  const node = (k, n, x, y, cls, title, sub, tools) => G(k, R(x, y, w, h, cls, 20) + `<circle cx="${x + 26}" cy="${y + 28}" r="15" class="x3-nb"/>` + T(x + 26, y + 34, n, 'x3-nn', 'middle')
+    + TL(x + 52, y + 35, title, 't1', 27) + (sub ? T(x + 20, y + 35 + title.length * 27 + 4, sub, 't2') : '') + TL(x + 20, y + h - 16 - (tools.length - 1) * 22, tools, 'x3-tl', 22));
+  const right = (k, i, y, cls = '') => G(k, A(`M${X(i) + w + 4},${y + h / 2} L${X(i + 1) - 6},${y + h / 2}`, id, cls));
+  const left = (k, i, y, cls = '') => G(k, A(`M${X(i) - 4},${y + h / 2} L${X(i - 1) + w + 6},${y + h / 2}`, id, cls));
+  el.innerHTML = o
+    + node(0, 1, X(0), Y0, '', ['The agent', 'runs'], '', ['Ask Northbridge'])
+    + right(1, 0, Y0) + node(1, 2, X(1), Y0, 'a', ['Every turn', 'is a trace'], '', ['OpenTelemetry sends it to', 'LangSmith, Langfuse,', 'Sentry'])
+    + right(2, 1, Y0, 'a') + node(2, 3, X(2), Y0, 'a', ['People read', 'the traces'], 'error analysis', ['LangSmith · Langfuse'])
+    + right(3, 2, Y0) + node(3, 4, X(3), Y0, 'g', ['What they find', 'becomes scores'], 'code · a judge · a person', ['our code · DeepEval · Ragas'])
+    + right(4, 3, Y0, 'g') + node(4, 5, X(4), Y0, 'g', ['The failures', 'become test cases'], '', ['a dataset: our 20 tasks'])
+    + G(5, A(`M${X(4) + w / 2},${Y0 + h + 4} L${X(4) + w / 2},${Y1 - 6}`, id, 'g')) + node(5, 6, X(4), Y1, 'g', ['The suite runs', 'on every change'], 'the gate blocks a bad one', ['pytest · DeepEval', 'the CI gate'])
+    + left(6, 4, Y1, 'g') + node(6, 7, X(3), Y1, 'y', ['Ship'], 'the change reaches real users', [''])
+    + left(7, 3, Y1) + node(7, 8, X(2), Y1, 'a', ['The same scorers', 'on live traces'], 'online evals', ['scores: LangSmith,', 'Langfuse · alerts: Sentry'])
+    + left(8, 2, Y1, 'a') + node(8, 9, X(1), Y1, 'a', ['The flagged ones', 'go back to be read'], '', ['review queues'])
+    + G(8, A(`M${X(1) + w / 2},${Y1 - 4} L${X(1) + w / 2},${(Y0 + h + Y1) / 2} L${X(2) + 60},${(Y0 + h + Y1) / 2} L${X(2) + 60},${Y0 + h + 6}`, id, 'a'))
+    + G(8, T(X(1) + w / 2 + 14, (Y0 + h + Y1) / 2 - 10, 'and round again', 't3'))
+    + `<g>${R(X(0), Y1 + 10, w, h - 20, 'c', 20)}${T(X(0) + 20, Y1 + 44, 'Blue: observability', 'x3-lg a')}${T(X(0) + 20, Y1 + 74, 'what happened', 't2')}${T(X(0) + 20, Y1 + 112, 'Green: evals', 'x3-lg g')}${T(X(0) + 20, Y1 + 142, 'was it right', 't2')}</g>`
+    + '</svg>';
+  return { step(k) { at(el, k); } };
 };
 
 FIGS.blank = (el) => ({ step() {} });

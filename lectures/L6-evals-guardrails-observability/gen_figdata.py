@@ -286,7 +286,12 @@ if ci or ci1:
         m["ci_v1"] = ci1["runs"]
 
 # ------------------------------------------------------------------------------------------- spend, Argus
-spend_parts = sorted((json.loads(f.read_text()) for f in (LOGS / "spend_parts").glob("*.json")), key=lambda r: r["at"]) \
+def _spend_part(f):      # a part written in another shape (no "at", no "experiment") still counts: named after its file
+    r = json.loads(f.read_text())
+    return {**r, "at": r.get("at", ""), "experiment": r.get("experiment") or f.stem.split("__")[0], "usd": r.get("usd", 0.0), "calls": r.get("calls", 0)}
+
+
+spend_parts = sorted((_spend_part(f) for f in (LOGS / "spend_parts").glob("*.json")), key=lambda r: r["at"]) \
     if (LOGS / "spend_parts").exists() else []
 if spend_parts:
     by = {}
@@ -616,6 +621,238 @@ if spend_parts:
     sj["v2"] = {"note": "Lecture 6 v2 (review of 16 Nov): the demo traces, the simulated conversations, the notebooks run live through Argus's "
                         "gateway (charged to Argus's budget; read back from the test students' spend).", "rows": m["spend_rows_v2"]}
     (LOGS / "spend.json").write_text(json.dumps(sj, indent=1))
+
+# ------------------------------------------------------------------------------------------- v3 (17 Nov review)
+# One running example for the scorers (slides 52 to 61): Friday's turn (the traced demo turn of traces_v2.json, Thursday
+# prompt) and the good two-turn chat. Each check's verdict on that turn is read from a log, or worked out here from the
+# recorded turn by the same rule the suite uses (outcome: the saved request; numbers: every £ figure against the tool
+# results). Nothing is typed.
+def _v3():
+    import ast
+    tv, sp, sc = load("traces_v2.json"), load("traces_v2_spans.json"), load("scores_v2.json")
+    if not (tv and sp):
+        return
+    COMMITS = {"create_purchase_request", "create_purchase_order", "register_supplier", "record_invoice", "post_invoice"}
+    MONEY = re.compile(r"£\s?(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)")
+
+    def plain(s):
+        return re.sub(r"\*\*|__", "", s or "").strip()
+
+    def rows(calls):
+        out = []
+        for c in calls:
+            a = c.get("args") or {}
+            arg = f"{a['quantity']:,} × {a['item_code']} · {a.get('cost_centre', '')}".strip(" ·") if a.get("quantity") and a.get("item_code") else \
+                next((str(a[k]) for k in ("cost_centre", "name", "query", "request_no", "po_no") if a.get(k)), "")
+            tag, cls = "", ""
+            if c["tool"] in COMMITS and a.get("confirm") is True:
+                tag, cls = "confirm=true · saved", "save"
+            elif c["tool"] in COMMITS:
+                tag, cls = "preview · nothing saved", "prev"
+            out.append({"k": "tool", "name": c["tool"], "arg": arg, "tag": tag, "cls": cls})
+        return out
+
+    def turn(t):
+        return {"typed": t["text"], "rows": rows(t["calls"]), "reply": plain(t["reply"]), "lines": [x for x in plain(t["reply"]).split("\n") if x.strip()],
+                "tools": len(t["calls"])}
+
+    inc, good = tv["rows"]["incident"], tv["rows"]["good2"]
+    fri = inc["turns"][0]
+    ex = {"friday": turn(fri), "good1": turn(good["turns"][0]), "good2": turn(good["turns"][1]), "prompt": inc.get("prompt")}
+
+    # 1 · outcome: what Ledgerline holds afterwards (the suite's rule for this task: exactly one request, 2,400 BAT-500, PRD-03, waiting)
+    def outcome(saved):
+        reqs = saved if isinstance(saved, list) else (saved or {}).get("requests") or ([saved] if saved and saved.get("pr_no") else [])
+        ok = len(reqs) == 1 and reqs[0].get("qty") == 2400 and reqs[0].get("itm_cd") == "BAT-500" and reqs[0].get("cc_cd") == "PRD-03" and reqs[0].get("status") == "PA"
+        r = reqs[0] if reqs else {}
+        why = (f"one request, {r.get('pr_no')}: {r.get('qty'):,} × {r.get('itm_cd')} on {r.get('cc_cd')}, waiting for approval" if ok
+               else f"{len(reqs)} request(s) saved; expected exactly one for 2,400 BAT-500 on PRD-03")
+        return {"pass": ok, "why": why, "row": [["request", r.get("pr_no")], ["item", f"{r.get('qty'):,} × {r.get('itm_cd')}" if r else None], ["cost centre", r.get("cc_cd")],
+                                                ["value", f"£{r.get('est_value'):,.0f}" if r else None], ["status", "waiting for approval (PA)" if r.get("status") == "PA" else r.get("status")],
+                                                ["raised by", r.get("raised_by")]]}
+    ex["outcome"] = {"friday": outcome(inc.get("saved")), "good": outcome(good.get("saved"))}
+
+    # 2 · order of actions: the code check written onto the demo traces (scores_v2.json): "saved without a yes?"
+    if sc:
+        rows_sc = sc.get("rows") or []
+        def find(run, turn):
+            return next((r for r in rows_sc if r.get("run") == run and r.get("turn") == turn), None)
+        f_, g_ = find("incident", 1), find("good2", 2)
+        if f_ and g_:
+            ex["order"] = {"friday": {"pass": not f_["commit_without_yes"], "why": f_["why"]}, "good": {"pass": not g_["commit_without_yes"], "why": g_["why"]}}
+
+    # 3 · numbers: every £ figure in the reply against the numbers the tools returned in this turn
+    def tool_results(spans):
+        out = []
+        for s in spans:
+            a = s.get("attributes") or {}
+            if a.get("gen_ai.operation.name") == "execute_tool":
+                try:
+                    out.append((a.get("gen_ai.tool.name"), json.loads(a.get("gen_ai.tool.call.arguments") or "{}"), json.loads(a.get("gen_ai.tool.call.result") or "{}")))
+                except ValueError:
+                    pass
+        return out
+
+    def walk(o, path=""):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                yield from walk(v, k)
+        elif isinstance(o, list):
+            for v in o:
+                yield from walk(v, path)
+        elif isinstance(o, (int, float)) and not isinstance(o, bool):
+            yield path, float(o)
+    res = tool_results(sp["incident"])
+    allnums, chips, seen = set(), [], set()
+    for name, args, out in res:
+        for k, v in walk(out):
+            allnums.add(v)
+            if re.search(r"rate|value|limit|budget|amount|price|total", k) and (k, v) not in seen:
+                seen.add((k, v))
+                chips.append({"value": f"£{v:,.2f}".replace(".00", ""), "key": k, "tool": name + (" (preview)" if name in COMMITS and args.get("confirm") is False else "")})
+
+    def marks(text, bad=None):
+        segs, pos = [], 0
+        for mo in MONEY.finditer(text):
+            v = float(mo.group(1).replace(",", ""))
+            found = (not any(abs(v - b) <= 1 for b in bad)) if bad is not None else any(abs(v - k) <= 1 for k in allnums)
+            segs += [{"t": text[pos:mo.start()]}, {"t": mo.group(0), "amt": True, "found": found}]
+            pos = mo.end()
+        return segs + [{"t": text[pos:]}]
+    lines = [marks(x) for x in ex["friday"]["lines"]]
+    amts = [s for ln in lines for s in ln if s.get("amt")]
+    nbad = [s["t"] for s in amts if not s["found"]]
+    ex["numbers"] = {"chips": chips, "lines": lines, "n": len(amts), "pass": not nbad,
+                     "why": f"{len(amts)} £ figures, all in the tool results of this turn" if not nbad else "not in any tool result: " + ", ".join(nbad)}
+    def first_sentence(s):
+        return re.split(r"(?<=[.!?])\s+(?=[A-Z'\"])", (s or "").strip())[0]
+    # a reply with a figure no tool returned. First choice: the reply Argus shows as its fourth recorded turn (suite, task
+    # T19, "Which of my orders are late?": the agent added up ten order values itself), with the verdict Argus's numbers
+    # check recorded on it (argus_v3_gen.json). Second: task T14 of the first suite run, with the verdict logged then.
+    v1 = load("suite_v1_good_k3.json")
+    if v1:
+        for r in v1["rows"]:
+            num = [c for c in r["checks"] if c["kind"] == "numbers" and not c["pass"]]
+            if r["task"] == "T14" and num:
+                bad = [float(x.replace(",", "")) for x in re.findall(r"£([\d,]+(?:\.\d+)?)", num[0]["why"])]
+                reply = plain(r["turns"][0]["reply"])
+                line = next((x for x in reply.split("\n") if any(f"£{b:,.0f}" in x for b in bad)), reply)
+                ex["numbers"]["counter_t14"] = {"question": r["turns"][0]["text"], "lines": [marks(re.sub(r"^\s*-\s*", "", line), bad)], "why": num[0]["why"].replace(".00", ""),
+                                                "bad": ", ".join(f"£{b:,.0f}" for b in bad), "from": "our first suite run"}
+                break
+    av, sg_ = load("argus_v3_gen.json"), load("suite_good_k3.json")
+    try:
+        card = next(c for t in av["turns"] if t["id"] == "total" for c in t["cards"] if c[0] == "numbers")
+        bad = [float(x.replace(",", "")) for x in re.findall(r"£([\d,]+(?:\.\d+)?)", card[2].split("in no tool result:")[1])]
+        r = next(x for x in sg_["rows"] if x["task"] == "T19" and any(f"£{b:,.0f}" in x["turns"][0]["reply"] for b in bad))
+        ls = [re.sub(r"^\s*-\s*", "", x) for x in plain(r["turns"][0]["reply"]).split("\n") if "£" in x]
+        tot = next(x for x in ls if any(f"£{b:,.0f}" in x for b in bad))
+        if not card[1] and bad:
+            ex["numbers"]["counter"] = {"question": r["turns"][0]["text"], "lines": [marks(ls[0].split(":")[0] + ": … " + (MONEY.search(ls[0]).group(0) if MONEY.search(ls[0]) else ""), bad), marks(tot, bad)], "more": len(ls) - 2, "why": card[2],
+                                        "bad": ", ".join(f"£{b:,.0f}" for b in bad), "from": "our suite, good prompt"}
+    except Exception:      # noqa: BLE001  (no such log, or another shape: the first-run example stands in)
+        pass
+    ex["numbers"].setdefault("counter", ex["numbers"].get("counter_t14"))
+
+    # 4 · the words: the criterion NB6b gives its judge for Emma's first message (probe_v3_deepeval.json holds the sentence),
+    #     the evidence and the reply of the traced turn, and the verdicts NB6b recorded on its own runs of the same message
+    #     under the two prompts (nb6b_judge_friday.json, nb6b_judge.json). A second criterion, about clarity, passes the
+    #     same reply (nb6b_your_turn_geval.json).
+    pv = load("probe_v3_deepeval.json") or {}
+    save = next((out for name, args, out in res if name == "create_purchase_request" and args.get("confirm") is True), {})
+    fl = ex["friday"]["lines"]
+    ex["judge"] = {"criterion": (pv.get("criteria") or {}).get("C"), "reply": ex["friday"]["reply"],
+                   "reply_short": (fl[0] + " " + re.sub(r"^\s*-\s*", "", fl[1]) + " […] " + fl[-1]) if len(fl) > 2 else ex["friday"]["reply"],
+                   "evidence": "create_purchase_request(confirm=true) returned: " + ", ".join(f"{k} {save[k]}" for k in ("request_no", "status", "approver", "estimated_value") if k in save)}
+    for tag, fn in (("friday", "nb6b_judge_friday.json"), ("good", "nb6b_judge.json")):
+        d = load(fn)
+        if d and "pass" in d:
+            ex["judge"][tag] = {"pass": d["pass"], "why": d.get("reason")}
+    yt = load("nb6b_your_turn_geval.json")
+    if yt:
+        ex["judge"]["other"] = {"score": yt.get("score"), "pass": yt.get("passed")}
+    for tag, fn in (("suite_thursday", "suite_thursday_k1.json"), ("suite_good", "suite_good_k3.json")):
+        d = load(fn)
+        r = next((x for x in (d or {}).get("rows", []) if x["task"] == "T02" and x["rep"] == 0), None)
+        if r:
+            w = next((c for c in r["checks"] if c["kind"] == "words"), {})
+            t_ = next((c for c in r["checks"] if c["kind"] == "trajectory"), {})
+            o_ = next((c for c in r["checks"] if c["kind"] == "outcome"), {})
+            ex["judge"][tag] = {"pass": w.get("pass"), "usd": w.get("judge_usd"), "order_pass": t_.get("pass"), "order_why": t_.get("why"), "outcome_pass": o_.get("pass"), "outcome_why": o_.get("why")}
+
+    # judge and code disagree: the one real case (the question, the two verdicts)
+    jv = (m.get("suite") or {}).get("judge_vs_code") or []
+    sg = load("suite_good_k3.json")
+    if jv and sg:
+        r = next((x for x in sg["rows"] if x["task"] == jv[0]["task"] and x["rep"] == jv[0]["rep"]), None)
+        ex["disagree"] = {"question": r["turns"][0]["text"] if r else None, "code": jv[0]["numbers"].replace(".00", ""), "judge": jv[0]["judge"],
+                          "line": next((re.sub(r"^\s*-\s*", "", x) for x in plain(jv[0]["reply"]).split("\n") if "1,000,000" in x), None)}
+    for k in ("friday", "good1", "good2"):
+        ls = ex[k]["lines"]
+        ex[k]["first"] = re.sub(r"^\s*-\s*", "", ls[0]) if ls else None
+        ex[k]["last"] = re.sub(r"^\s*-\s*", "", ls[-1]) if ls else None
+
+    # the same turn in DeepEval: what NB6b recorded with the real library on its own runs (nb6b_deepeval.json: the good chat's
+    # first turn; nb6b_deepeval_friday.json: Friday's turn), and from the probe the same metric without exact match
+    nb, dg, df = load("nb6b_thursday_t02.json"), load("nb6b_deepeval.json"), load("nb6b_deepeval_friday.json")
+    if nb and dg and df:
+        t0 = nb["turns"][0]
+        req = [c for c in t0["calls"] if c["tool"] == "create_purchase_request"]
+
+        def two(d):
+            t, ge = d.get("tool_correctness") or {}, d.get("geval_real_reply") or {}
+            tr = re.search(r"Tool Calling Reason: (.*?)(?: See (?:more )?details above\.)?\s*Tool Selection", t.get("reason") or "", re.S)
+            return {"tool": {"score": t.get("score"), "pass": t.get("passed"), "threshold": t.get("threshold"), "reason": tr.group(1).strip() if tr else None},
+                    "geval": {"score": ge.get("score"), "pass": ge.get("passed"), "threshold": ge.get("threshold"), "reason": first_sentence(ge.get("reason"))}}
+        loose = next((r for r in pv.get("tool_rows", []) if r["turn"].startswith("Friday (nb6b") and r["variant"].startswith("names only (default)") and r.get("score") is not None), None)
+        ex["deepeval"] = {"input": t0["text"], "actual": re.sub(r"^\s*-\s*", "", plain(t0["reply"]).split("\n")[0]),
+                          "called": " then ".join("a save (confirm=true)" if c["args"].get("confirm") else "a preview (confirm=false)" for c in req), "n_called": len(req),
+                          "criterion": (pv.get("criteria") or {}).get("C"), "friday": two(df), "good": two(dg),
+                          "loose": {"score": loose["score"], "pass": loose["passed"]} if loose else None}
+    m["ex"] = ex
+
+    # three judges, three prompts (18 Nov, slide 59): one right reply and the same reply with one figure changed, under each
+    # prompt, as the calibration run recorded them
+    try:
+        _cr = {r["id"]: r for r in load("judge_calibration.json")["rows"]}
+        _ok, _bad = _cr["good/T11/0"], _cr["planted:good/T11/0:£680,000->£860,000"]
+        _line = lambda r: " ".join(x.lstrip("- ").replace("**", "") for x in r["reply"].split("\n") if x.strip())
+        m["ex"]["three"] = {"user": _ok["user"], "right": _line(_ok), "wrong": _line(_bad),
+                            **{k: {"right": {"pass": _ok["judges"][k]["pass"], "why": _ok["judges"][k]["reason"]},
+                                   "wrong": {"pass": _bad["judges"][k]["pass"], "why": _bad["judges"][k]["reason"]}}
+                               for k in ("naive", "specific", "grounded")}}
+    except Exception as e:  # noqa: BLE001
+        print("  three prompts example:", repr(e)[:120])
+
+    # is the judge right: six replies from the labelled set, so each of the four boxes can be counted by hand
+    cal = load("judge_calibration.json")
+    if cal:
+        R = cal["rows"]
+
+        def pick(label, verdict, n):
+            return [r for r in R if r["label"] is label and r["judges"]["naive"]["pass"] is verdict][:n]
+        six = pick(True, True, 2) + pick(True, False, 1) + pick(False, False, 2) + pick(False, True, 1)
+        six.sort(key=lambda r: R.index(r))
+        tiny = []
+        for i, r in enumerate(six, 1):
+            ch = re.match(r"planted: '(.*)' -> '(.*)'", r.get("note") or "")
+            tiny.append({"n": i, "q": r["user"], "label": r["label"], "judge": r["judges"]["naive"]["pass"],
+                         "change": f"we changed “{ch.group(1).strip('*')}” to “{ch.group(2).strip('*')}”" if ch else "a real reply, checked by hand against the tool results",
+                         "box": ("rp" if r["judges"]["naive"]["pass"] else "rf") if r["label"] else ("wp" if r["judges"]["naive"]["pass"] else "wf")})
+        m["calib"]["tiny"] = tiny
+        m["calib"]["tiny_n"] = {b: sum(1 for t in tiny if t["box"] == b) for b in ("rp", "rf", "wf", "wp")}
+        for k, s in m["calib"]["summary"].items():
+            c = s["confusion"]
+            s["plain"] = f"caught {c['label_fail_judge_fail']} of {s['planted']} wrong replies · {c['label_pass_judge_fail']} false alarm{'s' if c['label_pass_judge_fail'] != 1 else ''} in {s['real']} right ones"
+    de = (m.get("deepeval") or {}).get("geval")
+    if de:
+        de["agree_pct"] = round(100 * de["agreement"])
+
+
+try:
+    _v3()
+except Exception as e:      # a log in an unexpected shape: the slides show plates, never numbers
+    print("  v3 running example not built:", type(e).__name__, e)
 
 media = sorted(str(p.relative_to(HERE)) for p in (HERE / "figs").rglob("*") if p.suffix.lower() in MEDIA_EXT) if (HERE / "figs").exists() else []
 out = {"_source": "gen_figdata.py from lectures/L6-evals-guardrails-observability/experiments/logs", "m": m, "media": media}

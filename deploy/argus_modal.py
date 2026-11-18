@@ -20,6 +20,11 @@ claude-sonnet-5-5; the judge Claude Haiku. Keys: ANTHROPIC_API_KEY from the Moda
 from `rasoi-experience`; the tracing keys (Langfuse; LangSmith and Sentry when present) from the course .env, sent as a
 Modal secret at deploy time (never in the image, never printed). Redeploy after adding a key with tools/add_tracing_keys.sh. min_containers is 0, so a deploy never leaves a container running; `admin --cmd warm` keeps one on for
 class, and a daily cron (04:00 UTC) sets it back to 0. Do not redeploy during class.
+
+v3 (17 Nov 2026): the function `deepeval_run` runs the real DeepEval library for Argus's teaching views, in an image of
+its own (deepeval==4.3.4 and nothing of the course), one process per request, so it cannot break the lab. The web
+container calls it; its model calls come back through Argus's gateway with the student's key. `warm` keeps DE_WARM
+of its containers on as well; `cool` and the cron let them sleep.
 """
 import json
 import os
@@ -98,10 +103,35 @@ def web():
     return create_app()
 
 
+# ---------------------------------------------------------------------------------------------------- DeepEval (v3)
+# Its own image: DeepEval and the Anthropic SDK at the versions the Lecture 6 notebooks pin, and one file of Argus (the
+# runner, which imports nothing of the course). Up to DE_CONTAINERS x DE_INPUTS requests at once (120): a class of 100.
+DE_CONTAINERS, DE_INPUTS, DE_WARM = 20, 6, 4
+de_image = (
+    modal.Image.debian_slim(python_version="3.11")
+    .pip_install("deepeval==4.3.4", "anthropic==2.8.0")
+    .env({"DEEPEVAL_TELEMETRY_OPT_OUT": "YES", "ERROR_REPORTING": "NO", "DEEPEVAL_UPDATE_WARNING_OPT_OUT": "YES", "PYTHONUNBUFFERED": "1"})
+    .add_local_file(ROOT / "ledgerline" / "ledgerline" / "argus" / "deepeval_runner.py", "/job/deepeval_runner.py")
+)
+
+
+@app.function(image=de_image, max_containers=DE_CONTAINERS, min_containers=0, scaledown_window=900, cpu=2, memory=2048, timeout=300)
+@modal.concurrent(max_inputs=DE_INPUTS)
+def deepeval_run(payload: dict) -> dict:
+    """One DeepEval request from Argus: {"mode", "case" | "turns", "metric", "criterion", "threshold", "gateway", "key"}.
+    Runs /job/deepeval_runner.py in a process of its own (its own environment, so two students' keys never meet) and
+    returns {"ok", "deepeval", "results": [{"name", "score", "passed", "reason", ...}], "seconds"} or {"ok": False, "error"}."""
+    sys.path.insert(0, "/job")
+    import deepeval_runner
+
+    return deepeval_runner.run_subprocess(payload)
+
+
 @app.function(schedule=modal.Cron("0 4 * * *"), timeout=120)  # every day 04:00 UTC: the web container may sleep
 def class_cool():
     modal.Function.from_name(APP, "web").update_autoscaler(min_containers=0)
-    print("web min_containers -> 0")
+    modal.Function.from_name(APP, "deepeval_run").update_autoscaler(min_containers=0)
+    print("web and deepeval_run min_containers -> 0")
 
 
 # ---------------------------------------------------------------------------------------------------- operator
@@ -113,6 +143,7 @@ def op(cmd: str, reason: str = "", cap: float = 0) -> dict:
     c = httpx.Client(base_url=URL, timeout=240)
     if cmd == "warm":
         modal.Function.from_name(APP, "web").update_autoscaler(min_containers=1)
+        modal.Function.from_name(APP, "deepeval_run").update_autoscaler(min_containers=DE_WARM)
         for _ in range(20):
             try:
                 print(c.get("/healthz").json())
@@ -122,6 +153,7 @@ def op(cmd: str, reason: str = "", cap: float = 0) -> dict:
                 time.sleep(10)
     elif cmd == "cool":
         modal.Function.from_name(APP, "web").update_autoscaler(min_containers=0)
+        modal.Function.from_name(APP, "deepeval_run").update_autoscaler(min_containers=0)
     elif cmd == "pause":
         c.post("/api/admin/flags", json={"enabled": False, "reason": reason}, headers=h).raise_for_status()
     elif cmd == "resume":

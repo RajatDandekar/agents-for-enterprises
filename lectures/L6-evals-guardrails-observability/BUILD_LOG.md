@@ -276,3 +276,146 @@ The Ragas run's files were checked afterwards: valid JSON, a complete notebook, 
 **QA after this pass**: 103 slides, 0 issues, 0 page errors (`logs/v2_finish_qa2.out`); `tools/world_v4.py --check` exit 0.
 
 **After the push** (`ecfbe04`): `colab_like_modal.py` ran all four notebooks from GitHub in a bare Python 3.12 container, no key: NB6a 15 of 15 code cells, NB6b 11 of 11, NB6c 13 of 13, NB6d 8 of 8, 0 errors (`logs/colab_like.out`). Real Colab itself is still untried.
+
+
+## NB6b and NB6c's DeepEval section rewritten (17 Nov, 09:20 to 10:10 UTC, after Rajat's review of that day)
+
+Rajat: "DeepEval Colab notebook is tough to go through ... what my classmates have to set from their side" (`REVIEW_17NOV.md`).
+
+**NB6b** (24 cells, 11 code → 45 cells, 22 code). One example to the end: Friday's turn (Thursday prompt) and the good chat,
+both run in section 1. Code checks on both; the judge by hand on the first reply of each, with one criterion ("asks Emma to
+confirm a preview before anything is saved"); the calibration as four boxes with plain counts (kappa is one printed
+sentence, no formula); DeepEval as **three things you set**, each in its own cell (the test case with `expected_tools`;
+`ToolCorrectnessMetric` with its two switches and `GEval` with a name, one sentence and the model; the threshold), run on
+the good chat and then on Friday's turn, result as a table with the reason in full; three "Your turn" cells behind
+`SOLUTION = True`. **NB6c** (30 cells, 13 code → 40 cells, 18 code): only section 5, the same three things for a whole
+conversation, then the judge's verdict beside our code check.
+
+**What the library does** (`logs/probe_v3_deepeval.json`, DeepEval 4.3.4): `ToolCorrectnessMetric` calls no model (0
+gateway calls for 15 measurements) but cannot be built without a model object and a key (in replay the notebook sets a
+placeholder key, so the tool check runs for real with no key). In its default mode it passes Friday's turn (the expected
+preview was called; the extra save is not looked at); with `should_exact_match=True` and the arguments compared it fails
+it. GEval through Haiku left the score out of its answer in about one call in eight, so `nbkit.measure` asks up to three times.
+
+**Found on the way.** The first live run of the new NB6b was refused by `nb_run.py`'s own check: a bare
+`os.environ.setdefault(...)` at the end of a cell displayed the join key. Fixed (an `if` statement) before any file was saved.
+
+**Logs** (names kept; the live runs re-recorded all of them). `nb6b_deepeval.json`: now the good chat's first turn, keys
+`tool_correctness` and `geval_real_reply`, each `{score, threshold, passed, reason}`; the key `geval_wrong_reply` is gone.
+New: `nb6b_deepeval_friday.json` (same two keys, Friday's turn), `nb6b_judge_friday.json` (`{reason, pass}`),
+`nb6b_your_turn_geval.json` (`{score, threshold, passed, reason}`), `probe_v3_deepeval.json`. `nb6c_deepeval_good.json`,
+`nb6c_deepeval_thursday.json`: same three keys in the same order, each now `{score, threshold, passed, reason}` with the
+reason in full (it was cut at 260 characters); `nb6c_deepeval_sim.json`: same keys, `content` in full.
+`course/l6/nbkit.py` gained `say`, `show_turns`, `measure`, `show_scores` (additive).
+
+**Runs**: NB6b live 22 of 22 code cells, 0 errors, US$0.22; NB6c live 18 of 18, 0 errors, US$0.87; both replay with 0
+errors. NB6c's saved output had ten library warning lines (progress bars, "not logged in") removed by hand and the page
+re-rendered from the `.ipynb` (`experiments/nb_render.py`). Spend for this pass: US$1.60.
+
+## 17 Nov review: the deck (builder B, 17 Nov, after Rajat's second review, `REVIEW_17NOV.md`)
+
+**What was asked.** The evals part simpler, on one practical example; the four boxes in place of the agreement formula;
+DeepEval as "three things you set", shown live in Argus; slide 76 cut; a demo of a trace becoming a score; a link for
+promptfoo; one flowchart of observability and evals together.
+
+**How it was done.** `index.html` was edited directly (`build/build.py` is stale and was not run). The deck as it stood
+before this review is `build/index_v2_17nov_before_v3.html`; the notes, `build/NOTES_v2_17nov_before_v3.md`. 103 → 106
+slides. Old → new: 1 to 52 unchanged · 53 → 53 and 54 · 54 to 58 → 55 to 59 · new 60 · 59 to 75 → 61 to 77 · 76 cut ·
+77 to 79 → 78 to 80 · new 81 · 80 to 95 → 82 to 97 · new 98 · 96 to 103 → 99 to 106.
+
+**The running example** is `m.ex` in `figdata.js` (a new block `_v3()` at the end of `gen_figdata.py`; if a log has an
+unexpected shape it prints one line and the slides show "from the run" chips, never a typed number):
+- Friday's turn and the good chat: `traces_v2.json` (the traced demo turn of slide 4) and its tool results from
+  `traces_v2_spans.json`.
+- Outcome: worked out from the saved rows by the suite's rule (one request, 2,400 BAT-500, PRD-03, waiting). Agrees with
+  `suite_thursday_k1.json` and `suite_good_k3.json`, task T02, and with NB6b's printed result.
+- Order of actions: `scores_v2.json` (the check written onto the traced turns).
+- Numbers: every £ figure of the reply against every number in the turn's tool results. Counter-example: the reply of
+  `suite_good_k3.json` task T19 with the verdict in `argus_v3_gen.json` (a total the agent added up); the T14 case of
+  the first suite run is kept as `m.ex.numbers.counter_t14`.
+- The words: criterion from `probe_v3_deepeval.json`, verdicts from `nb6b_judge_friday.json`, `nb6b_judge.json`,
+  `nb6b_your_turn_geval.json`.
+- DeepEval: `nb6b_deepeval.json` (the good chat's first turn), `nb6b_deepeval_friday.json`, and the default mode of
+  ToolCorrectness from `probe_v3_deepeval.json`.
+- Four boxes: `m.calib.tiny` (six replies of `judge_calibration.json`: the first of each kind under the naive judge) and
+  a plain sentence of counts for each of the three judges.
+
+**New figures** in `l6figs.js` (styles `x3-...` at the end of `l6.css`): `exturn` (a turn as a ledger), `x3row` (what
+Ledgerline holds), `verdict`, `numcheck` and `numce` (chips and marks), `fourbox`, `loopflow`; `cm` now names its boxes in
+plain words and prints the counts under the table; `_fill` has `data-f="pf"` (pass or fail from a boolean) and `mtab` a
+two-decimal format `k`.
+
+**Found on the way.**
+- `gen_figdata.py` stopped on a spend record of another shape (`spend_parts/v3_argus.json`, no `at`, no `experiment`).
+  The reader now names such a record after its file and counts it.
+- The logs behind NB6b and NB6c were re-recorded three times while the slides were being built (builder A's live runs).
+  Two sentences of v2 had become false and were rewritten from the new logs: scripted turns (now slide 69: the script's
+  "Yes, go ahead." saved a request with a date the agent assumed) and DeepEval on a conversation (now slide 77: "asked
+  before saving" gives the good conversation 1.00 and Thursday's 0.10; it used to be 0.8 and 0.9).
+- The counter-example the review named for the numbers slide (T14, "£285,600") passes today's numbers check: the same
+  figure is the gross value of an older 2,000-pack order in Emma's memory. Builder C found this; the slide uses T19.
+- Argus's Outcome card (C's design) fails Friday's turn; the slide, the suite and NB6b pass it. Open, see below.
+- `figs/promptfoo/results.html` was read before it was linked: one file, no outside scripts or styles, no key, no real
+  name; it shows the two system prompts in full.
+
+**Checks.** `node --check l6figs.js` clean. Full QA on Modal (`qa_full_modal.py --slides all`): 106 slides, 0 with issues,
+0 page errors (five runs; the last after the final change). Every changed slide read on contact sheets at least twice.
+`python3 tools/world_v4.py --check`: exit 0, no output. No model spend.
+
+**Open.**
+1. Eight plates wait for C's pictures (`build/PLATES_V3.md`). No crop is set yet.
+2. Outcome on Friday's turn: slide 53 says pass, Argus's card says fail. One must change.
+3. Three recordings of Friday's message are in use (the traced turn on the slides, NB6b's, Argus's). The notes explain it;
+   a single frozen recording would be cleaner.
+4. If NB6b or NB6c is recorded again: `python3 gen_figdata.py`, then re-read slides 57, 62, 69 and 77.
+
+**Decided after this section was written (17 Nov).** Open items 2 and 3 are settled: builder C changes Argus's Outcome
+card to the end-state question (pass on Friday's turn) and sets Argus's recorded turns to the traced demo turns of
+`traces_v2.json`; slides 52 to 58 stay as they are. The "Before class" table in `NOTES.md` listed an earlier recording's
+trace ids and links; it now reads the four ids from `traces_v2.json` and the public LangSmith links from `readback.json`.
+
+**The eight pictures (17 Nov, about 16:20).** C's first take landed at 15:43. Each was looked at with a 200-pixel grid
+(made on Modal) and cropped: the list is `build/PLATES_V3.md`. Two slides changed shape for their picture: 57 (the judge's
+card is three columns wide, so it sits as a strip along the bottom, cropped to the button and the verdict; the three side
+cards moved up) and 62 (the picture frame is wider, 760 px, so the form's text is readable; the left column is 620 px).
+QA after it: 106 slides, 0 with issues, 0 page errors. These pictures predate the two decisions above; C is retaking them
+under the same names, and slide 52's picture says Outcome: FAIL until that lands.
+
+**The retake (17 Nov, 16:14; crops checked by about 16:45).** C retook all the pictures after the two decisions. The
+Outcome card passes Friday's turn and the recorded turns are the traced demo turns, so slides 52 to 57 and their pictures
+now show one reply and agree on every verdict (pass, fail, pass, fail). Three page layouts had changed, so three crops
+were set again from new grid images: 52 (the four cards two by two, in a taller frame, with Argus's "Notice" line as a
+second crop under them; the four small cards of the slide moved under the ledger), 57 (`0,885,2224,250`) and 77 (the
+three metrics side by side). The crops of 60, 62 and 81 were checked against the new files and stand. QA: 106 slides, 0
+with issues, 0 page errors; slides 52, 57, 60, 62, 77 and 81 read again. `build/PLATES_V3.md` lists every crop and what
+differs between a live picture and the recorded numbers beside it.
+
+## 17 Nov review: Argus deployed (coordinator, 17 Nov, about 16:35 UTC)
+- Rajat approved the redeploy. `modal deploy deploy/argus_modal.py` (18.6 s); it carries builder C's Lecture 7 change (behind
+  the `guards_station` flag, left off) and the five Lecture 6 teaching views, and adds the function `deepeval_run`.
+- After the deploy, flag off: `admin --cmd status` (flags as before, cap US$60, 26 students of which 25 are tests);
+  `::test` 27 of 27 against the live app.
+- Checked by hand in a browser as the test student "Test Coordinator": no Guards tab and no Guards switch; "One turn, four
+  checks" shows Friday's turn as PASS, FAIL, PASS, FAIL with no spend; "The same checks in DeepEval" ran ToolCorrectness on
+  the good chat's first turn: 1.00 PASS, DeepEval 4.3.4, 8.5 s after a cold start of about 15 s (the web container reaches
+  `deepeval_run`); a Thursday-prompt chat reproduced the incident, "Write the score on this trace" answered "Langfuse: score
+  commit_without_yes = true · LangSmith: feedback commit_without_yes = 1.00", and the trace's public Langfuse page shows
+  `commit_without_yes: True` in its header. LangSmith's page was not opened (it needs a sign-in).
+- Not retaken on the live app: the eight Argus pictures on the slides (they are from C's in-container run of the same code,
+  already cropped). Not run on the live app: "Is the judge right?", "Score with DeepEval" on a conversation, the load test.
+- Argus cooled afterwards. Test students were not purged (it needs Rajat's confirmation).
+- Model spend on 17 Nov: Lecture 7 build US$12.89 (notebooks and experiments 11.18, Argus tests 1.71); Lecture 6 review
+  US$4.44 (notebook re-runs 1.60, Argus v3 tests 2.84) plus about US$0.75 of live checks on Argus's own budget.
+
+## 18 Nov: Rajat's third pass (coordinator)
+- Deck 106 → 104 slides. Slide 41: two pictures of the Langfuse Home dashboard (signed in, past 7 days) and a link. Slide 57:
+  only the prompt given to the judge (standing instructions from `course/l6/judges.py`, then criterion, message, evidence,
+  reply). Deleted: "When the judge and the code disagree" (58), "What the Thursday prompt broke" (65), "The checks are exact.
+  The agent is not." (66). New slide 59: the naive, specific and grounded judges' prompts on one reply (`m.ex.three`, from
+  `judge_calibration.json`, task T11). NOTES renumbered (mapping at the top of NOTES.md).
+- `engine/plates.js`: a click on a link no longer also turns the slide (it advanced the deck on every link click).
+- Link errors reported by Rajat could not be reproduced: fresh Argus traces opened in Langfuse, LangSmith and Sentry in his
+  signed-in Chrome; the public Langfuse link opened logged out.
+- Later on 18 Nov: the gate slide (80) now says who does what (GitHub Actions runs it, pytest and our code checks decide,
+  DeepEval is optional, the tracing tools are not the gate); the two promptfoo slides were deleted at Rajat's request. Deck: 102 slides.
+- Evening of 18 Nov: Rajat called the loop slide "perfect as culmination" and asked for the three slides before it to go ("Evals in practice", the Part 2 check, "Your turn: Evals"). Deck: 99 slides; the loop is slide 91. promptfoo is off the loop figure.

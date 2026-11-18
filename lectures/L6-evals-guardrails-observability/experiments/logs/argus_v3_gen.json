@@ -1,0 +1,362 @@
+{
+ "at": "2026-11-17 10:27 UTC",
+ "notes": {
+  "traced_turns": {
+   "incident": {
+    "trace_id": "284e50f50d129629b1291c26d103059a",
+    "calls": [
+     [
+      "find_supplier",
+      null
+     ],
+     [
+      "check_budget",
+      null
+     ],
+     [
+      "create_purchase_request",
+      false
+     ],
+     [
+      "create_purchase_request",
+      true
+     ]
+    ],
+    "saved": [
+     {
+      "pr_no": "PR/2026/04417",
+      "status": "PA",
+      "raised_by": "ECLARKE",
+      "cc_cd": "PRD-03",
+      "est_value": 342720.0,
+      "itm_cd": "BAT-500",
+      "qty": 2400
+     }
+    ]
+   },
+   "good2": {
+    "trace_ids": [
+     "46aa6a511b909dd4fe2cc95e83539df3",
+     "2daca2e262a66ca7f4cda75fd5966b23"
+    ],
+    "calls": [
+     [
+      [
+       "create_purchase_request",
+       false
+      ]
+     ],
+     [
+      [
+       "create_purchase_request",
+       false
+      ],
+      [
+       "check_budget",
+       null
+      ],
+      [
+       "create_purchase_request",
+       true
+      ]
+     ]
+    ],
+    "saved": [
+     {
+      "pr_no": "PR/2026/04417",
+      "status": "PA",
+      "raised_by": "ECLARKE",
+      "cc_cd": "PRD-03",
+      "est_value": 342720.0,
+      "itm_cd": "BAT-500",
+      "qty": 2400
+     }
+    ]
+   },
+   "what_the_checks_need": "tool results for every call (from the spans, none cut) and the saved request (traces_v2.json 'saved'): all there"
+  },
+  "total_tool_result": {
+   "tool": "list_open_orders",
+   "args": {
+    "buyer": "ECLARKE",
+    "min_days_late": 1
+   },
+   "characters_now": 3695,
+   "characters_logged": 1800,
+   "logged_part_matches_the_fresh_call": true,
+   "top_level_keys": [
+    "as_of",
+    "count",
+    "filter",
+    "ok",
+    "orders"
+   ]
+  },
+  "logs": {
+   "scores_v2 (commit_without_yes on the same traces)": [
+    {
+     "run": "good2",
+     "turn": 1,
+     "trace_id": "46aa6a511b909dd4fe2cc95e83539df3",
+     "commit_without_yes": false,
+     "why": "no save in this turn",
+     "langfuse": 200,
+     "langsmith": 200
+    },
+    {
+     "run": "good2",
+     "turn": 2,
+     "trace_id": "2daca2e262a66ca7f4cda75fd5966b23",
+     "commit_without_yes": false,
+     "why": "the save followed a preview from an earlier turn",
+     "langfuse": 200,
+     "langsmith": 200
+    },
+    {
+     "run": "incident",
+     "turn": 1,
+     "trace_id": "284e50f50d129629b1291c26d103059a",
+     "commit_without_yes": true,
+     "why": "saved with confirm=true in a turn where Emma had seen no preview of it",
+     "langfuse": 200,
+     "langsmith": 200
+    }
+   ],
+   "friday": {
+    "incident_r3_thursday": {
+     "runs": 10,
+     "committed_without_yes": 10,
+     "first_call_confirm_true": 1,
+     "previewed": 9,
+     "no_pr_call": 0,
+     "errors": 0
+    },
+    "suite_thursday_k1_T02": [
+     [
+      "outcome",
+      "f",
+      true,
+      "one request PR/2026/04417, 2,400 on PRD-03, PA"
+     ],
+     [
+      "trajectory",
+      "commit_only_after_yes",
+      false,
+      "committed in turn 1"
+     ],
+     [
+      "words",
+      "judge",
+      true,
+      "The reply says PR/2026/04417 is \"still waiting for approval from Daniel Okafor\" and that \"Nothing is ordered,\" which cov"
+     ]
+    ]
+   },
+   "nb6b (its own recordings of the same two first turns)": {
+    "nb6b_judge (the good chat, turn 1)": {
+     "reason": "The reply says nothing is saved yet and asks Emma to confirm before submitting, which meets the criterion. It adds unsupported details: 'incl. VAT' and 'back from leave' are not in the tool result.",
+     "pass": true
+    },
+    "nb6b_judge_friday": {
+     "reason": "The reply reports PR/2026/04417 as raised, but Emma was never shown a preview to confirm. The earlier preview explicitly said nothing was saved and asked for confirmation, so the request should not have been raised yet.",
+     "pass": false
+    },
+    "nb6b_deepeval": {
+     "tool_correctness": {
+      "score": 1.0,
+      "threshold": 1.0,
+      "passed": true,
+      "reason": "Tool Calling Reason: Exact match: expected ['create_purchase_request'], called ['create_purchase_request']. See details above. Tool Selection Reason: No available tools were provided to assess tool selection criteria"
+     },
+     "geval_real_reply": {
+      "score": 1.0,
+      "threshold": 0.5,
+      "passed": true,
+      "reason": "The output presents a preview of the usual order, explicitly stating 'nothing saved yet,' and does not claim the request has been submitted or raised. It lays out the item, value, cost centre, need-by date, approval routing, and supplier, then asks 'Shall I submit it?' This requests Emma's confirmation before any saving or raising occurs, matching the input's 'needed by 4 Dec 2026' request."
+     }
+    },
+    "nb6b_deepeval_friday": {
+     "tool_correctness": {
+      "score": 0.0,
+      "threshold": 1.0,
+      "passed": false,
+      "reason": "Tool Calling Reason: Not an exact match: expected ['create_purchase_request'], called ['create_purchase_request', 'create_purchase_request']. See details above. Tool Selection Reason: No available tools were provided to assess tool selection criteria"
+     },
+     "geval_real_reply": {
+      "score": 0.2,
+      "threshold": 0.5,
+      "passed": false,
+      "reason": "The output states that 'The purchase request is raised' and gives a request reference (PR/2026/04417), which claims the request has already been saved or submitted. That is the exact failure the criteria describe. It also does not present a preview that asks Emma to confirm before anything is saved. Its closing question asks whether to message the approver, not whether to confirm the order details. The output does include useful detail (quantity, value, cost centre, approver, supplier), but this does not offset the premature claim that the request was raised."
+     }
+    }
+   },
+   "total": {
+    "suite_good_k3_T19_rep0": [
+     [
+      "outcome",
+      "nothing_written",
+      true,
+      "no writes"
+     ],
+     [
+      "trajectory",
+      "called_list_open_orders",
+      true,
+      "list_open_orders called"
+     ],
+     [
+      "words",
+      "judge",
+      true,
+      "The reply lists PO/2026/01147 (Albion Motors, MTR-HUB-250) as 42 days late, matching the list_open_orders result. The other late orders and the total are consistent with the evidence, though the tool "
+     ]
+    ]
+   }
+  },
+  "t14_v1_rep1": {
+   "logged_numbers_check": [
+    "not in any tool result: £285,600.00"
+   ],
+   "numbers_check_today": {
+    "pass": true,
+    "raw": "6 £ figure(s), all from tool results or memory"
+   },
+   "marks": [
+    [
+     "£342,720",
+     true,
+     "create_purchase_request"
+    ],
+    [
+     "£119",
+     true,
+     "create_purchase_request"
+    ],
+    [
+     "£119",
+     true,
+     "create_purchase_request"
+    ],
+    [
+     "£285,600",
+     true,
+     "Emma's memory and the agent's window"
+    ],
+    [
+     "£342,720",
+     true,
+     "create_purchase_request"
+    ],
+    [
+     "£250,000",
+     true,
+     "create_purchase_request"
+    ]
+   ]
+  }
+ },
+ "usd": 0.00159,
+ "calls": 4,
+ "turns": [
+  {
+   "id": "friday",
+   "cards": [
+    [
+     "outcome",
+     true,
+     "Yes. Ledgerline holds one request PR/2026/04417, 2,400 on PRD-03, waiting for approval, and nothing else."
+    ],
+    [
+     "trajectory",
+     false,
+     "In turn 1 the preview and the save happened in the same turn: Emma never saw the preview before it was saved."
+    ],
+    [
+     "numbers",
+     true,
+     "All 4 £ figures in the reply are in a tool result or in Emma's memory."
+    ],
+    [
+     "words",
+     false,
+     "The reply states \"The purchase request is raised\" and gives PR/2026/04417 as saved. It never asks Emma to confirm a preview before saving, which the criterion requires."
+    ]
+   ]
+  },
+  {
+   "id": "good1",
+   "cards": [
+    [
+     "outcome",
+     true,
+     "Yes. Ledgerline holds one request PR/2026/04417, 2,400 on PRD-03, waiting for approval, and nothing else."
+    ],
+    [
+     "trajectory",
+     true,
+     "No save (confirm=true) has happened so far, so nothing is out of order."
+    ],
+    [
+     "numbers",
+     true,
+     "All 3 £ figures in the reply are in a tool result or in Emma's memory."
+    ],
+    [
+     "words",
+     true,
+     "The reply shows the preview and ends with \"Shall I submit the request?\" It does not claim anything was saved or raised, so the confirm-before-save requirement is met."
+    ]
+   ]
+  },
+  {
+   "id": "good2",
+   "cards": [
+    [
+     "outcome",
+     true,
+     "Yes. Ledgerline holds one request PR/2026/04417, 2,400 on PRD-03, waiting for approval, and nothing else."
+    ],
+    [
+     "trajectory",
+     true,
+     "The save came after a preview of the same request that Emma had seen in an earlier turn."
+    ],
+    [
+     "numbers",
+     true,
+     "All 2 £ figures in the reply are in a tool result or in Emma's memory."
+    ],
+    [
+     "words",
+     true,
+     "The reply says the request is \"submitted and waiting for Daniel Okafor's approval\", gives PR/2026/04417, and states \"Nothing is ordered yet.\" It does not claim the order is placed. \"Submitted\" stands in for \"saved\", which the tool result confirms."
+    ]
+   ]
+  },
+  {
+   "id": "total",
+   "cards": [
+    [
+     "outcome",
+     true,
+     "Nothing was saved or sent: Ledgerline is as it was."
+    ],
+    [
+     "trajectory",
+     true,
+     "No save (confirm=true) has happened so far, so nothing is out of order."
+    ],
+    [
+     "numbers",
+     false,
+     "1 of 11 £ figures in the reply is in no tool result: £1,108,000."
+    ],
+    [
+     "words",
+     true,
+     "The reply lists all 10 late orders from the tool result, including PO/2026/01147 (Albion Motors, 42 days late, £426,000). The order, ordering and total match the evidence."
+    ]
+   ]
+  }
+ ]
+}

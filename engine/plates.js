@@ -67,7 +67,7 @@ const show = (i, all = false) => {
 };
 const next = () => { const h = steps(cur).find((e) => !e.classList.contains('shown')); if (h) { h.classList.add('shown'); told(cur, false); } else if (cur < slides.length - 1) show(cur + 1); };
 const prev = () => { const s = steps(cur).filter((e) => e.classList.contains('shown')); if (s.length) { s[s.length - 1].classList.remove('shown'); told(cur, false); } else if (cur > 0) show(cur - 1, true); };
-const busy = (t) => t && t.closest && t.closest('input,button,.ctl');
+const busy = (t) => t && t.closest && t.closest('input,button,.ctl,a');   // a link opens its page; it must not also turn the slide
 addEventListener('keydown', (e) => {
   if (e.target.closest && e.target.closest('input')) return;
   if (['ArrowRight', ' ', 'PageDown', 'Enter'].includes(e.key)) { e.preventDefault(); next(); }
