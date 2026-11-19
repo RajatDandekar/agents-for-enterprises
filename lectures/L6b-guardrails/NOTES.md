@@ -66,8 +66,8 @@ slides (61, Guard C) in full and name the others, and leave 94 to 96 as reading.
 arXiv 2503.18813 (CaMeL).
 
 **Still open.** NB7a still has its section "Our guard has a bug" (changing it means a new recorded run on Modal). The
-links to `guards.py` lines 62 to 353 already work on GitHub (the new code was added at the end of the file). The two links
-to the second-model check (lines 360 and 377) work only after the next commit and push.
+code links on the slides were checked against GitHub after the push of 19 Nov (commit `c4e1b35`): `guards.py` on GitHub is
+the same file as here, including the second-model check at lines 360 and 377.
 
 ---
 
