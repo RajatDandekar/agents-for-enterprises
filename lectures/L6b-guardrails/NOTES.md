@@ -1,5 +1,76 @@
 # Lecture 7 · Guardrails and Red-Teaming · speaker notes (built 17 Nov 2026)
 
+## 18 Nov revision: read this first (104 slides; the sections further down still use the 17 Nov numbers)
+
+**What changed, in one paragraph.** The live app for this lecture is now **Aegis**, a separate app from Argus (Argus stays
+the observability app of Lecture 6). Every guard is shown on a running example with a screenshot from Aegis; the phrase
+"model in the loop" is gone (the slides say "through the agent" and "directly, with the model skipped"); the story about a
+bug in our own guard is gone (slide 29 shows the correct guard, slide 30 how to test one); the invoice demo runs on a real
+inbox; spotlighting and taint tracking have their own slides; each guard that reads text has an "opened" slide with its
+diagram, its code or prompt, and links; the close is one flowchart (98) and one table of design choices (99).
+
+**Aegis.** `https://rajatworkspace--northbridge-aegis.us-east.modal.run` · Modal app `northbridge-aegis`.
+Tabs: 1 Chat and trace · 2 Guard bench · 3 Detectors · 4 Attacks · `/wall`.
+- 30 minutes before: `modal run deploy/aegis_modal.py::admin --cmd warm`, then `--cmd status`. After class: `--cmd cool`.
+- Notebooks still take their live key from **Argus** ("Notebook key"), so warm Argus too if the class runs them live.
+- The inbox demo (slides 37, 38): run `tools/aegis_mailbox_secret.sh` once (it asks for the mailbox app password and
+  stores it as a Modal secret; nobody else sees it), join Aegis, then
+  `modal run deploy/aegis_modal.py::admin --cmd instructor --who "<your lab name>"`. The chat then shows
+  "Inbox: sandbox | my mailbox". Only the label "Northbridge AP" is read, read-only. `python3 tools/aegis_demo_invoice.py`
+  prints the invoice e-mail to send yourself. If the mailbox is not connected, leave the switch on "sandbox": the sandbox
+  inbox holds the same invoice and the demo is identical.
+- **Privacy.** With "my mailbox" on, the Langfuse trace of that chat is not public. LangSmith and Sentry still receive
+  it. Keep only the demo invoice under the label.
+- Not tested before class: the real mailbox login (only a fake-mailbox unit test). Test it once before Sunday.
+
+**The two live demos, as they now run.**
+- Demo 1 (4 to 6): Chat and trace, Thursday prompt, "Order the usual, please, needed by 4 Dec 2026." with Guards off,
+  then on, then "Yes, go ahead." Point at the strip above the chat: it says where the guards live.
+- Guard bench (21): press "Run all 17 (no model, free)"; open A14, A01, A03, A06 (slides 24 to 27 are these four).
+  For Guard 5 (28) use "Call any tool yourself": `create_purchase_order`, supplier NC-GDA-0063, item BAT-500,
+  quantity 200, rate 111, confirm false. Guards on: refused by never-events, even as a preview. Guards off: the preview
+  runs, and with confirm true an order is saved.
+- Demo 2 (37, 38): "Please deal with the new invoice in the AP inbox." Guards off: the agent saves the invoice
+  (record_invoice confirm=true) and, in our runs, does **not** send the list out; it tells Emma about the instruction.
+  Guards on: the save is refused by "Provenance". The send itself is shown on the bench (46, attack A11), because the
+  model never did it by itself.
+- Detectors (50): chip "The poisoned invoice": the classifier passes it (0.0023, a miss), the second model says ATTACK.
+  Chip "Order the usual": the classifier flags it (a false alarm), the second model says SAFE.
+
+**New slides, one line each.**
+20 Two ways to reach a tool (through the agent; directly) · 21 Live: the Guard bench · 22 What the bench shows
+(10 of 17, then 0 of 17) · 24 to 27 Guards 1 to 4, each on its bench screenshot · 28 Guard 5 on a real bench call ·
+29 Guard 3 opened: the whole guard in code · 30 Test a guard three ways · 31 a guard in the trace, with public links
+(Langfuse and LangSmith open without an account; Sentry needs our sign-in) · 35 Aegis, your turn 1 ·
+43 Spotlighting: delimiting, datamarking, encoding (Hines and colleagues, 2024: above 50% to below 2% in their tests) ·
+45 Taint tracking step by step (source, mark, sink; the mark lasts one turn) · 46 The invoice on the bench ·
+47 The same idea, further: lethal trifecta, Rule of Two, Dual LLM, CaMeL · 50 Live: the detectors ·
+54, 57, 61, 63 Guards A to D opened · 60 Guard C's prompt, word for word · 65 Where every guard stands ·
+68 The reply check · 83 Every guard's record · 92 Aegis, your turn 2 · 98 The whole process · 99 Design choices.
+
+**"m" and "e" on the tiles (slides 51, 53):** m is a chat message, e is an e-mail's body. It is in the legend now.
+
+**Old number to new number** (17 Nov deck to this one; a dash means the slide was replaced):
+2-12 unchanged · 15-19 unchanged · 20:22 · 21:23 · 22:24 · 23:25 · 24:26 · 25:27 · 26:28 · 27:- (now 29) · 28:- (now 30) ·
+29:31 · 30:32 · 31:33 · 32:34 · 33:35 · 34:36 · 35:- (now 37, 38) · 36:39 · 37:40 · 38:41 · 39:42 · 40:44 · 41:48 · 42:49 ·
+43:51 · 44:52 · 45:53 · 46:55 · 47:56 · 48:58 · 49:59 · 50:62 · 51:64 · 52:66 · 53:67 · 54:68 · 55:69 · 56:70 · 57:71 ·
+58:72 · 59:73 · 60:74 · 61:75 · 62:76 · 63:77 · 64:78 · 65:79 · 66:80 · 67:81 · 68:82 · 69:84 · 70:85 · 71:86 · 72:87 ·
+73:88 · 74:89 · 75:90 · 76:91 · 77:92 · 78:93 · 79:94 · 80:95 · 81:96 · 82:97 · 83-86:- (now 98, 99) · 87:100 · 88:101 ·
+89:102 · 90:103 · 91:104.
+
+**Timing.** The deck grew by 13 slides. If short: skip 47 (the same idea, further), show only one of the four "opened"
+slides (61, Guard C) in full and name the others, and leave 94 to 96 as reading.
+
+**Sources checked on 18 Nov 2026.** arXiv 2403.14720 (spotlighting) · simonwillison.net/2025/Jun/16/the-lethal-trifecta/
+· simonwillison.net/2023/Apr/25/dual-llm-pattern/ · ai.meta.com/blog/practical-ai-agent-security/ (31 Oct 2025) ·
+arXiv 2503.18813 (CaMeL).
+
+**Still open.** NB7a still has its section "Our guard has a bug" (changing it means a new recorded run on Modal). The
+links to `guards.py` lines 62 to 353 already work on GitHub (the new code was added at the end of the file). The two links
+to the second-model check (lines 360 and 377) work only after the next commit and push.
+
+---
+
 Sun 22 Nov 2026, 2 hours. **91 slides.** Lecture 7 of 11. Folder name kept as `L6b-guardrails`. Slide numbers are the
 deck's counter (bottom right). `[click]` = one step. Dr. Rajat Dandekar presents.
 

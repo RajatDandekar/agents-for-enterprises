@@ -115,8 +115,9 @@ class Agent:
         self.conversation_id = conversation_id or f"l6-{int(time.time() * 1000)}"
         self.user_label = user_label or "ECLARKE"
         self.tags = tuple(tags)
-        self.finale = C.Finale(self.llm_for, None, lambda: self.clock, self.memory, lambda: [], lambda: BRIEFING,
-                               lambda about: {"ok": True, "note": BRIEFING}, lambda n, p: {"ok": False, "error": "No routines."})
+        self.briefing = BRIEFING                    # what "what's new" says; a caller may replace it for one agent
+        self.finale = C.Finale(self.llm_for, None, lambda: self.clock, self.memory, lambda: [], lambda: self.briefing,
+                               lambda about: {"ok": True, "note": self.briefing}, lambda n, p: {"ok": False, "error": "No routines."})
         self.mark()
 
     # ------------------------------------------------------------------ the window
@@ -218,7 +219,7 @@ class Agent:
             if tc.name in mem_names:
                 out, _write = w._run_tool(tc.name, args, t, False)
             elif tc.name == "whats_new":
-                out = {"ok": True, "note": BRIEFING}
+                out = {"ok": True, "note": self.briefing}
             elif tc.name in SPECS:
                 out = self.call_tool(tc.name, args, t)
             else:

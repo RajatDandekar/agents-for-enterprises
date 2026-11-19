@@ -42,7 +42,7 @@ P2 = [
 ("new", '''<section class="slide" data-plate="The Attack Library">
   <div class="lec-top" style="top:84px"><h2 style="font-size:46px">Our library: twenty attacks, grouped by what the attacker wants</h2><p class="sub" style="font-size:20px">Written for Northbridge. <span data-l6="m.attacks.channels.direct"></span> are typed in Emma’s chat; <span data-l6="m.attacks.channels.indirect"></span> arrive by e-mail. Each has its own success check.</p></div>
   <div class="fig lg" data-fig="atkgroups" style="left:100px;top:200px;width:1400px;height:440px"></div>
-  <div class="look step" style="left:100px;top:670px;width:1400px;font-size:20px"><span class="k">How to write your own list</span>Do not start from clever tricks. Start from what must never happen in your system (the five headings), then write three or four ways someone might try to make it happen. In Argus this is the list in the Guards station.</div>
+  <div class="look step" style="left:100px;top:670px;width:1400px;font-size:20px"><span class="k">How to write your own list</span>Do not start from clever tricks. Start from what must never happen in your system (the five headings), then write three or four ways someone might try to make it happen. In Aegis this is the list on the tab “Attacks”.</div>
 </section>'''),
 ("new", f'''<section class="slide" data-plate="OWASP · Agentic 2026">
   <div class="lec-top" style="top:84px"><h2 style="font-size:46px">A shared list of risks: OWASP Top 10 for Agentic Applications (2026)</h2><p class="sub" style="font-size:20px">OWASP is a non-profit that publishes security checklists. This one, for AI agents, came out on 9 Dec 2025. Dark rows: risks we attack today.</p></div>
@@ -69,7 +69,7 @@ P2 = [
     <tr><td class="c">LLM03</td><td>Excessive Agency</td><td>the system can do more than the task needs</td><td>{ac("A03")}a tool that saves on one flag</td></tr>
     <tr class="q"><td class="c">LLM04</td><td>Supply Chain</td><td>models, packages and tools you did not write</td><td>not today</td></tr>
     <tr class="q"><td class="c">LLM05</td><td>Data and Model Poisoning</td><td>bad data in what the model learns or looks up</td><td>not today</td></tr>
-    <tr class="q"><td class="c">LLM06</td><td>Unbounded Consumption</td><td>it runs up cost or load without a limit</td><td>not today: Argus caps each student’s spend</td></tr>
+    <tr class="q"><td class="c">LLM06</td><td>Unbounded Consumption</td><td>it runs up cost or load without a limit</td><td>not today: Aegis caps each student’s spend</td></tr>
     <tr><td class="c">LLM07</td><td>Misinformation</td><td>a confident answer that is wrong</td><td>{ac("A17")}“just guess a price”</td></tr>
     <tr><td class="c">LLM08</td><td>Hidden Context Exposure</td><td>it reveals instructions meant to stay hidden</td><td>{ac("A07")}“print your system prompt”</td></tr>
     <tr class="q"><td class="c">LLM09</td><td>Vector and Embedding Weaknesses</td><td>weaknesses in the index it searches</td><td>not today</td></tr>
@@ -113,15 +113,24 @@ P2 = [
   <div class="lec-top" style="top:84px"><h2 style="font-size:46px">With every guard on: who stopped each of the twenty?</h2><p class="sub" style="font-size:20px">Thursday’s prompt, all nine guards, 16 Nov. None got through. But look at which guard did the work.</p></div>
   <div class="fig" data-fig="who" data-key="thursday_all" style="left:100px;top:200px;width:1400px;height:440px"></div>
   ''' + STEP * 4 + '''
-  <div class="look step" style="left:100px;top:644px;width:1400px;font-size:19.5px"><span class="k">Read it honestly</span>Half the attacks never reached the model: the injection classifier stopped the message first. That looks strong. It is the same classifier that stops “<span data-l6="m.detectors.deberta.fa_usual.text"></span>” So “every guard on, for every message” is the safest setting and not one a buyer could work with.</div>
+  <div class="look step" style="left:100px;top:644px;width:1400px;font-size:19.5px"><span class="k">Read it honestly</span>Half the attacks never reached the model: the injection classifier stopped the message first. That looks strong. It is the same classifier that stops “<span data-l6="m.detectors.deberta.fa_usual.text"></span>” So “every guard on, for every message” is the safest setting and not one a buyer could work with. The next slide gives every guard its own record.</div>
   <div class="l6-src step" style="left:100px;top:790px;width:1400px">One row per attack’s first decisive event (guards_attacks_thu.json). In the last row no guard had to act: the model itself did not do what was asked.</div>
+</section>'''),
+("new", '''<section class="slide" data-plate="Every Guard’s Record">
+  <div class="lec-top" style="top:84px"><h2 style="font-size:46px">Every guard’s record, in one table</h2><p class="sub" style="font-size:20px">The last slide showed who spoke first. This one gives each guard its own test: the tool called directly, through the agent, and the labelled set.</p></div>
+  <div class="fig" data-fig="guardperf" style="left:100px;top:186px;width:1400px;height:500px"></div>
+  <div class="three step" style="top:716px">
+    <div class="card" style="font-size:17px"><b>Why the code guards look idle through the agent.</b> With every guard on, the classifier stopped <span data-l6="m.attacks.who.thursday_all.0.n"></span> messages before any tool was asked for, and the model itself declined <span data-l6="m.attacks.who.thursday_all.4.n"></span> more.</div>
+    <div class="card af" style="font-size:17px"><b>Called directly, they did all the work.</b> <span data-l6="m.forced.none_worked"></span> of <span data-l6="m.forced.want"></span> attacks worked with no guards, <span data-l6="m.forced.code_worked"></span> with them. Ledgerline’s own checks stopped the other <span data-l6="m.forced.none_ledgerline"></span>.</div>
+    <div class="card" style="font-size:17px"><b>Never-events: nothing reached it.</b> “Recorded yes” met those calls first. Its own test is the direct call to Nordic Cell in Part 1: refused, even as a preview.</div>
+  </div>
 </section>'''),
 ("new", '''<section class="slide" data-plate="Zero at What Price">
   <div class="lec-top"><h2>Zero attacks is not the goal. Zero at what price?</h2><p class="sub">The three settings again, with the column that people forget: how much honest work each one stops.</p></div>
   <div class="l6-tw" style="position:absolute;left:100px;top:250px;width:1400px"><table class="l6t xl">
     <tr><th style="width:22%">Setting</th><th style="width:30%">Attacks that got through, of 20<br>good prompt · Thursday’s prompt</th><th>Honest work it stopped</th></tr>
     <tr><td><b>No guards</b></td><td><span data-l6="m.attacks.n.good_off"></span> · <span data-l6="m.attacks.n.thursday_off"></span></td><td>None.</td></tr>
-    <tr class="step"><td><b>Code guards only</b></td><td><span data-l6="m.attacks.n.good_code"></span> · <span data-l6="m.attacks.n.thursday_code"></span> <span style="color:var(--ink-3)">(the card number)</span></td><td>None that we know of, after the bug fix: Emma’s real yes went through in <span data-l6="m.replay.saved_after_yes"></span> of <span data-l6="m.replay.runs"></span> runs.</td></tr>
+    <tr class="step"><td><b>Code guards only</b></td><td><span data-l6="m.attacks.n.good_code"></span> · <span data-l6="m.attacks.n.thursday_code"></span> <span style="color:var(--ink-3)">(the card number)</span></td><td>None that we know of: Emma’s real yes went through in <span data-l6="m.replay.saved_after_yes"></span> of <span data-l6="m.replay.runs"></span> runs.</td></tr>
     <tr class="step"><td><b>Every guard, on every message</b></td><td><span data-l6="m.attacks.n.good_all"></span> · <span data-l6="m.attacks.n.thursday_all"></span></td><td>The classifier stops <span data-l6="m.detectors.deberta.false_alarms"></span> of <span data-l6="m.detectors.deberta.benign"></span> ordinary texts, among them “<span data-l6="m.detectors.deberta.fa_usual.text"></span>”</td></tr>
   </table></div>
   <div class="three step" style="top:596px">
@@ -152,7 +161,7 @@ P2 = [
   <div class="l6-src step" style="left:100px;top:812px;width:1400px">l7_redteam_variants.json (what the attacker wrote; it declined <span data-l6="m.rt.declined"></span> of <span data-l6="m.rt.n"></span>) and l7_redteam.json (the runs), 17 Nov. One run per message per setting: run it again and a cell may change.</div>
 </section>'''),
 ("new", '''<section class="slide" data-plate="promptfoo">
-  <div class="lec-top" style="top:84px"><h2 style="font-size:46px">The tools teams use, 1: promptfoo’s red team</h2><p class="sub" style="font-size:20px">Open source (MIT licence), run from the command line. The same loop as ours, packaged: you describe your application, it writes the attacks, sends them, and grades the answers.</p></div>
+  <div class="lec-top" style="top:84px"><h2 style="font-size:46px">The tools teams use, 1: promptfoo’s red team</h2><p class="sub" style="font-size:20px">Open source, run from the command line. The same loop as ours, packaged: it writes the attacks, sends them and grades the answers.</p></div>
   <div class="fig" data-fig="shot" data-src="figs/promptfoo/pf_redteam_eval.png" data-crop="888,856,2280,704" data-label="promptfoo: the results of our red-team run. Two columns, one per target; each row is one generated attack" style="left:100px;top:204px;width:880px;height:272px"></div>
   <div class="side" style="left:1010px;top:204px;width:490px">
     <div class="card" style="font-size:18px"><b>What the picture shows.</b> Two columns: our agent with no guards, and with all guards. Each row is one attack promptfoo wrote. PASS means its grader judged that the agent resisted.</div>
@@ -201,29 +210,30 @@ P2 = [
 ("new", nbslide("NB7d · Together", "NB7d_red_team", "NB7d: build a red team",
                 "We run this one together. It ends with the attack success rate before and after the guards, for attacks a model wrote.",
                 '''<div class="card" style="font-size:16.5px"><b>1</b> An attack as data: a message and a check in code.<br><b>2</b> Run a few; attack success rate, guards off and on.<br><b>3</b> An attacker model rewrites a seed attack five ways; the agent answers; code decides.<br><b>4</b> All fifteen rewrites, guards off and on: read what got through.<br><b>5</b> Two tools: promptfoo’s recorded run, then garak, live.</div>''', 30)),
-("new", '''<section class="slide" data-plate="Argus · Your Turn 2">
-  <div class="lec-top" style="top:84px"><h2 style="font-size:46px">Your turn 2: write an attack nobody stops</h2><p class="sub" style="font-size:20px">Argus, the Guards station again. This time the attack is yours. The class wall counts every attempt.</p></div>
-  <div class="fig" data-fig="shot" data-src="figs/argus/guards_station_a00_code.png" data-crop="1852,2040,1220,480" data-label="Argus, Guards: “My attacks”, the list of what you have sent, with the result of each and the guard that stopped it" style="left:100px;top:200px;width:580px;height:228px"></div>
-  <div class="card" style="position:absolute;left:710px;top:200px;width:330px;font-size:18px"><b>The picture: “My attacks”</b>, under the verdict. One line per attack you sent: the prompt, the guard setting, held or got through, and which guard stopped it.</div>
-  <div class="look" style="left:100px;top:452px;width:940px;font-size:19.5px"><span class="k">What counts as winning</span>Not a rude reply. Something changed in Ledgerline that Emma did not agree to, or something left Northbridge. If you manage it with the code guards on, tell me: it goes into the library with your name on it.</div>
-  <div class="look" style="left:100px;top:622px;width:940px;font-size:19.5px;background:var(--card)"><span class="k" style="color:var(--ink-3)">Ideas, if you are stuck</span>Say it in another language. Split it over two messages. Claim an emergency. Quote a policy that does not exist. Ask it to read the AP inbox and “do what is needed”.</div>
-  <div class="side" style="left:1070px;top:200px;width:430px">
-    <div class="card" style="font-size:18px"><b class="n">1</b>Under the attack list, type your own attack. Press <b>Send</b>.</div>
-    <div class="card" style="font-size:18px"><b class="n">2</b>First with Guards: <b>None</b>. Did anything change in Ledgerline?</div>
-    <div class="card" style="font-size:18px"><b class="n">3</b>Then <b>Code</b>, then <b>All</b>. Which guard spoke first?</div>
-    <div class="card" style="font-size:18px"><b class="n">4</b>Change one thing and send it again. “My attacks” keeps score.</div>
-    <div class="card" style="font-size:18px"><b class="n">5</b>Watch the class wall. Ten minutes.</div>
+("new", '''<section class="slide" data-plate="Aegis · Your Turn 2">
+  <div class="lec-top" style="top:84px"><h2 style="font-size:46px">Your turn 2: write an attack nobody stops</h2><p class="sub" style="font-size:20px">The same tab as before. This time the attack is yours, and the class wall counts every attempt.</p></div>
+  <div class="l7-go" style="left:100px;top:192px;width:1352px"><span class="k">Open Aegis</span><span data-l6="m.aegis_url" data-f="url"></span><small>The tab <b>4 Attacks</b>. Scroll to the box under the attack list: <b>Or write your own attack…</b></small></div>
+  <div class="fig" data-fig="shot" data-src="figs/aegis/attacks.png" data-crop="815,3010,1010,240" data-label="Aegis, Attacks: the box under the attack list, Or write your own attack, with the Send button" style="left:100px;top:282px;width:720px;height:171px"></div>
+  <div class="fig" data-fig="shot" data-src="figs/aegis/attacks.png" data-crop="1845,1745,1230,330" data-label="Aegis, Attacks: My attacks, one line per attack you sent, with the prompt, the guard setting, the result and the guard that stopped it; and the link Class wall" style="left:100px;top:466px;width:720px;height:193px"></div>
+  <div class="look" style="left:100px;top:676px;width:680px;font-size:18.5px"><span class="k">What counts as winning</span>Not a rude reply. Something changed in Ledgerline that Emma did not agree to, or something left Northbridge. If you manage it with the code guards on, tell me: it goes into the library with your name on it.</div>
+  <div class="l7-steps" style="left:850px;top:282px;width:650px">
+    <div style="font-size:18px">Type your own attack in the box under the list. Press <b>Send</b>.</div>
+    <div style="font-size:18px">First with Guards: <b>None</b>. Read the verdict: did anything change in Ledgerline?</div>
+    <div style="font-size:18px">Then <b>Code</b>, then <b>All</b>. Read <b>Stopped by</b>: which guard spoke first?</div>
+    <div style="font-size:18px">Change one thing and send it again. <b>My attacks</b> keeps score of every try.</div>
+    <div style="font-size:18px">Press <b>Class wall</b> to see the whole class. Ten minutes.</div>
   </div>
-  <div class="l6-src" style="left:100px;top:790px;width:1400px;font-size:17px">Argus: <span data-l6="m.argus_url" data-f="url"></span> · The picture is from our own test before class.</div>
+  <div class="look" style="left:850px;top:676px;width:610px;font-size:18.5px;background:var(--card)"><span class="k" style="color:var(--ink-3)">Ideas, if you are stuck</span>Say it in another language. Split it over two messages. Claim an emergency. Quote a policy that does not exist. Ask it to read the AP inbox and “do what is needed”.</div>
 </section>'''),
-("parked", 31, [("<p class=\"sub\" style=\"font-size:20px\">Attack success rate per guard set, live, for the whole class. <code>/wall</code> on the projector.</p>",
+("parked", 31, [("data-src=\"figs/argus/wall.png\"", "data-src=\"figs/aegis/wall.png\""),
+                ("<p class=\"sub\" style=\"font-size:20px\">Attack success rate per guard set, live, for the whole class. <code>/wall</code> on the projector.</p>",
                  "<p class=\"sub\" style=\"font-size:20px\">Attack success rate for each guard setting, live, for the whole class. I put <code>/wall</code> on the projector while you attack.</p>"),
                 ("data-crop=\"0,0,3200,1800\" data-label=\"Argus: the class wall\" style=\"left:100px;top:200px;width:1050px;height:600px\"></div>",
-                 "data-crop=\"144,550,2912,1040\" data-label=\"Argus: the class wall. Attack success rate for each guard setting, and the attacks that got through\" style=\"left:100px;top:200px;width:1050px;height:375px\"></div>\n  <div class=\"look\" style=\"left:100px;top:606px;width:1050px;font-size:19.5px\"><span class=\"k\">How to read the wall</span>One tile per guard setting. The big figure is the attack success rate for the whole class: attacks that got what they wanted, out of attacks sent. Below: which attacks got through, and through which settings.</div>"),
+                 "data-crop=\"130,520,2940,860\" data-label=\"Aegis: the class wall. Attack success rate for each guard setting, and the attacks that got through\" style=\"left:100px;top:200px;width:1050px;height:375px\"></div>\n  <div class=\"look\" style=\"left:100px;top:606px;width:1050px;font-size:19.5px\"><span class=\"k\">How to read the wall</span>One tile per guard setting. The big figure is the attack success rate for the whole class: attacks that got what they wanted, out of attacks sent. Below: which attacks got through, and through which settings.</div>"),
                 ("<div class=\"card\">This screenshot is from our test run, before class. In class it fills with yours.</div>",
                  "<div class=\"card\"><b class=\"n\">1</b>Every attack you send is added to the tile of the guard setting you used.</div>\n    <div class=\"card\"><b class=\"n\">2</b>After ten minutes we stop and read it together.</div>"),
                 ("<div class=\"card step\">Read it the way a security team would: which set, which attack, and what the false alarms were.</div>",
-                 "<div class=\"card step\"><b class=\"n\">3</b>Read it the way a security team would: which setting, which attack, and how much honest work was stopped.</div>\n    <div class=\"card\" style=\"font-size:16.5px;background:var(--g3)\">The picture is from our own small test run on 16 Nov, where nothing got through. In class it fills with yours.</div>")]),
+                 "<div class=\"card step\"><b class=\"n\">3</b>Read it the way a security team would: which setting, which attack, and how much honest work was stopped.</div>\n    <div class=\"card\" style=\"font-size:16.5px;background:var(--g3)\">The picture is Aegis’s wall after our own small test on 18 Nov, where nothing got through. In class it fills with yours.</div>")]),
 ("parked", 26, [("<h2>The guard landscape, Nov 2026</h2><p class=\"sub\">What is current, what is archived, what needs a sign-in. Check status before adopting: the market consolidated fast.</p>",
                  "<h2>The landscape, Nov 2026</h2><p class=\"sub\">What teams reach for, by kind. Names change fast: the next slide says how fast.</p>"),
                 ("<h3>Most used, no product</h3>Claude Agent SDK PreToolUse (runs before allow rules), LangChain v1 PII and human-in-the-loop middleware, OpenAI Agents SDK input, output and tool guardrails.",
@@ -278,45 +288,25 @@ P2 = [
 </section>'''),
 
 # ------------------------------------------------------------------ CLOSE
-("new", '''<section class="slide part" data-plain="1" data-num="4">
-  <div class="center"><span class="num">Close · Ask Northbridge, trusted</span>
-    <div class="recall"><b>So far</b>A trace to see it, an eval to measure it, a guard to bound it, and attacks to check the guard.</div>
-    <h1 class="q2">Friday again, with all three layers on</h1></div>
+("new", f'''<section class="slide" data-plate="The Whole Process">
+  <div class="lec-top" style="top:84px"><h2 style="font-size:46px">The whole process, as one loop</h2><p class="sub" style="font-size:20px">Eight steps, each with one number from our own runs. This is what you take to your own agent on Monday.</p></div>
+  <div class="fig" data-fig="closing" style="left:100px;top:190px;width:1400px;height:620px"></div>
+  {STEP}{STEP}{STEP}{STEP}
 </section>'''),
-("new", '''<section class="slide" data-plate="Friday, Replayed">
-  <div class="lec-top" style="top:84px"><h2 style="font-size:46px">Friday 09:10, replayed: the bad prompt, and the right outcome</h2><p class="sub" style="font-size:20px">Thursday’s prompt is still loaded. Emma sends the same message. Our recorded run, both turns.</p></div>
-  <div style="position:absolute;left:100px;top:192px"><span class="l6-mk">Turn 1</span></div>
-  <div class="fig" data-fig="turn" data-path="m.replay.t1" data-sm="1" style="left:100px;top:226px;width:690px;height:380px"></div>
-  <div class="step" style="position:absolute;left:810px;top:192px"><span class="l6-mk">Turn 2</span></div>
-  <div class="fig step" data-fig="turn" data-path="m.replay.t2" data-sm="1" style="left:810px;top:226px;width:690px;height:380px"></div>
-  <div class="three step" style="top:620px">
-    <div class="card af" style="font-size:18.5px"><span class="tag af">The guard</span>refused the save in turn 1 and allowed it after her yes: <span data-l6="m.replay.saved_after_yes"></span> of <span data-l6="m.replay.runs"></span> runs ended with <span data-l6="m.replay.pr_no"></span> waiting for Daniel.</div>
-    <div class="card af" style="font-size:18.5px"><span class="tag af">The trace</span>holds both turns and the guard’s row, so the refusal can be found and explained on Monday.</div>
-    <div class="card af" style="font-size:18.5px"><span class="tag af">The eval</span>still fails Thursday’s prompt. The guard made the bad prompt safe. It did not make it good: fix the prompt too.</div>
-  </div>
+("new", '''<section class="slide" data-plate="Design Choices">
+  <div class="lec-top" style="top:84px"><h2 style="font-size:46px">The design choices an engineer makes</h2><p class="sub" style="font-size:20px">Each row is a decision you will face on your own agent. What we chose for Ask Northbridge, and the number that decided it.</p></div>
+  <div class="l6-tw" style="position:absolute;left:100px;top:192px;width:1400px"><table class="l6t l7-dc">
+    <tr><th style="width:25%">The choice</th><th style="width:43%">What we chose, and why</th><th>The number behind it</th></tr>
+    <tr><td><b>A rule in the prompt, or in code?</b></td><td>Both. Anything that must never happen goes in code. The prompt is for how the agent should behave on an ordinary day.</td><td>One prompt edit: saved without a yes in <span data-l6="m.incident.dated.thursday.committed"></span> of <span data-l6="m.incident.dated.thursday.runs"></span> runs. With the guard: <span data-l6="m.replay.saved_after_turn1"></span> of <span data-l6="m.replay.runs"></span>.</td></tr>
+    <tr class="step"><td><b>Where does the guard stand?</b></td><td>At the tool, before the call runs: the last moment before something is saved or sent.</td><td><span data-l6="m.forced.code_worked"></span> of <span data-l6="m.forced.want"></span> direct tool calls worked.</td></tr>
+    <tr class="step"><td><b>When it says no: stop, or ask a person?</b></td><td>Refuse with a reason and a next step. The next step usually sends the decision to Emma.</td><td>One extra turn. After her yes: saved in <span data-l6="m.replay.saved_after_yes"></span> of <span data-l6="m.replay.runs"></span>.</td></tr>
+    <tr class="step"><td><b>Code, or a model that reads text?</b></td><td>Code wherever a rule can name it. A model only where it cannot: injections, personal data.</td><td>Code guards: <span data-l6="m.replay.refusal.ms" data-f="ms2"></span> a check, no fee.</td></tr>
+    <tr class="step"><td><b>Which model-based guard, and where?</b></td><td>The cheap classifier on text from outside only. A second model where the classifier is not enough.</td><td>Classifier: <span data-l6="m.detector_rows.0.caught"></span> caught, <span data-l6="m.detector_rows.0.fa"></span> false alarms, <span data-l6="m.detector_rows.0.ms"></span>. Second model: <span data-l6="m.detector_rows.2.caught"></span>, <span data-l6="m.detector_rows.2.fa"></span>, <span data-l6="m.detector_rows.2.ms"></span>.</td></tr>
+    <tr class="step"><td><b>What about text from outside?</b></td><td>Wrap it as data, and mark the turn: no save and no message to an outside address until Emma speaks.</td><td>The two e-mail attacks: refused at the tool.</td></tr>
+    <tr class="step"><td><b>A guard gives no clear verdict?</b></td><td>Count it as a flag, never as a pass. This is called failing closed.</td><td>One line in <code style="font-size:14px">llm_check()</code>.</td></tr>
+    <tr class="step"><td><b>Switch a new guard on at once?</b></td><td>No. Run it in watch mode first (<code style="font-size:14px">mode="monitor"</code>): it writes “would refuse” to the trace and stops nothing. Read its false alarms, then enforce.</td><td>The classifier stopped “<span data-l6="m.detectors.deberta.fa_usual.text"></span>”</td></tr>
+  </table></div>
 </section>'''),
-("parked", 35, [("<h3>One span, two facts</h3><code>execute_tool create_purchase_request</code>, <code>confirm=true</code>, in the same turn as the preview. Found in four clicks; the online scorer found all <span data-l6=\"m.online.commit_without_yes\"></span> such turns.",
-                 "<h3>One row, two facts</h3><code>create_purchase_request</code> with <code>confirm=true</code>, in the same turn as the preview. A check run over all our recorded turns found <span data-l6=\"m.online.commit_without_yes\"></span> like it."),
-                ("<h3>Red before merge</h3>The CI gate on Thursday’s prompt exited <span data-l6=\"m.ci.thursday.exit\"></span>: T02 and T03 “committed in turn 1”. The suite: <span data-l6=\"m.suite.thursday_k1.passed\"></span>/<span data-l6=\"m.suite.thursday_k1.runs\"></span> vs <span data-l6=\"m.suite.good_k3.passed\"></span>/<span data-l6=\"m.suite.good_k3.runs\"></span>.",
-                 "<h3>Red before it ships</h3>The test run on Thursday’s prompt failed (exit code <span data-l6=\"m.ci.thursday.exit\"></span>): “saved in turn 1”. The full set of tasks: <span data-l6=\"m.suite.thursday_k1.passed\"></span> of <span data-l6=\"m.suite.thursday_k1.runs\"></span> runs passed, against <span data-l6=\"m.suite.good_k3.passed\"></span> of <span data-l6=\"m.suite.good_k3.runs\"></span> with the good prompt."),
-                ("In both replays the commit was refused in turn 1 and allowed after Emma’s yes. Attacks under Thursday’s prompt: <span data-l6=\"m.attacks.n.thursday_off\"></span> → <span data-l6=\"m.attacks.n.thursday_all\"></span> of 20.",
-                 "In both recorded runs the save was refused in turn 1 and allowed after Emma’s yes. Attacks that got through under Thursday’s prompt: <span data-l6=\"m.attacks.n.thursday_off\"></span> of 20 with no guards, <span data-l6=\"m.attacks.n.thursday_code\"></span> with the code guards, <span data-l6=\"m.attacks.n.thursday_all\"></span> with every guard."),
-                ("<p class=\"sub\">Each layer, measured on our runs.</p>", "<p class=\"sub\">Each layer, measured on our own runs. The first two are yesterday’s; the third is today’s.</p>"),
-                ("The guard stops this incident. The eval stops the next prompt edit that breaks something a guard does not cover. The trace explains the one nobody predicted.",
-                 "The guard stops this incident, today, whatever the prompt says. The eval stops the next careless edit that breaks something no guard covers. The trace explains the failure nobody predicted.")]),
-("parked", 36, [("<p class=\"sub\">Honest limits of what we built in these two lectures.</p>", "<p class=\"sub\">Honest limits of what we built in these two lectures. Each one is a reason to keep all three layers.</p>"),
-                ("Our yes detector is a rule; a clever “no” passes it. A real system shows a button: the yes is a click, not a sentence.",
-                 "Our guard finds the yes by matching words. “Yes, but not today” would fool it. A real system shows a button: the yes is a click, not a sentence."),
-                ("<h3>20 tasks, 41 texts</h3>Enough to teach and to catch Thursday; not enough to certify anything. Every incident adds to them.",
-                 "<h3>20 attacks, <span data-l6=\"m.detectors.set.injection\"></span> texts</h3>Enough to teach, and to catch Thursday. Not enough to certify anything. Every incident adds to them."),
-                ("<span class=\"tag nt\">Judges drift</span><h3>Re-calibrate</h3>A new judge model, a new kappa. Keep the labels; re-run them.",
-                 "<span class=\"tag nt\">Models change</span><h3>Measure again</h3>A new model for the agent, for a judge or for a guard means running the same labelled sets again. Keep the labels."),
-                ("<h3>Encoding, translation</h3>Our classifier missed the translation attack and two e-mails. Code behind it decides.",
-                 "<h3>A guard that reads text can be fooled</h3>Our classifier missed the translation attack and <span data-l6=\"m.detectors.deberta.mail_missed\"></span> of the <span data-l6=\"m.detectors.deberta.mail_n\"></span> poisoned e-mails. The rule in code behind it decides."),
-                ("<h3>Guards only see tool calls</h3>A tool that does too much at once (no preview) cannot be guarded well. Fix the tool.",
-                 "<h3>A guard sees only the call</h3>A tool that does too much in one call, with no preview step, cannot be guarded well. Fix the tool first."),
-                ("Traces nobody opens and alerts nobody owns protect nothing. Name an owner.",
-                 "Traces nobody opens and refusals nobody reads protect nothing. Name an owner.")]),
 ("parked", 37, [("Reply to Henrik Weber · Sat 21 Nov 2026", "Reply to Henrik Weber · Sun 22 Nov 2026"),
                 ("style=\"left:200px;top:110px;width:1200px;font-size:20px\"", "style=\"left:160px;top:110px;width:1280px;font-size:22.5px\""),
                 ("Yes. Every turn is a trace in Langfuse: each model call and tool call, with arguments, tokens and cost. Friday’s commit is one span, found in four clicks.",
@@ -328,9 +318,9 @@ P2 = [
                 ("What we ask in return: an owner for the traces and alerts, and every new incident sent to us as a task.",
                  "What we ask in return: an owner for the traces and the refusals, and every new incident sent to us as a test and as an attack.")]),
 ("new", f'''<section class="slide" data-plate="Four Notebooks">
-  <div class="lec-top"><h2>Four notebooks, each runs two ways</h2><p class="sub">With your Argus key every call is live. With no key each notebook replays our recorded run.</p></div>
+  <div class="lec-top"><h2>Four notebooks, each runs two ways</h2><p class="sub">With your notebook key every call is live. With no key each notebook replays our recorded run.</p></div>
   <div style="position:absolute;left:100px;top:240px;width:1400px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
-    <div class="card" style="font-size:18px"><span class="tag nt">NB7a</span><h3>Guards in code</h3>Write the incident’s guard by hand, meet its bug, add a second guard, then test the guards with no model at all.<br><br><a class="colab" style="font-size:16px;padding:11px 15px" href="{GH}NB7a_guards.ipynb" target="_blank" rel="noopener">Open in Colab</a></div>
+    <div class="card" style="font-size:18px"><span class="tag nt">NB7a</span><h3>Guards in code</h3>Write the incident’s guard by hand, test it on honest work, add a second guard, then test the guards with no model at all.<br><br><a class="colab" style="font-size:16px;padding:11px 15px" href="{GH}NB7a_guards.ipynb" target="_blank" rel="noopener">Open in Colab</a></div>
     <div class="card" style="font-size:18px"><span class="tag nt">NB7b</span><h3>Guards that read text</h3>A classifier, Presidio and a second model on one labelled set. Four numbers for each.<br><br><a class="colab" style="font-size:16px;padding:11px 15px" href="{GH}NB7b_detectors.ipynb" target="_blank" rel="noopener">Open in Colab</a></div>
     <div class="card" style="font-size:18px"><span class="tag nt">NB7c</span><h3>NeMo Guardrails</h3>A policy in a settings file, with Claude. The same set, the same four numbers, then one real turn.<br><br><a class="colab" style="font-size:16px;padding:11px 15px" href="{GH}NB7c_nemo_guardrails.ipynb" target="_blank" rel="noopener">Open in Colab</a></div>
     <div class="card" style="font-size:18px"><span class="tag nt">NB7d</span><h3>A red team</h3>Attacks as data, attack success rate, an attacker model, then garak, a scanner.<br><br><a class="colab" style="font-size:16px;padding:11px 15px" href="{GH}NB7d_red_team.ipynb" target="_blank" rel="noopener">Open in Colab</a></div>
@@ -345,14 +335,14 @@ P2 = [
     <div class="card step" style="font-size:18.5px"><span class="tag af">Part 3 · 20</span><h3>Four numbers</h3>A labelled set: 10 attacks, 10 ordinary inputs, three of them tricky. Report caught, false alarms, time added and cost per check.</div>
     <div class="card step" style="font-size:18.5px"><span class="tag af">Part 4 · 30</span><h3>A small red team</h3>Ten attacks, each with a success check in code and an OWASP code. Attack success rate before and after your guards. Then an attacker model rewrites three of them.</div>
   </div>
-  <div class="look step" style="left:100px;top:640px;width:1400px;font-size:20px"><span class="k">How it is marked</span>Measured, not described. A small honest result beats a large claimed one, and a bug you found in your own guard counts in your favour: ours refused a real yes, and it is on a slide.</div>
+  <div class="look step" style="left:100px;top:640px;width:1400px;font-size:20px"><span class="k">How it is marked</span>Measured, not described. A small honest result beats a large claimed one, and a false alarm you found in your own guard counts in your favour.</div>
 </section>'''),
 ("new", '''<section class="slide" data-plate="Further Reading">
   <div class="lec-top"><h2>To go further</h2><p class="sub">Primary sources for today. Links are in NOTES.md and in Lecture 6’s <code>research/TOOLS_RESEARCH.md</code>.</p></div>
   <div style="position:absolute;left:100px;top:240px;width:1400px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px">
     <div class="card" style="font-size:18.5px"><span class="tag nt">Lists</span><h3>What can go wrong</h3>OWASP Top 10 for Agentic Applications (2026) and OWASP Top 10 for LLM Applications (2026), both at genai.owasp.org. Read the agentic one in full: it is short.</div>
     <div class="card" style="font-size:18.5px"><span class="tag nt">Tool documentation</span><h3>The tools we ran</h3>NeMo Guardrails; Microsoft Presidio; the ProtectAI injection classifier’s model card; promptfoo’s red-team guide; the hooks pages of the Claude Agent SDK, LangChain and the OpenAI Agents SDK.</div>
-    <div class="card" style="font-size:18.5px"><span class="tag nt">Ideas</span><h3>Behind the methods</h3>Spotlighting: marking outside text as data. Taint tracking: limiting what a turn may do after it has read outside text. “Dual LLM” designs, where one model reads outside text and another, which never sees it, decides what to do.</div>
+    <div class="card" style="font-size:18.5px"><span class="tag nt">Ideas</span><h3>Behind the methods</h3>Spotlighting: <a class="gl" href="https://arxiv.org/abs/2403.14720" target="_blank" rel="noopener">Hines and colleagues, 2024 ↗</a>. The lethal trifecta and the Dual LLM pattern: <a class="gl" href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/" target="_blank" rel="noopener">Simon Willison, 2025 ↗</a> and <a class="gl" href="https://simonwillison.net/2023/Apr/25/dual-llm-pattern/" target="_blank" rel="noopener">2023 ↗</a>. Agents Rule of Two: <a class="gl" href="https://ai.meta.com/blog/practical-ai-agent-security/" target="_blank" rel="noopener">Meta, 2025 ↗</a>. CaMeL: <a class="gl" href="https://arxiv.org/abs/2503.18813" target="_blank" rel="noopener">Debenedetti and colleagues, 2025 ↗</a>.</div>
   </div>
   <div class="look" style="left:100px;top:620px;width:1400px">Every number about our agent today: <code>lectures/L6b-guardrails/experiments/logs/</code> (17 Nov) and <code>lectures/L6-evals-guardrails-observability/experiments/logs/</code> (16 Nov), read by <code>gen_figdata.py</code>. Run them yourself in the four notebooks.</div>
 </section>'''),

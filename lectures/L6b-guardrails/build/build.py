@@ -15,7 +15,7 @@ sys.path.insert(0, str(HERE))
 PARKED = (HERE / "index_parked_16nov.html").read_text()
 secs = re.split(r'(?=<section class="slide)', PARKED)        # secs[n] = slide n of the parked deck (1 to 38)
 OUT = HERE.parent / "index.html"
-VER = "20261117h"
+VER = "20261118a"
 PARTS = (("part0", "P0", "OPENER (DEMO FIRST) AND PART 1 · GUARDS IN CODE"),
          ("part1", "P1", "PART 2 · TEXT FROM OUTSIDE, AND GUARDS THAT READ TEXT"),
          ("part2", "P2", "PART 3 · RED-TEAMING, AND THE CLOSE"))

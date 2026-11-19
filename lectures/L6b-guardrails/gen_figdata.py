@@ -166,8 +166,27 @@ def turn_fig(typed, calls, events, reply, max_sent=3, which="first"):
     return {"typed": typed, "rows": rows, "reply": first_para(reply, max_sent, which), "n_calls": len(calls or [])}
 
 
-m = {"argus_url": "https://rajatworkspace--northbridge-argus.us-east.modal.run", "measured_on": "16 Nov 2026"}
+m = {"argus_url": "https://rajatworkspace--northbridge-argus.us-east.modal.run", "measured_on": "16 Nov 2026",
+     "aegis_url": "https://rajatworkspace--northbridge-aegis.us-east.modal.run"}
 TEXTS = attack_texts()
+
+# ------------------------------------------------------------------------------------------- Aegis: the live demo's own turns
+# four chat turns run on the deployed Aegis (experiments/aegis_links.py), with the links each trace has in the three tools.
+# The LangSmith link Aegis shows needs a sign-in; the public one is made by the Lecture 6 script share_trace.py.
+al = load("aegis_links.json", NEW)
+if al:
+    sh = (load("share_trace.json") or {}).get("traces", {})
+    m["aegis"] = {"at": al.get("at"), "usd": al.get("usd")}
+    for k in ("refused", "yes", "mail_on", "mail_off"):
+        t = al.get(k)
+        if not t:
+            continue
+        ref = next((c for c in t["calls"] if c.get("refused_by")), None)
+        m["aegis"][k] = {"text": t["text"], "trace_id": t["trace_id"], "usd": t["usd"], "calls": len(t["calls"]),
+                         "tools": [c["tool"] for c in t["calls"]],
+                         "refused_tool": ref and ref["tool"], "refused_by": ref and ref["refused_by"].replace("guard: ", ""),
+                         "langfuse": t["links"]["langfuse"], "sentry": t["links"]["sentry"],
+                         "langsmith": (sh.get(t["trace_id"]) or {}).get("public_url")}
 
 # ------------------------------------------------------------------------------------------- the incident, and Demo 1
 inc = {t: load(f"incident_{t}.json") for t in ("r1", "r2", "r3")}

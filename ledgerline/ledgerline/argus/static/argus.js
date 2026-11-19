@@ -57,6 +57,7 @@ function showLab() {
   if (ME.guards_station) $(".brand small").textContent = "Lecture 7 · Guardrails and Red-Teaming";
   spend(); renderChat(); renderGuards(); renderAttacks(); renderMyAttacks(); renderTasks(); renderRecorded(); renderScenarios(); renderMyConvos();
   if (ME.evals && ME.evals.length) renderEval(ME.evals[ME.evals.length - 1]);
+  if (window.aegisLab) window.aegisLab();   /* Aegis (Lecture 7) adds its own tabs: static/aegis.js, loaded only by the Aegis app */
   go(location.hash.slice(1) || "traces");
   initTeach();
 }
@@ -79,7 +80,7 @@ $("#keybtn").onclick = () => drawer("Your key for the class notebooks", `<p clas
   <div class="row" style="margin-top:10px"><button class="btn primary" id="copykey">Copy</button><span class="tiny muted">Keep it to yourself: anyone with it spends your budget.</span></div>`);
 document.addEventListener("click", e => { if (e.target && e.target.id === "copykey") { navigator.clipboard.writeText($("#keybox").textContent).then(() => toast("Copied.")); } });
 function go(t) { const sub = String(t).split(":")[1]; t = String(t).split(":")[0];   /* #evals:turn opens a view inside Evals */
-  if (!["traces", "evals", "convos", "guards"].includes(t) || (t === "guards" && !(ME && ME.guards_station))) t = "traces"; TAB = t; if (t === "evals" && sub) evview(sub); $$(".tab").forEach(s => s.classList.toggle("on", s.id === "tab-" + t)); $$("#tabs a").forEach(a => a.classList.toggle("on", a.dataset.tab === t)); }
+  if (!["traces", "evals", "convos", "guards"].concat(window.AEGIS_TABS || []).includes(t) || (t === "guards" && !(ME && ME.guards_station))) t = "traces"; TAB = t; if (t === "evals" && sub) evview(sub); $$(".tab").forEach(s => s.classList.toggle("on", s.id === "tab-" + t)); $$("#tabs a").forEach(a => a.classList.toggle("on", a.dataset.tab === t)); }
 $$("#tabs a").forEach(a => a.addEventListener("click", e => { e.preventDefault(); history.replaceState(null, "", "#" + a.dataset.tab); go(a.dataset.tab); }));
 
 /* ------------------------------------------------------------------ 1 · traces */

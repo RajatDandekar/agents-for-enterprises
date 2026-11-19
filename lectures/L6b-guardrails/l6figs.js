@@ -27,6 +27,7 @@ FIGS._fill = () => {
     let v = get(s.dataset.l6);
     if (v == null || v === '') { s.innerHTML = '<span class="todo-in">from the run</span>'; return; }
     const f = s.dataset.f;
+    if (f === 'link') { s.innerHTML = `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(s.dataset.t || 'open')} ↗</a>`; return; }
     if (f === 'url') { s.innerHTML = `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(String(v).replace(/^https?:\/\//, ''))}</a>`; return; }
     s.textContent = f === 'n' ? fmt(v) : f === 'usd' ? usd(v) : f === 'usd2' ? '$' + Number(v).toFixed(2) : f === 'pct' ? pct(v) : f === 's' ? Number(v).toFixed(1) + ' s' : f === 'ms' ? ms(v) : f === 'k' ? Number(v).toFixed(2) : f === 'gbp' ? '£' + fmt(v) : f === 'usd5' ? '$' + Number(v).toFixed(5) : f === 'ms2' ? Number(v).toFixed(2) + ' ms' : f === 'list' ? (Array.isArray(v) ? v.join(', ') : String(v)) : String(v);
   });
@@ -305,7 +306,7 @@ FIGS.dettiles = (el) => {
   const A = t.filter((r) => r.label), B = t.filter((r) => !r.label);
   const n = (rows, f) => rows.filter(f).length;
   const leg = det === 'none' ? `<span><i class="atk"></i>an attack</span><span><i class="ord"></i>ordinary work</span><span class="lt">m = a chat message · e = an e-mail</span>`
-    : `<span><i class="caught"></i>attack caught: ${n(A, (r) => r[det])}</span><span><i class="missed"></i>attack missed: ${n(A, (r) => !r[det])}</span><span><i class="fa"></i>false alarm: ${n(B, (r) => r[det])}</span><span><i class="ok"></i>ordinary, let through: ${n(B, (r) => !r[det])}</span>`;
+    : `<span><i class="caught"></i>attack caught: ${n(A, (r) => r[det])}</span><span><i class="missed"></i>attack missed: ${n(A, (r) => !r[det])}</span><span><i class="fa"></i>false alarm: ${n(B, (r) => r[det])}</span><span><i class="ok"></i>ordinary, let through: ${n(B, (r) => !r[det])}</span><span class="lt">m = a chat message · e = an e-mail</span>`;
   el.innerHTML = `<div class="l7-tiles"><div class="grp"><b>${A.length} attacks</b><div class="tl">${A.map(tile).join('')}</div></div><div class="grp"><b>${B.length} ordinary messages and e-mails</b><div class="tl">${B.map(tile).join('')}</div></div><div class="leg">${leg}</div></div>`;
   return { step(k) { el.querySelector('.l7-tiles').classList.toggle('pre', det !== 'none' && k < +(el.dataset.at || 0)); } };
 };
@@ -486,6 +487,117 @@ FIGS.redloop = (el) => {
       + ways.slice(0, 5).map((w, i) => R(i * 283, 268, 268, 100, 'v', 14) + T(i * 283 + 134, 308, esc(w), 't1', 'middle') + T(i * 283 + 134, 342, esc(sub[w] || ''), 't2', 'middle')).join(''))
     + G(5, T(700, 440, total + 'The attacker is a model. The judge is code.', 't1', 'middle')) + '</svg></div>';
   return { step(k) { at(el, k); } };
+};
+
+/* ------------------------------------------------------------------ 18 Nov review: the guard seen from two sides, each guard's inside, the close */
+const bx = (x, y, w, h, cls, t, s, lh = 27) => R(x, y, w, h, cls) + T(x + w / 2, y + 44, t, 't1', 'middle') + TL(x + w / 2, y + 80, s, 't2', lh, 'middle');
+
+/* two ways to reach a tool: through the agent (the model decides), or directly (we write the call). The guard stands in the same place. */
+FIGS.twoways = (el) => {
+  const [id, o] = svgOpen(1400, 460);
+  const tail = (y) => A(`M830,${y} L890,${y}`, id) + bx(890, y - 60, 200, 120, 'b', 'The guard', ['reads the call', 'before it runs']) + A(`M1090,${y} L1150,${y}`, id, 'b')
+    + bx(1150, y - 60, 250, 120, 'a', 'The tool', ['runs on Ledgerline,', 'or is refused']);
+  el.innerHTML = '<div class="l7d">' + o
+    + G(0, T(0, 24, 'THROUGH THE AGENT · WHAT EMMA DOES IN THE CHAT', 't3')
+      + bx(0, 40, 230, 120, '', 'Emma’s message', ['“Order the usual,', 'please.”']) + A('M230,100 L290,100', id)
+      + bx(290, 40, 250, 120, 'v', 'The model decides', ['which tool to call,', 'with which values']) + A('M540,100 L600,100', id)
+      + bx(600, 40, 230, 120, '', 'A tool call', ['a name and', 'its values']) + tail(100))
+    + G(1, T(0, 254, 'DIRECTLY · THE GUARD BENCH: NO MODEL IS CALLED', 't3')
+      + bx(0, 270, 540, 120, 'y', 'We write the tool call ourselves', ['as if an attacker had already talked the model round.', 'It costs nothing and takes a moment.']) + A('M540,330 L600,330', id)
+      + bx(600, 270, 230, 120, '', 'The same tool call', ['a name and', 'its values']) + tail(330))
+    + G(2, T(700, 440, 'The guard stands in the same place both times: at the tool, before the call runs.', 't1', 'middle')) + '</svg></div>';
+  return { step(k) { at(el, k); } };
+};
+
+/* one guard as five boxes, left to right. data-pipe = deberta | presidio | llm | nemo | reply; data-stepped: reveal box by box */
+FIGS.pipe = (el) => {
+  const P = {
+    deberta: ['GUARD A · THE INJECTION CLASSIFIER, STEP BY STEP', [['', 'The text', ['Emma’s message, or', 'an e-mail’s body']], ['', 'Cut into windows', ['1,600 characters each,', 'at most 6']],
+      ['v', 'DeBERTa v3', ['a small model on our', 'own CPU, no API call']], ['y', 'A probability', ['0 to 1: how much it', 'reads like an injection']], ['b', '0.5 or more', ['a message: blocked', 'an e-mail: held back']]]],
+    presidio: ['GUARD B · PRESIDIO, STEP BY STEP', [['', 'The text', ['Emma’s message, or', 'the agent’s reply']], ['v', 'Recognisers', ['patterns and checksums,', 'plus a small language', 'model (spaCy)']],
+      ['y', 'Findings', ['each with a type,', 'a place and a score']], ['b', 'Score 0.4 or more', ['the span is replaced', 'by &lt;redacted&gt;']], ['g', 'The masked text', ['goes on to the model', 'and into the trace']]]],
+    llm: ['GUARD C · A SECOND MODEL, STEP BY STEP', [['', 'The text', ['Emma’s message, or', 'an e-mail’s body']], ['', 'Placed in the prompt', ['in place of {text},', 'between &lt;&lt;&lt; and &gt;&gt;&gt;']],
+      ['v', 'Claude Haiku', ['a second model:', 'no tools, no memory']], ['y', 'Its answer', ['“ATTACK - reason” or', '“SAFE - reason”']], ['b', 'Code reads one word', ['ATTACK, or no clear', 'word at all: a flag']]]],
+    nemo: ['GUARD D · NEMO GUARDRAILS, STEP BY STEP', [['', 'The message', ['goes to NeMo, not', 'straight to the model']], ['b', 'Input rail', ['“self check input”:', 'a model call with', 'our policy prompt']],
+      ['v', 'The main model', ['runs only when the', 'rail answered No']], ['b', 'Output rail', ['“self check output”:', 'a second policy', 'prompt, on the reply']], ['g', 'The reply', ['or NeMo’s refusal', 'sentence instead']]]],
+    reply: ['THE REPLY CHECK, STEP BY STEP', [['', 'The reply', ['the agent’s answer,', 'before Emma sees it']], ['', 'Every £ amount', ['found by a pattern']],
+      ['y', 'Compared', ['with the numbers the', 'tools returned in this', 'conversation, within £1']], ['b', 'No match', ['a note is added: this', 'figure did not come', 'from Ledgerline']], ['g', 'Emma reads it', ['the reply, and the', 'note when there', 'was one']]]],
+  };
+  const [cap, boxes] = P[el.dataset.pipe] || P.llm, [id, o] = svgOpen(1400, 220), stepped = el.dataset.stepped != null;
+  el.innerHTML = '<div class="l7d">' + o + T(0, 22, cap, 't3')
+    + boxes.map(([cls, t, s], i) => G(stepped ? i : 0, (i ? A(`M${i * 288 - 40},125 L${i * 288},125`, id) : '') + bx(i * 288, 40, 248, 170, cls, t, s))).join('') + '</svg></div>';
+  return { step(k) { at(el, k); } };
+};
+
+/* taint tracking in one turn: where outside text comes in (source), the mark, and what the mark forbids (sink) */
+FIGS.taintfig = (el) => {
+  const [id, o] = svgOpen(1400, 380);
+  const b = (i, cls, t, s) => (i ? A(`M${i * 288 - 40},145 L${i * 288},145`, id) : '') + bx(i * 288, 50, 248, 190, cls, t, s);
+  el.innerHTML = '<div class="l7d">' + o
+    + G(0, T(0, 26, 'SOURCE · WHERE OUTSIDE TEXT COMES IN', 't3') + b(0, 'a', 'read_mailbox runs', ['a tool that returns', 'text written outside', 'Northbridge'])
+      + b(1, 'b', 'guard.after()', ['wraps the text as data', 'and marks the turn:', 'tainted_turn = turn']))
+    + G(1, b(2, 'v', 'The model reads it', ['and asks for a save', '(confirm=true), or', 'for send_message']))
+    + G(2, T(864, 26, 'SINK · WHAT IT MUST NOT REACH', 't3') + b(3, 'b', 'guard.before()', ['this turn read outside', 'text: no save, no message', 'to an outside address']))
+    + G(3, T(1152, 270, 'THE MARK LASTS ONE TURN', 't3') + b(4, 'g', 'Emma speaks next', ['a new turn: the mark', 'is gone, and her yes', 'can commit']))
+    + G(4, T(700, 340, 'Taint tracking: remember where the data came from, and check it at the place where it could do harm.', 't1', 'middle')) + '</svg></div>';
+  return { step(k) { at(el, k); } };
+};
+
+/* where every guard of this lecture stands, around the model and the tool */
+FIGS.placement = (el) => {
+  const [id, o] = svgOpen(1400, 540);
+  const gd = (x, y, w, k, t, s) => R(x, y, w, 150, 'b') + T(x + w / 2, y + 40, t, 't3', 'middle') + G(k, TL(x + w / 2, y + 76, s, 't2', 27, 'middle'));
+  el.innerHTML = '<div class="l7d">' + o
+    + G(0, bx(0, 50, 170, 150, '', 'Emma', ['types a', 'message']) + A('M170,125 L202,125', id) + A('M452,125 L484,125', id)
+      + R(484, 50, 190, 430, 'v') + T(579, 250, 'The model', 't1', 'middle') + TL(579, 284, ['decides the', 'next step'], 't2', 27, 'middle')
+      + A('M674,125 L706,125', id) + A('M996,125 L1028,125', id, 'b') + bx(1028, 50, 170, 150, 'a', 'The tool', ['one function', 'call']) + A('M1198,125 L1230,125', id)
+      + bx(1230, 50, 170, 150, '', 'Ledgerline', ['the ERP']) + A('M1113,200 L1113,405 L996,405', id) + A('M706,405 L674,405', id) + A('M484,405 L452,405', id) + A('M202,405 L170,405', id)
+      + bx(0, 330, 170, 150, '', 'Emma', ['reads the', 'reply']))
+    + gd(202, 50, 250, 1, '1 · HER MESSAGE COMES IN', ['A · injection classifier', 'B · Presidio masks data', 'C, D · a second model'])
+    + gd(706, 50, 290, 2, '2 · BEFORE THE TOOL RUNS', ['identity · approvals', 'outside text · recorded yes', 'limits · never-events'])
+    + gd(706, 330, 290, 3, '3 · AFTER THE RESULT', ['wrap outside text as data', 'mark the turn (taint)', 'A · holds back an e-mail'])
+    + gd(202, 330, 250, 4, '4 · THE REPLY GOES OUT', ['£ figures against the', 'tool results', 'B · Presidio masks data'])
+    + G(5, T(700, 524, 'Every guard is our code, outside the model. Each decision becomes a row in the trace.', 't1', 'middle')) + '</svg></div>';
+  return { step(k) { at(el, k); } };
+};
+
+/* the close: the whole process as one loop, each box with one number from our own runs */
+FIGS.closing = (el) => {
+  const f = get('m.forced') || {}, n = get('m.attacks.n') || {}, rp = get('m.replay') || {}, rows = get('m.detector_rows') || [], [id, o] = svgOpen(1400, 620);
+  const v = (x) => (x == null ? 'from the run' : x);
+  const B = [['1 · Name the never-events', ['what must not happen,', 'whatever anyone types'], 'POL-APR-002 · Purchase Policy §6.2', ''],
+    ['2 · Code guards at the tool', ['identity, approvals, a recorded', 'yes, limits'], `${v(f.code_worked)} of ${v(f.want)} direct attacks worked`, 'b'],
+    ['3 · Mark text from outside', ['wrap it as data, and taint', 'the turn that read it'], 'A11, A12: refused at the tool', 'b'],
+    ['4 · Detectors, measured', ['where a rule cannot name it:', 'on a labelled set'], `classifier ${v((rows[0] || {}).caught)} · model ${v((rows[2] || {}).caught)}`, 'v'],
+    ['5 · Decisions in the trace', ['a guard row with its reason,', 'its rule and the next step'], 'Langfuse · LangSmith · Sentry', 'a'],
+    ['6 · Red-team it', ['our library, plus attacks', 'a second model writes'], `guards off ${v(n.thursday_off)} of 20 · on ${v(n.thursday_all)} of 20`, 'y'],
+    ['7 · Monitor, then enforce', ['watch what it would refuse;', 'honest work must still pass'], `${v(rp.saved_after_yes)} of ${v(rp.runs)} real yeses still saved`, 'g'],
+    ['8 · Something got through?', ['or honest work was refused:', 'write it down as a new test'], 'a new rule, a new test', '']];
+  const pos = (i) => (i < 4 ? [i * 360, 20] : [(7 - i) * 360, 290]);
+  const box = (i) => { const [x, y] = pos(i), [t, s, ft, cls] = B[i];
+    return R(x, y, 320, 170, cls) + T(x + 160, y + 40, t, 't1 s', 'middle') + TL(x + 160, y + 74, s, 't2', 26, 'middle') + T(x + 160, y + 146, esc(ft), 'tm', 'middle'); };
+  const ar = (i) => (i === 0 ? '' : i < 4 ? A(`M${i * 360 - 40},105 L${i * 360},105`, id) : i === 4 ? A('M1240,190 L1240,290', id) : A(`M${(8 - i) * 360},375 L${(8 - i) * 360 - 40},375`, id));
+  el.innerHTML = '<div class="l7d">' + o + [0, 1, 2, 3].map((k) => G(k, ar(2 * k) + box(2 * k) + ar(2 * k + 1) + box(2 * k + 1))).join('')
+    + G(3, A('M160,290 L160,190', id, 'b') + T(184, 247, 'back to step 1', 't2'))
+    + G(4, T(700, 520, 'A guard is finished when it has tests on both sides:', 't1', 'middle') + T(700, 556, 'the attacks it must refuse, and the honest work it must allow.', 't1', 'middle')) + '</svg></div>';
+  return { step(k) { at(el, k); } };
+};
+
+/* every guard against its own test: called directly, through the agent, and on the labelled set */
+FIGS.guardperf = (el) => {
+  const g = get('m.forced.groups'), w = get('m.attacks.who.thursday_all'), rows = get('m.detector_rows');
+  if (!Array.isArray(g) || !Array.isArray(w) || !Array.isArray(rows)) return wait(el, 'Every guard against its own test', 'guards_forced.json');
+  const who = (k) => w.find((x) => x.key === k) || { n: 0, ids: [] }, ids = (x) => (x.n ? ` <small>${x.ids.map(esc).join(', ')}</small>` : '');
+  const lab = (i) => (rows[i] ? `${esc(rows[i].caught)} caught · ${esc(rows[i].fa)} false alarms` : '–');
+  const refused = who('refused'), NA = '<span class="na">–</span>';
+  const code = g.map((x, i) => `<tr><td><b>${esc(x.label)}</b></td>${i ? '' : `<td rowspan="${g.length}" class="pl2">before the tool runs</td>`}<td>${x.n ? `refused ${x.n}` : 'nothing reached it'}${ids(x)}</td><td>${x.key === 'provenance' && refused.n ? `refused ${refused.n}${ids(refused)}` : 'nothing reached it'}</td><td>${NA}</td></tr>`).join('');
+  el.innerHTML = `<div class="l6-tw"><span class="l6-mk">Measured · every guard, each against its own test</span><table class="l6t l7-gp"><tr><th>Guard</th><th>Where it stands</th><th>The tool called directly, 17 attacks</th><th>Through the agent, 20 attacks</th><th>On the labelled set</th></tr>
+    <tr><td><b>Injection classifier</b></td><td class="pl2">on the message, on an e-mail</td><td>${NA}</td><td>stopped ${who('blocked').n} messages, held back ${who('quarantined').n} e-mail</td><td>${lab(0)}</td></tr>${code}
+    <tr><td><b>Reply check</b></td><td class="pl2">on the reply</td><td>${NA}</td><td>flagged ${who('flagged').n}${ids(who('flagged'))}</td><td>${NA}</td></tr>
+    <tr><td><b>Presidio</b></td><td class="pl2">on the message, on the reply</td><td>${NA}</td><td>${NA}</td><td>${lab(1)}</td></tr>
+    <tr class="mut"><td><b>A second model</b> (NB7b)</td><td class="pl2">taught, not on the agent</td><td>${NA}</td><td>${NA}</td><td>${lab(2)}</td></tr>
+    <tr class="mut"><td><b>NeMo Guardrails</b> (NB7c)</td><td class="pl2">taught, not on the agent</td><td>${NA}</td><td>${NA}</td><td>${lab(3)}</td></tr></table></div>`;
+  return { step() {} };
 };
 
 FIGS.blank = (el) => ({ step() {} });

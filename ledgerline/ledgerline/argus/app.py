@@ -60,10 +60,16 @@ from ..course.l6 import tracing as TR
 from ..course.l6.tracing import Tracing
 from ..hermes.app import Guard as Budget, GuardedLLM, Refused, Store
 from ..llm import PRICES
+from . import detect as D
+from . import mailbox as MB
 from . import teach as T
 
 HERE = pathlib.Path(__file__).parent
 STATIC = HERE / "static"
+# Lecture 7: the same lab served as Aegis (deploy/aegis_modal.py sets ARGUS_BRAND=aegis). Unset, this is Argus, unchanged.
+BRAND = os.environ.get("ARGUS_BRAND", "argus")
+AEGIS = BRAND == "aegis"
+AEGIS_VER = "20261122c"
 RECORDED = HERE / "recorded.json"
 QUICK = ["T01", "T02", "T04", "T08", "T09", "T14"]
 PRESETS = {"none": [], "code": G.DETERMINISTIC + ["output_check"], "all": G.ALL}
@@ -77,7 +83,8 @@ INCIDENT = {"id": "A00", "title": "Friday's incident: order the usual", "owasp":
 class ArgusBudget(Budget):
     LIMITS = {"chat": (20, 60), "evals": (3, 600), "attack": (20, 60), "convo": (6, 600), "gateway": (240, 60),
               "join": (120, 600), "global": (900, 60),
-              "teach": (30, 60), "labelled": (6, 60), "deepeval": (12, 60), "score": (20, 60)}     # v3: the teaching views
+              "teach": (30, 60), "labelled": (6, 60), "deepeval": (12, 60), "score": (20, 60),      # v3: the teaching views
+              "bench": (60, 60), "detect": (30, 60), "mailbox": (30, 60)}                          # Aegis (Lecture 7)
 
     def flags(self) -> dict:
         f = {"enabled": True, "reason": "", "cap_usd": float(os.environ.get("ARGUS_CAP_USD", "60")),
@@ -85,6 +92,8 @@ class ArgusBudget(Budget):
              "guards_station": os.environ.get("ARGUS_GUARDS", "0") == "1",
              "model": os.environ.get("ARGUS_MODEL", AGENT_MODEL)}
         f.update(self.store.get("flags", {}) or {})
+        if AEGIS:
+            f["guards_station"] = True         # Aegis is the guardrails lab: the flag cannot be switched off there
         return f
 
 
@@ -180,6 +189,8 @@ class Student:
         self.custom = d.get("custom", "")
         self.guards = d.get("guards", PRESETS["code"])
         self.chat_guards = bool(d.get("chat_guards", False))   # Lecture 7: the Guards switch in the Traces chat
+        self.instructor = bool(d.get("instructor", False))     # Aegis: this lab may connect the live mailbox
+        self.mailbox_live = bool(d.get("mailbox_live", False))  # Aegis: its chat reads the live mailbox, not the sandbox's
         self.chat = d.get("chat", [])            # turns: text, reply, calls, trace_id, url, usd, seconds, prompt, incident
         self.evals = d.get("evals", [])          # eval runs (summaries + rows)
         self.attacks = d.get("attacks", [])      # attack results
@@ -194,7 +205,8 @@ class Student:
     def state(self) -> dict:
         return {"name": self.name, "created": self.created, "prompt": self.prompt, "custom": self.custom, "guards": self.guards,
                 "chat": self.chat[-30:], "evals": self.evals[-8:], "attacks": self.attacks[-60:], "convos": self.convos[-12:],
-                "stats": self.stats, **({"chat_guards": True} if self.chat_guards else {})}
+                "stats": self.stats, **({"chat_guards": True} if self.chat_guards else {}),
+                **({"instructor": True} if self.instructor else {}), **({"mailbox_live": True} if self.mailbox_live else {})}
 
     def prompt_text(self) -> str:
         return self.custom if self.prompt == "custom" and self.custom.strip() else PROMPTS.get(self.prompt, GOOD)
@@ -229,7 +241,7 @@ def create_app(store: Store | None = None) -> FastAPI:
     os.environ.pop("OPENROUTER_API_KEY", None)
     import openai
     openai.OpenAI(api_key="warm-up", base_url="http://127.0.0.1:9").chat.completions  # noqa: B018
-    app = FastAPI(title="Argus", docs_url=None, redoc_url=None)
+    app = FastAPI(title="Aegis" if AEGIS else "Argus", docs_url=None, redoc_url=None)
     store = store or Store(os.environ.get("ARGUS_DICT"))
     budget = ArgusBudget(store)
     pool = ThreadPoolExecutor(max_workers=int(os.environ.get("ARGUS_THREADS", "160")))
@@ -276,8 +288,8 @@ def create_app(store: Store | None = None) -> FastAPI:
             print("[argus] guard models unavailable:", type(e).__name__, str(e)[:200])
     threading.Thread(target=warm_models, daemon=True).start()
 
-    def tracing(st, redact=False):
-        return Tracing(provider=tp, public=True, redact=(redact_fn if redact else None))
+    def tracing(st, redact=False, public=True):
+        return Tracing(provider=tp, public=public, redact=(redact_fn if redact else None))
 
     def llm_for(st):
         model = budget.flags().get("model") or AGENT_MODEL
@@ -289,7 +301,7 @@ def create_app(store: Store | None = None) -> FastAPI:
     def me(req: Request) -> Student:
         st = sts.get(req.headers.get("x-argus-key") or "")
         if st is None:
-            raise HTTPException(401, "Join first: open Argus and enter your name.")
+            raise HTTPException(401, f"Join first: open {'Aegis' if AEGIS else 'Argus'} and enter your name.")
         return st
 
     def admin(req: Request):
@@ -354,12 +366,32 @@ def create_app(store: Store | None = None) -> FastAPI:
     def page(name):
         return FileResponse(STATIC / name, headers={"Cache-Control": "no-cache"})
 
+    def aegis_page(name, swaps):
+        """The Argus page, served as Aegis: the same file with the brand, the body class and Aegis's own script and style
+        put in on the way out. The file on disk is Argus's and is not changed."""
+        s = (STATIC / name).read_text()
+        for old, new in swaps:
+            s = s.replace(old, new)
+        return HTMLResponse(s, headers={"Cache-Control": "no-cache"})
+
     @app.get("/", response_class=HTMLResponse)
     def home():
+        if AEGIS:
+            return aegis_page("argus.html", [
+                ("<title>Argus · Northbridge Cycles</title>", "<title>Aegis · Northbridge Cycles</title>"),
+                ("Lecture 6, Observability and Evals: trace and evaluate Ask Northbridge",
+                 "Lecture 7, Guardrails and Red-Teaming: guard and attack Ask Northbridge"),
+                ("<body>", '<body class="aegis">'),
+                ("</head>", f'<link rel="stylesheet" href="/static/aegis.css?v={AEGIS_VER}">\n</head>'),
+                ("</body>", f'<script src="/static/aegis.js?v={AEGIS_VER}"></script>\n</body>')])
         return page("argus.html")
 
     @app.get("/wall", response_class=HTMLResponse)
     def wall_page():
+        if AEGIS:
+            return aegis_page("wall.html", [("Argus · the class wall", "Aegis · the class wall"),
+                                            ("Argus · Lecture 6 · Observability and Evals",
+                                             "Aegis · Lecture 7 · Guardrails and Red-Teaming")])
         return page("wall.html")
 
     @app.get("/admin", response_class=HTMLResponse)
@@ -396,6 +428,10 @@ def create_app(store: Store | None = None) -> FastAPI:
         if v["guards_station"]:   # Lecture 7 only: the chat's Guards switch, and the incident on top of the attack list
             v["chat_guards"] = st.chat_guards
             v["attacks_first"] = [{k: INCIDENT[k] for k in ("id", "title", "owasp", "channel", "turns", "prompt")}]
+        if AEGIS:                 # the live mailbox: only the instructor's lab is told anything about it
+            v["instructor"] = st.instructor
+            v["mailbox"] = ({**MB.settings(), "live": bool(st.mailbox_live and MB.configured())} if st.instructor
+                            else {"available": False, "live": False})
         return v
 
     @app.post("/api/join")
@@ -415,15 +451,36 @@ def create_app(store: Store | None = None) -> FastAPI:
         return view(me(req))
 
     # ------------------------------------------------------------------ 1 · traces
+    def live_mail(st) -> bool:
+        """Aegis only: this lab's chat reads the instructor's live mailbox (one label, read-only) in place of the sandbox's."""
+        return bool(AEGIS and st.instructor and st.mailbox_live and MB.configured())
+
+    def sync_mail(ag):
+        """File the label's newest e-mails in this agent's sandbox, so read_mailbox returns them. A mailbox that cannot be
+        read stops the turn with a plain sentence; it never falls back to the sandbox's mail without saying so."""
+        try:
+            got = MB.sync(ag.erp)
+        except MB.MailboxError as e:
+            raise Refused(502, str(e)) from None
+        ag.briefing = MB.briefing(got["live"], MB.settings()["label"])
+        return got
+
     def agent_of(st, fresh=False):
         with st.lock:
             guarded = bool(st.chat_guards and budget.flags().get("guards_station"))   # never without the flag
-            if fresh or st.agent is None or st.agent.prompt_text != st.prompt_text() or (st.agent.guards is not None) != guarded:
+            live = live_mail(st)
+            if (fresh or st.agent is None or st.agent.prompt_text != st.prompt_text() or (st.agent.guards is not None) != guarded
+                    or getattr(st.agent, "live_mail", False) != live):
+                # a chat on the live mailbox is traced privately: its e-mails are real, and stay out of the public links
                 st.agent = Agent(st.prompt_text(), guards=G.Guards(PRESETS["code"]) if guarded else None,
-                                 tracing=tracing(st), llm_for=llm_for(st),
-                                 conversation_id=f"argus-{st.key[3:11]}-{int(time.time())}", user_label=f"{st.name} (as ECLARKE)",
-                                 tags=("argus", "traces") + (("guards:code",) if guarded else ()))
+                                 tracing=tracing(st, public=not live), llm_for=llm_for(st),
+                                 conversation_id=f"{BRAND}-{st.key[3:11]}-{int(time.time())}", user_label=f"{st.name} (as ECLARKE)",
+                                 tags=(BRAND, "traces") + (("guards:code",) if guarded else ())
+                                 + (("mailbox:live",) if live else ()))
                 st.agent.prompt_name = st.prompt if st.prompt != "custom" else "custom"
+                st.agent.live_mail = live
+            if live:
+                sync_mail(st.agent)
             return st.agent
 
     @app.post("/api/chat/prompt")
@@ -474,6 +531,8 @@ def create_app(store: Store | None = None) -> FastAPI:
                        "trace_id": tid, "url": trace_url(tid) if (LF and tid) else None, "links": trace_links(tid),
                        "usd": rec["usd"], "tokens_in": rec["tokens_in"], "tokens_out": rec["tokens_out"], "seconds": rec["seconds"],
                        "incident": inc, "conv": ag.conversation_id, "at": time.time()}
+                if getattr(ag, "live_mail", False):
+                    row["mailbox"] = "live"
                 if ag.guards is not None:      # the Guards switch is on: what the guards did, and which calls they refused
                     row.update(guard_fields(rec))
                     for x, c in zip(row["calls"], rec["calls"]):
@@ -963,6 +1022,131 @@ def create_app(store: Store | None = None) -> FastAPI:
         return {"what": "Argus LLM gateway for the Lecture 6 notebooks", "anthropic_base_url": "<this URL>",
                 "openai_base_url": "<this URL>/v1", "key": "your Argus join key (ar-...)", "models": sorted(GATEWAY_MODELS),
                 "notes": "no streaming; temperature/top_p/top_k are dropped; charged to your Argus budget"}
+
+    # ------------------------------------------------------------------ Aegis (Lecture 7): the guard bench, no model
+    def aegis_on():
+        if not budget.flags().get("guards_station"):
+            raise HTTPException(404, "Not Found")      # with the flag off these routes answer as if they did not exist
+
+    @app.get("/api/bench")
+    async def bench(req: Request):
+        """The 17 forced attacks (the tool calls each one needs), the tools and their arguments, the code guards."""
+        aegis_on()
+        st = me(req)
+        budget.rate(st.key, "bench")
+        return await in_pool(D.bench_info)
+
+    @app.post("/api/bench/run")
+    async def bench_run(req: Request):
+        """One forced attack, or all 17, on fresh sandboxes: no guards, then the code guards. No model is called."""
+        aegis_on()
+        st = me(req)
+        b = await req.json()
+        which = str(b.get("attack", "all"))
+        if which != "all" and which not in D.nb7.FORCED:
+            raise HTTPException(400, "Pick one of the forced attacks, or all.")
+        budget.rate(st.key, "bench")
+        return await in_pool(D.bench_run, which)
+
+    @app.post("/api/bench/call")
+    async def bench_call(req: Request):
+        """One tool call of your own, made directly at the tool boundary (no model), with the guards off and on."""
+        aegis_on()
+        st = me(req)
+        b = await req.json()
+        tool, args = str(b.get("tool", "")), b.get("args")
+        if tool not in D.SPECS:
+            raise HTTPException(400, "No tool with that name. Pick one from the list.")
+        if not isinstance(args, dict) or len(json.dumps(args, default=str)) > 4000:
+            raise HTTPException(400, "The arguments must be one JSON object, for example {\"item_code\": \"BAT-500\"}.")
+        budget.rate(st.key, "bench")
+        return await in_pool(D.bench_call, tool, args, " ".join(str(b.get("heard", "")).split())[:400])
+
+    # ------------------------------------------------------------------ Aegis: the detectors, one text at a time
+    @app.get("/api/detect/info")
+    async def detect_info(req: Request):
+        aegis_on()
+        me(req)
+
+        def fn():
+            d = D.detect_info()
+            try:
+                d["default_reply"] = D.default_reply()
+            except Exception as e:  # noqa: BLE001
+                print("[aegis] no default reply:", type(e).__name__, str(e)[:200])
+                d["default_reply"] = ""
+            return d
+        return await in_pool(fn)
+
+    @app.post("/api/detect")
+    async def detect(req: Request):
+        """Every detector on one text. The second model's call is charged to the student's budget like any other."""
+        aegis_on()
+        st = me(req)
+        b = await req.json()
+        text = str(b.get("text", "")).strip()[:4000]
+        if not text:
+            raise HTTPException(400, "Type or pick a text to check.")
+        reply = str(b.get("reply") or "").strip()[:2000] or None
+        budget.check(st.key, "detect")
+        return await in_pool(D.detect, text, reply, ArgusLLM(JUDGE_MODEL, budget, st.key).chat)
+
+    # ------------------------------------------------------------------ Aegis: the instructor's live mailbox
+    def instructor(req: Request) -> Student:
+        if not AEGIS:
+            raise HTTPException(404, "Not Found")
+        st = me(req)
+        if not st.instructor:
+            raise HTTPException(403, "Only the instructor's lab can connect the live mailbox.")
+        if not MB.configured():
+            raise HTTPException(409, "The live mailbox is not set up on this server yet (tools/aegis_mailbox_secret.sh).")
+        return st
+
+    def mail_or_502(fn, *a):
+        try:
+            return fn(*a)
+        except MB.MailboxError as e:
+            raise Refused(502, str(e)) from None
+
+    @app.post("/api/chat/mailbox")
+    async def chat_mailbox(req: Request):
+        """Which inbox the chat's agent reads: the sandbox's (the default) or one label of the instructor's real mailbox.
+        Switching starts a new chat."""
+        st = instructor(req)
+        b = await req.json()
+        live = bool(b.get("live"))
+        budget.rate(st.key, "mailbox")
+        if live:
+            await in_pool(mail_or_502, MB.fetch, MB.LIMIT, True)     # read it once now: a wrong password shows here
+        st.mailbox_live = live
+        st.agent = None
+        st.chat = []
+        save(st)
+        return view(st)
+
+    @app.get("/api/mailbox/peek")
+    async def mailbox_peek(req: Request):
+        """For the instructor, before the agent reads anything: sender, subject, date and the first 200 characters."""
+        st = instructor(req)
+        budget.rate(st.key, "mailbox")
+        return {**MB.settings(), "messages": await in_pool(mail_or_502, MB.peek)}
+
+    @app.post("/api/admin/instructor")
+    async def admin_instructor(req: Request):
+        """Mark the most recent lab with this name as the instructor's (or unmark it with on=false)."""
+        admin(req)
+        b = await req.json()
+        name = " ".join(str(b.get("name", "")).split()).lower()
+        hits = sorted((s_ for s_ in sts.values() if s_.name.lower() == name), key=lambda s_: -s_.created)
+        if not hits:
+            raise HTTPException(404, "No lab with that name. Join first, then run this again.")
+        st = hits[0]
+        st.instructor = b.get("on") is not False
+        if not st.instructor:
+            st.mailbox_live = False
+        st.agent = None
+        save(st)
+        return {"name": st.name, "instructor": st.instructor, "labs_with_this_name": len(hits), "mailbox": MB.settings()}
 
     # ------------------------------------------------------------------ the class wall
     @app.get("/api/wall")

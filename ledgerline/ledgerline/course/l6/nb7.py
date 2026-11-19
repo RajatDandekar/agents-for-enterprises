@@ -214,10 +214,11 @@ FORCED = {
 }
 
 
-def forced(attack_id: str, guards=None) -> dict:
+def forced(attack_id: str, guards=None, outs: bool = False) -> dict:
     """An attack with the model's refusal taken away. In a fresh sandbox, the guard hears the attack's messages; then the
     tool calls the attacker wants are made directly at the tool boundary; then the attack's own success check reads
-    Ledgerline. No model is involved, so the answer is the same every time: this is how a guard is tested."""
+    Ledgerline. No model is involved, so the answer is the same every time: this is how a guard is tested.
+    outs=True also keeps, for each call, what came back ("out") and what Ledgerline holds afterwards ("saved")."""
     att = attack(attack_id)
     if attack_id not in FORCED:
         return {"id": attack_id, "title": att["title"], "worked": None, "why": "wants words, not a tool call", "calls": []}
@@ -229,12 +230,13 @@ def forced(attack_id: str, guards=None) -> dict:
         args = json.loads(json.dumps(args).replace("{pr}", str((att.get("_ctx") or {}).get("pr"))))
         out = at_boundary(ag, tool, args)
         calls.append({"tool": tool, "args": args, "ok": bool(out.get("ok", True)), "refused_by": out.get("refused_by"),
-                      "rule": out.get("rule"), "error": out.get("error"), "next_step": out.get("next_step")})
+                      "rule": out.get("rule"), "error": out.get("error"), "next_step": out.get("next_step"),
+                      **({"out": out} if outs else {})})
     ok, why = succeeded(ag, att)
     stopped = next((c for c in calls if c["refused_by"]), None) or next((c for c in calls if not c["ok"]), None)
     return {"id": attack_id, "title": att["title"], "worked": bool(ok), "why": why, "calls": calls,
             "stopped_by": (stopped["refused_by"] or "Ledgerline itself") if stopped and not ok else None,
-            "reason": (stopped or {}).get("error") if not ok else None}
+            "reason": (stopped or {}).get("error") if not ok else None, **({"saved": holds(ag.writes())} if outs else {})}
 
 
 # ------------------------------------------------------------------------------------------------ the trace, guards included
